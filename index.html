@@ -2,14 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Analyst Wire</title>
-    <!-- Paddle library -->
-    <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Login | Analyst Wire Terminal</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/auth-ui-web@1.5.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/auth-ui-shared@1.6.0"></script>
+
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #0f0f0f; color: white; }
+        #auth-container { width: 100%; max-width: 400px; padding: 20px; background: #1a1a1a; border-radius: 8px; }
+    </style>
 </head>
 <body>
-    <h1>Analyst Wire Terminal</h1>
-    <button id="login-btn">Log In as Test User</button>
-    <button id="upgrade-btn">Upgrade to Premium</button>
-    <script type="module" src="app.js"></script>
+
+    <div id="auth-container">
+        <h2>Terminal Access</h2>
+        <div id="supabase-auth-ui"></div>
+    </div>
+
+    <script>
+        // 1. Initialize Supabase
+        const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+
+        // 2. Initialize and Render Auth UI
+        const { Auth } = window.supabaseAuthUI;
+        const ui = new Auth(supabase);
+
+        ui.render('#supabase-auth-ui', {
+            providers: ['google', 'email'],
+            view: 'sign_in', // Or 'sign_up'
+        });
+
+        // 3. Redirect to terminal after successful login
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN') {
+                window.location.href = '/terminal.html'; // Change to your actual terminal filename
+            }
+        });
+    </script>
 </body>
 </html>
