@@ -2,29 +2,65 @@
 <html>
 <head>
     <title>Login Test</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #0f0f0f; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #1a1a1a; padding: 30px; border-radius: 8px; text-align: center; width: 100%; max-width: 300px; }
+        input { padding: 12px; width: 100%; box-sizing: border-box; margin: 10px 0; border-radius: 4px; border: none; }
+        button { padding: 12px; width: 100%; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        #status { margin-top: 15px; color: #ff4444; }
+    </style>
 </head>
 <body>
+
+<div class="container">
     <h2>Terminal Login</h2>
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
-    <button onclick="signIn()">Login</button>
+    <button id="loginBtn">Login</button>
+    <p id="status"></p>
+</div>
 
-    <script>
-        const supabase = supabase.createClient('https://supabase.com/dashboard/project/fgidelsazisdqjfckerd', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+<script>
+    // 1. Correct API URL
+    const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
+    
+    // 2. ONLY USE THE 'anon' KEY HERE. DO NOT USE THE SERVICE ROLE KEY.
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5NDc1ODQsImV4cCI6MjA5ODUyMzU4NH0.BaxMA1FiXvyVDOsVNkN2tLNrkkCqsppVe54Sc8c0cYg';
 
-        async function signIn() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            
-            if (error) {
-                alert('Error: ' + error.message);
-            } else {
-                window.location.href = '/terminal.html';
-            }
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const status = document.getElementById('status');
+
+        if (!email || !password) {
+            status.innerText = 'Please enter both email and password.';
+            return;
         }
-    </script>
+
+        status.style.color = '#b3b3b3';
+        status.innerText = 'Logging in...';
+
+        const { data, error } = await client.auth.signInWithPassword({ 
+            email: email, 
+            password: password 
+        });
+
+        if (error) {
+            status.style.color = '#ff4444';
+            status.innerText = 'Error: ' + error.message;
+        } else {
+            status.style.color = '#28a745';
+            status.innerText = 'Success! Redirecting...';
+            
+            // Redirect straight to your Cloudflare hosted terminal
+            window.location.href = 'https://analyst-wire.pages.dev/terminal.html';
+        }
+    });
+</script>
+
 </body>
 </html>
