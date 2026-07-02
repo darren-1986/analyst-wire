@@ -49,4 +49,243 @@
 
         /* --- ACCOUNT UI ELEMENTS --- */
         .account-container { max-width: 600px; margin: 0 auto; background: #131722; padding: 30px; border-radius: 8px; border: 1px solid #2a2e39; }
-        .account-container h2 { margin-top: 0; color: #fff; border-bottom: 1px solid #2a2e39; padding-bottom: 15
+        .account-container h2 { margin-top: 0; color: #fff; border-bottom: 1px solid #2a2e39; padding-bottom: 15px; font-size: 18px; }
+        .account-container h3 { color: #fff; border-bottom: 1px solid #2a2e39; padding-bottom: 10px; margin-top: 35px; font-size: 15px; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-group { margin-bottom: 15px; }
+        .info-label { font-size: 11px; color: #787b86; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; letter-spacing: 0.5px; }
+        .info-value { font-size: 15px; color: #fff; background: #1c2230; padding: 12px; border-radius: 4px; border: 1px solid #2a2e39; }
+        
+        .badge { color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .badge-active { background: #089981; }
+        .badge-canceled { background: #f23645; }
+
+        /* Buttons & Forms */
+        .pwd-input { width: 100%; padding: 12px; box-sizing: border-box; margin-bottom: 15px; background: #1c2230; border: 1px solid #2a2e39; color: white; border-radius: 4px; }
+        .pwd-input:focus { outline: none; border-color: #2962ff; }
+        .btn-update { background: #2962ff; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
+        .btn-update:hover { background: #1e4bd8; }
+        .btn-secondary { background: #333; border: 1px solid #2a2e39; margin-top: 10px; }
+        #pwd-status { margin-top: 10px; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div class="top-nav">
+    <div style="font-weight: bold; color: #fff; letter-spacing: 1px;">ANALYST WIRE</div>
+    <div class="nav-links">
+        <a id="nav-terminal" class="active">Terminal</a>
+        <a id="nav-account">Account</a>
+        <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+        <a id="logoutBtn">Logout</a>
+    </div>
+</div>
+
+<div id="terminal-view">
+    <div class="ticker-panel">
+        <div>XAU/USD <span class="tick-up">▲ 2415.30</span></div>
+        <div>AUD/USD <span class="tick-down">▼ 0.6542</span></div>
+        <div>DXY <span class="tick-up">▲ 105.20</span></div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">Macro Engine v3.0 - Confluence Score</div>
+        <div class="panel-content" id="macro-engine-container">
+            <p style="color: #787b86; font-style: italic;">Awaiting API initialization...</p>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">Live Feed (Gold, AUS, USA)</div>
+        <div class="panel-content" id="newsfeed-container">
+            <div class="news-item"><span class="news-tag">XAU</span> Central banks increase gold reserves amid geopolitical tensions.</div>
+            <div class="news-item"><span class="news-tag">USD</span> Fed officials signal potential for sustained higher rates through Q3.</div>
+            <div class="news-item"><span class="news-tag">AUD</span> RBA maintains hawkish bias following stronger-than-expected inflation data.</div>
+        </div>
+    </div>
+</div>
+
+<div id="account-view">
+    <div class="account-container">
+        <h2>Subscription Details</h2>
+        
+        <div class="info-grid">
+            <div class="info-group">
+                <div class="info-label">Member Name</div>
+                <div class="info-value" id="user-name">Loading...</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label">Account Email</div>
+                <div class="info-value" id="user-email">Loading...</div>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-group">
+                <div class="info-label">Plan Type</div>
+                <div class="info-value" id="sub-type">Loading...</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label">Status</div>
+                <div class="info-value" style="border: none; background: transparent; padding: 0; padding-top: 8px;">
+                    <span class="badge" id="sub-status">Loading...</span>
+                </div>
+            </div>
+            <div class="info-group">
+                <div class="info-label">Subscription Price</div>
+                <div class="info-value" id="sub-price">Syncing...</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label">Next Billing Date</div>
+                <div class="info-value" id="sub-date">Syncing...</div>
+            </div>
+        </div>
+
+        <button class="btn-update btn-secondary" id="manage-sub">Manage Subscription via Stripe</button>
+
+        <h3>Security & Login</h3>
+        <div class="info-label">Update Password</div>
+        <input type="password" id="new-password" class="pwd-input" placeholder="Enter new password (min. 6 characters)">
+        <input type="password" id="confirm-password" class="pwd-input" placeholder="Confirm new password">
+        <button class="btn-update" id="updatePwdBtn">Save New Password</button>
+        <p id="pwd-status"></p>
+
+    </div>
+</div>
+
+<script>
+    // --- DATABASE CONNECTION ---
+    const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --- AUTHENTICATION & DATA FETCHING ---
+    async function loadAccountData(session) {
+        document.getElementById('user-email').innerText = session.user.email;
+        
+        const { data: profile } = await client
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+        
+        if (profile) {
+            if (profile.is_admin === true) {
+                document.getElementById('nav-admin').style.display = 'inline';
+            }
+
+            // 0a. Name
+            document.getElementById('user-name').innerText = profile.full_name || 'N/A';
+
+            // 0b. Plan Type
+            document.getElementById('sub-type').innerText = profile.subscription_tag ? profile.subscription_tag.toUpperCase() : 'FREE';
+
+            // 1. Status Badge
+            const statusStr = profile.stripe_status || profile.status || 'Active';
+            const statusEl = document.getElementById('sub-status');
+            statusEl.innerText = statusStr.toUpperCase();
+            
+            if (statusStr.toLowerCase() === 'active') {
+                statusEl.className = 'badge badge-active';
+            } else {
+                statusEl.className = 'badge badge-canceled';
+            }
+
+            // 2. Price
+            document.getElementById('sub-price').innerText = profile.plan_price ? `$${profile.plan_price}/mo` : 'N/A';
+
+            // 3. Billing Date
+            if (profile.current_period_end) {
+                let dateVal = profile.current_period_end;
+                if (!isNaN(dateVal) && dateVal.toString().length === 10) dateVal = dateVal * 1000; 
+                
+                const dateObj = new Date(dateVal);
+                document.getElementById('sub-date').innerText = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            } else {
+                document.getElementById('sub-date').innerText = 'N/A';
+            }
+        }
+    }
+
+    // --- MANAGE SUBSCRIPTION REDIRECT ---
+    document.getElementById('manage-sub').addEventListener('click', () => {
+        window.open('https://billing.stripe.com/p/login/test_dRmcN58656TOaojaZf9fW00', '_blank');
+    });
+
+    client.auth.onAuthStateChange((event, session) => {
+        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+            if (!session) {
+                window.location.href = 'index.html';
+            } else {
+                loadAccountData(session);
+            }
+        }
+    });
+
+    // --- UPDATE PASSWORD LOGIC ---
+    document.getElementById('updatePwdBtn').addEventListener('click', async () => {
+        const newPwd = document.getElementById('new-password').value;
+        const confirmPwd = document.getElementById('confirm-password').value;
+        const statusText = document.getElementById('pwd-status');
+
+        if (!newPwd || newPwd.length < 6) {
+            statusText.style.color = '#f23645';
+            statusText.innerText = 'Password must be at least 6 characters.';
+            return;
+        }
+
+        if (newPwd !== confirmPwd) {
+            statusText.style.color = '#f23645';
+            statusText.innerText = 'Passwords do not match.';
+            return;
+        }
+
+        statusText.style.color = '#787b86';
+        statusText.innerText = 'Updating password...';
+
+        const { error } = await client.auth.updateUser({
+            password: newPwd
+        });
+
+        if (error) {
+            statusText.style.color = '#f23645';
+            statusText.innerText = 'Error: ' + error.message;
+        } else {
+            statusText.style.color = '#089981';
+            statusText.innerText = 'Password updated successfully!';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+            setTimeout(() => { statusText.innerText = ''; }, 3000);
+        }
+    });
+
+    // --- NAVIGATION LOGIC ---
+    const navTerminal = document.getElementById('nav-terminal');
+    const navAccount = document.getElementById('nav-account');
+    const viewTerminal = document.getElementById('terminal-view');
+    const viewAccount = document.getElementById('account-view');
+
+    navTerminal.addEventListener('click', () => {
+        navTerminal.classList.add('active');
+        navAccount.classList.remove('active');
+        viewTerminal.style.display = 'grid'; 
+        viewAccount.style.display = 'none';
+    });
+
+    navAccount.addEventListener('click', () => {
+        navAccount.classList.add('active');
+        navTerminal.classList.remove('active');
+        viewTerminal.style.display = 'none';
+        viewAccount.style.display = 'block'; 
+    });
+
+    // --- LOGOUT LOGIC ---
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await client.auth.signOut();
+        window.location.href = 'index.html';
+    });
+</script>
+
+</body>
+</html>
