@@ -160,7 +160,11 @@
 
 <script>
 
-
+window.addEventListener('message', (event) => {
+    if (event.data.height) {
+        document.querySelector('iframe').style.height = event.data.height + 'px';
+    }
+});
 
 
 
