@@ -15,12 +15,10 @@
         .nav-links a.active { color: #2962ff; font-weight: bold; }
 
         /* --- VIEW CONTAINERS --- */
-        
-        /* 1. Terminal Grid (Active by default) */
         #terminal-view { 
             display: grid; 
-            grid-template-columns: 2fr 1fr; /* Macro Engine takes 2/3, News takes 1/3 */
-            grid-template-rows: auto 1fr; /* Ticker auto-sizes, panels fill the rest */
+            grid-template-columns: 2fr 1fr; 
+            grid-template-rows: auto 1fr; 
             gap: 15px; 
             padding: 15px; 
             flex-grow: 1; 
@@ -28,7 +26,6 @@
             height: calc(100vh - 50px);
         }
 
-        /* 2. Account View (Hidden by default) */
         #account-view {
             display: none; 
             padding: 30px;
@@ -42,7 +39,6 @@
         .tick-up { color: #089981; }
         .tick-down { color: #f23645; }
 
-        /* Panels use flexbox to maintain equal heights and proper internal padding */
         .panel { background: #131722; border: 1px solid #2a2e39; border-radius: 4px; display: flex; flex-direction: column; overflow: hidden; }
         .panel-header { background: #1c2230; padding: 10px 15px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #2a2e39; color: #787b86; }
         .panel-content { padding: 15px; flex-grow: 1; overflow-y: auto; }
@@ -53,11 +49,24 @@
 
         /* --- ACCOUNT UI ELEMENTS --- */
         .account-container { max-width: 600px; margin: 0 auto; background: #131722; padding: 30px; border-radius: 8px; border: 1px solid #2a2e39; }
-        .account-container h2 { margin-top: 0; color: #fff; border-bottom: 1px solid #2a2e39; padding-bottom: 15px; }
-        .info-group { margin-bottom: 20px; }
-        .info-label { font-size: 12px; color: #787b86; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
-        .info-value { font-size: 16px; color: #fff; background: #1c2230; padding: 10px; border-radius: 4px; border: 1px solid #333; }
-        .badge { background: #089981; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .account-container h2 { margin-top: 0; color: #fff; border-bottom: 1px solid #2a2e39; padding-bottom: 15px; font-size: 18px; }
+        .account-container h3 { color: #fff; border-bottom: 1px solid #2a2e39; padding-bottom: 10px; margin-top: 35px; font-size: 15px; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-group { margin-bottom: 15px; }
+        .info-label { font-size: 11px; color: #787b86; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; letter-spacing: 0.5px; }
+        .info-value { font-size: 15px; color: #fff; background: #1c2230; padding: 12px; border-radius: 4px; border: 1px solid #2a2e39; }
+        
+        .badge { color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .badge-active { background: #089981; }
+        .badge-canceled { background: #f23645; }
+
+        /* Password Form */
+        .pwd-input { width: 100%; padding: 12px; box-sizing: border-box; margin-bottom: 15px; background: #1c2230; border: 1px solid #2a2e39; color: white; border-radius: 4px; }
+        .pwd-input:focus { outline: none; border-color: #2962ff; }
+        .btn-update { background: #2962ff; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
+        .btn-update:hover { background: #1e4bd8; }
+        #pwd-status { margin-top: 10px; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -72,7 +81,6 @@
 </div>
 
 <div id="terminal-view">
-    
     <div class="ticker-panel">
         <div>XAU/USD <span class="tick-up">▲ 2415.30</span></div>
         <div>AUD/USD <span class="tick-down">▼ 0.6542</span></div>
@@ -94,7 +102,6 @@
             <div class="news-item"><span class="news-tag">AUD</span> RBA maintains hawkish bias following stronger-than-expected inflation data.</div>
         </div>
     </div>
-
 </div>
 
 <div id="account-view">
@@ -102,47 +109,135 @@
         <h2>Subscription Details</h2>
         
         <div class="info-group">
-            <div class="info-label">Email Address</div>
+            <div class="info-label">Account Email</div>
             <div class="info-value" id="user-email">Loading...</div>
         </div>
 
-        <div class="info-group">
-            <div class="info-label">Access Level</div>
-            <div class="info-value">
-                <span class="badge" id="sub-status">Loading...</span>
+        <div class="info-grid">
+            <div class="info-group">
+                <div class="info-label">Status</div>
+                <div class="info-value" style="border: none; background: transparent; padding: 0; padding-top: 8px;">
+                    <span class="badge" id="sub-status">Loading...</span>
+                </div>
+            </div>
+            
+            <div class="info-group">
+                <div class="info-label">Subscription Price</div>
+                <div class="info-value" id="sub-price">Syncing...</div>
+            </div>
+
+            <div class="info-group">
+                <div class="info-label">Next Billing Date</div>
+                <div class="info-value" id="sub-date">Syncing...</div>
             </div>
         </div>
+
+        <h3>Security & Login</h3>
+        <div class="info-label">Update Password</div>
+        <input type="password" id="new-password" class="pwd-input" placeholder="Enter new password (min. 6 characters)">
+        <input type="password" id="confirm-password" class="pwd-input" placeholder="Confirm new password">
+        <button class="btn-update" id="updatePwdBtn">Save New Password</button>
+        <p id="pwd-status"></p>
+
     </div>
 </div>
 
 <script>
     // --- DATABASE CONNECTION ---
     const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
+    
+    // 1. MUST BE YOUR REAL KEY, OR IT WILL KICK YOU OUT!
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // --- AUTHENTICATION & DATA FETCHING ---
-    async function initApp() {
-        // 1. Verify Login
-        const { data: { user } } = await client.auth.getUser();
-        if (!user) {
-            window.location.href = 'index.html'; // Kick out if not logged in
+    async function loadAccountData(session) {
+        document.getElementById('user-email').innerText = session.user.email;
+        
+        const { data: profile } = await client
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+        
+        if (profile) {
+            // 1. Status Badge
+            const statusStr = profile.stripe_status || profile.status || 'Active';
+            const statusEl = document.getElementById('sub-status');
+            statusEl.innerText = statusStr.toUpperCase();
+            
+            if (statusStr.toLowerCase() === 'active') {
+                statusEl.className = 'badge badge-active';
+            } else {
+                statusEl.className = 'badge badge-canceled';
+            }
+
+            // 2. Price
+            document.getElementById('sub-price').innerText = profile.plan_price ? `$${profile.plan_price}/mo` : 'N/A';
+
+            // 3. Billing Date (Handles both standard dates and Stripe's Unix timestamps)
+            if (profile.current_period_end) {
+                // If Stripe sent a Unix timestamp (numbers only), multiply by 1000 for JS
+                let dateVal = profile.current_period_end;
+                if (!isNaN(dateVal) && dateVal.toString().length === 10) dateVal = dateVal * 1000; 
+                
+                const dateObj = new Date(dateVal);
+                document.getElementById('sub-date').innerText = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            } else {
+                document.getElementById('sub-date').innerText = 'N/A';
+            }
+        }
+    }
+
+    // BULLETPROOF GATEKEEPER
+    client.auth.onAuthStateChange((event, session) => {
+        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+            if (!session) {
+                window.location.href = 'index.html';
+            } else {
+                loadAccountData(session);
+            }
+        }
+    });
+
+    // --- UPDATE PASSWORD LOGIC ---
+    document.getElementById('updatePwdBtn').addEventListener('click', async () => {
+        const newPwd = document.getElementById('new-password').value;
+        const confirmPwd = document.getElementById('confirm-password').value;
+        const statusText = document.getElementById('pwd-status');
+
+        if (!newPwd || newPwd.length < 6) {
+            statusText.style.color = '#f23645';
+            statusText.innerText = 'Password must be at least 6 characters.';
             return;
         }
 
-        // 2. Pre-load Account Data
-        document.getElementById('user-email').innerText = user.email;
-        const { data: profile } = await client.from('profiles').select('*').eq('id', user.id).single();
-        
-        if (profile) {
-            const status = profile.subscription_tag || profile.status || 'Active Pro';
-            document.getElementById('sub-status').innerText = status;
-        } else {
-            document.getElementById('sub-status').innerText = 'Data Syncing...';
-            document.getElementById('sub-status').style.background = '#f23645';
+        if (newPwd !== confirmPwd) {
+            statusText.style.color = '#f23645';
+            statusText.innerText = 'Passwords do not match.';
+            return;
         }
-    }
-    initApp();
+
+        statusText.style.color = '#787b86';
+        statusText.innerText = 'Updating password...';
+
+        const { error } = await client.auth.updateUser({
+            password: newPwd
+        });
+
+        if (error) {
+            statusText.style.color = '#f23645';
+            statusText.innerText = 'Error: ' + error.message;
+        } else {
+            statusText.style.color = '#089981';
+            statusText.innerText = 'Password updated successfully!';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+            
+            // Clear success message after 3 seconds
+            setTimeout(() => { statusText.innerText = ''; }, 3000);
+        }
+    });
 
     // --- NAVIGATION LOGIC ---
     const navTerminal = document.getElementById('nav-terminal');
@@ -153,15 +248,13 @@
     navTerminal.addEventListener('click', () => {
         navTerminal.classList.add('active');
         navAccount.classList.remove('active');
-        
-        viewTerminal.style.display = 'grid'; // Grid forces the layout alignment 
+        viewTerminal.style.display = 'grid'; 
         viewAccount.style.display = 'none';
     });
 
     navAccount.addEventListener('click', () => {
         navAccount.classList.add('active');
         navTerminal.classList.remove('active');
-        
         viewTerminal.style.display = 'none';
         viewAccount.style.display = 'block'; 
     });
