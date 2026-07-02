@@ -1,35 +1,61 @@
 <!DOCTYPE html>
-<html>
-<body>
-    <div id="status" style="font-family: monospace; color: white; background: black; padding: 20px;">
-        Starting...
-    </div>
-
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #0f1115; color: white; font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; background: #1a1d23; color: white; }
+        th, td { padding: 12px; border: 1px solid #333; text-align: left; }
+        th { background: #242831; text-transform: uppercase; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <h2>User Management</h2>
+    <table id="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Tag</th>
+                <th>Status</th>
+                <th>Last Payment</th>
+                <th>Next Billing</th>
+                <th>Cancel?</th>
+            </tr>
+        </thead>
+        <tbody id="admin-body">
+            <tr><td colspan="7">Loading...</td></tr>
+        </tbody>
+    </table>
+
     <script>
-        const statusEl = document.getElementById('status');
-        statusEl.innerText = "Step 1: Initializing...";
+        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-        // MAKE SURE YOU REPLACE THESE
-        const url = 'https://fgidelsazisdqjfckerd.supabase.co';
-        const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
+        async function init() {
+            const tbody = document.getElementById('admin-body');
+            try {
+                // Fetching all columns explicitly
+                const { data, error } = await client.from('profiles').select('full_name, email, subscription_tag, sub_status, last_payment_date, current_period_end, cancel_at_period_end');
+                
+                if (error) throw error;
 
-        try {
-            if (url === 'YOUR_SUPABASE_URL') throw new Error("You forgot to paste your URL!");
-            
-            const client = supabase.createClient(url, key);
-            statusEl.innerText = "Step 2: Client created. Fetching...";
-
-            client.from('profiles').select('email').limit(1).then(({data, error}) => {
-                if (error) {
-                    statusEl.innerText = "ERROR FROM SUPABASE: " + error.message;
-                } else {
-                    statusEl.innerText = "SUCCESS! Data received: " + JSON.stringify(data);
-                }
-            });
-        } catch (e) {
-            statusEl.innerText = "CRASHED: " + e.message;
+                tbody.innerHTML = data.map(u => `
+                    <tr>
+                        <td>${u.full_name || '-'}</td>
+                        <td>${u.email || '-'}</td>
+                        <td>${u.subscription_tag || '-'}</td>
+                        <td>${u.sub_status || '-'}</td>
+                        <td>${u.last_payment_date ? new Date(u.last_payment_date).toLocaleDateString() : '-'}</td>
+                        <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
+                        <td>${u.cancel_at_period_end || '-'}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" style="color:red">Error: ${err.message}</td></tr>`;
+            }
         }
+        init();
     </script>
 </body>
 </html>
