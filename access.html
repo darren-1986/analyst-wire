@@ -2,53 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claim Terminal Access</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    <title>Claim Access</title>
+    <!-- Use a specific, stable version of the Supabase library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f0f0f; color: #ffffff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: #1a1a1a; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); width: 100%; max-width: 400px; text-align: center; }
-        h2 { margin-top: 0; color: #fff; }
-        p { color: #b3b3b3; margin-bottom: 25px; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #333; background: #0f0f0f; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #007bff; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; }
-        button:hover { background: #0056b3; }
+        body { font-family: sans-serif; background: #0f0f0f; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .container { background: #1a1a1a; padding: 30px; border-radius: 8px; text-align: center; }
+        input { padding: 10px; width: 250px; display: block; margin: 10px auto; color: black; }
+        button { padding: 10px 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Access Ready</h2>
-    <p>Your subscription is active. Enter your email below to receive your one-time login link.</p>
-    
-    <input type="email" id="email" placeholder="Email used for payment">
-    <button onclick="sendMagicLink()">Send Access Link</button>
+    <h2>Claim Terminal Access</h2>
+    <input type="email" id="email" placeholder="Enter your Stripe email">
+    <button id="claimBtn">Send Access Link</button>
+    <p id="status"></p>
 </div>
 
 <script>
-    // Initialize Supabase
-    const supabase = supabase.createClient('https://supabase.com/dashboard/project/fgidelsazisdqjfckerd', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    // 1. Initialize (REPLACE THESE KEYS)
+    const SUPABASE_URL = 'https://supabase.com/dashboard/project/fgidelsazisdqjfckerd';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
+    
+    // Add a check to ensure Supabase is loaded
+    if (typeof supabase === 'undefined') {
+        document.getElementById('status').innerText = "Error: Supabase library failed to load.";
+    } else {
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function sendMagicLink() {
-        const email = document.getElementById('email').value;
-        if (!email) return alert('Please enter your email');
+        // 2. Add event listener to the button
+        document.getElementById('claimBtn').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const status = document.getElementById('status');
+            
+            if (!email) {
+                alert('Please enter an email');
+                return;
+            }
 
-        // This triggers the email to the user
-        const { error } = await supabase.auth.signInWithOtp({
-            email: email,
-            options: {
-                // This redirects them to your terminal AFTER they click the email link
-                emailRedirectTo: 'https://your-username.github.io/terminal.html'
+            status.innerText = "Sending...";
+
+            const { error } = await client.auth.signInWithOtp({
+                email: email,
+                options: {
+                    emailRedirectTo: 'https://analyst-wire.pages.dev/'
+                }
+            });
+
+            if (error) {
+                status.innerText = "Error: " + error.message;
+            } else {
+                status.innerText = "Success! Check your email for the login link.";
             }
         });
-
-        if (error) {
-            alert('Error: ' + error.message);
-        } else {
-            alert('Check your inbox! We sent your secure access link.');
-        }
     }
 </script>
 
