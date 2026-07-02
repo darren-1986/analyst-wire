@@ -16,8 +16,9 @@
         th, td { padding: 12px; border: 1px solid #333; text-align: left; }
         th { background: #242831; text-transform: uppercase; font-size: 0.75rem; color: #888; }
         
-        .status-active { color: #089981; font-weight: bold; }
-        .status-inactive { color: #f23645; font-weight: bold; }
+        /* Force these colors */
+        .status-active { color: #089981 !important; font-weight: bold; }
+        .status-inactive { color: #f23645 !important; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -42,8 +43,9 @@
 </div>
 
 <script>
-    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-    let allUsers = []; // Store data globally for searching
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY
+');
+    let allUsers = []; 
 
     async function init() {
         const tbody = document.getElementById('admin-body');
@@ -61,16 +63,17 @@
     function renderTable(users) {
         const tbody = document.getElementById('admin-body');
         tbody.innerHTML = users.map(u => {
-            const status = (u.sub_status || 'active').toLowerCase();
-            const isActive = status === 'active';
+            const statusText = (u.sub_status || 'active').toLowerCase();
+            // Logic: Anything containing "cancel" or "inactive" becomes Red
+            const isRed = statusText.includes('cancel') || statusText.includes('inactive');
             
             return `
                 <tr>
                     <td>${u.full_name || '-'}</td>
                     <td>${u.email || '-'}</td>
                     <td>${u.subscription_tag || '-'}</td>
-                    <td class="${isActive ? 'status-active' : 'status-inactive'}">
-                        ${status.toUpperCase()}
+                    <td class="${isRed ? 'status-inactive' : 'status-active'}">
+                        ${statusText.toUpperCase()}
                     </td>
                     <td>${u.last_payment_date ? new Date(u.last_payment_date).toLocaleDateString() : '-'}</td>
                     <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
@@ -80,7 +83,6 @@
         }).join('');
     }
 
-    // Search Logic
     document.getElementById('search').addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         const filtered = allUsers.filter(u => 
