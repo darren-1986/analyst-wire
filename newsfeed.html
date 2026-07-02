@@ -157,11 +157,17 @@
             }));
         }).observe(feedContainer, { childList: true, subtree: true });
     </script>
+    
     <script>
     // Force the environment to believe it is the top-level window
     Object.defineProperty(window, 'self', {
         get: () => window.top
     });
+
+        window.addEventListener('load', () => {
+    const height = document.body.scrollHeight;
+    window.parent.postMessage({ height }, '*');
+});
 </script>
     <script src="https://www.livesquawk.com/partner_messenger/js/include_forexanalytic.js?v=3"></script>
 </body>
