@@ -26,7 +26,7 @@
     // 1. Correct API URL
     const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
     
-    // 2. ONLY USE THE 'anon' KEY HERE. DO NOT USE THE SERVICE ROLE KEY.
+    // 2. ANON Key
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5NDc1ODQsImV4cCI6MjA5ODUyMzU4NH0.BaxMA1FiXvyVDOsVNkN2tLNrkkCqsppVe54Sc8c0cYg';
 
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -44,6 +44,7 @@
         status.style.color = '#b3b3b3';
         status.innerText = 'Logging in...';
 
+        // Perform Login
         const { data, error } = await client.auth.signInWithPassword({ 
             email: email, 
             password: password 
@@ -54,10 +55,21 @@
             status.innerText = 'Error: ' + error.message;
         } else {
             status.style.color = '#28a745';
-            status.innerText = 'Success! Redirecting...';
+            status.innerText = 'Success! Checking permissions...';
             
-            // Redirect straight to your Cloudflare hosted terminal
-            window.location.href = 'https://analyst-wire.pages.dev/terminal.html';
+            // Check if user is admin
+            const { data: profile, error: profileError } = await client
+                .from('profiles')
+                .select('is_admin')
+                .eq('id', data.user.id)
+                .single();
+
+            // Redirect based on role
+            if (profile?.is_admin === true) {
+                window.location.href = '/admin.html';
+            } else {
+                window.location.href = 'https://analyst-wire.pages.dev/terminal.html';
+            }
         }
     });
 </script>
