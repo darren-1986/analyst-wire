@@ -5,7 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analyst Wire | Admin Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* CSS Styling */
+        body { background-color: #0f1115; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        .admin-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; background: #1a1d23; border-bottom: 1px solid #333; }
+        .admin-nav a { color: #089981; text-decoration: none; }
+        .admin-container { max-width: 1200px; margin: 40px auto; padding: 20px; background: #1a1d23; border-radius: 8px; border: 1px solid #333; }
+        
+        .admin-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .admin-table th, .admin-table td { padding: 16px; border-bottom: 1px solid #333; text-align: left; }
+        .admin-table th { color: #888; font-size: 0.85rem; text-transform: uppercase; }
+        .admin-table tr:hover { background-color: #242831; }
+
+        /* Conditional Status Styling */
+        .status-text { font-weight: bold; font-family: monospace; }
+        .status-active { color: #089981; }    /* Green */
+        .status-cancelled { color: #f23645; } /* Red */
+    </style>
 </head>
 <body>
 
@@ -15,12 +32,7 @@
     </nav>
 
     <main class="admin-container">
-        <section class="admin-header">
-            <h2>User Management</h2>
-            <div id="stats-summary">
-                </div>
-        </section>
-
+        <h2>User Management</h2>
         <table class="admin-table">
             <thead>
                 <tr>
@@ -28,17 +40,53 @@
                     <th>Status</th>
                     <th>Plan Price</th>
                     <th>Next Billing</th>
-                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="admin-table-body">
-                <tr>
-                    <td colspan="5" style="text-align: center;">Loading user data...</td>
-                </tr>
+                <tr><td colspan="4" style="text-align: center;">Loading data...</td></tr>
             </tbody>
         </table>
     </main>
 
-    <script src="admin.js"></script>
+    <script>
+        // 1. Initialize Supabase
+        const supabaseUrl = 'YOUR_SUPABASE_URL';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
+        const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 2. Fetch and Render Data
+        async function loadAdminTable() {
+            const { data: users, error } = await client
+                .from('profiles')
+                .select('email, stripe_status, plan_price, current_period_end');
+
+            if (error) {
+                console.error("Error loading users:", error);
+                document.getElementById('admin-table-body').innerHTML = '<tr><td colspan="4">Error loading data.</td></tr>';
+                return;
+            }
+
+            const tableBody = document.getElementById('admin-table-body');
+            
+            tableBody.innerHTML = users.map(user => {
+                const status = (user.stripe_status || 'inactive').toLowerCase();
+                const isCancelled = status.includes('cancel');
+                
+                return `
+                    <tr>
+                        <td>${user.email || 'N/A'}</td>
+                        <td class="status-text ${isCancelled ? 'status-cancelled' : 'status-active'}">
+                            ${status.toUpperCase()}
+                        </td>
+                        <td>$${parseFloat(user.plan_price || 0).toFixed(2)}</td>
+                        <td>${user.current_period_end ? new Date(user.current_period_end).toLocaleDateString() : 'N/A'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Run on load
+        loadAdminTable();
+    </script>
 </body>
 </html>
