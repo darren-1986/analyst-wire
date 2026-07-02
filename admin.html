@@ -2,62 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Analyst Wire | Admin Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { background-color: #0f1115; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
-        .admin-container { max-width: 1400px; margin: 0 auto; background: #1a1d23; padding: 20px; border-radius: 8px; }
-        .admin-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .admin-table th, .admin-table td { padding: 12px; border-bottom: 1px solid #333; text-align: left; font-size: 0.9rem; }
-        .status-active { color: #089981; font-weight: bold; }
-        .status-cancelled { color: #f23645; font-weight: bold; }
-    </style>
+    <style>body { background: #0f1115; color: white; font-family: sans-serif; padding: 20px; }</style>
 </head>
 <body>
+    <h1>Admin Panel</h1>
+    <div id="output" style="white-space: pre-wrap;">Loading...</div>
 
-<div class="admin-container">
-    <h2>User Management</h2>
-    <table class="admin-table">
-        <thead>
-            <tr>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Tag</th>
-                <th>Status</th>
-                <th>Last Payment</th>
-                <th>Next Billing</th>
-                <th>Cancel Status</th>
-            </tr>
-        </thead>
-        <tbody id="admin-table-body">
-            <tr><td colspan="7">Loading data...</td></tr>
-        </tbody>
-    </table>
-</div>
+    <script>
+        const supabase = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-<script>
-    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY
-');
-
-   const client = supabase.createClient(supabaseUrl, supabaseKey);
-
-    async function quickCheck() {
-        console.log("Attempting to fetch 1 row...");
-        try {
-            const { data, error } = await client.from('profiles').select('email').limit(1);
-            if (error) {
-                console.error("CRITICAL ERROR FOUND:", error);
-                document.body.innerHTML += `<h1 style="color:red">ERROR: ${error.message}</h1>`;
-            } else {
-                console.log("SUCCESS! Connection is working. Data:", data);
-                document.body.innerHTML += `<h1 style="color:green">SUCCESS! Connection is working.</h1>`;
+        async function init() {
+            const out = document.getElementById('output');
+            try {
+                // 1. Simple connection test
+                const { data, error } = await supabase.from('profiles').select('email').limit(5);
+                
+                if (error) throw error;
+                
+                out.innerText = "Connection Success! Data found:\n" + JSON.stringify(data, null, 2);
+            } catch (err) {
+                out.innerHTML = `<span style="color:red">ERROR: ${err.message}</span>`;
+                console.error("Full Debug:", err);
             }
-        } catch (err) {
-            console.error("FATAL SCRIPT ERROR:", err);
-            document.body.innerHTML += `<h1 style="color:red">FATAL ERROR: ${err.message}</h1>`;
         }
-    }
-    quickCheck();
-</script>
+        init();
+    </script>
 </body>
 </html>
