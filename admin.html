@@ -51,43 +51,54 @@
  <script>
     const supabaseUrl = 'https://fgidelsazisdqjfckerd.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
-    const client = supabase.createClient(supabaseUrl, supabaseKey);
+   const client = supabase.createClient(supabaseUrl, supabaseKey);
 
     async function loadAdminTable() {
-        const { data: { user } } = await client.auth.getUser();
+        const tableBody = document.getElementById('admin-table-body');
         
-        if (!user) {
-            console.error("No user logged in.");
-            return;
+        try {
+            // 1. Get user
+            const { data: { user }, error: authError } = await client.auth.getUser();
+            if (authError) throw new Error("Auth Error: " + authError.message);
+            if (!user) throw new Error("No user logged in.");
+
+            // 2. Check Admin Status
+            const { data: profile, error: profileError } = await client
+                .from('profiles')
+                .select('is_admin')
+                .eq('id', user.id)
+                .single();
+
+            if (profileError) throw new Error("Profile Fetch Error: " + profileError.message);
+            if (!profile || profile.is_admin !== true) throw new Error("Access Denied: Not an admin.");
+
+            // 3. Fetch All Users
+            const { data: users, error: fetchError } = await client
+                .from('profiles')
+                .select('email, stripe_status, plan_price, current_period_end');
+
+            if (fetchError) throw new Error("Fetch Users Error: " + fetchError.message);
+
+            // 4. Render
+            tableBody.innerHTML = users.map(user => {
+                const status = (user.stripe_status || 'inactive').toLowerCase();
+                const isCancelled = status.includes('cancel');
+                return `
+                    <tr>
+                        <td>${user.email || 'N/A'}</td>
+                        <td class="status-text ${isCancelled ? 'status-cancelled' : 'status-active'}">
+                            ${status.toUpperCase()}
+                        </td>
+                        <td>$${parseFloat(user.plan_price || 0).toFixed(2)}</td>
+                        <td>${user.current_period_end ? new Date(user.current_period_end).toLocaleDateString() : 'N/A'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+        } catch (err) {
+            console.error(err);
+            tableBody.innerHTML = `<tr><td colspan="4" style="color: #ff4d4d; text-align: center;">${err.message}</td></tr>`;
         }
-
-        console.log("Logged in as:", user.email, "ID:", user.id);
-
-        const { data: profile, error } = await client
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', user.id)
-            .single();
-
-        if (error) {
-            console.error("Database Error (Is RLS blocking this?):", error);
-            return;
-        }
-
-        console.log("Profile Data:", profile);
-
-        if (!profile || profile.is_admin !== true) {
-            console.warn("Access Denied: User is not an admin.");
-            alert("Access Denied: You are not marked as an admin.");
-            return;
-        }
-
-        // --- Fetch all data if admin ---
-        const { data: users, error: fetchError } = await client
-            .from('profiles')
-            .select('email, stripe_status, plan_price, current_period_end');
-            
-        // ... (rest of your rendering code)
     }
 
     loadAdminTable();
