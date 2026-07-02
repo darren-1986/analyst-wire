@@ -2,110 +2,70 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analyst Wire | Admin Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <style>
-        /* CSS Styling */
-        body { background-color: #0f1115; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
-        .admin-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; background: #1a1d23; border-bottom: 1px solid #333; }
-        .admin-nav a { color: #089981; text-decoration: none; }
-        .admin-container { max-width: 1200px; margin: 40px auto; padding: 20px; background: #1a1d23; border-radius: 8px; border: 1px solid #333; }
-        
+        body { background-color: #0f1115; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+        .admin-container { max-width: 1400px; margin: 0 auto; background: #1a1d23; padding: 20px; border-radius: 8px; }
         .admin-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .admin-table th, .admin-table td { padding: 16px; border-bottom: 1px solid #333; text-align: left; }
-        .admin-table th { color: #888; font-size: 0.85rem; text-transform: uppercase; }
-        .admin-table tr:hover { background-color: #242831; }
-
-        /* Conditional Status Styling */
-        .status-text { font-weight: bold; font-family: monospace; }
-        .status-active { color: #089981; }    /* Green */
-        .status-cancelled { color: #f23645; } /* Red */
+        .admin-table th, .admin-table td { padding: 12px; border-bottom: 1px solid #333; text-align: left; font-size: 0.9rem; }
+        .status-active { color: #089981; font-weight: bold; }
+        .status-cancelled { color: #f23645; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <nav class="admin-nav">
-        <h1>Analyst Wire Admin</h1>
-        <a href="/terminal.html">Back to Terminal</a>
-    </nav>
+<div class="admin-container">
+    <h2>User Management</h2>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Tag</th>
+                <th>Status</th>
+                <th>Last Payment</th>
+                <th>Next Billing</th>
+                <th>Cancel Status</th>
+            </tr>
+        </thead>
+        <tbody id="admin-table-body">
+            <tr><td colspan="7">Loading data...</td></tr>
+        </tbody>
+    </table>
+</div>
 
-    <main class="admin-container">
-        <h2>User Management</h2>
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Status</th>
-                    <th>Plan Price</th>
-                    <th>Next Billing</th>
-                </tr>
-            </thead>
-            <tbody id="admin-table-body">
-                <tr><td colspan="4" style="text-align: center;">Loading data...</td></tr>
-            </tbody>
-        </table>
-    </main>
-
- <script>
-    const supabaseUrl = 'https://fgidelsazisdqjfckerd.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
-   const client = supabase.createClient(supabaseUrl, supabaseKey);
+<script>
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY
+');
 
     async function loadAdminTable() {
         const tableBody = document.getElementById('admin-table-body');
         
-        // Helper to show errors in the UI
-        const reportError = (msg) => {
-            console.error(msg);
-            tableBody.innerHTML = `<tr><td colspan="5" style="color: #ff4d4d; text-align: center;">${msg}</td></tr>`;
-        };
+        // Fetch all 7 columns
+        const { data: users, error } = await client
+            .from('profiles')
+            .select('full_name, email, subscription_tag, sub_status, last_payment_date, current_period_end, cancel_at_period_end');
 
-        try {
-            console.log("Step 1: Checking Auth...");
-            const { data: { user }, error: authError } = await client.auth.getUser();
-            if (authError) throw new Error("Auth Error: " + authError.message);
-            if (!user) throw new Error("No user is logged in.");
+        if (error) { tableBody.innerHTML = `<tr><td colspan="7">Error: ${error.message}</td></tr>`; return; }
 
-            console.log("Step 2: Checking Admin status for:", user.email);
-            const { data: profile, error: profileError } = await client
-                .from('profiles')
-                .select('is_admin')
-                .eq('id', user.id)
-                .single();
-
-            if (profileError) throw new Error("Profile Fetch Error (RLS?): " + profileError.message);
-            if (!profile || profile.is_admin !== true) throw new Error("Access Denied: Not an admin.");
-
-            console.log("Step 3: Fetching All Users...");
-            const { data: users, error: fetchError } = await client
-                .from('profiles')
-                .select('full_name, email, stripe_status, plan_price, current_period_end');
-
-            if (fetchError) throw new Error("Data Fetch Error: " + fetchError.message);
+        tableBody.innerHTML = users.map(u => {
+            const isCancelled = (u.cancel_at_period_end || '').toLowerCase().includes('cancel');
             
-            console.log("Step 4: Rendering", users.length, "users.");
-
-            // Rendering Logic
-            tableBody.innerHTML = users.map(user => {
-                const isCancelled = (user.stripe_status || '').toLowerCase().includes('cancel');
-                return `
-                    <tr>
-                        <td>${user.full_name || 'No Name Set'}</td>
-                        <td>${user.email || 'N/A'}</td>
-                        <td class="status-text ${isCancelled ? 'status-cancelled' : 'status-active'}">
-                            ${(user.stripe_status || 'active').toUpperCase()}
-                        </td>
-                        <td>$${parseFloat(user.plan_price || 0).toFixed(2)}</td>
-                        <td>${user.current_period_end ? new Date(user.current_period_end).toLocaleDateString() : 'N/A'}</td>
-                    </tr>
-                `;
-            }).join('');
-
-        } catch (err) {
-            reportError(err.message);
-        }
+            return `
+                <tr>
+                    <td>${u.full_name || '-'}</td>
+                    <td>${u.email || '-'}</td>
+                    <td>${u.subscription_tag || '-'}</td>
+                    <td class="${isCancelled ? 'status-cancelled' : 'status-active'}">
+                        ${(u.sub_status || 'active').toUpperCase()}
+                    </td>
+                    <td>${u.last_payment_date ? new Date(u.last_payment_date).toLocaleDateString() : '-'}</td>
+                    <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
+                    <td>${u.cancel_at_period_end || 'False'}</td>
+                </tr>
+            `;
+        }).join('');
     }
 
     loadAdminTable();
