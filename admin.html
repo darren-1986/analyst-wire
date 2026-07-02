@@ -7,15 +7,15 @@
     <style>
         body { background: #0f1115; color: white; font-family: sans-serif; padding: 20px; }
         .admin-container { max-width: 1200px; margin: 0 auto; background: #1a1d23; border-radius: 8px; padding: 20px; }
-        
-        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .search-box { padding: 8px; width: 300px; background: #242831; border: 1px solid #333; color: white; border-radius: 4px; }
-        .nav-link { color: #089981; text-decoration: none; font-size: 0.9rem; }
-        
+
+        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-box, .filter-select { padding: 8px; background: #242831; border: 1px solid #333; color: white; border-radius: 4px; }
+        .nav-link { color: #089981; text-decoration: none; font-size: 0.9rem; margin-left: auto; }
+
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 12px; border: 1px solid #333; text-align: left; }
         th { background: #242831; text-transform: uppercase; font-size: 0.75rem; color: #888; }
-        
+
         .status-active { color: #089981; font-weight: bold; }
         .status-inactive { color: #f23645; font-weight: bold; }
     </style>
@@ -24,8 +24,24 @@
 
 <div class="admin-container">
     <div class="controls">
-        <h2>User Management</h2>
-        <input type="text" id="search" class="search-box" placeholder="Search by name or email...">
+        <h2 style="margin-right: 15px;">User Management</h2>
+        
+        <input type="text" id="search" class="search-box" placeholder="Search name or email...">
+        
+        <select id="filter-status" class="filter-select">
+            <option value="all">Status: All</option>
+            <option value="active">Active</option>
+            <option value="canceled">Canceled/Other</option>
+        </select>
+
+        <select id="filter-tag" class="filter-select">
+            <option value="all">Tag: All</option>
+            <option value="pro">Pro</option>
+            <option value="audio squawk">Audio Squawk</option>
+            <option value="newsfeed">Newsfeed</option>
+            <option value="free">Free</option>
+        </select>
+
         <a href="/terminal.html" class="nav-link">← Back to Terminal</a>
     </div>
 
@@ -47,77 +63,67 @@
     let allUsers = []; 
 
     async function init() {
-        const tbody = document.getElementById('admin-body');
-
-        // 1. GATEKEEPER: Check if user is logged in at all
         const { data: { session } } = await client.auth.getSession();
-        if (!session) {
-            window.location.href = 'index.html'; // Not logged in, send to login
-            return;
-        }
+        if (!session) { window.location.href = 'index.html'; return; }
 
-        // 2. ADMIN CHECK: Verify the logged-in user is actually an admin
-        const { data: profile } = await client
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', session.user.id)
-            .single();
+        const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
+        if (!profile || profile.is_admin !== true) { window.location.href = 'terminal.html'; return; }
 
-        if (!profile || profile.is_admin !== true) {
-            window.location.href = 'terminal.html'; // Logged in but not admin, send to terminal
-            return;
-        }
-
-        // 3. FETCH DATA (Only runs if checks pass)
         const { data, error } = await client.from('profiles').select('*');
-
-        if (error) {
-            tbody.innerHTML = `<tr><td colspan="7" style="color:red">Error: ${error.message}</td></tr>`;
-            return;
-        }
+        if (error) { document.getElementById('admin-body').innerHTML = `<tr><td colspan="7" style="color:red">Error: ${error.message}</td></tr>`; return; }
 
         allUsers = data;
         renderTable(allUsers);
     }
 
+    function applyFilters() {
+        const term = document.getElementById('search').value.toLowerCase();
+        const status = document.getElementById('filter-status').value;
+        const tag = document.getElementById('filter-tag').value;
+
+        const filtered = allUsers.filter(u => {
+            const matchesSearch = (u.full_name?.toLowerCase().includes(term)) || (u.email?.toLowerCase().includes(term));
+            
+            // Logic for status dropdown
+            let matchesStatus = true;
+            if (status === 'active') matchesStatus = (u.sub_status?.toLowerCase() === 'active');
+            if (status === 'canceled') matchesStatus = (u.sub_status?.toLowerCase() !== 'active');
+            
+            // Logic for tag dropdown
+            const matchesTag = (tag === 'all') || (u.subscription_tag?.toLowerCase() === tag);
+
+            return matchesSearch && matchesStatus && matchesTag;
+        });
+        renderTable(filtered);
+    }
+
     function renderTable(users) {
         const tbody = document.getElementById('admin-body');
-        tbody.innerHTML = users.map(u => {
+        tbody.innerHTML = users.length ? users.map(u => {
             const status = (u.sub_status || 'active').toLowerCase();
             const isActive = status === 'active';
-            const cancelVal = (u.cancel_at_period_end || '').toLowerCase();
-            const isCancelRed = cancelVal.includes('cancel');
+            const isCancelRed = (u.cancel_at_period_end || '').toLowerCase().includes('cancel');
 
             return `
                 <tr>
                     <td>${u.full_name || '-'}</td>
                     <td>${u.email || '-'}</td>
                     <td>${u.subscription_tag || '-'}</td>
-                    <td class="${isActive ? 'status-active' : 'status-inactive'}">
-                        ${status.toUpperCase()}
-                    </td>
+                    <td class="${isActive ? 'status-active' : 'status-inactive'}">${status.toUpperCase()}</td>
                     <td>${u.last_payment_date ? new Date(u.last_payment_date).toLocaleDateString() : '-'}</td>
                     <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
-                    <td class="${isCancelRed ? 'status-inactive' : 'status-active'}">
-                        ${u.cancel_at_period_end || 'False'}
-                    </td>
+                    <td class="${isCancelRed ? 'status-inactive' : 'status-active'}">${u.cancel_at_period_end || 'False'}</td>
                 </tr>
             `;
-        }).join('');
+        }).join('') : '<tr><td colspan="7" style="text-align:center;">No users found matching filters.</td></tr>';
     }
 
-    document.getElementById('search').addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        const filtered = allUsers.filter(u => 
-            (u.full_name?.toLowerCase().includes(term)) || 
-            (u.email?.toLowerCase().includes(term))
-        );
-        renderTable(filtered);
-    });
+    // Event Listeners for all three inputs
+    document.getElementById('search').addEventListener('input', applyFilters);
+    document.getElementById('filter-status').addEventListener('change', applyFilters);
+    document.getElementById('filter-tag').addEventListener('change', applyFilters);
 
-    // Run the gatekeeper check on load
     init();
 </script>
-
 </body>
 </html>
