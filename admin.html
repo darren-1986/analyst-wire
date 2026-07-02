@@ -42,20 +42,40 @@
 </div>
 
 <script>
-    // REPLACE THIS WITH YOUR REGENERATED ANON KEY
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-    
+
     let allUsers = []; 
 
     async function init() {
         const tbody = document.getElementById('admin-body');
+
+        // 1. GATEKEEPER: Check if user is logged in at all
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) {
+            window.location.href = 'index.html'; // Not logged in, send to login
+            return;
+        }
+
+        // 2. ADMIN CHECK: Verify the logged-in user is actually an admin
+        const { data: profile } = await client
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', session.user.id)
+            .single();
+
+        if (!profile || profile.is_admin !== true) {
+            window.location.href = 'terminal.html'; // Logged in but not admin, send to terminal
+            return;
+        }
+
+        // 3. FETCH DATA (Only runs if checks pass)
         const { data, error } = await client.from('profiles').select('*');
-        
+
         if (error) {
             tbody.innerHTML = `<tr><td colspan="7" style="color:red">Error: ${error.message}</td></tr>`;
             return;
         }
-        
+
         allUsers = data;
         renderTable(allUsers);
     }
@@ -65,11 +85,9 @@
         tbody.innerHTML = users.map(u => {
             const status = (u.sub_status || 'active').toLowerCase();
             const isActive = status === 'active';
-
-            // New Logic for Cancel Column
             const cancelVal = (u.cancel_at_period_end || '').toLowerCase();
             const isCancelRed = cancelVal.includes('cancel');
-            
+
             return `
                 <tr>
                     <td>${u.full_name || '-'}</td>
@@ -97,7 +115,9 @@
         renderTable(filtered);
     });
 
+    // Run the gatekeeper check on load
     init();
 </script>
+
 </body>
 </html>
