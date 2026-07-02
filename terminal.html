@@ -92,7 +92,7 @@
     <div class="panel">
         <div class="panel-header">Newsfeed</div>
         <div class="panel-content" id="macro-engine-container">
-            <iframe src="https://your-worker-url.workers.dev" ... ></iframe>
+            <iframe src="https://api.codetabs.com/v1/proxy?quest=https://newsfeedsquawk.yzz.me/newsfeed.html" width="100%" height="600px"></iframe>
         </div>
     </div>
 
@@ -156,41 +156,7 @@
 
 <script>
 
-    export default {
-  async fetch(request) {
-    const target = "https://newsfeedsquawk.yzz.me/newsfeed.html";
-    const response = await fetch(target);
-    const html = await response.text();
-    
-    // Return the HTML with CORS headers so your frontend can read it
-    return new Response(html, {
-      headers: {
-        "Content-Type": "text/html",
-        "Access-Control-Allow-Origin": "*" 
-      }
-    });
-  }
-};
-    async function loadNews() {
-  const proxyUrl = "https://your-worker-name.workers.dev";
-  
-  const response = await fetch(proxyUrl);
-  const htmlText = await response.text();
-  
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(htmlText, 'text/html');
-  
-  // Now you can filter the data based on your requirements
-  const items = Array.from(doc.querySelectorAll('.news-item-selector')); 
-  const filtered = items.filter(el => 
-    /gold|australia|usa/i.test(el.innerText)
-  );
 
-  const display = document.getElementById('news-container');
-  filtered.forEach(item => display.appendChild(item));
-}
-
-loadNews();
 
 
 
