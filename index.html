@@ -1,45 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Terminal Access</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/auth-ui-web@1.5.2/dist/index.js"></script>
-    <style>
-        body { background: #0f0f0f; color: white; display: flex; justify-content: center; padding-top: 50px; }
-        #auth-container { width: 100%; max-width: 400px; padding: 20px; background: #1a1a1a; border-radius: 8px; }
-    </style>
+    <title>Login Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-    <div id="auth-container">
-        <h2>Terminal Access</h2>
-        <div id="supabase-auth-ui"></div>
-    </div>
+    <h2>Terminal Login</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="signIn()">Login</button>
 
     <script>
-        // REPLACE THESE WITH YOUR ACTUAL KEYS FROM SUPABASE DASHBOARD
-        const SUPABASE_URL = 'https://supabase.com/dashboard/project/fgidelsazisdqjfckerd';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY
-';
+        const supabase = supabase.createClient('https://supabase.com/dashboard/project/fgidelsazisdqjfckerd', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-        try {
-            const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            const { Auth } = window.supabaseAuthUI;
-            const ui = new Auth(supabase);
-
-            ui.render('#supabase-auth-ui', {
-                providers: ['google', 'email'],
-            });
-
-            supabase.auth.onAuthStateChange((event, session) => {
-                if (event === 'SIGNED_IN') {
-                    window.location.href = '/terminal.html';
-                }
-            });
-        } catch (e) {
-            console.error("Auth failed to load:", e);
-            document.body.innerHTML = "<h1>Error: Check Browser Console</h1>";
+        async function signIn() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            
+            if (error) {
+                alert('Error: ' + error.message);
+            } else {
+                window.location.href = '/terminal.html';
+            }
         }
     </script>
 </body>
