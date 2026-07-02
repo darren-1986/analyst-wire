@@ -54,46 +54,34 @@
    const client = supabase.createClient(supabaseUrl, supabaseKey);
 
     async function loadAdminTable() {
-        const tableBody = document.getElementById('admin-table-body');
+    const tableBody = document.getElementById('admin-table-body');
+    
+    // Simple direct fetch from profiles
+    const { data: users, error } = await client
+        .from('profiles')
+        .select('full_name, email, stripe_status, plan_price, current_period_end');
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    tableBody.innerHTML = users.map(user => {
+        const isCancelled = (user.stripe_status || '').toLowerCase().includes('cancel');
         
-        try {
-            // 1. Get user
-            const { data: { user }, error: authError } = await client.auth.getUser();
-            if (authError) throw new Error("Auth Error: " + authError.message);
-            if (!user) throw new Error("No user logged in.");
-
-            // 2. Check Admin Status
-            const { data: profile, error: profileError } = await client
-                .from('profiles')
-                .select('is_admin')
-                .eq('id', user.id)
-                .single();
-
-            if (profileError) throw new Error("Profile Fetch Error: " + profileError.message);
-            if (!profile || profile.is_admin !== true) throw new Error("Access Denied: Not an admin.");
-
-            // 3. Fetch All Users
-            const { data: users, error: fetchError } = await client
-                .from('profiles')
-                .select('email, stripe_status, plan_price, current_period_end');
-
-            if (fetchError) throw new Error("Fetch Users Error: " + fetchError.message);
-
-            // 4. Render
-            tableBody.innerHTML = users.map(user => {
-                const status = (user.stripe_status || 'inactive').toLowerCase();
-                const isCancelled = status.includes('cancel');
-                return `
-                    <tr>
-                        <td>${user.email || 'N/A'}</td>
-                        <td class="status-text ${isCancelled ? 'status-cancelled' : 'status-active'}">
-                            ${status.toUpperCase()}
-                        </td>
-                        <td>$${parseFloat(user.plan_price || 0).toFixed(2)}</td>
-                        <td>${user.current_period_end ? new Date(user.current_period_end).toLocaleDateString() : 'N/A'}</td>
-                    </tr>
-                `;
-            }).join('');
+        return `
+            <tr>
+                <td>${user.full_name || 'No Name Set'}</td>
+                <td>${user.email || 'N/A'}</td>
+                <td class="status-text ${isCancelled ? 'status-cancelled' : 'status-active'}">
+                    ${(user.stripe_status || 'active').toUpperCase()}
+                </td>
+                <td>$${parseFloat(user.plan_price || 0).toFixed(2)}</td>
+                <td>${user.current_period_end ? new Date(user.current_period_end).toLocaleDateString() : 'N/A'}</td>
+            </tr>
+        `;
+    }).join('');
+}
 
         } catch (err) {
             console.error(err);
