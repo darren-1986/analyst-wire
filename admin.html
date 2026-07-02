@@ -1,80 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Analyst Wire | Admin Portal</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <style>
-        /* Stable Styling */
-        body { background-color: #0f1115; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
-        .admin-container { max-width: 1000px; margin: 0 auto; background: #1a1d23; border-radius: 8px; border: 1px solid #333; padding: 20px; }
-        
-        .admin-table { width: 100%; border-collapse: collapse; }
-        .admin-table th, .admin-table td { padding: 16px; border-bottom: 1px solid #333; text-align: left; }
-        .admin-table th { color: #888; font-size: 0.85rem; text-transform: uppercase; }
-
-        /* Status Styling */
-        .status-active { color: #089981; font-weight: bold; }
-        .status-cancelled { color: #f23645; font-weight: bold; }
-    </style>
-</head>
+<html>
 <body>
-
-    <div class="admin-container">
-        <h2>User Management</h2>
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Status</th>
-                    <th>Plan Price</th>
-                    <th>Next Billing</th>
-                </tr>
-            </thead>
-            <tbody id="admin-table-body">
-                <tr><td colspan="4" style="text-align: center;">Loading...</td></tr>
-            </tbody>
-        </table>
+    <div id="status" style="font-family: monospace; color: white; background: black; padding: 20px;">
+        Starting...
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // REPLACE WITH YOUR KEYS
-        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY
+        const statusEl = document.getElementById('status');
+        statusEl.innerText = "Step 1: Initializing...";
 
-');
+        // MAKE SURE YOU REPLACE THESE
+        const url = 'https://fgidelsazisdqjfckerd.supabase.co';
+        const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
 
-        async function loadAdminTable() {
-            const tableBody = document.getElementById('admin-table-body');
+        try {
+            if (url === 'YOUR_SUPABASE_URL') throw new Error("You forgot to paste your URL!");
             
-            // Fetching the reliable columns
-            const { data: users, error } = await client
-                .from('profiles')
-                .select('email, stripe_status, plan_price, current_period_end');
+            const client = supabase.createClient(url, key);
+            statusEl.innerText = "Step 2: Client created. Fetching...";
 
-            if (error) {
-                tableBody.innerHTML = `<tr><td colspan="4" style="color:red; text-align:center;">Error: ${error.message}</td></tr>`;
-                return;
-            }
-
-            tableBody.innerHTML = users.map(user => {
-                const status = (user.stripe_status || 'active').toLowerCase();
-                const isCancelled = status.includes('cancel');
-                
-                return `
-                    <tr>
-                        <td>${user.email || 'N/A'}</td>
-                        <td class="${isCancelled ? 'status-cancelled' : 'status-active'}">
-                            ${status.toUpperCase()}
-                        </td>
-                        <td>$${parseFloat(user.plan_price || 0).toFixed(2)}</td>
-                        <td>${user.current_period_end ? new Date(user.current_period_end).toLocaleDateString() : 'N/A'}</td>
-                    </tr>
-                `;
-            }).join('');
+            client.from('profiles').select('email').limit(1).then(({data, error}) => {
+                if (error) {
+                    statusEl.innerText = "ERROR FROM SUPABASE: " + error.message;
+                } else {
+                    statusEl.innerText = "SUCCESS! Data received: " + JSON.stringify(data);
+                }
+            });
+        } catch (e) {
+            statusEl.innerText = "CRASHED: " + e.message;
         }
-
-        loadAdminTable();
     </script>
 </body>
 </html>
