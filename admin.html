@@ -39,46 +39,38 @@
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY
 ');
 
-    async function loadAdminTable() {
-        const tableBody = document.getElementById('admin-table-body');
-        
+    console.log("Starting script...");
+
+    if (supabaseUrl === 'YOUR_SUPABASE_URL') {
+        alert("CRITICAL ERROR: You forgot to replace YOUR_SUPABASE_URL in the script!");
+    }
+
+    const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function testConnection() {
         try {
-            console.log("Fetching user data...");
+            console.log("Attempting to connect to Supabase...");
             
-            // We use .select('*') temporarily to catch any column errors
-            const { data: users, error } = await client
+            // Try a simple health check query
+            const { data, error } = await client
                 .from('profiles')
-                .select('*'); 
+                .select('email')
+                .limit(1);
 
-            if (error) throw new Error("Supabase Error: " + error.message);
-            
-            console.log("Data received:", users);
-
-            tableBody.innerHTML = users.map(u => {
-                const isCancelled = (u.cancel_at_period_end || '').toLowerCase().includes('cancel');
-                
-                return `
-                    <tr>
-                        <td>${u.full_name || '-'}</td>
-                        <td>${u.email || '-'}</td>
-                        <td>${u.subscription_tag || '-'}</td>
-                        <td class="${isCancelled ? 'status-cancelled' : 'status-active'}">
-                            ${(u.sub_status || 'active').toUpperCase()}
-                        </td>
-                        <td>${u.last_payment_date ? new Date(u.last_payment_date).toLocaleDateString() : '-'}</td>
-                        <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
-                        <td>${u.cancel_at_period_end || 'False'}</td>
-                    </tr>
-                `;
-            }).join('');
-
+            if (error) {
+                console.error("SUPABASE ERROR:", error);
+                alert("Supabase Error! Check the browser console (F12).");
+            } else {
+                console.log("SUCCESS! Connection works. Data received:", data);
+                alert("Success! Check the console for the data.");
+            }
         } catch (err) {
-            console.error("Full Error:", err);
-            tableBody.innerHTML = `<tr><td colspan="7" style="color: #ff4d4d; text-align: center;">Error: ${err.message}</td></tr>`;
+            console.error("FATAL ERROR:", err);
+            alert("Fatal error! Check the console.");
         }
     }
 
-    loadAdminTable();
+    testConnection();
 </script>
 </body>
 </html>
