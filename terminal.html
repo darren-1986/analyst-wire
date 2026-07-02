@@ -61,11 +61,12 @@
         .badge-active { background: #089981; }
         .badge-canceled { background: #f23645; }
 
-        /* Password Form */
+        /* Buttons & Forms */
         .pwd-input { width: 100%; padding: 12px; box-sizing: border-box; margin-bottom: 15px; background: #1c2230; border: 1px solid #2a2e39; color: white; border-radius: 4px; }
         .pwd-input:focus { outline: none; border-color: #2962ff; }
         .btn-update { background: #2962ff; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
         .btn-update:hover { background: #1e4bd8; }
+        .btn-secondary { background: #333; border: 1px solid #2a2e39; margin-top: 10px; }
         #pwd-status { margin-top: 10px; font-size: 13px; }
     </style>
 </head>
@@ -116,22 +117,26 @@
 
         <div class="info-grid">
             <div class="info-group">
+                <div class="info-label">Plan Type</div>
+                <div class="info-value" id="sub-type">Loading...</div>
+            </div>
+            <div class="info-group">
                 <div class="info-label">Status</div>
                 <div class="info-value" style="border: none; background: transparent; padding: 0; padding-top: 8px;">
                     <span class="badge" id="sub-status">Loading...</span>
                 </div>
             </div>
-            
             <div class="info-group">
                 <div class="info-label">Subscription Price</div>
                 <div class="info-value" id="sub-price">Syncing...</div>
             </div>
-
             <div class="info-group">
                 <div class="info-label">Next Billing Date</div>
                 <div class="info-value" id="sub-date">Syncing...</div>
             </div>
         </div>
+
+        <button class="btn-update btn-secondary" id="manage-sub">Manage Subscription via Stripe</button>
 
         <h3>Security & Login</h3>
         <div class="info-label">Update Password</div>
@@ -146,8 +151,6 @@
 <script>
     // --- DATABASE CONNECTION ---
     const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
-    
-    // REPLACE WITH YOUR REGENERATED ANON KEY
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -162,10 +165,12 @@
             .single();
         
         if (profile) {
-            // Reveal Admin Link if user is admin
             if (profile.is_admin === true) {
                 document.getElementById('nav-admin').style.display = 'inline';
             }
+
+            // 0. Plan Type
+            document.getElementById('sub-type').innerText = profile.subscription_tag ? profile.subscription_tag.toUpperCase() : 'FREE';
 
             // 1. Status Badge
             const statusStr = profile.stripe_status || profile.status || 'Active';
@@ -194,7 +199,11 @@
         }
     }
 
-    // BULLETPROOF GATEKEEPER
+    // --- MANAGE SUBSCRIPTION REDIRECT ---
+    document.getElementById('manage-sub').addEventListener('click', () => {
+        window.open('YOUR_STRIPE_PORTAL_LINK_HERE', '_blank');
+    });
+
     client.auth.onAuthStateChange((event, session) => {
         if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
             if (!session) {
@@ -238,7 +247,6 @@
             statusText.innerText = 'Password updated successfully!';
             document.getElementById('new-password').value = '';
             document.getElementById('confirm-password').value = '';
-            
             setTimeout(() => { statusText.innerText = ''; }, 3000);
         }
     });
