@@ -158,19 +158,44 @@
 
     export default {
   async fetch(request) {
-    const url = "https://newsfeedsquawk.yzz.me/newsfeed.html";
-    const response = await fetch(url);
-
-    // Copy the response to modify headers
-    let newResponse = new Response(response.body, response);
-
-    // Strip out the security headers that block iframes
-    newResponse.headers.delete("X-Frame-Options");
-    newResponse.headers.delete("Content-Security-Policy");
-
-    return newResponse;
+    const target = "https://newsfeedsquawk.yzz.me/newsfeed.html";
+    const response = await fetch(target);
+    const html = await response.text();
+    
+    // Return the HTML with CORS headers so your frontend can read it
+    return new Response(html, {
+      headers: {
+        "Content-Type": "text/html",
+        "Access-Control-Allow-Origin": "*" 
+      }
+    });
   }
 };
+    async function loadNews() {
+  const proxyUrl = "https://your-worker-name.workers.dev";
+  
+  const response = await fetch(proxyUrl);
+  const htmlText = await response.text();
+  
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlText, 'text/html');
+  
+  // Now you can filter the data based on your requirements
+  const items = Array.from(doc.querySelectorAll('.news-item-selector')); 
+  const filtered = items.filter(el => 
+    /gold|australia|usa/i.test(el.innerText)
+  );
+
+  const display = document.getElementById('news-container');
+  filtered.forEach(item => display.appendChild(item));
+}
+
+loadNews();
+
+
+
+
+    
     // --- DATABASE CONNECTION ---
     const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
