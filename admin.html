@@ -2,28 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>User Management</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background: #0f1115; color: white; font-family: sans-serif; padding: 20px; }
-        .controls { display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; }
-        .search-box { padding: 8px; width: 300px; background: #242831; border: 1px solid #333; color: white; border-radius: 4px; }
         table { width: 100%; border-collapse: collapse; background: #1a1d23; color: white; }
         th, td { padding: 12px; border: 1px solid #333; text-align: left; }
         th { background: #242831; text-transform: uppercase; font-size: 0.8rem; }
-        
-        /* Status Colors */
-        .status-active { color: #089981; font-weight: bold; }
-        .status-inactive { color: #f23645; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="controls">
-        <h2>User Management</h2>
-        <input type="text" id="search" class="search-box" placeholder="Search by name or email...">
-        <a href="terminal.html" style="color: #089981; text-decoration: none;">← Back to Terminal</a>
-    </div>
-
+    <h2>User Management</h2>
     <table id="admin-table">
         <thead>
             <tr>
@@ -44,7 +32,6 @@
     <script>
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY
 ');
-        let allUsers = [];
 
         async function init() {
             const tbody = document.getElementById('admin-body');
@@ -52,45 +39,29 @@
                 const { data, error } = await client.from('profiles').select('full_name, email, subscription_tag, sub_status, last_payment_date, current_period_end, cancel_at_period_end');
                 
                 if (error) throw error;
-                
-                allUsers = data;
-                renderTable(allUsers);
+
+                tbody.innerHTML = data.map(u => {
+                    // Logic for colors
+                    const status = (u.sub_status || '').toLowerCase();
+                    const isInactive = status.includes('cancel') || status.includes('inactive');
+                    const color = isInactive ? '#f23645' : '#089981';
+
+                    return `
+                        <tr>
+                            <td>${u.full_name || '-'}</td>
+                            <td>${u.email || '-'}</td>
+                            <td>${u.subscription_tag || '-'}</td>
+                            <td style="color: ${color}; font-weight: bold;">${u.sub_status || '-'}</td>
+                            <td>${u.last_payment_date ? new Date(u.last_payment_date).toLocaleDateString() : '-'}</td>
+                            <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
+                            <td>${u.cancel_at_period_end || '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
             } catch (err) {
                 tbody.innerHTML = `<tr><td colspan="7" style="color:red">Error: ${err.message}</td></tr>`;
             }
         }
-
-        function renderTable(data) {
-            const tbody = document.getElementById('admin-body');
-            tbody.innerHTML = data.map(u => {
-                const status = (u.sub_status || 'active').toLowerCase();
-                // Red for cancelled/inactive, Green for active
-                const statusClass = (status.includes('cancel') || status.includes('inactive')) ? 'status-inactive' : 'status-active';
-                
-                return `
-                    <tr>
-                        <td>${u.full_name || '-'}</td>
-                        <td>${u.email || '-'}</td>
-                        <td>${u.subscription_tag || '-'}</td>
-                        <td class="${statusClass}">${status.toUpperCase()}</td>
-                        <td>${u.last_payment_date ? new Date(u.last_payment_date).toLocaleDateString() : '-'}</td>
-                        <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
-                        <td>${u.cancel_at_period_end || '-'}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // Search logic
-        document.getElementById('search').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtered = allUsers.filter(u => 
-                (u.full_name?.toLowerCase().includes(term)) || 
-                (u.email?.toLowerCase().includes(term))
-            );
-            renderTable(filtered);
-        });
-
         init();
     </script>
 </body>
