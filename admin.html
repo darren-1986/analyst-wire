@@ -42,30 +42,40 @@
     async function loadAdminTable() {
         const tableBody = document.getElementById('admin-table-body');
         
-        // Fetch all 7 columns
-        const { data: users, error } = await client
-            .from('profiles')
-            .select('full_name, email, subscription_tag, sub_status, last_payment_date, current_period_end, cancel_at_period_end');
-
-        if (error) { tableBody.innerHTML = `<tr><td colspan="7">Error: ${error.message}</td></tr>`; return; }
-
-        tableBody.innerHTML = users.map(u => {
-            const isCancelled = (u.cancel_at_period_end || '').toLowerCase().includes('cancel');
+        try {
+            console.log("Fetching user data...");
             
-            return `
-                <tr>
-                    <td>${u.full_name || '-'}</td>
-                    <td>${u.email || '-'}</td>
-                    <td>${u.subscription_tag || '-'}</td>
-                    <td class="${isCancelled ? 'status-cancelled' : 'status-active'}">
-                        ${(u.sub_status || 'active').toUpperCase()}
-                    </td>
-                    <td>${u.last_payment_date ? new Date(u.last_payment_date).toLocaleDateString() : '-'}</td>
-                    <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
-                    <td>${u.cancel_at_period_end || 'False'}</td>
-                </tr>
-            `;
-        }).join('');
+            // We use .select('*') temporarily to catch any column errors
+            const { data: users, error } = await client
+                .from('profiles')
+                .select('*'); 
+
+            if (error) throw new Error("Supabase Error: " + error.message);
+            
+            console.log("Data received:", users);
+
+            tableBody.innerHTML = users.map(u => {
+                const isCancelled = (u.cancel_at_period_end || '').toLowerCase().includes('cancel');
+                
+                return `
+                    <tr>
+                        <td>${u.full_name || '-'}</td>
+                        <td>${u.email || '-'}</td>
+                        <td>${u.subscription_tag || '-'}</td>
+                        <td class="${isCancelled ? 'status-cancelled' : 'status-active'}">
+                            ${(u.sub_status || 'active').toUpperCase()}
+                        </td>
+                        <td>${u.last_payment_date ? new Date(u.last_payment_date).toLocaleDateString() : '-'}</td>
+                        <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
+                        <td>${u.cancel_at_period_end || 'False'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+        } catch (err) {
+            console.error("Full Error:", err);
+            tableBody.innerHTML = `<tr><td colspan="7" style="color: #ff4d4d; text-align: center;">Error: ${err.message}</td></tr>`;
+        }
     }
 
     loadAdminTable();
