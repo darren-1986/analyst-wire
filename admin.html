@@ -48,45 +48,57 @@
         </table>
     </main>
 
-    <script>
-        // 1. Initialize Supabase
-        const supabaseUrl = 'https://fgidelsazisdqjfckerd.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
-        const client = supabase.createClient(supabaseUrl, supabaseKey);
+  <script>
+    const supabaseUrl = 'https://fgidelsazisdqjfckerd.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
+    const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 2. Fetch and Render Data
-        async function loadAdminTable() {
-            const { data: users, error } = await client
-                .from('profiles')
-                .select('email, stripe_status, plan_price, current_period_end');
+    async function loadAdminTable() {
+        // 1. Get the current user
+        const { data: { user } } = await client.auth.getUser();
+        
+        // 2. Check if the current user is an admin
+        const { data: profile } = await client
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single();
 
-            if (error) {
-                console.error("Error loading users:", error);
-                document.getElementById('admin-table-body').innerHTML = '<tr><td colspan="4">Error loading data.</td></tr>';
-                return;
-            }
-
-            const tableBody = document.getElementById('admin-table-body');
-            
-            tableBody.innerHTML = users.map(user => {
-                const status = (user.stripe_status || 'inactive').toLowerCase();
-                const isCancelled = status.includes('cancel');
-                
-                return `
-                    <tr>
-                        <td>${user.email || 'N/A'}</td>
-                        <td class="status-text ${isCancelled ? 'status-cancelled' : 'status-active'}">
-                            ${status.toUpperCase()}
-                        </td>
-                        <td>$${parseFloat(user.plan_price || 0).toFixed(2)}</td>
-                        <td>${user.current_period_end ? new Date(user.current_period_end).toLocaleDateString() : 'N/A'}</td>
-                    </tr>
-                `;
-            }).join('');
+        if (!profile || !profile.is_admin) {
+            alert("Access Denied: Admin only.");
+            window.location.href = '/terminal.html'; // Redirect non-admins
+            return;
         }
 
-        // Run on load
-        loadAdminTable();
-    </script>
+        // 3. If admin, fetch all users
+        const { data: users, error } = await client
+            .from('profiles')
+            .select('email, stripe_status, plan_price, current_period_end');
+
+        if (error) {
+            console.error("Error loading users:", error);
+            return;
+        }
+
+        // 4. Render
+        const tableBody = document.getElementById('admin-table-body');
+        tableBody.innerHTML = users.map(user => {
+            const status = (user.stripe_status || 'inactive').toLowerCase();
+            const isCancelled = status.includes('cancel');
+            return `
+                <tr>
+                    <td>${user.email || 'N/A'}</td>
+                    <td class="status-text ${isCancelled ? 'status-cancelled' : 'status-active'}">
+                        ${status.toUpperCase()}
+                    </td>
+                    <td>$${parseFloat(user.plan_price || 0).toFixed(2)}</td>
+                    <td>${user.current_period_end ? new Date(user.current_period_end).toLocaleDateString() : 'N/A'}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    loadAdminTable();
+</script>
 </body>
 </html>
