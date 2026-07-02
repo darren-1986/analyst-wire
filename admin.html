@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyst Wire | Admin Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="admin-nav">
+        <h1>Analyst Wire Admin</h1>
+        <a href="/terminal.html">Back to Terminal</a>
+    </nav>
+
+    <main class="admin-container">
+        <section class="admin-header">
+            <h2>User Management</h2>
+            <div id="stats-summary">
+                </div>
+        </section>
+
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Plan Price</th>
+                    <th>Next Billing</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="admin-table-body">
+                <tr>
+                    <td colspan="5" style="text-align: center;">Loading user data...</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <script src="admin.js"></script>
+</body>
+</html>
