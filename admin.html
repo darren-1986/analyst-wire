@@ -39,38 +39,25 @@
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY
 ');
 
-    console.log("Starting script...");
+   const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-    if (supabaseUrl === 'YOUR_SUPABASE_URL') {
-        alert("CRITICAL ERROR: You forgot to replace YOUR_SUPABASE_URL in the script!");
-    }
-
-    const client = supabase.createClient(supabaseUrl, supabaseKey);
-
-    async function testConnection() {
+    async function quickCheck() {
+        console.log("Attempting to fetch 1 row...");
         try {
-            console.log("Attempting to connect to Supabase...");
-            
-            // Try a simple health check query
-            const { data, error } = await client
-                .from('profiles')
-                .select('email')
-                .limit(1);
-
+            const { data, error } = await client.from('profiles').select('email').limit(1);
             if (error) {
-                console.error("SUPABASE ERROR:", error);
-                alert("Supabase Error! Check the browser console (F12).");
+                console.error("CRITICAL ERROR FOUND:", error);
+                document.body.innerHTML += `<h1 style="color:red">ERROR: ${error.message}</h1>`;
             } else {
-                console.log("SUCCESS! Connection works. Data received:", data);
-                alert("Success! Check the console for the data.");
+                console.log("SUCCESS! Connection is working. Data:", data);
+                document.body.innerHTML += `<h1 style="color:green">SUCCESS! Connection is working.</h1>`;
             }
         } catch (err) {
-            console.error("FATAL ERROR:", err);
-            alert("Fatal error! Check the console.");
+            console.error("FATAL SCRIPT ERROR:", err);
+            document.body.innerHTML += `<h1 style="color:red">FATAL ERROR: ${err.message}</h1>`;
         }
     }
-
-    testConnection();
+    quickCheck();
 </script>
 </body>
 </html>
