@@ -1,68 +1,122 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
+
         body { background: #0f1115; color: white; font-family: sans-serif; padding: 20px; }
+
         table { width: 100%; border-collapse: collapse; background: #1a1d23; color: white; }
+
         th, td { padding: 12px; border: 1px solid #333; text-align: left; }
+
         th { background: #242831; text-transform: uppercase; font-size: 0.8rem; }
+
     </style>
+
 </head>
+
 <body>
+
     <h2>User Management</h2>
+
     <table id="admin-table">
+
         <thead>
+
             <tr>
+
                 <th>Name</th>
+
                 <th>Email</th>
+
                 <th>Tag</th>
+
                 <th>Status</th>
+
                 <th>Last Payment</th>
+
                 <th>Next Billing</th>
+
                 <th>Cancel?</th>
+
             </tr>
+
         </thead>
+
         <tbody id="admin-body">
+
             <tr><td colspan="7">Loading...</td></tr>
+
         </tbody>
+
     </table>
 
+
+
     <script>
-        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY
-');
+
+        const client = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+
+
 
         async function init() {
+
             const tbody = document.getElementById('admin-body');
+
             try {
+
+                // Fetching all columns explicitly
+
                 const { data, error } = await client.from('profiles').select('full_name, email, subscription_tag, sub_status, last_payment_date, current_period_end, cancel_at_period_end');
+
                 
+
                 if (error) throw error;
 
-                tbody.innerHTML = data.map(u => {
-                    // Logic for colors
-                    const status = (u.sub_status || '').toLowerCase();
-                    const isInactive = status.includes('cancel') || status.includes('inactive');
-                    const color = isInactive ? '#f23645' : '#089981';
 
-                    return `
-                        <tr>
-                            <td>${u.full_name || '-'}</td>
-                            <td>${u.email || '-'}</td>
-                            <td>${u.subscription_tag || '-'}</td>
-                            <td style="color: ${color}; font-weight: bold;">${u.sub_status || '-'}</td>
-                            <td>${u.last_payment_date ? new Date(u.last_payment_date).toLocaleDateString() : '-'}</td>
-                            <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
-                            <td>${u.cancel_at_period_end || '-'}</td>
-                        </tr>
-                    `;
-                }).join('');
+
+                tbody.innerHTML = data.map(u => `
+
+                    <tr>
+
+                        <td>${u.full_name || '-'}</td>
+
+                        <td>${u.email || '-'}</td>
+
+                        <td>${u.subscription_tag || '-'}</td>
+
+                        <td>${u.sub_status || '-'}</td>
+
+                        <td>${u.last_payment_date ? new Date(u.last_payment_date).toLocaleDateString() : '-'}</td>
+
+                        <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
+
+                        <td>${u.cancel_at_period_end || '-'}</td>
+
+                    </tr>
+
+                `).join('');
+
             } catch (err) {
+
                 tbody.innerHTML = `<tr><td colspan="7" style="color:red">Error: ${err.message}</td></tr>`;
+
             }
+
         }
+
         init();
+
     </script>
+
 </body>
-</html>
+
+</html> 
+
