@@ -76,6 +76,7 @@
     <div class="nav-links">
         <a id="nav-terminal" class="active">Terminal</a>
         <a id="nav-account">Account</a>
+        <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
         <a id="logoutBtn">Logout</a>
     </div>
 </div>
@@ -146,8 +147,8 @@
     // --- DATABASE CONNECTION ---
     const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
     
-    // 1. MUST BE YOUR REAL KEY, OR IT WILL KICK YOU OUT!
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
+    // REPLACE WITH YOUR REGENERATED ANON KEY
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // --- AUTHENTICATION & DATA FETCHING ---
@@ -161,6 +162,11 @@
             .single();
         
         if (profile) {
+            // Reveal Admin Link if user is admin
+            if (profile.is_admin === true) {
+                document.getElementById('nav-admin').style.display = 'inline';
+            }
+
             // 1. Status Badge
             const statusStr = profile.stripe_status || profile.status || 'Active';
             const statusEl = document.getElementById('sub-status');
@@ -175,9 +181,8 @@
             // 2. Price
             document.getElementById('sub-price').innerText = profile.plan_price ? `$${profile.plan_price}/mo` : 'N/A';
 
-            // 3. Billing Date (Handles both standard dates and Stripe's Unix timestamps)
+            // 3. Billing Date
             if (profile.current_period_end) {
-                // If Stripe sent a Unix timestamp (numbers only), multiply by 1000 for JS
                 let dateVal = profile.current_period_end;
                 if (!isNaN(dateVal) && dateVal.toString().length === 10) dateVal = dateVal * 1000; 
                 
@@ -234,7 +239,6 @@
             document.getElementById('new-password').value = '';
             document.getElementById('confirm-password').value = '';
             
-            // Clear success message after 3 seconds
             setTimeout(() => { statusText.innerText = ''; }, 3000);
         }
     });
