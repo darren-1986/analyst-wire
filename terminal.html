@@ -92,11 +92,7 @@
     <div class="panel">
         <div class="panel-header">Newsfeed</div>
         <div class="panel-content" id="macro-engine-container">
-            <iframe 
-    src="https://newsfeedsquawk.yzz.me/newsfeed.html" 
-    style="width: 100%; height: 600px; border: none;" 
-    title="Newsfeed">
-</iframe>
+            <iframe src="https://your-worker-url.workers.dev" ... ></iframe>
         </div>
     </div>
 
@@ -159,6 +155,22 @@
 </div>
 
 <script>
+
+    export default {
+  async fetch(request) {
+    const url = "https://newsfeedsquawk.yzz.me/newsfeed.html";
+    const response = await fetch(url);
+
+    // Copy the response to modify headers
+    let newResponse = new Response(response.body, response);
+
+    // Strip out the security headers that block iframes
+    newResponse.headers.delete("X-Frame-Options");
+    newResponse.headers.delete("Content-Security-Policy");
+
+    return newResponse;
+  }
+};
     // --- DATABASE CONNECTION ---
     const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
