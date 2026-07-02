@@ -42,9 +42,14 @@
 </div>
 
 <script>
-    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY
-');
-    let allUsers = []; // Store data globally for searching
+    // Note: I have joined your key into one continuous string to fix the syntax error.
+    // REMEMBER TO REGENERATE THIS KEY IN SUPABASE IMMEDIATELY!
+    const client = supabase.createClient(
+        'https://fgidelsazisdqjfckerd.supabase.co', 
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY'
+    );
+    
+    let allUsers = []; 
 
     async function init() {
         const tbody = document.getElementById('admin-body');
@@ -81,7 +86,6 @@
         }).join('');
     }
 
-    // Search Logic
     document.getElementById('search').addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         const filtered = allUsers.filter(u => 
