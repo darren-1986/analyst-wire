@@ -2,28 +2,53 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Analyst Wire Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>body { background: #0f1115; color: white; font-family: sans-serif; padding: 20px; }</style>
+    <style>
+        body { background: #0f1115; color: #fff; font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; background: #1a1d23; }
+        th, td { padding: 10px; border: 1px solid #333; text-align: left; }
+    </style>
 </head>
 <body>
-    <h1>Admin Panel</h1>
-    <div id="output" style="white-space: pre-wrap;">Loading...</div>
+    <h2>User Management</h2>
+    <table id="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Tag</th>
+                <th>Status</th>
+                <th>Last Payment</th>
+                <th>Next Billing</th>
+                <th>Cancel?</th>
+            </tr>
+        </thead>
+        <tbody id="admin-body"></tbody>
+    </table>
 
     <script>
         const supabase = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
         async function init() {
-            const out = document.getElementById('output');
+            const tbody = document.getElementById('admin-body');
             try {
-                // 1. Simple connection test
-                const { data, error } = await supabase.from('profiles').select('email').limit(5);
-                
+                const { data, error } = await supabase.from('profiles').select('*');
                 if (error) throw error;
-                
-                out.innerText = "Connection Success! Data found:\n" + JSON.stringify(data, null, 2);
+
+                tbody.innerHTML = data.map(u => `
+                    <tr>
+                        <td>${u.full_name || '-'}</td>
+                        <td>${u.email || '-'}</td>
+                        <td>${u.subscription_tag || '-'}</td>
+                        <td>${u.sub_status || '-'}</td>
+                        <td>${u.last_payment_date || '-'}</td>
+                        <td>${u.current_period_end || '-'}</td>
+                        <td>${u.cancel_at_period_end || '-'}</td>
+                    </tr>
+                `).join('');
             } catch (err) {
-                out.innerHTML = `<span style="color:red">ERROR: ${err.message}</span>`;
-                console.error("Full Debug:", err);
+                tbody.innerHTML = `<tr><td colspan="7" style="color:red">Error: ${err.message}</td></tr>`;
             }
         }
         init();
