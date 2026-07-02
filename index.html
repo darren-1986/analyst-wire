@@ -2,15 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Member Login | Analyst Wire Terminal</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/auth-ui-web@1.5.2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/auth-ui-shared@1.6.0"></script>
-
+    <title>Terminal Access</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/auth-ui-web@1.5.2/dist/index.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #0f0f0f; color: white; }
+        body { background: #0f0f0f; color: white; display: flex; justify-content: center; padding-top: 50px; }
         #auth-container { width: 100%; max-width: 400px; padding: 20px; background: #1a1a1a; border-radius: 8px; }
     </style>
 </head>
@@ -22,24 +18,29 @@
     </div>
 
     <script>
-        // 1. Initialize Supabase
-        const supabase = supabase.createClient('https://supabase.com/dashboard/project/fgidelsazisdqjfckerd', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+        // REPLACE THESE WITH YOUR ACTUAL KEYS FROM SUPABASE DASHBOARD
+        const SUPABASE_URL = 'https://supabase.com/dashboard/project/fgidelsazisdqjfckerd';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY
+';
 
-        // 2. Initialize and Render Auth UI
-        const { Auth } = window.supabaseAuthUI;
-        const ui = new Auth(supabase);
+        try {
+            const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            const { Auth } = window.supabaseAuthUI;
+            const ui = new Auth(supabase);
 
-        ui.render('#supabase-auth-ui', {
-            providers: ['google', 'email'],
-            view: 'sign_in', // Or 'sign_up'
-        });
+            ui.render('#supabase-auth-ui', {
+                providers: ['google', 'email'],
+            });
 
-        // 3. Redirect to terminal after successful login
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN') {
-                window.location.href = '/terminal.html'; // Change to your actual terminal filename
-            }
-        });
+            supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN') {
+                    window.location.href = '/terminal.html';
+                }
+            });
+        } catch (e) {
+            console.error("Auth failed to load:", e);
+            document.body.innerHTML = "<h1>Error: Check Browser Console</h1>";
+        }
     </script>
 </body>
 </html>
