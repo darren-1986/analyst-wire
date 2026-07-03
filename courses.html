@@ -76,11 +76,22 @@
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
+    // The Bouncer Logic
+    async function verifyAccess(profile) {
+        if (profile.is_admin !== true && profile.subscription_tag !== 'pro') {
+            alert("Access Denied: This page is for Pro subscribers only.");
+            await client.auth.signOut();
+            window.location.href = 'index.html';
+            return false;
+        }
+        return true;
+    }
+
     async function init() {
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
 
-        // Fetch both admin status and subscription tag
+        // Fetch data
         const { data: profile } = await client
             .from('profiles')
             .select('is_admin, subscription_tag')
@@ -88,17 +99,13 @@
             .single();
 
         if (profile) {
+            // Apply Bouncer Logic immediately
+            const hasAccess = await verifyAccess(profile);
+            if (!hasAccess) return;
+
             // Show Admin link if admin
             if (profile.is_admin === true) {
                 document.getElementById('nav-admin').style.display = 'block';
-            }
-
-            // Access Restriction Logic
-            // Allow access if they are Admin OR have the 'pro' tag
-            if (profile.is_admin !== true && profile.subscription_tag !== 'pro') {
-                alert("Access Denied: This page is for Pro subscribers only.");
-                window.location.href = 'terminal.html'; 
-                return;
             }
         }
     }
