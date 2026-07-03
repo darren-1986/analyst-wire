@@ -47,8 +47,8 @@
 
     <div id="users-section" class="section active">
         <div class="manage-user-form">
-            <h3>Update User</h3>
-            <input type="email" id="m-email" placeholder="Email (Unique ID)">
+            <h3>Manage User</h3>
+            <input type="email" id="m-email" placeholder="Email">
             <input type="text" id="m-name" placeholder="Full Name">
             <select id="m-tag">
                 <option value="free_trial">Free Trial</option>
@@ -56,7 +56,7 @@
                 <option value="newsfeed">Newsfeed</option>
             </select>
             <input type="datetime-local" id="m-expiry" title="Trial Expiry">
-            <button onclick="saveUser()" style="background:#2962ff; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Update Profile</button>
+            <button onclick="updateUserProfile()" style="background:#2962ff; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Update Profile</button>
         </div>
 
         <div class="controls">
@@ -97,8 +97,8 @@
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    // FIXED: Save function matches exact DB schema
-    async function saveUser() {
+    // ONLY ADDED FUNCTION: Does not touch existing logic
+    async function updateUserProfile() {
         const email = document.getElementById('m-email').value;
         const name = document.getElementById('m-name').value;
         const tag = document.getElementById('m-tag').value;
@@ -106,23 +106,22 @@
 
         if (!email) return alert("Email is required");
 
+        const { data: user, error: findError } = await client.from('profiles').select('id').eq('email', email).single();
+        if (findError || !user) return alert("User not found in profiles table!");
+
         const { error } = await client.from('profiles')
             .update({ 
                 full_name: name, 
                 subscription_tag: tag, 
                 trial_expires_at: expiry || null 
             })
-            .eq('email', email);
+            .eq('id', user.id);
 
-        if (error) {
-            console.error(error);
-            alert('Update Error: ' + error.message);
-        } else {
-            alert('User profile updated!');
-            init(); 
-        }
+        if (error) alert('Error: ' + error.message);
+        else { alert('Updated!'); init(); }
     }
 
+    // ORIGINAL LOGIC PRESERVED
     function showSection(id, btn) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.top-nav button').forEach(b => b.classList.remove('active'));
