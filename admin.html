@@ -19,9 +19,9 @@
         .section { display: none; }
         .section.active { display: block; }
 
-        /* Manage User Form */
-        .manage-user-form { background: #242831; padding: 15px; border-radius: 6px; margin-bottom: 25px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border: 1px solid #333; }
-        .manage-user-form h3 { margin: 0 10px 0 0; font-size: 1rem; color: #888; }
+        /* Management Panel */
+        .manage-user-panel { background: #242831; padding: 20px; border-radius: 6px; margin-bottom: 25px; border: 1px solid #333; }
+        .manage-user-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
         .manage-user-form input, .manage-user-form select { padding: 8px; background: #1a1d23; border: 1px solid #333; color: white; border-radius: 4px; }
 
         .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
@@ -46,19 +46,21 @@
 <div class="admin-container">
 
     <div id="users-section" class="section active">
-        <div class="manage-user-form">
-            <h3>Manage User</h3>
-            <input type="text" id="m-name" placeholder="Full Name">
-            <input type="email" id="m-email" placeholder="Email">
-            <input type="password" id="m-password" placeholder="Password (for new users)">
-            <select id="m-tag">
-                <option value="free_trial">Free Trial</option>
-                <option value="pro">Pro</option>
-                <option value="newsfeed">Newsfeed</option>
-                <option value="audio squawk">Audio Squawk</option>
-            </select>
-            <input type="datetime-local" id="m-expiry" title="Trial Expiry">
-            <button onclick="manageUser()" style="background:#2962ff; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Save User</button>
+        <div class="manage-user-panel">
+            <h3>Manage User / Grant Trial</h3>
+            <div class="manage-user-form">
+                <input type="text" id="m-name" placeholder="Full Name">
+                <input type="email" id="m-email" placeholder="Email">
+                <input type="password" id="m-password" placeholder="Password">
+                <select id="m-tag">
+                    <option value="free_trial">Free Trial</option>
+                    <option value="pro">Pro</option>
+                    <option value="newsfeed">Newsfeed</option>
+                    <option value="audio squawk">Audio Squawk</option>
+                </select>
+                <input type="datetime-local" id="m-expiry" title="Trial Expiry">
+                <button onclick="manageUser()" style="background:#2962ff; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Save User</button>
+            </div>
         </div>
 
         <div class="controls">
@@ -99,7 +101,6 @@
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    // Securely invoke user management
     async function manageUser() {
         const payload = {
             name: document.getElementById('m-name').value,
@@ -122,16 +123,13 @@
         }
     }
 
-    // Section Toggle Logic
     function showSection(id, btn) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.top-nav button').forEach(b => b.classList.remove('active'));
-
         document.getElementById(id + '-section').classList.add('active');
         btn.classList.add('active');
     }
 
-    // Existing Auth and Table Logic
     let allUsers = [];
 
     async function init() {
