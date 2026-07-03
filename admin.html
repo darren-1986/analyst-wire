@@ -19,7 +19,7 @@
         .section { display: none; }
         .section.active { display: block; }
 
-        /* ADDED: Update User Panel */
+        /* Management Panel */
         .manage-user-form { background: #242831; padding: 15px; border-radius: 6px; margin-bottom: 25px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border: 1px solid #333; }
         .manage-user-form h3 { margin: 0 10px 0 0; font-size: 1rem; color: #888; }
         .manage-user-form input, .manage-user-form select { padding: 8px; background: #1a1d23; border: 1px solid #333; color: white; border-radius: 4px; }
@@ -97,7 +97,7 @@
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    // ADDED: Logic to update your specific DB columns
+    // FIXED: Save function matches exact DB schema
     async function saveUser() {
         const email = document.getElementById('m-email').value;
         const name = document.getElementById('m-name').value;
@@ -115,6 +115,7 @@
             .eq('email', email);
 
         if (error) {
+            console.error(error);
             alert('Update Error: ' + error.message);
         } else {
             alert('User profile updated!');
@@ -122,16 +123,13 @@
         }
     }
 
-    // SECTION TOGGLE LOGIC
     function showSection(id, btn) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.top-nav button').forEach(b => b.classList.remove('active'));
-
         document.getElementById(id + '-section').classList.add('active');
         btn.classList.add('active');
     }
 
-    // ORIGINAL AUTH AND TABLE LOGIC
     let allUsers = [];
 
     async function init() {
