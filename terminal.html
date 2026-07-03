@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Analyst Wire | Terminal</title>
+    <title>Analyst Wire | Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     <style>
         /* Refinitiv-inspired Dark Theme */
@@ -24,59 +24,24 @@
         .dropdown-content a:hover { background-color: #2a2e39; }
 
         /* --- VIEW CONTAINERS --- */
-        #terminal-view { 
-            display: grid; 
-            grid-template-columns: 3fr 1fr; 
-            grid-template-rows: auto 1fr; 
-            gap: 15px; 
-            padding: 15px; 
-            flex-grow: 1; 
-            box-sizing: border-box; 
-            height: calc(100vh - 50px);
-        }
-
-        #account-view {
-            display: none; 
-            padding: 30px;
-            overflow-y: auto;
-            height: calc(100vh - 50px);
-            box-sizing: border-box;
-        }
+        #terminal-view { display: grid; grid-template-columns: 3fr 1fr; grid-template-rows: auto 1fr; gap: 15px; padding: 15px; flex-grow: 1; box-sizing: border-box; height: calc(100vh - 50px); }
+        #account-view { display: none; padding: 30px; overflow-y: auto; height: calc(100vh - 50px); box-sizing: border-box; }
 
         /* --- TERMINAL UI ELEMENTS --- */
         .ticker-panel { grid-column: 1 / -1; background: #131722; border: 1px solid #2a2e39; padding: 10px 15px; border-radius: 4px; display: flex; gap: 30px; font-family: monospace; font-size: 14px; }
-        .tick-up { color: #089981; }
-        .tick-down { color: #f23645; }
-
+        .tick-up { color: #089981; } .tick-down { color: #f23645; }
         .panel { background: #131722; border: 1px solid #2a2e39; border-radius: 4px; display: flex; flex-direction: column; overflow: hidden; }
         .panel-header { background: #1c2230; padding: 10px 15px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #2a2e39; color: #787b86; }
         .panel-content { padding: 15px; flex-grow: 1; overflow-y: auto; }
-
-        .news-item { padding: 10px 0; border-bottom: 1px solid #2a2e39; font-size: 13px; }
-        .news-item:last-child { border-bottom: none; }
-        .news-tag { background: #2962ff; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-right: 8px; }
-
-        /* --- ACCOUNT UI ELEMENTS --- */
-        .account-container { max-width: 600px; margin: 0 auto; background: #131722; padding: 30px; border-radius: 8px; border: 1px solid #2a2e39; }
-        .account-container h2 { margin-top: 0; color: #fff; border-bottom: 1px solid #2a2e39; padding-bottom: 15px; font-size: 18px; }
-        .account-container h3 { color: #fff; border-bottom: 1px solid #2a2e39; padding-bottom: 10px; margin-top: 35px; font-size: 15px; }
         
+        /* Account UI */
+        .account-container { max-width: 600px; margin: 0 auto; background: #131722; padding: 30px; border-radius: 8px; border: 1px solid #2a2e39; }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .info-group { margin-bottom: 15px; }
-        .info-label { font-size: 11px; color: #787b86; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; letter-spacing: 0.5px; }
+        .info-label { font-size: 11px; color: #787b86; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
         .info-value { font-size: 15px; color: #fff; background: #1c2230; padding: 12px; border-radius: 4px; border: 1px solid #2a2e39; }
-        
-        .badge { color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .badge-active { background: #089981; }
-        .badge-canceled { background: #f23645; }
-
-        /* Buttons & Forms */
-        .pwd-input { width: 100%; padding: 12px; box-sizing: border-box; margin-bottom: 15px; background: #1c2230; border: 1px solid #2a2e39; color: white; border-radius: 4px; }
-        .pwd-input:focus { outline: none; border-color: #2962ff; }
-        .btn-update { background: #2962ff; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
-        .btn-update:hover { background: #1e4bd8; }
-        .btn-secondary { background: #333; border: 1px solid #2a2e39; margin-top: 10px; }
-        #pwd-status { margin-top: 10px; font-size: 13px; }
+        .btn-update { background: #2962ff; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; width: 100%; }
+        .btn-secondary { background: #333; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -86,7 +51,7 @@
        <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px; width: auto; object-fit: contain; display: block;">
    </div>
    <div class="nav-links">
-       <a id="nav-terminal" class="active">Terminal</a>
+       <a id="nav-terminal" class="active">Dashboard</a>
        <a href="courses.html">Courses</a>
        
        <div class="dropdown">
@@ -172,7 +137,6 @@
 </div>
 
 <script>
-    // --- DROPDOWN LOGIC ---
     function toggleDropdown() {
         document.getElementById("settingsDropdown").style.display = 
             document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block";
@@ -241,11 +205,12 @@
         else { statusText.style.color = '#089981'; statusText.innerText = 'Password updated successfully!'; document.getElementById('new-password').value = ''; document.getElementById('confirm-password').value = ''; setTimeout(() => { statusText.innerText = ''; }, 3000); }
     });
 
-    const navTerminal = document.getElementById('nav-terminal'), navAccount = document.getElementById('nav-account'), viewTerminal = document.getElementById('terminal-view'), viewAccount = document.getElementById('account-view');
-    navTerminal.addEventListener('click', () => { navTerminal.classList.add('active'); navAccount.classList.remove('active'); viewTerminal.style.display = 'grid'; viewAccount.style.display = 'none'; });
-    navAccount.addEventListener('click', () => { navTerminal.classList.remove('active'); navAccount.classList.add('active'); viewTerminal.style.display = 'none'; viewAccount.style.display = 'block'; });
-    document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
-</script>
+    const navTerminal = document.getElementById('nav-terminal');
+    const navAccount = document.getElementById('nav-account');
+    const viewTerminal = document.getElementById('terminal-view');
+    const viewAccount = document.getElementById('account-view');
 
-</body>
-</html>
+    navTerminal.addEventListener('click', () => {
+        navTerminal.classList.add('active');
+        navAccount.classList.remove('active');
+        viewTerminal.style.display
