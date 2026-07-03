@@ -9,11 +9,19 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000000; color: #d1d4dc; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
         /* Top Navigation */
-        .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; }
+        .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; position: relative; }
         .nav-links { display: flex; align-items: center; }
         .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: color 0.2s; }
         .nav-links a:hover { color: #d1d4dc; }
         .nav-links a.active { color: #2962ff; font-weight: bold; }
+
+        /* Dropdown Styling */
+        .dropdown { position: relative; margin-left: 20px; }
+        .dropbtn { background: none; border: none; color: #787b86; cursor: pointer; font-size: 18px; padding: 5px; }
+        .dropbtn:hover { color: #fff; }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: #1c2230; min-width: 150px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); border: 1px solid #2a2e39; z-index: 1000; border-radius: 4px; }
+        .dropdown-content a { color: #d1d4dc; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; margin: 0; cursor: pointer; }
+        .dropdown-content a:hover { background-color: #2a2e39; }
 
         /* --- VIEW CONTAINERS --- */
         #terminal-view { 
@@ -80,17 +88,22 @@
    <div class="nav-links">
        <a id="nav-terminal" class="active">Terminal</a>
        <a href="courses.html">Courses</a>
-       <a id="nav-account">Account</a>
-       <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
-       <a id="logoutBtn" style="cursor: pointer;">Logout</a>
+       
+       <div class="dropdown">
+           <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+           <div id="settingsDropdown" class="dropdown-content">
+               <a id="nav-account">Account</a>
+               <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+               <a id="logoutBtn" style="color: #f23645;">Logout</a>
+           </div>
+       </div>
    </div>
 </div>
 
 <div id="terminal-view">
     <div class="ticker-panel">
         <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-ticker-tape.js"></script>
-
-<tv-ticker-tape symbols="FOREXCOM:SPXUSD,FOREXCOM:NSXUSD,FOREXCOM:DJI,BITSTAMP:BTCUSD,BITSTAMP:ETHUSD,CMCMARKETS:GOLD,OANDA:EURUSD,OANDA:GBPUSD,OANDA:USDJPY,OANDA:AUDUSD,OANDA:GBPJPY,OANDA:USDCAD,OANDA:NZDUSD,OANDA:EURJPY,CME_MINI:MNQ1!,CME_MINI:NQ1!,CME_MINI:ES1!,TVC:SILVER" line-chart-type="Baseline" item-size="compact" show-hover></tv-ticker-tape>
+        <tv-ticker-tape symbols="FOREXCOM:SPXUSD,FOREXCOM:NSXUSD,FOREXCOM:DJI,BITSTAMP:BTCUSD,BITSTAMP:ETHUSD,CMCMARKETS:GOLD,OANDA:EURUSD,OANDA:GBPUSD,OANDA:USDJPY,OANDA:AUDUSD,OANDA:GBPJPY,OANDA:USDCAD,OANDA:NZDUSD,OANDA:EURJPY,CME_MINI:MNQ1!,CME_MINI:NQ1!,CME_MINI:ES1!,TVC:SILVER" line-chart-type="Baseline" item-size="compact" show-hover></tv-ticker-tape>
     </div>
 
     <div class="panel">
@@ -159,6 +172,20 @@
 </div>
 
 <script>
+    // --- DROPDOWN LOGIC ---
+    function toggleDropdown() {
+        document.getElementById("settingsDropdown").style.display = 
+            document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block";
+    }
+    window.onclick = function(event) {
+        if (!event.target.matches('.dropbtn')) {
+            var dropdowns = document.getElementsByClassName("dropdown-content");
+            for (var i = 0; i < dropdowns.length; i++) {
+                dropdowns[i].style.display = "none";
+            }
+        }
+    }
+
     window.addEventListener('message', (event) => {
         if (event.data.height) {
             document.querySelector('iframe').style.height = event.data.height + 'px';
@@ -173,7 +200,7 @@
         document.getElementById('user-email').innerText = session.user.email;
         const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
         if (profile) {
-            if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'inline';
+            if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'block';
             document.getElementById('user-name').innerText = profile.full_name || 'N/A';
             document.getElementById('sub-type').innerText = profile.subscription_tag ? profile.subscription_tag.toUpperCase() : 'FREE';
             const statusStr = profile.stripe_status || profile.status || 'Active';
@@ -216,7 +243,7 @@
 
     const navTerminal = document.getElementById('nav-terminal'), navAccount = document.getElementById('nav-account'), viewTerminal = document.getElementById('terminal-view'), viewAccount = document.getElementById('account-view');
     navTerminal.addEventListener('click', () => { navTerminal.classList.add('active'); navAccount.classList.remove('active'); viewTerminal.style.display = 'grid'; viewAccount.style.display = 'none'; });
-    navAccount.addEventListener('click', () => { navAccount.classList.add('active'); navTerminal.classList.remove('active'); viewTerminal.style.display = 'none'; viewAccount.style.display = 'block'; });
+    navAccount.addEventListener('click', () => { navTerminal.classList.remove('active'); navAccount.classList.add('active'); viewTerminal.style.display = 'none'; viewAccount.style.display = 'block'; });
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
 </script>
 
