@@ -24,8 +24,16 @@
         .dropdown-content a:hover { background-color: #2a2e39; }
 
         /* --- VIEW CONTAINERS --- */
-        #terminal-view { display: grid; grid-template-columns: 3fr 1fr; grid-template-rows: auto 1fr; gap: 15px; padding: 15px; flex-grow: 1; box-sizing: border-box; height: calc(100vh - 50px); }
-        #account-view { display: none; padding: 30px; overflow-y: auto; height: calc(100vh - 50px); box-sizing: border-box; }
+        #terminal-view { 
+            display: grid; 
+            grid-template-columns: 3fr 1fr; 
+            grid-template-rows: auto 1fr; 
+            gap: 15px; 
+            padding: 15px; 
+            flex-grow: 1; 
+            box-sizing: border-box; 
+            height: calc(100vh - 50px);
+        }
 
         /* --- TERMINAL UI ELEMENTS --- */
         .ticker-panel { grid-column: 1 / -1; background: #131722; border: 1px solid #2a2e39; padding: 10px 15px; border-radius: 4px; display: flex; gap: 30px; font-family: monospace; font-size: 14px; }
@@ -33,15 +41,10 @@
         .panel { background: #131722; border: 1px solid #2a2e39; border-radius: 4px; display: flex; flex-direction: column; overflow: hidden; }
         .panel-header { background: #1c2230; padding: 10px 15px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #2a2e39; color: #787b86; }
         .panel-content { padding: 15px; flex-grow: 1; overflow-y: auto; }
-        
-        /* Account UI */
-        .account-container { max-width: 600px; margin: 0 auto; background: #131722; padding: 30px; border-radius: 8px; border: 1px solid #2a2e39; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .info-group { margin-bottom: 15px; }
-        .info-label { font-size: 11px; color: #787b86; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
-        .info-value { font-size: 15px; color: #fff; background: #1c2230; padding: 12px; border-radius: 4px; border: 1px solid #2a2e39; }
-        .btn-update { background: #2962ff; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; width: 100%; }
-        .btn-secondary { background: #333; margin-top: 10px; }
+
+        .news-item { padding: 10px 0; border-bottom: 1px solid #2a2e39; font-size: 13px; }
+        .news-item:last-child { border-bottom: none; }
+        .news-tag { background: #2962ff; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-right: 8px; }
     </style>
 </head>
 <body>
@@ -51,15 +54,15 @@
        <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px; width: auto; object-fit: contain; display: block;">
    </div>
    <div class="nav-links">
-       <a id="nav-terminal" class="active">Dashboard</a>
+       <a href="terminal.html" class="active">Dashboard</a>
        <a href="courses.html">Courses</a>
        
        <div class="dropdown">
            <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
            <div id="settingsDropdown" class="dropdown-content">
-               <a id="nav-account">Account</a>
+               <a href="account.html">Account</a>
                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
-               <a id="logoutBtn" style="color: #f23645;">Logout</a>
+               <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
            </div>
        </div>
    </div>
@@ -90,53 +93,8 @@
     </div>
 </div>
 
-<div id="account-view">
-    <div class="account-container">
-        <h2>Subscription Details</h2>
-        <div class="info-grid">
-            <div class="info-group">
-                <div class="info-label">Member Name</div>
-                <div class="info-value" id="user-name">Loading...</div>
-            </div>
-            <div class="info-group">
-                <div class="info-label">Account Email</div>
-                <div class="info-value" id="user-email">Loading...</div>
-            </div>
-        </div>
-
-        <div class="info-grid">
-            <div class="info-group">
-                <div class="info-label">Plan Type</div>
-                <div class="info-value" id="sub-type">Loading...</div>
-            </div>
-            <div class="info-group">
-                <div class="info-label">Status</div>
-                <div class="info-value" style="border: none; background: transparent; padding: 0; padding-top: 8px;">
-                    <span class="badge" id="sub-status">Loading...</span>
-                </div>
-            </div>
-            <div class="info-group">
-                <div class="info-label">Subscription Price</div>
-                <div class="info-value" id="sub-price">Syncing...</div>
-            </div>
-            <div class="info-group">
-                <div class="info-label">Next Billing Date</div>
-                <div class="info-value" id="sub-date">Syncing...</div>
-            </div>
-        </div>
-
-        <button class="btn-update btn-secondary" id="manage-sub">Manage Subscription via Stripe</button>
-
-        <h3>Security & Login</h3>
-        <div class="info-label">Update Password</div>
-        <input type="password" id="new-password" class="pwd-input" placeholder="Enter new password (min. 6 characters)">
-        <input type="password" id="confirm-password" class="pwd-input" placeholder="Confirm new password">
-        <button class="btn-update" id="updatePwdBtn">Save New Password</button>
-        <p id="pwd-status"></p>
-    </div>
-</div>
-
 <script>
+    // --- DROPDOWN LOGIC ---
     function toggleDropdown() {
         document.getElementById("settingsDropdown").style.display = 
             document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block";
@@ -160,57 +118,24 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function loadAccountData(session) {
-        document.getElementById('user-email').innerText = session.user.email;
-        const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
-        if (profile) {
-            if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'block';
-            document.getElementById('user-name').innerText = profile.full_name || 'N/A';
-            document.getElementById('sub-type').innerText = profile.subscription_tag ? profile.subscription_tag.toUpperCase() : 'FREE';
-            const statusStr = profile.stripe_status || profile.status || 'Active';
-            const statusEl = document.getElementById('sub-status');
-            statusEl.innerText = statusStr.toUpperCase();
-            statusEl.className = statusStr.toLowerCase() === 'active' ? 'badge badge-active' : 'badge badge-canceled';
-            document.getElementById('sub-price').innerText = profile.plan_price ? `$${profile.plan_price}/mo` : 'N/A';
-            if (profile.current_period_end) {
-                let dateVal = profile.current_period_end;
-                if (!isNaN(dateVal) && dateVal.toString().length === 10) dateVal = dateVal * 1000; 
-                document.getElementById('sub-date').innerText = new Date(dateVal).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-            } else {
-                document.getElementById('sub-date').innerText = 'N/A';
-            }
+    // Initial Auth Check
+    async function init() {
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) { window.location.href = 'index.html'; return; }
+        
+        const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
+        if (profile && profile.is_admin === true) {
+            document.getElementById('nav-admin').style.display = 'block';
         }
     }
 
-    document.getElementById('manage-sub').addEventListener('click', () => {
-        window.open('https://billing.stripe.com/p/login/test_dRmcN58656TOaojaZf9fW00', '_blank');
+    document.getElementById('logoutBtn').addEventListener('click', async () => { 
+        await client.auth.signOut(); 
+        window.location.href = 'index.html'; 
     });
 
-    client.auth.onAuthStateChange((event, session) => {
-        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-            if (!session) window.location.href = 'index.html';
-            else loadAccountData(session);
-        }
-    });
+    init();
+</script>
 
-    document.getElementById('updatePwdBtn').addEventListener('click', async () => {
-        const newPwd = document.getElementById('new-password').value;
-        const confirmPwd = document.getElementById('confirm-password').value;
-        const statusText = document.getElementById('pwd-status');
-        if (!newPwd || newPwd.length < 6) { statusText.style.color = '#f23645'; statusText.innerText = 'Password must be at least 6 characters.'; return; }
-        if (newPwd !== confirmPwd) { statusText.style.color = '#f23645'; statusText.innerText = 'Passwords do not match.'; return; }
-        statusText.style.color = '#787b86'; statusText.innerText = 'Updating password...';
-        const { error } = await client.auth.updateUser({ password: newPwd });
-        if (error) { statusText.style.color = '#f23645'; statusText.innerText = 'Error: ' + error.message; }
-        else { statusText.style.color = '#089981'; statusText.innerText = 'Password updated successfully!'; document.getElementById('new-password').value = ''; document.getElementById('confirm-password').value = ''; setTimeout(() => { statusText.innerText = ''; }, 3000); }
-    });
-
-    const navTerminal = document.getElementById('nav-terminal');
-    const navAccount = document.getElementById('nav-account');
-    const viewTerminal = document.getElementById('terminal-view');
-    const viewAccount = document.getElementById('account-view');
-
-    navTerminal.addEventListener('click', () => {
-        navTerminal.classList.add('active');
-        navAccount.classList.remove('active');
-        viewTerminal.style.display
+</body>
+</html>
