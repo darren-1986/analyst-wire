@@ -8,12 +8,19 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000000; color: #d1d4dc; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
         /* Top Navigation */
-        .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; flex-shrink: 0; }
-        
+        .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; position: relative; }
         .nav-links { display: flex; align-items: center; }
         .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: color 0.2s; }
         .nav-links a:hover { color: #d1d4dc; }
         .nav-links a.active { color: #2962ff; font-weight: bold; }
+
+        /* Dropdown Styling */
+        .dropdown { position: relative; margin-left: 20px; }
+        .dropbtn { background: none; border: none; color: #787b86; cursor: pointer; font-size: 18px; padding: 5px; }
+        .dropbtn:hover { color: #fff; }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: #1c2230; min-width: 150px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); border: 1px solid #2a2e39; z-index: 1000; border-radius: 4px; }
+        .dropdown-content a { color: #d1d4dc; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; margin: 0; cursor: pointer; }
+        .dropdown-content a:hover { background-color: #2a2e39; }
 
         /* Main Content */
         .page-container { padding: 30px; overflow-y: auto; flex-grow: 1; }
@@ -29,11 +36,17 @@
     </div>
     
     <div class="nav-links">
-        <a href="terminal.html">Terminal</a>
+        <a href="terminal.html">Dashboard</a>
         <a href="courses.html" class="active">Courses</a>
-        <a id="nav-account" href="terminal.html?view=account">Account</a>
-        <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
-        <a id="logoutBtn" style="cursor: pointer;">Logout</a>
+        
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+            <div id="settingsDropdown" class="dropdown-content">
+                <a id="nav-account" href="terminal.html">Account</a>
+                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                <a id="logoutBtn" style="color: #f23645;">Logout</a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -46,14 +59,26 @@
 </div>
 
 <script>
+    function toggleDropdown() {
+        document.getElementById("settingsDropdown").style.display = 
+            document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block";
+    }
+    
+    window.onclick = function(event) {
+        if (!event.target.matches('.dropbtn')) {
+            var dropdowns = document.getElementsByClassName("dropdown-content");
+            for (var i = 0; i < dropdowns.length; i++) {
+                dropdowns[i].style.display = "none";
+            }
+        }
+    }
+
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
     async function init() {
-        // Gatekeeper: Redirect to login if not signed in
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
 
-        // Check if Admin to show the link
         const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
         if (profile && profile.is_admin === true) {
             document.getElementById('nav-admin').style.display = 'block';
