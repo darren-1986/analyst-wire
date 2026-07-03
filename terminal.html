@@ -30,7 +30,8 @@
         
         .panel { background: #131722; border: 1px solid #2a2e39; border-radius: 4px; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
         .panel-header { background: #1c2230; padding: 10px 15px; font-size: 13px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #2a2e39; color: #787b86; }
-        .panel-content { padding: 15px; flex-grow: 1; overflow-y: auto; }
+        /* Removed padding here to fix scrollbar overflow */
+        .panel-content { flex-grow: 1; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -66,7 +67,7 @@
     </div>
     <div class="panel">
         <div class="panel-header">Live Feed</div>
-        <div class="panel-content">...</div>
+        <div class="panel-content" style="padding: 15px;">...</div>
     </div>
 </div>
 
