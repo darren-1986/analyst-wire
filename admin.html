@@ -6,7 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background: #0f1115; color: white; font-family: sans-serif; margin: 0; }
-        
+
         /* Top Navigation */
         .top-nav { background: #1c2230; padding: 15px 20px; display: flex; gap: 20px; border-bottom: 2px solid #2a2e39; align-items: center; }
         .top-nav button, .top-nav a { background: none; border: none; color: #787b86; cursor: pointer; font-size: 1rem; text-decoration: none; font-weight: bold; }
@@ -21,7 +21,11 @@
 
         .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
         .search-box, .filter-select { padding: 8px; background: #242831; border: 1px solid #333; color: white; border-radius: 4px; }
-        
+
+        /* Management Form Styling */
+        .manage-user-form { background: #242831; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .manage-user-form input, .manage-user-form select { padding: 8px; background: #1a1d23; border: 1px solid #333; color: white; border-radius: 4px; }
+
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 12px; border: 1px solid #333; text-align: left; }
         th { background: #242831; text-transform: uppercase; font-size: 0.75rem; color: #888; }
@@ -39,8 +43,21 @@
 </div>
 
 <div class="admin-container">
-    
+
     <div id="users-section" class="section active">
+        <div class="manage-user-form">
+            <h3>Manage User</h3>
+            <input type="email" id="m-email" placeholder="Email">
+            <input type="password" id="m-password" placeholder="Password (New Users)">
+            <select id="m-tag">
+                <option value="free_trial">Free Trial</option>
+                <option value="pro">Pro</option>
+                <option value="newsfeed">Newsfeed</option>
+            </select>
+            <input type="datetime-local" id="m-expiry" title="Trial Expiry">
+            <button onclick="manageUser()" style="background:#2962ff; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Save User</button>
+        </div>
+
         <div class="controls">
             <h2>User Management</h2>
             <input type="text" id="search" class="search-box" placeholder="Search name or email...">
@@ -54,7 +71,7 @@
                 <option value="pro">Pro</option>
                 <option value="audio squawk">Audio Squawk</option>
                 <option value="newsfeed">Newsfeed</option>
-                <option value="free">Free</option>
+                <option value="free_trial">Free Trial</option>
             </select>
         </div>
         <table id="admin-table">
@@ -79,17 +96,31 @@
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    // Section Toggle Logic
+    // Securely manage users via Edge Function
+    async function manageUser() {
+        const email = document.getElementById('m-email').value;
+        const password = document.getElementById('m-password').value;
+        const tag = document.getElementById('m-tag').value;
+        const expiry = document.getElementById('m-expiry').value;
+
+        if (!email) return alert("Email required");
+
+        const { data, error } = await client.functions.invoke('manage-user', {
+            body: { email, password, tag, expiry }
+        });
+
+        if (error) alert('Error: ' + error.message);
+        else { alert('User saved!'); init(); }
+    }
+
     function showSection(id, btn) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.top-nav button').forEach(b => b.classList.remove('active'));
-        
         document.getElementById(id + '-section').classList.add('active');
         btn.classList.add('active');
     }
 
-    // Existing Auth and Table Logic
-    let allUsers = []; 
+    let allUsers = [];
 
     async function init() {
         const { data: { session } } = await client.auth.getSession();
