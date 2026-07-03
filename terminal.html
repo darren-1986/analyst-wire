@@ -10,6 +10,7 @@
         
         /* Top Navigation */
         .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; }
+        .nav-links { display: flex; align-items: center; }
         .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: color 0.2s; }
         .nav-links a:hover { color: #d1d4dc; }
         .nav-links a.active { color: #2962ff; font-weight: bold; }
@@ -73,13 +74,16 @@
 <body>
 
 <div class="top-nav">
-   <img src="assets/logo.png" alt="Analyst Wire" style="height: 100%; width: auto; object-fit: contain; display: block;">
-    <div class="nav-links">
-        <a id="nav-terminal" class="active">Terminal</a>
-        <a id="nav-account">Account</a>
-        <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
-        <a id="logoutBtn">Logout</a>
-    </div>
+   <div style="height: 50px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 5px 0;">
+       <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px; width: auto; object-fit: contain; display: block;">
+   </div>
+   <div class="nav-links">
+       <a id="nav-terminal" class="active">Terminal</a>
+       <a href="courses.html">Courses</a>
+       <a id="nav-account">Account</a>
+       <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+       <a id="logoutBtn" style="cursor: pointer;">Logout</a>
+   </div>
 </div>
 
 <div id="terminal-view">
@@ -93,8 +97,8 @@
         <div class="panel-header">Newsfeed</div>
         <div class="panel-content" id="macro-engine-container">
             <div class="newsfeed-container" style="display: flex; flex-direction: column; height: 100%;">
-    <iframe src="https://analyst-wire.pages.dev/newsfeed" style="flex-grow: 1; border: none;"></iframe>
-</div>
+                <iframe src="https://analyst-wire.pages.dev/newsfeed" style="flex-grow: 1; border: none;"></iframe>
+            </div>
         </div>
     </div>
 
@@ -111,7 +115,6 @@
 <div id="account-view">
     <div class="account-container">
         <h2>Subscription Details</h2>
-        
         <div class="info-grid">
             <div class="info-group">
                 <div class="info-label">Member Name</div>
@@ -152,152 +155,69 @@
         <input type="password" id="confirm-password" class="pwd-input" placeholder="Confirm new password">
         <button class="btn-update" id="updatePwdBtn">Save New Password</button>
         <p id="pwd-status"></p>
-
     </div>
 </div>
 
 <script>
-
-window.addEventListener('message', (event) => {
-    if (event.data.height) {
-        document.querySelector('iframe').style.height = event.data.height + 'px';
-    }
-});
-
-
-
-
+    window.addEventListener('message', (event) => {
+        if (event.data.height) {
+            document.querySelector('iframe').style.height = event.data.height + 'px';
+        }
+    });
     
-    // --- DATABASE CONNECTION ---
     const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // --- AUTHENTICATION & DATA FETCHING ---
     async function loadAccountData(session) {
         document.getElementById('user-email').innerText = session.user.email;
-        
-        const { data: profile } = await client
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-        
+        const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
         if (profile) {
-            if (profile.is_admin === true) {
-                document.getElementById('nav-admin').style.display = 'inline';
-            }
-
-            // 0a. Name
+            if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'inline';
             document.getElementById('user-name').innerText = profile.full_name || 'N/A';
-
-            // 0b. Plan Type
             document.getElementById('sub-type').innerText = profile.subscription_tag ? profile.subscription_tag.toUpperCase() : 'FREE';
-
-            // 1. Status Badge
             const statusStr = profile.stripe_status || profile.status || 'Active';
             const statusEl = document.getElementById('sub-status');
             statusEl.innerText = statusStr.toUpperCase();
-            
-            if (statusStr.toLowerCase() === 'active') {
-                statusEl.className = 'badge badge-active';
-            } else {
-                statusEl.className = 'badge badge-canceled';
-            }
-
-            // 2. Price
+            statusEl.className = statusStr.toLowerCase() === 'active' ? 'badge badge-active' : 'badge badge-canceled';
             document.getElementById('sub-price').innerText = profile.plan_price ? `$${profile.plan_price}/mo` : 'N/A';
-
-            // 3. Billing Date
             if (profile.current_period_end) {
                 let dateVal = profile.current_period_end;
                 if (!isNaN(dateVal) && dateVal.toString().length === 10) dateVal = dateVal * 1000; 
-                
-                const dateObj = new Date(dateVal);
-                document.getElementById('sub-date').innerText = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('sub-date').innerText = new Date(dateVal).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             } else {
                 document.getElementById('sub-date').innerText = 'N/A';
             }
         }
     }
 
-    // --- MANAGE SUBSCRIPTION REDIRECT ---
     document.getElementById('manage-sub').addEventListener('click', () => {
         window.open('https://billing.stripe.com/p/login/test_dRmcN58656TOaojaZf9fW00', '_blank');
     });
 
     client.auth.onAuthStateChange((event, session) => {
         if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-            if (!session) {
-                window.location.href = 'index.html';
-            } else {
-                loadAccountData(session);
-            }
+            if (!session) window.location.href = 'index.html';
+            else loadAccountData(session);
         }
     });
 
-    // --- UPDATE PASSWORD LOGIC ---
     document.getElementById('updatePwdBtn').addEventListener('click', async () => {
         const newPwd = document.getElementById('new-password').value;
         const confirmPwd = document.getElementById('confirm-password').value;
         const statusText = document.getElementById('pwd-status');
-
-        if (!newPwd || newPwd.length < 6) {
-            statusText.style.color = '#f23645';
-            statusText.innerText = 'Password must be at least 6 characters.';
-            return;
-        }
-
-        if (newPwd !== confirmPwd) {
-            statusText.style.color = '#f23645';
-            statusText.innerText = 'Passwords do not match.';
-            return;
-        }
-
-        statusText.style.color = '#787b86';
-        statusText.innerText = 'Updating password...';
-
-        const { error } = await client.auth.updateUser({
-            password: newPwd
-        });
-
-        if (error) {
-            statusText.style.color = '#f23645';
-            statusText.innerText = 'Error: ' + error.message;
-        } else {
-            statusText.style.color = '#089981';
-            statusText.innerText = 'Password updated successfully!';
-            document.getElementById('new-password').value = '';
-            document.getElementById('confirm-password').value = '';
-            setTimeout(() => { statusText.innerText = ''; }, 3000);
-        }
+        if (!newPwd || newPwd.length < 6) { statusText.style.color = '#f23645'; statusText.innerText = 'Password must be at least 6 characters.'; return; }
+        if (newPwd !== confirmPwd) { statusText.style.color = '#f23645'; statusText.innerText = 'Passwords do not match.'; return; }
+        statusText.style.color = '#787b86'; statusText.innerText = 'Updating password...';
+        const { error } = await client.auth.updateUser({ password: newPwd });
+        if (error) { statusText.style.color = '#f23645'; statusText.innerText = 'Error: ' + error.message; }
+        else { statusText.style.color = '#089981'; statusText.innerText = 'Password updated successfully!'; document.getElementById('new-password').value = ''; document.getElementById('confirm-password').value = ''; setTimeout(() => { statusText.innerText = ''; }, 3000); }
     });
 
-    // --- NAVIGATION LOGIC ---
-    const navTerminal = document.getElementById('nav-terminal');
-    const navAccount = document.getElementById('nav-account');
-    const viewTerminal = document.getElementById('terminal-view');
-    const viewAccount = document.getElementById('account-view');
-
-    navTerminal.addEventListener('click', () => {
-        navTerminal.classList.add('active');
-        navAccount.classList.remove('active');
-        viewTerminal.style.display = 'grid'; 
-        viewAccount.style.display = 'none';
-    });
-
-    navAccount.addEventListener('click', () => {
-        navAccount.classList.add('active');
-        navTerminal.classList.remove('active');
-        viewTerminal.style.display = 'none';
-        viewAccount.style.display = 'block'; 
-    });
-
-    // --- LOGOUT LOGIC ---
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-        await client.auth.signOut();
-        window.location.href = 'index.html';
-    });
+    const navTerminal = document.getElementById('nav-terminal'), navAccount = document.getElementById('nav-account'), viewTerminal = document.getElementById('terminal-view'), viewAccount = document.getElementById('account-view');
+    navTerminal.addEventListener('click', () => { navTerminal.classList.add('active'); navAccount.classList.remove('active'); viewTerminal.style.display = 'grid'; viewAccount.style.display = 'none'; });
+    navAccount.addEventListener('click', () => { navAccount.classList.add('active'); navTerminal.classList.remove('active'); viewTerminal.style.display = 'none'; viewAccount.style.display = 'block'; });
+    document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
 </script>
 
 </body>
