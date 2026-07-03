@@ -116,11 +116,9 @@
 
         if (!email) return alert("Email is required");
 
-        // 1. Check if user exists
         const { data: existingUser } = await client.from('profiles').select('id').eq('email', email).maybeSingle();
 
         if (existingUser) {
-            // Update existing
             const { error } = await client.from('profiles').update({
                 full_name: name,
                 subscription_tag: tag,
@@ -130,13 +128,12 @@
             if (error) alert('Update Error: ' + error.message);
             else { alert('User updated successfully!'); init(); }
         } else {
-            // Invite new
             const { error } = await client.auth.admin.inviteUserByEmail(email, {
                 redirectTo: 'https://analyst-wire.pages.dev/setup',
                 data: { full_name: name, subscription_tag: tag, trial_expires_at: expiry || null }
             });
             if (error) alert('Invite Error: ' + error.message);
-            else { alert('Invite sent! User will be directed to /setup after clicking the link.'); init(); }
+            else { alert('Invite sent!'); init(); }
         }
     }
 
@@ -161,26 +158,16 @@
         renderTable(allUsers);
     }
 
-    function applyFilters() {
-        const term = document.getElementById('search').value.toLowerCase();
-        const statusFilter = document.getElementById('filter-status').value;
-        const tag = document.getElementById('filter-tag').value;
-
-        const filtered = allUsers.filter(u => {
-            const matchesSearch = (u.full_name?.toLowerCase().includes(term)) || (u.email?.toLowerCase().includes(term));
-            const isCanceled = (u.cancel_at_period_end || '').toLowerCase().includes('cancel');
-            let matchesStatus = true;
-            if (statusFilter === 'active') matchesStatus = !isCanceled;
-            if (statusFilter === 'canceled') matchesStatus = isCanceled;
-            const matchesTag = (tag === 'all') || (u.subscription_tag?.toLowerCase() === tag);
-            return matchesSearch && matchesStatus && matchesTag;
-        });
-        renderTable(filtered);
-    }
-
     function renderTable(users) {
         const tbody = document.getElementById('admin-body');
-        tbody.innerHTML = users.length ? users.map(u => `
+        tbody.innerHTML = users.length ? users.map(u => {
+            // Logic to normalize "cancel" status
+            const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
+            const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
+            const statusLabel = isCancelled ? 'Cancelled' : 'Active';
+            const statusClass = isCancelled ? 'status-inactive' : 'status-active';
+
+            return `
             <tr onclick="selectUser('${u.email}', '${u.full_name || ''}', '${u.subscription_tag || ''}')">
                 <td>${u.full_name || '-'}</td>
                 <td>${u.email || '-'}</td>
@@ -188,15 +175,37 @@
                 <td>${(u.sub_status || 'active').toUpperCase()}</td>
                 <td>${u.trial_expires_at ? new Date(u.trial_expires_at).toLocaleDateString() : '-'}</td>
                 <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
-                <td>${u.cancel_at_period_end || 'False'}</td>
+                <td class="${statusClass}">${statusLabel}</td>
             </tr>
-        `).join('') : '<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>';
+        `}).join('') : '<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>';
     }
 
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
     document.getElementById('search').addEventListener('input', applyFilters);
     document.getElementById('filter-status').addEventListener('change', applyFilters);
     document.getElementById('filter-tag').addEventListener('change', applyFilters);
+
+    function applyFilters() {
+        const term = document.getElementById('search').value.toLowerCase();
+        const statusFilter = document.getElementById('filter-status').value;
+        const tag = document.getElementById('filter-tag').value;
+
+        const filtered = allUsers.filter(u => {
+            const matchesSearch = (u.full_name?.toLowerCase().includes(term)) || (u.email?.toLowerCase().includes(term));
+            
+            // Re-use logic for filtering
+            const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
+            const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
+            
+            let matchesStatus = true;
+            if (statusFilter === 'active') matchesStatus = !isCancelled;
+            if (statusFilter === 'canceled') matchesStatus = isCancelled;
+            
+            const matchesTag = (tag === 'all') || (u.subscription_tag?.toLowerCase() === tag);
+            return matchesSearch && matchesStatus && matchesTag;
+        });
+        renderTable(filtered);
+    }
 
     init();
 </script>
