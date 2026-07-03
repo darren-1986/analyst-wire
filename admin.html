@@ -46,6 +46,7 @@
 <div class="admin-container">
 
     <div id="users-section" class="section active">
+        <!-- Management Panel -->
         <div class="manage-user-form">
             <h3>Invite User</h3>
             <input type="email" id="m-email" placeholder="Email">
@@ -107,8 +108,9 @@
 
         if (!email) return alert("Email is required");
 
-        // Invites user securely via email
+        // Invites user securely via email and redirects to setup page
         const { error } = await client.auth.admin.inviteUserByEmail(email, {
+            redirectTo: 'https://analyst-wire.pages.dev/setup',
             data: { 
                 full_name: name,
                 subscription_tag: tag,
@@ -119,7 +121,7 @@
         if (error) {
             alert('Invite Error: ' + error.message);
         } else {
-            alert('Invite sent to ' + email + '! User will set their password via link.');
+            alert('Invite sent! User will be directed to /setup after clicking the link.');
             init(); 
         }
     }
