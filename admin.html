@@ -27,7 +27,8 @@
         .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
         .search-box, .filter-select { padding: 8px; background: #242831; border: 1px solid #333; color: white; border-radius: 4px; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; cursor: pointer; }
+        tr:hover { background: #2a2e39; }
         th, td { padding: 12px; border: 1px solid #333; text-align: left; }
         th { background: #242831; text-transform: uppercase; font-size: 0.75rem; color: #888; }
         .status-active { color: #089981; font-weight: bold; }
@@ -46,20 +47,19 @@
 <div class="admin-container">
 
     <div id="users-section" class="section active">
-        <!-- Management Panel -->
         <div class="manage-user-form">
-            <h3>Invite User</h3>
+            <h3>Edit/Invite User</h3>
             <input type="email" id="m-email" placeholder="Email">
             <input type="text" id="m-name" placeholder="Full Name">
             <select id="m-tag">
                 <option value="pro">Pro</option>
                 <option value="newsfeed">Newsfeed</option>
                 <option value="audio squawk">Audio Squawk</option>
-                <option value="free">Free</option>
+                <option value="free">Free (No Access)</option>
                 <option value="admin">Admin</option>
             </select>
             <input type="datetime-local" id="m-expiry" title="Trial Record Date">
-            <button onclick="saveUser()" style="background:#2962ff; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Invite User</button>
+            <button onclick="saveUser()" style="background:#2962ff; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Update / Invite</button>
         </div>
 
         <div class="controls">
@@ -100,6 +100,14 @@
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
+    // Populate form from table click
+    function selectUser(email, name, tag) {
+        document.getElementById('m-email').value = email;
+        document.getElementById('m-name').value = name || '';
+        document.getElementById('m-tag').value = tag || 'free';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     async function saveUser() {
         const email = document.getElementById('m-email').value;
         const name = document.getElementById('m-name').value;
@@ -108,21 +116,27 @@
 
         if (!email) return alert("Email is required");
 
-        // Invites user securely via email and redirects to setup page
-        const { error } = await client.auth.admin.inviteUserByEmail(email, {
-            redirectTo: 'https://analyst-wire.pages.dev/setup',
-            data: { 
+        // 1. Check if user exists
+        const { data: existingUser } = await client.from('profiles').select('id').eq('email', email).maybeSingle();
+
+        if (existingUser) {
+            // Update existing
+            const { error } = await client.from('profiles').update({
                 full_name: name,
                 subscription_tag: tag,
                 trial_expires_at: expiry || null
-            }
-        });
+            }).eq('email', email);
 
-        if (error) {
-            alert('Invite Error: ' + error.message);
+            if (error) alert('Update Error: ' + error.message);
+            else { alert('User updated successfully!'); init(); }
         } else {
-            alert('Invite sent! User will be directed to /setup after clicking the link.');
-            init(); 
+            // Invite new
+            const { error } = await client.auth.admin.inviteUserByEmail(email, {
+                redirectTo: 'https://analyst-wire.pages.dev/setup',
+                data: { full_name: name, subscription_tag: tag, trial_expires_at: expiry || null }
+            });
+            if (error) alert('Invite Error: ' + error.message);
+            else { alert('Invite sent! User will be directed to /setup after clicking the link.'); init(); }
         }
     }
 
@@ -138,13 +152,11 @@
     async function init() {
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
-
         const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
         if (!profile || profile.is_admin !== true) { window.location.href = 'terminal.html'; return; }
 
         const { data, error } = await client.from('profiles').select('*');
         if (error) { document.getElementById('admin-body').innerHTML = `<tr><td colspan="7" style="text-align:center;">Error: ${error.message}</td></tr>`; return; }
-
         allUsers = data;
         renderTable(allUsers);
     }
@@ -168,22 +180,17 @@
 
     function renderTable(users) {
         const tbody = document.getElementById('admin-body');
-        tbody.innerHTML = users.length ? users.map(u => {
-            const status = (u.sub_status || 'active').toLowerCase();
-            const isActive = status === 'active';
-            const isCancelRed = (u.cancel_at_period_end || '').toLowerCase().includes('cancel');
-            return `
-                <tr>
-                    <td>${u.full_name || '-'}</td>
-                    <td>${u.email || '-'}</td>
-                    <td>${u.subscription_tag || '-'}</td>
-                    <td class="${isActive ? 'status-active' : 'status-inactive'}">${status.toUpperCase()}</td>
-                    <td>${u.trial_expires_at ? new Date(u.trial_expires_at).toLocaleDateString() : '-'}</td>
-                    <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
-                    <td class="${isCancelRed ? 'status-inactive' : 'status-active'}">${u.cancel_at_period_end || 'False'}</td>
-                </tr>
-            `;
-        }).join('') : '<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>';
+        tbody.innerHTML = users.length ? users.map(u => `
+            <tr onclick="selectUser('${u.email}', '${u.full_name || ''}', '${u.subscription_tag || ''}')">
+                <td>${u.full_name || '-'}</td>
+                <td>${u.email || '-'}</td>
+                <td>${u.subscription_tag || '-'}</td>
+                <td>${(u.sub_status || 'active').toUpperCase()}</td>
+                <td>${u.trial_expires_at ? new Date(u.trial_expires_at).toLocaleDateString() : '-'}</td>
+                <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
+                <td>${u.cancel_at_period_end || 'False'}</td>
+            </tr>
+        `).join('') : '<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>';
     }
 
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
