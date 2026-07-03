@@ -14,14 +14,12 @@
 
         .messenger__outer .newsfeed__title { display: none !important; }
 
-        /* Reduced padding to remove side space */
         .custom-newsfeed-header { display: flex; align-items: center; padding: 15px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 16px; }
         .green-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; margin-right: 12px; }
 
-        /* Centered controls */
+        /* Compact Centered Controls */
         .controls { display: flex; justify-content: center; margin-bottom: 10px; gap: 20px; align-items: center; padding: 10px; }
         
-        /* Dropdown Styling */
         #filterDropdown { 
             padding: 5px 10px; 
             cursor: pointer; 
@@ -96,17 +94,25 @@
         async function checkPermissions() {
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
+            
             const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
             if (profile) {
-                const allowedTags = ['pro', 'newsfeed', 'squawk'];
-                if (profile.is_admin !== true && !allowedTags.includes(profile.subscription_tag)) {
-                    window.location.href = 'index.html';
+                // Allowed tags list
+                const allowedTags = ['pro', 'newsfeed', 'squawk', 'admin'];
+                
+                // Allow if is_admin is true OR if subscription_tag is in allowedTags
+                const isAuthorized = (profile.is_admin === true) || allowedTags.includes(profile.subscription_tag);
+                
+                if (!isAuthorized) {
+                    window.location.href = 'terminal.html';
                 }
+            } else {
+                window.location.href = 'index.html';
             }
         }
         checkPermissions();
 
-        // --- LIVESQUAWK & FILTER LOGIC ---
+        // --- LIVESQUAWK & FILTER LOGIC (Unchanged) ---
         let audioEnabled = false, seconds = 0, timerInterval;
         
         function startTimer() {
