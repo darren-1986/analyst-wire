@@ -7,12 +7,16 @@
     <link rel="stylesheet" href="https://www.livesquawk.com/partner_messenger/css/partner_messenger.css">
     
     <style>
-        /* Base Styling & Sticky Nav */
-        body { margin: 0; padding-top: 50px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; }
-        .messenger__outer { transition: background 0.3s, color 0.3s; flex-grow: 1; }
+        /* Force box-sizing to prevent overflow/alignment issues */
+        *, *:before, *:after { box-sizing: border-box; }
         
+        body, .messenger__outer { transition: background 0.3s, color 0.3s; }
+        body.dark, body.dark .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; }
+        body.light, body.light .messenger__outer { background-color: #ffffff !important; color: #000000 !important; }
+        body.dark .messenger__outer, body.dark .messenger__outer * { color: #e2e8f0 !important; }
+
         /* Fixed Navigation */
-        .top-nav { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; }
+        .top-nav { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; background: #131722; padding: 0 30px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; }
         .nav-links { display: flex; align-items: center; }
         .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: color 0.2s; }
         .nav-links a:hover { color: #d1d4dc; }
@@ -27,10 +31,8 @@
         .dropdown-content a:hover { background-color: #2a2e39; }
 
         /* Newsfeed Content Styles */
-        body.dark, body.dark .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; }
-        body.light, body.light .messenger__outer { background-color: #ffffff !important; color: #000000 !important; }
-        body.dark .messenger__outer, body.dark .messenger__outer * { color: #e2e8f0 !important; }
-
+        body { margin: 0; padding-top: 50px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; }
+        .messenger__outer { flex-grow: 1; overflow: hidden; }
         .messenger__outer .newsfeed__title { display: none !important; }
         .custom-newsfeed-header { display: flex; align-items: center; padding: 15px 0 15px 165px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 16px; }
         .green-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; margin-right: 12px; }
@@ -80,7 +82,7 @@
        </div>
     </div>
 
-    <div class="controls">
+    <div class="controls" style="margin-top: 10px;">
         <div class="audio-container">
             <img src="media/squawkimage.png" alt="Logo" />
             <div class="audio-wrapper">
@@ -132,7 +134,7 @@
         window.onclick = function(event) { if (!event.target.matches('.dropbtn')) document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); }
         document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
 
-        // --- LIVESQUAWK & FILTER LOGIC (Unchanged) ---
+        // --- LIVESQUAWK & FILTER LOGIC ---
         let audioEnabled = false, seconds = 0, timerInterval;
         function startTimer() { timerInterval = setInterval(() => { seconds++; const h = Math.floor(seconds/3600), m = Math.floor((seconds%3600)/60), s = seconds%60; document.getElementById('timerText').innerText = `(${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')})`; }, 1000); }
         function speakText(text) { if (!audioEnabled) return; const u = new SpeechSynthesisUtterance(text); u.volume = document.getElementById('volSlider').value; window.speechSynthesis.speak(u); }
