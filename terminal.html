@@ -31,7 +31,6 @@
         .panel { background: #131722; border: 1px solid #2a2e39; border-radius: 4px; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
         .panel-header { background: #1c2230; padding: 10px 15px; font-size: 13px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #2a2e39; color: #787b86; }
         
-        /* Fix: Changed overflow-y: auto to overflow: hidden to remove container scrollbar */
         .panel-content { flex-grow: 1; overflow: hidden; }
 
         /* New Wrapper for split right column */
@@ -63,8 +62,7 @@
 <div id="terminal-view">
     <div class="ticker-panel">
        <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-ticker-tape.js"></script>
-
-<tv-ticker-tape symbols="FOREXCOM:SPXUSD,FOREXCOM:NSXUSD,FOREXCOM:DJI,FX:EURUSD,BITSTAMP:BTCUSD,BITSTAMP:ETHUSD,CMCMARKETS:GOLD,TVC:SILVER,OANDA:GBPUSD,OANDA:USDJPY,OANDA:AUDUSD,OANDA:GBPJPY,OANDA:USDCAD,OANDA:USDCHF,OANDA:NZDUSD,OANDA:EURJPY,OANDA:EURAUD" line-chart-type="Line" item-size="compact"></tv-ticker-tape>
+       <tv-ticker-tape symbols="FOREXCOM:SPXUSD,FOREXCOM:NSXUSD,FOREXCOM:DJI,FX:EURUSD,BITSTAMP:BTCUSD,BITSTAMP:ETHUSD,CMCMARKETS:GOLD,TVC:SILVER,OANDA:GBPUSD,OANDA:USDJPY,OANDA:AUDUSD,OANDA:GBPJPY,OANDA:USDCAD,OANDA:USDCHF,OANDA:NZDUSD,OANDA:EURJPY,OANDA:EURAUD" line-chart-type="Line" item-size="compact"></tv-ticker-tape>
     </div>
     <div class="panel">
         <div class="panel-header">Newsfeed</div>
@@ -89,17 +87,35 @@
 
 <script>
     function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
+    
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+
     async function init() {
+        // 1. Session check
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
+
+        // 2. Security Check (The Gatekeeper)
         const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
+
+        // IF THE TAG IS FREE, KICK THEM OUT IMMEDIATELY
+        if (!profile || profile.subscription_tag === 'free') {
+            alert("Your subscription is inactive. Redirecting to login.");
+            await client.auth.signOut();
+            window.location.href = 'index.html';
+            return; // Stop here
+        }
+
+        // 3. UI logic
         if (profile) {
             if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'block';
             if (profile.is_admin === true || profile.subscription_tag === 'pro') document.getElementById('nav-courses').style.display = 'block';
         }
     }
+
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+    
+    // Run Init
     init();
 </script>
 </body>
