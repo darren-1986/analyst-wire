@@ -33,6 +33,9 @@
         
         /* Fix: Changed overflow-y: auto to overflow: hidden to remove container scrollbar */
         .panel-content { flex-grow: 1; overflow: hidden; }
+
+        /* New Wrapper for split right column */
+        .right-column { display: flex; flex-direction: column; gap: 15px; min-height: 0; }
     </style>
 </head>
 <body>
@@ -66,26 +69,32 @@
         <div class="panel-header">Newsfeed</div>
         <div class="panel-content"><iframe src="https://analyst-wire.pages.dev/dashboard-newsfeed" style="width:100%; height:100%; border: none;"></iframe></div>
     </div>
-    <div class="panel">
-        <div class="panel-header">Economic Calendar</div>
-        <div class="panel-content" style="padding: 15px;">
-           <!-- TradingView Widget BEGIN -->
-<div class="tradingview-widget-container">
-  <div class="tradingview-widget-container__widget"></div>
-  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/economic-calendar/" rel="noopener nofollow" target="_blank"><span class="blue-text">Economic Calendar</span></a><span class="trademark"> by TradingView</span></div>
-  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
-  {
-  "colorTheme": "dark",
-  "isTransparent": false,
-  "locale": "en",
-  "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
-  "importanceFilter": "-1,0,1",
-  "width": 480,
-  "height": 300
-}
-  </script>
-</div>
-<!-- TradingView Widget END -->
+    
+    <div class="right-column">
+        <div class="panel" style="flex: 1;">
+            <div class="panel-header">Bloomberg TV</div>
+            <div class="panel-content">
+                <iframe width="100%" height="100%" src="https://www.youtube.com/embed/BL065lGzS0k?autoplay=1&mute=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="panel" style="flex: 1;">
+            <div class="panel-header">Economic Calendar</div>
+            <div class="panel-content" style="padding: 15px;">
+                <div class="tradingview-widget-container">
+                    <div class="tradingview-widget-container__widget"></div>
+                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
+                    {
+                    "colorTheme": "dark",
+                    "isTransparent": false,
+                    "locale": "en",
+                    "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
+                    "importanceFilter": "-1,0,1",
+                    "width": "100%",
+                    "height": "100%"
+                    }
+                    </script>
+                </div>
+            </div>
         </div>
     </div>
 </div>
