@@ -64,21 +64,21 @@
 
     <div class="top-nav">
        <div style="height: 50px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 5px 0;">
-           <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px; width: auto; object-fit: contain; display: block;">
+            <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px; width: auto; object-fit: contain; display: block;">
        </div>
        <div class="nav-links">
-           <a href="terminal.html">Dashboard</a>
-           <a href="/newsfeed" class="active">Newsfeed</a>
-           <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
-           
-           <div class="dropdown">
-               <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
-               <div id="settingsDropdown" class="dropdown-content">
-                   <a href="account.html">Account</a>
-                   <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
-                   <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
-               </div>
-           </div>
+            <a href="terminal.html">Dashboard</a>
+            <a href="/newsfeed" class="active">Newsfeed</a>
+            <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
+            
+            <div class="dropdown">
+                <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+                <div id="settingsDropdown" class="dropdown-content">
+                    <a href="account.html">Account</a>
+                    <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                    <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
+                </div>
+            </div>
        </div>
     </div>
 
@@ -113,20 +113,25 @@
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
         async function init() {
+            // 1. Session check
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
             
+            // 2. Fetch profile
             const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
-            if (profile) {
-                // Access Check
-                const allowedTags = ['pro', 'newsfeed', 'squawk'];
-                if (profile.is_admin !== true && !allowedTags.includes(profile.subscription_tag)) {
-                    window.location.href = 'terminal.html'; return;
-                }
-                // Menu visibility
-                if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'block';
-                if (profile.is_admin === true || profile.subscription_tag === 'pro') document.getElementById('nav-courses').style.display = 'block';
+            
+            // 3. HARD BOUNCER LOGIC
+            const allowedTags = ['pro', 'newsfeed', 'squawk'];
+            if (!profile || (profile.is_admin !== true && !allowedTags.includes(profile.subscription_tag))) {
+                alert("Your subscription does not include access to this page.");
+                await client.auth.signOut();
+                window.location.href = 'index.html';
+                return; // Stop execution
             }
+
+            // 4. UI logic
+            if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'block';
+            if (profile.is_admin === true || profile.subscription_tag === 'pro') document.getElementById('nav-courses').style.display = 'block';
         }
 
         // --- NAVIGATION & DROPDOWN ---
