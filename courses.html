@@ -53,7 +53,7 @@
 <div class="page-container">
     <div class="page-header">
         <h1>Trading Courses</h1>
-        <p style="color: #787b86;">Select a course to begin your training.</p>
+        <p style="color: #787b86;">Welcome to the Pro Academy.</p>
     </div>
     <div style="color: #787b86; font-style: italic;">Modules loading...</div>
 </div>
@@ -79,9 +79,26 @@
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
 
-        const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
-        if (profile && profile.is_admin === true) {
-            document.getElementById('nav-admin').style.display = 'block';
+        // Fetch both admin status and subscription tag
+        const { data: profile } = await client
+            .from('profiles')
+            .select('is_admin, subscription_tag')
+            .eq('id', session.user.id)
+            .single();
+
+        if (profile) {
+            // Show Admin link if admin
+            if (profile.is_admin === true) {
+                document.getElementById('nav-admin').style.display = 'block';
+            }
+
+            // Access Restriction Logic
+            // Allow access if they are Admin OR have the 'pro' tag
+            if (profile.is_admin !== true && profile.subscription_tag !== 'pro') {
+                alert("Access Denied: This page is for Pro subscribers only.");
+                window.location.href = 'terminal.html'; 
+                return;
+            }
         }
     }
 
