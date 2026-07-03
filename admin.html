@@ -97,7 +97,6 @@
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    // FIXED SAVE FUNCTION: Only touches "subscription_tag" and "full_name"
     async function saveUser() {
         const email = document.getElementById('m-email').value;
         const name = document.getElementById('m-name').value;
@@ -106,23 +105,22 @@
 
         if (!email) return alert("Email is required");
 
-        const { error } = await client.from('profiles')
-            .update({ 
-                full_name: name, 
-                subscription_tag: tag, 
-                trial_expires_at: expiry || null 
-            })
-            .eq('email', email);
+        // Uses upsert to either Add or Update the row based on the email
+        const { error } = await client.from('profiles').upsert({
+            email: email,
+            full_name: name,
+            subscription_tag: tag,
+            trial_expires_at: expiry || null
+        }, { onConflict: 'email' });
 
         if (error) {
             alert('Update Error: ' + error.message);
         } else {
-            alert('User profile updated!');
+            alert('User profile saved/updated!');
             init(); 
         }
     }
 
-    // ORIGINAL UI LOGIC PRESERVED
     function showSection(id, btn) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.top-nav button').forEach(b => b.classList.remove('active'));
