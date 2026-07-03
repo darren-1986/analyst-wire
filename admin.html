@@ -47,18 +47,18 @@
 
     <div id="users-section" class="section active">
         <div class="manage-user-form">
-            <h3>Update User</h3>
+            <h3>Invite User</h3>
             <input type="email" id="m-email" placeholder="Email">
             <input type="text" id="m-name" placeholder="Full Name">
             <select id="m-tag">
                 <option value="pro">Pro</option>
                 <option value="newsfeed">Newsfeed</option>
                 <option value="audio squawk">Audio Squawk</option>
-                <option value="free">Free (No Access)</option>
+                <option value="free">Free</option>
                 <option value="admin">Admin</option>
             </select>
-            <input type="datetime-local" id="m-expiry" title="Record Trial Date">
-            <button onclick="saveUser()" style="background:#2962ff; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Update Profile</button>
+            <input type="datetime-local" id="m-expiry" title="Trial Record Date">
+            <button onclick="saveUser()" style="background:#2962ff; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Invite User</button>
         </div>
 
         <div class="controls">
@@ -99,7 +99,6 @@
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    // UPSERT: Saves access level to tag and trial record to trial_expires_at
     async function saveUser() {
         const email = document.getElementById('m-email').value;
         const name = document.getElementById('m-name').value;
@@ -108,17 +107,19 @@
 
         if (!email) return alert("Email is required");
 
-        const { error } = await client.from('profiles').upsert({
-            email: email,
-            full_name: name,
-            subscription_tag: tag, // Controls Access
-            trial_expires_at: expiry || null // Record Keeping Only
-        }, { onConflict: 'email' });
+        // Invites user securely via email
+        const { error } = await client.auth.admin.inviteUserByEmail(email, {
+            data: { 
+                full_name: name,
+                subscription_tag: tag,
+                trial_expires_at: expiry || null
+            }
+        });
 
         if (error) {
-            alert('Update Error: ' + error.message);
+            alert('Invite Error: ' + error.message);
         } else {
-            alert('Profile saved!');
+            alert('Invite sent to ' + email + '! User will set their password via link.');
             init(); 
         }
     }
