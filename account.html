@@ -6,16 +6,23 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000000; color: #d1d4dc; margin: 0; min-height: 100vh; }
-        .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; }
+        
+        /* Top Navigation */
+        .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; position: relative; }
         .nav-links { display: flex; align-items: center; }
         .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; }
-        .dropdown { position: relative; margin-left: 20px; }
-        .dropbtn { background: none; border: none; color: #787b86; cursor: pointer; font-size: 18px; }
-        .dropdown-content { display: none; position: absolute; right: 0; background-color: #1c2230; min-width: 150px; border: 1px solid #2a2e39; border-radius: 4px; z-index: 1000; }
-        .dropdown-content a { color: #d1d4dc; padding: 12px 16px; display: block; font-size: 13px; text-decoration: none; cursor: pointer; }
         
+        /* Dropdown Styling */
+        .dropdown { position: relative; margin-left: 20px; }
+        .dropbtn { background: none; border: none; color: #787b86; cursor: pointer; font-size: 18px; padding: 5px; }
+        .dropbtn:hover { color: #fff; }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: #1c2230; min-width: 150px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); border: 1px solid #2a2e39; z-index: 1000; border-radius: 4px; }
+        .dropdown-content a { color: #d1d4dc; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; margin: 0; cursor: pointer; }
+        .dropdown-content a:hover { background-color: #2a2e39; }
+
         .account-container { max-width: 600px; margin: 40px auto; background: #131722; padding: 30px; border-radius: 8px; border: 1px solid #2a2e39; }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-group { margin-bottom: 15px; }
         .info-label { font-size: 11px; color: #787b86; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
         .info-value { font-size: 15px; color: #fff; background: #1c2230; padding: 12px; border-radius: 4px; border: 1px solid #2a2e39; }
         .pwd-input { width: 100%; padding: 12px; margin-bottom: 15px; background: #1c2230; border: 1px solid #2a2e39; color: white; border-radius: 4px; box-sizing: border-box; }
@@ -29,16 +36,18 @@
 <body>
 
 <div class="top-nav">
-    <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px;">
+    <div style="height: 50px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 5px 0;">
+        <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px; width: auto; object-fit: contain; display: block;">
+    </div>
     <div class="nav-links">
         <a href="terminal.html">Dashboard</a>
         <a href="courses.html">Courses</a>
         <div class="dropdown">
-            <button class="dropbtn" onclick="document.getElementById('settingsDropdown').style.display = (document.getElementById('settingsDropdown').style.display === 'block' ? 'none' : 'block')">⚙️</button>
-            <div id="settingsDropdown" class="dropdown-content" style="display:none;">
+            <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+            <div id="settingsDropdown" class="dropdown-content">
                 <a href="account.html" style="color:#2962ff;">Account</a>
                 <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
-                <a id="logoutBtn" style="color: #f23645;">Logout</a>
+                <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
             </div>
         </div>
     </div>
@@ -52,7 +61,7 @@
     </div>
     <div class="info-grid">
         <div class="info-group"><div class="info-label">Plan Type</div><div class="info-value" id="sub-type">Loading...</div></div>
-        <div class="info-group"><div class="info-label">Status</div><div class="info-value" style="border:none; padding:8px 0;"><span class="badge" id="sub-status">Loading...</span></div></div>
+        <div class="info-group"><div class="info-label">Status</div><div class="info-value" style="border:none; background: transparent; padding: 8px 0;"><span class="badge" id="sub-status">Loading...</span></div></div>
         <div class="info-group"><div class="info-label">Subscription Price</div><div class="info-value" id="sub-price">Syncing...</div></div>
         <div class="info-group"><div class="info-label">Next Billing Date</div><div class="info-value" id="sub-date">Syncing...</div></div>
     </div>
@@ -65,27 +74,62 @@
 </div>
 
 <script>
+    function toggleDropdown() {
+        document.getElementById("settingsDropdown").style.display = 
+            document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block";
+    }
+
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
     
     async function init() {
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
+        
         document.getElementById('user-email').innerText = session.user.email;
         const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
+        
         if (profile) {
             if (profile.is_admin) document.getElementById('nav-admin').style.display = 'block';
             document.getElementById('user-name').innerText = profile.full_name || 'N/A';
             document.getElementById('sub-type').innerText = (profile.subscription_tag || 'FREE').toUpperCase();
+            
             const statusStr = (profile.stripe_status || profile.status || 'Active').toUpperCase();
             const statusEl = document.getElementById('sub-status');
             statusEl.innerText = statusStr;
             statusEl.className = statusStr === 'ACTIVE' ? 'badge badge-active' : 'badge badge-canceled';
+            
             document.getElementById('sub-price').innerText = profile.plan_price ? `$${profile.plan_price}/mo` : 'N/A';
-            if (profile.current_period_end) document.getElementById('sub-date').innerText = new Date(profile.current_period_end * 1000).toLocaleDateString();
+            
+            // Robust Date Parsing Fix
+            if (profile.current_period_end) {
+                const val = profile.current_period_end;
+                // Check if numeric timestamp (seconds) or date string
+                const dateObj = typeof val === 'number' ? new Date(val * 1000) : new Date(val);
+                
+                if (!isNaN(dateObj.getTime())) {
+                    document.getElementById('sub-date').innerText = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                } else {
+                    document.getElementById('sub-date').innerText = 'N/A';
+                }
+            } else {
+                document.getElementById('sub-date').innerText = 'N/A';
+            }
         }
     }
+
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
     document.getElementById('manage-sub').addEventListener('click', () => window.open('https://billing.stripe.com/p/login/test_dRmcN58656TOaojaZf9fW00', '_blank'));
+
+    document.getElementById('updatePwdBtn').addEventListener('click', async () => {
+        const newPwd = document.getElementById('new-password').value;
+        const confirmPwd = document.getElementById('confirm-password').value;
+        const statusText = document.getElementById('pwd-status');
+        if (newPwd.length < 6) { statusText.innerText = 'Password too short'; return; }
+        if (newPwd !== confirmPwd) { statusText.innerText = 'Passwords do not match'; return; }
+        const { error } = await client.auth.updateUser({ password: newPwd });
+        statusText.innerText = error ? 'Error: ' + error.message : 'Password updated!';
+    });
+
     init();
 </script>
 </body>
