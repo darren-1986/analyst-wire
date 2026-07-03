@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Analyst Wire | Courses</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000000; color: #d1d4dc; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Top Navigation */
+        .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; flex-shrink: 0; }
+        
+        .nav-links { display: flex; align-items: center; }
+        .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: color 0.2s; }
+        .nav-links a:hover { color: #d1d4dc; }
+        .nav-links a.active { color: #2962ff; font-weight: bold; }
+
+        /* Main Content */
+        .page-container { padding: 30px; overflow-y: auto; flex-grow: 1; }
+        .page-header { margin-bottom: 30px; }
+        .page-header h1 { color: #fff; margin: 0; }
+    </style>
+</head>
+<body>
+
+<div class="top-nav">
+    <div style="height: 50px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 5px 0;">
+        <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px; width: auto; object-fit: contain; display: block;">
+    </div>
+    
+    <div class="nav-links">
+        <a href="terminal.html">Terminal</a>
+        <a href="courses.html" class="active">Courses</a>
+        <a id="nav-account" href="terminal.html?view=account">Account</a>
+        <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+        <a id="logoutBtn" style="cursor: pointer;">Logout</a>
+    </div>
+</div>
+
+<div class="page-container">
+    <div class="page-header">
+        <h1>Trading Courses</h1>
+        <p style="color: #787b86;">Select a course to begin your training.</p>
+    </div>
+    <div style="color: #787b86; font-style: italic;">Modules loading...</div>
+</div>
+
+<script>
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+
+    async function init() {
+        // Gatekeeper: Redirect to login if not signed in
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) { window.location.href = 'index.html'; return; }
+
+        // Check if Admin to show the link
+        const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
+        if (profile && profile.is_admin === true) {
+            document.getElementById('nav-admin').style.display = 'block';
+        }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => { 
+        await client.auth.signOut(); 
+        window.location.href = 'index.html'; 
+    });
+
+    init();
+</script>
+
+</body>
+</html>
