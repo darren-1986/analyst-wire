@@ -14,12 +14,14 @@
 
         .messenger__outer .newsfeed__title { display: none !important; }
 
-        .custom-newsfeed-header { display: flex; align-items: center; padding: 15px 0 15px 165px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 16px; }
+        /* Reduced padding to remove side space */
+        .custom-newsfeed-header { display: flex; align-items: center; padding: 15px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 16px; }
         .green-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; margin-right: 12px; }
 
-        /* Centered and compact controls */
-        .controls { display: flex; justify-content: center; margin-bottom: 10px; gap: 15px; align-items: center; padding: 10px; }
+        /* Centered controls */
+        .controls { display: flex; justify-content: center; margin-bottom: 10px; gap: 20px; align-items: center; padding: 10px; }
         
+        /* Dropdown Styling */
         #filterDropdown { 
             padding: 5px 10px; 
             cursor: pointer; 
