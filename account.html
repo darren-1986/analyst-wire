@@ -45,19 +45,19 @@
         <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px; width: auto; object-fit: contain; display: block;">
     </div>
     <div class="nav-links">
-    <a href="terminal.html">Dashboard</a>
-    <a href="/newsfeed">Newsfeed</a>
-    <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
-    
-    <div class="dropdown">
-        <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
-        <div id="settingsDropdown" class="dropdown-content">
-            <a href="account.html" style="color:#2962ff;">Account</a>
-            <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
-            <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
+        <a href="terminal.html">Dashboard</a>
+        <a href="/newsfeed">Newsfeed</a>
+        <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
+        
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+            <div id="settingsDropdown" class="dropdown-content">
+                <a href="account.html" style="color:#2962ff;">Account</a>
+                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
+            </div>
         </div>
     </div>
-</div>
 </div>
 
 <div class="account-container">
@@ -90,6 +90,7 @@
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
     
     async function init() {
+        // 1. Session check
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
         
