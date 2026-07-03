@@ -78,16 +78,17 @@
 
     function applyFilters() {
         const term = document.getElementById('search').value.toLowerCase();
-        const status = document.getElementById('filter-status').value;
+        const statusFilter = document.getElementById('filter-status').value;
         const tag = document.getElementById('filter-tag').value;
 
         const filtered = allUsers.filter(u => {
             const matchesSearch = (u.full_name?.toLowerCase().includes(term)) || (u.email?.toLowerCase().includes(term));
             
-            // Logic for status dropdown
+            // CORRECTED LOGIC: Check Cancel? column for status filter
+            const isCanceled = (u.cancel_at_period_end || '').toLowerCase().includes('cancel');
             let matchesStatus = true;
-            if (status === 'active') matchesStatus = (u.sub_status?.toLowerCase() === 'active');
-            if (status === 'canceled') matchesStatus = (u.sub_status?.toLowerCase() !== 'active');
+            if (statusFilter === 'active') matchesStatus = !isCanceled;
+            if (statusFilter === 'canceled') matchesStatus = isCanceled;
             
             // Logic for tag dropdown
             const matchesTag = (tag === 'all') || (u.subscription_tag?.toLowerCase() === tag);
@@ -118,12 +119,12 @@
         }).join('') : '<tr><td colspan="7" style="text-align:center;">No users found matching filters.</td></tr>';
     }
 
-    // Event Listeners for all three inputs
     document.getElementById('search').addEventListener('input', applyFilters);
     document.getElementById('filter-status').addEventListener('change', applyFilters);
     document.getElementById('filter-tag').addEventListener('change', applyFilters);
 
     init();
 </script>
+
 </body>
 </html>
