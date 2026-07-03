@@ -5,61 +5,90 @@
     <title>Analyst Wire | Admin Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #0f1115; color: white; font-family: sans-serif; padding: 20px; }
-        .admin-container { max-width: 1200px; margin: 0 auto; background: #1a1d23; border-radius: 8px; padding: 20px; }
+        body { background: #0f1115; color: white; font-family: sans-serif; margin: 0; }
+        
+        /* Top Navigation */
+        .top-nav { background: #1c2230; padding: 15px 20px; display: flex; gap: 20px; border-bottom: 2px solid #2a2e39; align-items: center; }
+        .top-nav button, .top-nav a { background: none; border: none; color: #787b86; cursor: pointer; font-size: 1rem; text-decoration: none; font-weight: bold; }
+        .top-nav button:hover, .top-nav a:hover { color: #fff; }
+        .top-nav .active { color: #2962ff; }
+
+        .admin-container { max-width: 1200px; margin: 20px auto; background: #1a1d23; border-radius: 8px; padding: 20px; }
+
+        /* Sections */
+        .section { display: none; }
+        .section.active { display: block; }
 
         .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
         .search-box, .filter-select { padding: 8px; background: #242831; border: 1px solid #333; color: white; border-radius: 4px; }
-        .nav-link { color: #089981; text-decoration: none; font-size: 0.9rem; margin-left: auto; }
-
+        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 12px; border: 1px solid #333; text-align: left; }
         th { background: #242831; text-transform: uppercase; font-size: 0.75rem; color: #888; }
-
         .status-active { color: #089981; font-weight: bold; }
         .status-inactive { color: #f23645; font-weight: bold; }
     </style>
 </head>
 <body>
 
+<div class="top-nav">
+    <button onclick="showSection('users', this)" class="active">Users</button>
+    <button onclick="showSection('revenue', this)">Revenue</button>
+    <a href="terminal.html">Terminal</a>
+    <button id="logoutBtn">Logout</button>
+</div>
+
 <div class="admin-container">
-    <div class="controls">
-        <h2 style="margin-right: 15px;">User Management</h2>
-        
-        <input type="text" id="search" class="search-box" placeholder="Search name or email...">
-        
-        <select id="filter-status" class="filter-select">
-            <option value="all">Status: All</option>
-            <option value="active">Active</option>
-            <option value="canceled">Canceled/Other</option>
-        </select>
-
-        <select id="filter-tag" class="filter-select">
-            <option value="all">Tag: All</option>
-            <option value="pro">Pro</option>
-            <option value="audio squawk">Audio Squawk</option>
-            <option value="newsfeed">Newsfeed</option>
-            <option value="free">Free</option>
-        </select>
-
-        <a href="/terminal.html" class="nav-link">← Back to Terminal</a>
+    
+    <div id="users-section" class="section active">
+        <div class="controls">
+            <h2>User Management</h2>
+            <input type="text" id="search" class="search-box" placeholder="Search name or email...">
+            <select id="filter-status" class="filter-select">
+                <option value="all">Status: All</option>
+                <option value="active">Active</option>
+                <option value="canceled">Canceled</option>
+            </select>
+            <select id="filter-tag" class="filter-select">
+                <option value="all">Tag: All</option>
+                <option value="pro">Pro</option>
+                <option value="audio squawk">Audio Squawk</option>
+                <option value="newsfeed">Newsfeed</option>
+                <option value="free">Free</option>
+            </select>
+        </div>
+        <table id="admin-table">
+            <thead>
+                <tr>
+                    <th>Name</th><th>Email</th><th>Tag</th><th>Status</th><th>Last Payment</th><th>Next Billing</th><th>Cancel?</th>
+                </tr>
+            </thead>
+            <tbody id="admin-body">
+                <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <table id="admin-table">
-        <thead>
-            <tr>
-                <th>Name</th><th>Email</th><th>Tag</th><th>Status</th><th>Last Payment</th><th>Next Billing</th><th>Cancel?</th>
-            </tr>
-        </thead>
-        <tbody id="admin-body">
-            <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
-        </tbody>
-    </table>
+    <div id="revenue-section" class="section">
+        <h2>Revenue Overview</h2>
+        <p style="color: #787b86;">Revenue data module initialization pending...</p>
+    </div>
+
 </div>
 
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
+    // Section Toggle Logic
+    function showSection(id, btn) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.top-nav button').forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(id + '-section').classList.add('active');
+        btn.classList.add('active');
+    }
+
+    // Existing Auth and Table Logic
     let allUsers = []; 
 
     async function init() {
@@ -83,16 +112,11 @@
 
         const filtered = allUsers.filter(u => {
             const matchesSearch = (u.full_name?.toLowerCase().includes(term)) || (u.email?.toLowerCase().includes(term));
-            
-            // CORRECTED LOGIC: Check Cancel? column for status filter
             const isCanceled = (u.cancel_at_period_end || '').toLowerCase().includes('cancel');
             let matchesStatus = true;
             if (statusFilter === 'active') matchesStatus = !isCanceled;
             if (statusFilter === 'canceled') matchesStatus = isCanceled;
-            
-            // Logic for tag dropdown
             const matchesTag = (tag === 'all') || (u.subscription_tag?.toLowerCase() === tag);
-
             return matchesSearch && matchesStatus && matchesTag;
         });
         renderTable(filtered);
@@ -104,7 +128,6 @@
             const status = (u.sub_status || 'active').toLowerCase();
             const isActive = status === 'active';
             const isCancelRed = (u.cancel_at_period_end || '').toLowerCase().includes('cancel');
-
             return `
                 <tr>
                     <td>${u.full_name || '-'}</td>
@@ -116,15 +139,15 @@
                     <td class="${isCancelRed ? 'status-inactive' : 'status-active'}">${u.cancel_at_period_end || 'False'}</td>
                 </tr>
             `;
-        }).join('') : '<tr><td colspan="7" style="text-align:center;">No users found matching filters.</td></tr>';
+        }).join('') : '<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>';
     }
 
+    document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
     document.getElementById('search').addEventListener('input', applyFilters);
     document.getElementById('filter-status').addEventListener('change', applyFilters);
     document.getElementById('filter-tag').addEventListener('change', applyFilters);
 
     init();
 </script>
-
 </body>
 </html>
