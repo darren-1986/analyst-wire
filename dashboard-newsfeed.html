@@ -96,18 +96,16 @@
             if (!session) { window.location.href = 'index.html'; return; }
             
             const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
-            if (profile) {
-                // Allowed tags list
-                const allowedTags = ['pro', 'newsfeed', 'squawk', 'admin'];
-                
-                // Allow if is_admin is true OR if subscription_tag is in allowedTags
-                const isAuthorized = (profile.is_admin === true) || allowedTags.includes(profile.subscription_tag);
-                
-                if (!isAuthorized) {
-                    window.location.href = 'terminal.html';
-                }
-            } else {
+            
+            // HARD BOUNCER LOGIC
+            const allowedTags = ['pro', 'newsfeed', 'squawk', 'admin'];
+            const isAuthorized = profile && (profile.is_admin === true || allowedTags.includes(profile.subscription_tag));
+            
+            if (!isAuthorized) {
+                alert("Your subscription does not include access to this page.");
+                await client.auth.signOut();
                 window.location.href = 'index.html';
+                return;
             }
         }
         checkPermissions();
