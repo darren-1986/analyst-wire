@@ -17,23 +17,29 @@
         .custom-newsfeed-header { display: flex; align-items: center; padding: 15px 0 15px 165px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 16px; }
         .green-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; margin-right: 12px; }
 
-        .controls { display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px; background: #0f172a; }
-        #searchBar, #filterDropdown { padding: 5px 10px; border-radius: 4px; border: 1px solid #475569; background: #1e293b; color: white; }
+        /* Compact Controls */
+        .controls { display: flex; justify-content: flex-end; margin-bottom: 5px; gap: 10px; align-items: center; padding: 10px; background: #131722; border-bottom: 1px solid #2a2e39; }
+        
+        /* Styled Dropdown */
+        #filterDropdown { 
+            padding: 6px 12px; 
+            border-radius: 4px; 
+            border: 1px solid #2a2e39; 
+            background: #1c2230; 
+            color: #d1d4dc; 
+            cursor: pointer;
+            font-size: 13px;
+        }
+        #searchBar { padding: 6px 12px; border-radius: 4px; border: 1px solid #2a2e39; background: #1c2230; color: white; }
         
         .audio-container { display: flex; align-items: center; gap: 10px; margin-right: auto; }
-        .audio-container img { height: 30px; width: auto; }
-        .audio-wrapper { display: flex; align-items: center; gap: 15px; border: 1px solid #00b4f9; padding: 6px 14px; border-radius: 8px; background: #0f172a; }
-        #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 8px; min-width: 190px; }
+        .audio-container img { height: 25px; width: auto; }
+        .audio-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid #2a2e39; padding: 4px 10px; border-radius: 4px; background: #1c2230; }
+        #audioToggle { cursor: pointer; background: none; border: none; color: #d1d4dc; font-weight: 500; display: flex; align-items: center; gap: 8px; font-size: 12px; }
         .status-on { color: #22c55e !important; }
 
-        .vol-slider { -webkit-appearance: none; width: 80px; height: 6px; background: #334155; border-radius: 3px; outline: none; }
-        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: #00b4f9; border-radius: 50%; cursor: pointer; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: "🌙"; font-size: 12px; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #00b4f9; }
-        input:checked + .slider:before { transform: translateX(26px); content: "☀️"; }
+        .vol-slider { -webkit-appearance: none; width: 60px; height: 4px; background: #334155; border-radius: 2px; outline: none; }
+        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; background: #00b4f9; border-radius: 50%; cursor: pointer; }
     </style>
 </head>
 <body class="dark">
@@ -47,7 +53,7 @@
             </div>
         </div>
         
-        <input type="text" id="searchBar" placeholder="Search keywords..." onkeyup="filterFeed()">
+        <input type="text" id="searchBar" placeholder="Search..." onkeyup="filterFeed()">
         
         <select id="filterDropdown" onchange="setFilter(this.value)">
             <option value="all">All</option>
@@ -57,11 +63,6 @@
             <option value="crypto">Crypto</option>
             <option value="centralBanks">Central Banks</option>
         </select>
-
-        <label class="switch">
-            <input type="checkbox" id="themeToggle" checked>
-            <span class="slider"></span>
-        </label>
     </div>
 
     <div class="custom-newsfeed-header"><div class="green-dot"></div> NEWSFEED</div>
@@ -82,7 +83,6 @@
         }
         init();
 
-        // --- Livesquawk & Filtering ---
         let audioEnabled = false, seconds = 0, timerInterval;
         function startTimer() { timerInterval = setInterval(() => { seconds++; const h = Math.floor(seconds/3600), m = Math.floor((seconds%3600)/60), s = seconds%60; document.getElementById('timerText').innerText = `(${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')})`; }, 1000); }
         function speakText(text) { if (!audioEnabled) return; const u = new SpeechSynthesisUtterance(text); u.volume = document.getElementById('volSlider').value; window.speechSynthesis.speak(u); }
@@ -96,7 +96,6 @@
         function filterFeed() { const query = document.getElementById('searchBar').value.toLowerCase(); document.querySelectorAll('.news__item__outer').forEach(item => { const text = item.innerText.toLowerCase(); const matchesCategory = (currentFilter === 'all' || filters[currentFilter].some(word => text.includes(word))); const matchesSearch = text.includes(query); item.style.display = (matchesCategory && matchesSearch) ? '' : 'none'; }); }
         
         window.messenger_start_init = function() { if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); };
-        document.getElementById('themeToggle').addEventListener('change', () => { document.body.classList.toggle('dark'); document.body.classList.toggle('light'); });
         const feedContainer = document.getElementById('livesquawk_messenger_outer');
         new MutationObserver((mutations) => { mutations.forEach(m => m.addedNodes.forEach(node => { if (node.classList && node.classList.contains('news__item__outer')) { if (audioTriggerKeywords.some(kw => node.innerText.toLowerCase().includes(kw.toLowerCase()))) speakText(node.innerText); } })); }).observe(feedContainer, { childList: true, subtree: true });
         
