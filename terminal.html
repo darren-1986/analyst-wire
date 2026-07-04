@@ -46,6 +46,7 @@
    <div class="nav-links">
        <a href="terminal.html" class="active">Dashboard</a>
        <a href="/newsfeed">Newsfeed</a>
+       <a id="nav-key-levels" href="key_levels.html" style="display: none;">Key Levels</a>
        <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
        
        <div class="dropdown">
@@ -91,31 +92,34 @@
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
     async function init() {
-        // 1. Session check
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
 
-        // 2. Security Check (The Gatekeeper)
         const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
 
-        // IF THE TAG IS FREE, KICK THEM OUT IMMEDIATELY
         if (!profile || profile.subscription_tag === 'free') {
             alert("Your subscription is inactive. Redirecting to login.");
             await client.auth.signOut();
             window.location.href = 'index.html';
-            return; // Stop here
+            return;
         }
 
-        // 3. UI logic
+        // Visibility Logic for Navigation Links
         if (profile) {
-            if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'block';
-            if (profile.is_admin === true || profile.subscription_tag === 'pro') document.getElementById('nav-courses').style.display = 'block';
+            if (profile.is_admin === true) {
+                document.getElementById('nav-admin').style.display = 'block';
+            }
+            
+            // Show Courses and Key Levels for Pro/Admin
+            if (profile.is_admin === true || profile.subscription_tag === 'pro') {
+                document.getElementById('nav-courses').style.display = 'block';
+                document.getElementById('nav-key-levels').style.display = 'block';
+            }
         }
     }
 
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
     
-    // Run Init
     init();
 </script>
 </body>
