@@ -15,17 +15,19 @@
 <body>
     <div class="upload-container">
         <h2>Upload Key Levels</h2>
+        <label>Select Date:</label>
         <input type="date" id="upload-date">
         <input type="file" id="csvFile" accept=".csv" />
-        <button onclick="processUpload()">Upload & Replace</button>
+        <button onclick="processUpload()">Upload & Replace Data</button>
         <div id="status"></div>
     </div>
 
     <script>
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-        function findVal(row, label) {
-            const fullText = Array.isArray(row) ? row.join(" ") : "";
+        function findVal(rowArray, label) {
+            if (!Array.isArray(rowArray)) return 0;
+            const fullText = rowArray.join(" ");
             const regex = new RegExp(`${label}:\\s*([\\d\\.]+)`);
             const match = fullText.match(regex);
             return match ? parseFloat(match[1]) : 0;
@@ -42,19 +44,29 @@
                 complete: async (results) => {
                     await client.from('key_levels').delete().eq('trade_date', date);
 
-                    const cleanData = results.data.slice(1).filter(row => Array.isArray(row)).map(row => ({
-                        ticker: row[0],
-                        s1: findVal(row[2], 'S1'),
-                        s2: findVal(row[2], 'S2'),
-                        r1: findVal(row[3], 'R1'),
-                        r2: findVal(row[3], 'R2'),
-                        bias: (row.join ? row.join(" ") : "").includes('↑') ? '↑ Bullish' : (row.join ? row.join(" ") : "").includes('↓') ? '↓ Bearish' : 'Neutral',
-                        bull_bear_line: parseFloat(row[4]) || 0,
-                        trade_date: date
-                    }));
+                    const cleanData = results.data.slice(1).filter(r => Array.isArray(r)).map(row => {
+                        const s1 = findVal(row, 'S1');
+                        const r1 = findVal(row, 'R1');
+                        const bbl = parseFloat(row[4]) || 0;
+                        const mid = (s1 + r1) / 2;
+                        
+                        // AUTO-CALCULATE BIAS
+                        const calculatedBias = (bbl > mid) ? '↑ Bullish' : (bbl < mid ? '↓ Bearish' : 'Neutral');
+
+                        return {
+                            ticker: row[0],
+                            s1: s1,
+                            s2: findVal(row, 'S2'),
+                            r1: r1,
+                            r2: findVal(row, 'R2'),
+                            bias: calculatedBias,
+                            bull_bear_line: bbl,
+                            trade_date: date
+                        };
+                    });
 
                     const { error } = await client.from('key_levels').insert(cleanData);
-                    document.getElementById('status').innerText = error ? "Error: " + error.message : "Success!";
+                    document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Bias auto-calculated.";
                 }
             });
         }
