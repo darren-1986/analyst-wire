@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Analyst Wire | Admin Upload</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         body { background: #0f1115; color: white; padding: 40px; font-family: sans-serif; }
@@ -14,7 +14,6 @@
     </style>
 </head>
 <body>
-
     <div class="upload-container">
         <h2>Upload Key Levels</h2>
         <label>Select Date for this data:</label>
@@ -28,11 +27,9 @@
     <script>
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-        // Pattern matching function to ignore bad headers
-        function findVal(rowArray, label) {
-            const fullText = rowArray.join(" ");
+        function findVal(text, label) {
             const regex = new RegExp(`${label}:\\s*([\\d\\.]+)`);
-            const match = fullText.match(regex);
+            const match = text.match(regex);
             return match ? parseFloat(match[1]) : 0;
         }
 
@@ -45,23 +42,24 @@
                 header: false,
                 skipEmptyLines: true,
                 complete: async (results) => {
-                    // 1. DELETE existing data for this date
+                    // 1. DELETE EXISTING DATA FOR THIS DATE FIRST
                     await client.from('key_levels').delete().eq('trade_date', date);
 
                     // 2. Map and Insert
+                    // Row structure based on your screenshot: 0:Ticker, 1:Bias, 2:Support, 3:Resistance, 4:Line
                     const cleanData = results.data.slice(1).map(row => ({
                         ticker: row[0],
-                        s1: findVal(row, 'S1'),
-                        s2: findVal(row, 'S2'),
-                        r1: findVal(row, 'R1'),
-                        r2: findVal(row, 'R2'),
-                        bias: row.join(" ").includes('↑') ? '↑ Bullish' : (row.join(" ").includes('↓') ? '↓ Bearish' : 'Neutral'),
-                        bull_bear_line: parseFloat(row[row.length - 1]) || 0,
+                        bias: row[1] || 'Neutral',
+                        s1: findVal(row[2], 'S1'),
+                        s2: findVal(row[2], 'S2'),
+                        r1: findVal(row[3], 'R1'),
+                        r2: findVal(row[3], 'R2'),
+                        bull_bear_line: parseFloat(row[4]) || 0,
                         trade_date: date
                     }));
 
                     const { error } = await client.from('key_levels').insert(cleanData);
-                    document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Radar updated for " + date;
+                    document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Data replaced for " + date;
                 }
             });
         }
