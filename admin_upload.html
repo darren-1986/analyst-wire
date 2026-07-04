@@ -3,57 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <title>Analyst Wire | Admin Upload</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         body { background: #0f1115; color: white; padding: 40px; font-family: sans-serif; }
         .upload-container { max-width: 500px; background: #1a1d23; padding: 25px; border-radius: 8px; border: 1px solid #333; }
+        input[type="file"], input[type="date"] { margin: 15px 0; display: block; width: 100%; padding: 8px; background: #1a1d23; color: white; border: 1px solid #333; }
         button { background: #2962ff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-        #status { margin-top: 20px; }
+        #status { margin-top: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
+
     <div class="upload-container">
-        <h2>Upload Key Levels (Robust Parser)</h2>
+        <h2>Upload Key Levels</h2>
+        <label>Select Date for this data:</label>
+        <input type="date" id="upload-date">
         <input type="file" id="csvFile" accept=".csv" />
-        <button onclick="processUpload()">Upload Data</button>
+        <button onclick="processUpload()">Upload & Replace Data</button>
         <div id="status"></div>
+        <a href="admin.html" style="color: #787b86; display: block; margin-top: 20px; font-size: 12px;">← Back to Admin</a>
     </div>
 
     <script>
-        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'YOUR_SUPABASE_KEY');
 
-        // Helper to extract numbers like "S1: 1.1385" from any string
-        function getVal(text, label) {
-            if (!text) return 0;
+        // Pattern matching function to ignore bad headers
+        function findVal(rowArray, label) {
+            const fullText = rowArray.join(" ");
             const regex = new RegExp(`${label}:\\s*([\\d\\.]+)`);
-            const match = text.match(regex);
+            const match = fullText.match(regex);
             return match ? parseFloat(match[1]) : 0;
         }
 
         async function processUpload() {
             const file = document.getElementById('csvFile').files[0];
+            const date = document.getElementById('upload-date').value;
+            if (!file || !date) return alert("Select file AND date.");
+
             Papa.parse(file, {
-                header: false, // Set to false to parse by index
+                header: false,
                 skipEmptyLines: true,
                 complete: async (results) => {
-                    // Skip the first row (headers) and map by index
-                    const cleanData = results.data.slice(1).map(row => {
-                        return {
-                            ticker: row[0],
-                            s1: getVal(row[1], 'S1'),
-                            s2: getVal(row[1], 'S2'),
-                            r1: getVal(row[2], 'R1'),
-                            r2: getVal(row[2], 'R2'),
-                            bias: row[3] || 'Neutral',
-                            bull_bear_line: parseFloat(row[4]) || 0,
-                            trade_date: new Date().toISOString().split('T')[0]
-                        };
-                    });
+                    // 1. DELETE existing data for this date
+                    await client.from('key_levels').delete().eq('trade_date', date);
+
+                    // 2. Map and Insert
+                    const cleanData = results.data.slice(1).map(row => ({
+                        ticker: row[0],
+                        s1: findVal(row, 'S1'),
+                        s2: findVal(row, 'S2'),
+                        r1: findVal(row, 'R1'),
+                        r2: findVal(row, 'R2'),
+                        bias: row.join(" ").includes('↑') ? '↑ Bullish' : (row.join(" ").includes('↓') ? '↓ Bearish' : 'Neutral'),
+                        bull_bear_line: parseFloat(row[row.length - 1]) || 0,
+                        trade_date: date
+                    }));
 
                     const { error } = await client.from('key_levels').insert(cleanData);
-                    document.getElementById('status').innerText = error ? "Error: " + error.message : "Success!";
-                    if(error) console.error(error);
+                    document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Radar updated for " + date;
                 }
             });
         }
