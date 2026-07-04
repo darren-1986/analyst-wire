@@ -7,7 +7,7 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000000; color: #d1d4dc; margin: 0; min-height: 100vh; }
         
-        /* Navigation (Same as Dashboard) */
+        /* Navigation (Preserved) */
         .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; }
         .nav-links { display: flex; align-items: center; }
         .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; }
@@ -18,12 +18,16 @@
         .dropbtn { background: none; border: none; color: #787b86; cursor: pointer; font-size: 18px; padding: 5px; }
         .dropdown-content { display: none; position: absolute; right: 0; background-color: #1c2230; min-width: 150px; border: 1px solid #2a2e39; z-index: 1000; border-radius: 4px; }
         .dropdown-content a { color: #d1d4dc; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; }
+        .dropdown-content a:hover { background-color: #2a2e39; }
 
-        /* Content */
+        /* Radar Styling */
         .container { padding: 30px; }
-        table { width: 100%; border-collapse: collapse; background: #131722; margin-top: 20px; }
-        th { background: #1c2230; padding: 12px; text-align: left; border: 1px solid #2a2e39; color: #787b86; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; background: #131722; margin-top: 20px; border: 1px solid #2a2e39; }
+        th { background: #1c2230; padding: 12px; text-align: left; border: 1px solid #2a2e39; color: #787b86; font-size: 12px; text-transform: uppercase; }
         td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
+        .bias-up { color: #089981; font-weight: bold; }
+        .bias-down { color: #f23645; font-weight: bold; }
+        .range-badge { background: #2a2e39; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -43,6 +47,7 @@
             <div id="settingsDropdown" class="dropdown-content">
                 <a href="account.html">Account</a>
                 <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
                 <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
             </div>
         </div>
@@ -50,15 +55,15 @@
 </div>
 
 <div class="container">
-    <h1>Key Levels & Bias</h1>
+    <h1>Market Trade Radar</h1>
     <table id="levels-table">
         <thead>
             <tr>
-                <th>Date</th><th>Ticker</th><th>S1</th><th>S2</th><th>R1</th><th>R2</th><th>Bias</th><th>Line</th>
+                <th>Date</th><th>Ticker</th><th>Bias</th><th>Bull/Bear Line</th><th>Volatility Range</th><th>S1</th><th>R1</th>
             </tr>
         </thead>
         <tbody id="levels-body">
-            <tr><td colspan="8">Loading data...</td></tr>
+            <tr><td colspan="7">Loading data...</td></tr>
         </tbody>
     </table>
 </div>
@@ -80,21 +85,36 @@
             return;
         }
 
-        // Show UI links
-        if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'block';
-        if (profile.is_admin === true || profile.subscription_tag === 'pro') document.getElementById('nav-courses').style.display = 'block';
+        // Show Admin/Upload/Courses Links
+        if (profile.is_admin === true) {
+            document.getElementById('nav-admin').style.display = 'block';
+            document.getElementById('nav-upload').style.display = 'block';
+        }
+        if (profile.is_admin === true || profile.subscription_tag === 'pro') {
+            document.getElementById('nav-courses').style.display = 'block';
+        }
 
         // Fetch Data
         const { data, error } = await client.from('key_levels').select('*').order('trade_date', {ascending: false});
-        if (error) { document.getElementById('levels-body').innerHTML = "<tr><td colspan='8'>Error loading data.</td></tr>"; return; }
+        if (error) { document.getElementById('levels-body').innerHTML = "<tr><td colspan='7'>Error loading data.</td></tr>"; return; }
         
         const tbody = document.getElementById('levels-body');
-        tbody.innerHTML = data.map(r => `
-            <tr>
-                <td>${r.trade_date}</td><td>${r.ticker}</td><td>${r.s1}</td><td>${r.s2}</td>
-                <td>${r.r1}</td><td>${r.r2}</td><td>${r.bias}</td><td>${r.bull_bear_line}</td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = data.map(r => {
+            const range = (r.r1 - r.s1).toFixed(4);
+            const biasClass = (r.bias && r.bias.includes('↓')) ? 'bias-down' : (r.bias && r.bias.includes('↑') ? 'bias-up' : '');
+            
+            return `
+                <tr>
+                    <td>${r.trade_date}</td>
+                    <td><b>${r.ticker}</b></td>
+                    <td class="${biasClass}">${r.bias || '—'}</td>
+                    <td>${r.bull_bear_line}</td>
+                    <td><span class="range-badge">${range} pips</span></td>
+                    <td>${r.s1}</td>
+                    <td>${r.r1}</td>
+                </tr>
+            `;
+        }).join('');
     }
 
     function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
