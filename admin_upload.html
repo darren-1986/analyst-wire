@@ -8,69 +8,55 @@
     <style>
         body { background: #0f1115; color: white; padding: 40px; font-family: sans-serif; }
         .upload-container { max-width: 500px; background: #1a1d23; padding: 25px; border-radius: 8px; border: 1px solid #333; }
-        input[type="file"] { margin: 20px 0; display: block; }
         button { background: #2962ff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-        #status { margin-top: 20px; font-size: 14px; }
+        #status { margin-top: 20px; }
     </style>
 </head>
 <body>
     <div class="upload-container">
-        <h2>Upload Key Levels (CSV)</h2>
+        <h2>Upload Key Levels (Robust Parser)</h2>
         <input type="file" id="csvFile" accept=".csv" />
-        <button onclick="processUpload()">Upload & Process</button>
+        <button onclick="processUpload()">Upload Data</button>
         <div id="status"></div>
-        <a href="admin.html" style="color: #787b86; display: block; margin-top: 20px; font-size: 12px;">← Back to Admin</a>
     </div>
 
     <script>
-        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'YOUR_SUPABASE_KEY');
 
-        async function init() {
-            const { data: { session } } = await client.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
-            const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
-            if (!profile || profile.is_admin !== true) { window.location.href = 'terminal.html'; return; }
+        // Helper to extract numbers like "S1: 1.1385" from any string
+        function getVal(text, label) {
+            if (!text) return 0;
+            const regex = new RegExp(`${label}:\\s*([\\d\\.]+)`);
+            const match = text.match(regex);
+            return match ? parseFloat(match[1]) : 0;
         }
 
         async function processUpload() {
             const file = document.getElementById('csvFile').files[0];
-            const statusDiv = document.getElementById('status');
-            
             Papa.parse(file, {
-                header: true,
+                header: false, // Set to false to parse by index
                 skipEmptyLines: true,
-                transformHeader: (h) => h.trim().replace(/\s+/g, ' '), // Clean headers
                 complete: async (results) => {
-                    // DEBUG: Check what the headers actually are
-                    console.log("Detected Headers:", Object.keys(results.data[0]));
-
-                    const cleanData = results.data.map(row => {
-                        const getVal = (cell, label) => {
-                            if (!cell) return 0;
-                            const regex = new RegExp(`${label}:\\s*([\\d\\.]+)`);
-                            const match = cell.match(regex);
-                            return match ? parseFloat(match[1]) : 0;
-                        };
-
+                    // Skip the first row (headers) and map by index
+                    const cleanData = results.data.slice(1).map(row => {
                         return {
-                            ticker: row['Ticker'] || row['ticker'],
-                            bias: row['S.T. Bias'] || 'Neutral',
-                            bull_bear_line: parseFloat(row['BULL/BEAR LINE']) || 0,
-                            s1: getVal(row['SUPPORT'] || '', 'S1'),
-                            s2: getVal(row['SUPPORT'] || '', 'S2'),
-                            r1: getVal(row['RESISTANCE'] || '', 'R1'),
-                            r2: getVal(row['RESISTANCE'] || '', 'R2'),
+                            ticker: row[0],
+                            s1: getVal(row[1], 'S1'),
+                            s2: getVal(row[1], 'S2'),
+                            r1: getVal(row[2], 'R1'),
+                            r2: getVal(row[2], 'R2'),
+                            bias: row[3] || 'Neutral',
+                            bull_bear_line: parseFloat(row[4]) || 0,
                             trade_date: new Date().toISOString().split('T')[0]
                         };
                     });
 
                     const { error } = await client.from('key_levels').insert(cleanData);
-                    statusDiv.innerText = error ? "Error: " + error.message : "Success! Data Uploaded.";
+                    document.getElementById('status').innerText = error ? "Error: " + error.message : "Success!";
                     if(error) console.error(error);
                 }
             });
         }
-        init();
     </script>
 </body>
 </html>
