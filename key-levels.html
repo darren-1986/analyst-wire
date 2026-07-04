@@ -20,12 +20,13 @@
         .dropdown-content a { color: #d1d4dc; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; }
         .dropdown-content a:hover { background-color: #2a2e39; }
 
-        /* Content & Radar Styling */
+        /* Content */
         .container { padding: 30px; }
         table { width: 100%; border-collapse: collapse; background: #131722; margin-top: 20px; border: 1px solid #2a2e39; }
         th { background: #1c2230; padding: 12px; text-align: left; border: 1px solid #2a2e39; color: #787b86; font-size: 11px; text-transform: uppercase; }
         td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
         
+        /* Indicators */
         .bias-up { color: #089981; font-weight: bold; }
         .bias-down { color: #f23645; font-weight: bold; }
         .range-badge { background: #2a2e39; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; }
@@ -73,7 +74,7 @@
 </div>
 
 <script>
-    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'YOUR_SUPABASE_KEY');
 
     async function init() {
         const { data: { session } } = await client.auth.getSession();
@@ -81,8 +82,8 @@
 
         const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
         
-        // --- IRONCLAD BOUNCER ---
-        // Explicitly allow if Admin is TRUE or if they have the right tag
+        // --- IRONCLAD ACCESS CHECK ---
+        // Access is granted if they are an ADMIN OR have a qualified tag.
         const allowedTags = ['pro', 'newsfeed', 'squawk'];
         const isAuthorized = (profile && profile.is_admin === true) || (profile && allowedTags.includes(profile.subscription_tag));
 
@@ -92,7 +93,7 @@
             return;
         }
 
-        // Show Admin/Upload/Courses Links
+        // UI Visibility
         if (profile.is_admin === true) {
             document.getElementById('nav-admin').style.display = 'block';
             document.getElementById('nav-upload').style.display = 'block';
@@ -101,7 +102,7 @@
             document.getElementById('nav-courses').style.display = 'block';
         }
 
-        // Fetch Data
+        // Fetch Radar Data
         const { data, error } = await client.from('key_levels').select('*').order('trade_date', {ascending: false});
         if (error) { document.getElementById('levels-body').innerHTML = "<tr><td colspan='8'>Error loading data.</td></tr>"; return; }
         
@@ -111,7 +112,6 @@
             const isTrending = range > 0.0050; 
             const state = isTrending ? "Trending" : "Consolidated";
             const stateClass = isTrending ? "trending" : "consolidated";
-
             const biasText = r.bias || 'Neutral';
             const biasClass = (biasText.includes('↓') || biasText.toLowerCase().includes('bear')) ? 'bias-down' : (biasText.includes('↑') || biasText.toLowerCase().includes('bull') ? 'bias-up' : '');
             
