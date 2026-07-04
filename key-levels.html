@@ -22,6 +22,9 @@
 
         /* Content */
         .container { padding: 30px; }
+        .filter-section { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; }
+        select, input[type="date"] { background: #131722; color: white; padding: 8px; border: 1px solid #2a2e39; border-radius: 4px; }
+
         table { width: 100%; border-collapse: collapse; background: #131722; margin-top: 20px; border: 1px solid #2a2e39; }
         th { background: #1c2230; padding: 12px; text-align: left; border: 1px solid #2a2e39; color: #787b86; font-size: 11px; text-transform: uppercase; }
         td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
@@ -60,13 +63,25 @@
 
 <div class="container">
     <h1>Market Trade Radar</h1>
-    <label style="color: #787b86; font-size: 12px;">Select Date to View:</label>
-    <input type="date" id="date-filter" onchange="fetchData(this.value)" style="background:#131722; color:white; border:1px solid #2a2e39; padding:8px; margin-bottom: 20px; display: block;">
+    
+    <div class="filter-section">
+        <input type="date" id="date-filter" onchange="render()">
+        <select id="cat-filter" onchange="render()">
+            <option value="all">All Categories</option>
+            <option value="Forex">Forex</option>
+            <option value="Commodities">Commodities</option>
+            <option value="Equities">Equities</option>
+            <option value="Indices">Indices</option>
+        </select>
+        <select id="ticker-filter" onchange="render()">
+            <option value="all">All Tickers</option>
+        </select>
+    </div>
 
     <table id="levels-table">
         <thead>
             <tr>
-                <th>Date</th><th>Ticker</th><th>Bias</th><th>Bull/Bear Line</th><th>Market State</th><th>Volatility (R1-S1)</th><th>S1</th><th>R1</th>
+                <th>Date</th><th>Ticker</th><th>Bias</th><th>Bull/Bear Line</th><th>Market State</th><th>Volatility</th><th>S1</th><th>R1</th>
             </tr>
         </thead>
         <tbody id="levels-body">
@@ -78,68 +93,82 @@
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
+    // Categorization Map
+    const categoryMap = {
+        'EUR/USD': 'Forex', 'GBP/USD': 'Forex', 'AUD/USD': 'Forex', 'NZD/USD': 'Forex', 'AUD/NZD': 'Forex', 'EUR/CHF': 'Forex', 
+        'USD/CHF': 'Forex', 'USD/CAD': 'Forex', 'USD/NOK': 'Forex', 'USD/MXN': 'Forex', 'USD/JPY': 'Forex', 'EUR/JPY': 'Forex',
+        'GBP/JPY': 'Forex', 'AUD/JPY': 'Forex', 'NZD/JPY': 'Forex', 'CAD/JPY': 'Forex', 'EUR/GBP': 'Forex', 'EUR/AUD': 'Forex',
+        'EUR/NZD': 'Forex', 'GBP/AUD': 'Forex', 'GBP/NZD': 'Forex', 'DXY': 'Forex',
+        'XAU/USD': 'Commodities', 'XAG/USD': 'Commodities', 'WTI': 'Commodities', 'COPPER': 'Commodities', 'COCOA': 'Commodities',
+        'COFFEE': 'Commodities', 'COTTONSUGAR': 'Commodities', 'CORN': 'Commodities', 'SOYBEANS': 'Commodities', 'WHEAT': 'Commodities',
+        'AAPL': 'Equities', 'AMZN': 'Equities', 'GOOG': 'Equities', 'MSFT': 'Equities', 'TSLA': 'Equities', 'META': 'Equities', 'V': 'Equities', 
+        'JPM': 'Equities', 'KO': 'Equities', 'MCD': 'Equities', 'AMD': 'Equities', 'BABA': 'Equities', 'JNJ': 'Equities', 'NVDA': 'Equities',
+        'S&P500': 'Indices', 'NASDAQ': 'Indices', 'DOW': 'Indices', 'RUSSEL': 'Indices', 'FTSE': 'Indices', 'NIKKEI': 'Indices', 'HANG': 'Indices',
+        'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto'
+    };
+
+    let cachedData = [];
+
     async function init() {
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
-
         const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
         
-        // --- ACCESS CHECK ---
         const allowedTags = ['pro', 'newsfeed', 'squawk'];
-        const isAuthorized = (profile && profile.is_admin === true) || (profile && allowedTags.includes(profile.subscription_tag));
-
-        if (!isAuthorized) {
-            alert("Access Denied: This page is for Pro or Admin members only.");
-            window.location.href = 'terminal.html';
-            return;
+        if (!profile || (!profile.is_admin && !allowedTags.includes(profile.subscription_tag))) {
+            alert("Access Denied."); window.location.href = 'terminal.html'; return;
         }
 
-        // Show Admin/Upload Links
-        if (profile.is_admin === true) {
+        if (profile.is_admin) {
             document.getElementById('nav-admin').style.display = 'block';
             document.getElementById('nav-upload').style.display = 'block';
         }
 
-        // Initialize Date Filter to Today
         document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
-        fetchData(document.getElementById('date-filter').value);
+        fetchData();
     }
 
-    async function fetchData(date) {
-        const tbody = document.getElementById('levels-body');
-        tbody.innerHTML = "<tr><td colspan='8'>Loading...</td></tr>";
+    async function fetchData() {
+        const date = document.getElementById('date-filter').value;
+        const { data } = await client.from('key_levels').select('*').eq('trade_date', date);
+        cachedData = data || [];
+        
+        // Populate Ticker Filter
+        const tickerSelect = document.getElementById('ticker-filter');
+        tickerSelect.innerHTML = '<option value="all">All Tickers</option>';
+        [...new Set(cachedData.map(r => r.ticker))].sort().forEach(t => {
+            tickerSelect.innerHTML += `<option value="${t}">${t}</option>`;
+        });
+        
+        render();
+    }
 
-        const { data, error } = await client.from('key_levels').select('*').eq('trade_date', date).order('ticker', {ascending: true});
+    function render() {
+        const cat = document.getElementById('cat-filter').value;
+        const tick = document.getElementById('ticker-filter').value;
+        const tbody = document.getElementById('levels-body');
         
-        if (error) { tbody.innerHTML = "<tr><td colspan='8'>Error loading data.</td></tr>"; return; }
-        if (!data || data.length === 0) { tbody.innerHTML = "<tr><td colspan='8'>No data found for this date.</td></tr>"; return; }
-        
-        tbody.innerHTML = data.map(r => {
+        const filtered = cachedData.filter(r => {
+            const matchesCat = (cat === 'all' || categoryMap[r.ticker] === cat);
+            const matchesTick = (tick === 'all' || r.ticker === tick);
+            return matchesCat && matchesTick;
+        });
+
+        tbody.innerHTML = filtered.length ? filtered.map(r => {
             const range = Math.abs(r.r1 - r.s1).toFixed(4);
-            const isTrending = range > 0.0050; 
-            const state = isTrending ? "Trending" : "Consolidated";
-            const stateClass = isTrending ? "trending" : "consolidated";
-            const biasText = r.bias || 'Neutral';
-            const biasClass = (biasText.includes('↓') || biasText.toLowerCase().includes('bear')) ? 'bias-down' : (biasText.includes('↑') || biasText.toLowerCase().includes('bull') ? 'bias-up' : '');
-            
-            return `
-                <tr>
-                    <td>${r.trade_date}</td>
-                    <td><b>${r.ticker}</b></td>
-                    <td class="${biasClass}">${biasText}</td>
-                    <td>${r.bull_bear_line}</td>
-                    <td><span class="state-badge ${stateClass}">${state}</span></td>
-                    <td><span class="range-badge">${range}</span></td>
-                    <td>${r.s1}</td>
-                    <td>${r.r1}</td>
-                </tr>
-            `;
-        }).join('');
+            const state = (range > 0.0050) ? "Trending" : "Consolidated";
+            const biasClass = (r.bias?.includes('↓')) ? 'bias-down' : (r.bias?.includes('↑') ? 'bias-up' : '');
+            return `<tr>
+                <td>${r.trade_date}</td><td><b>${r.ticker}</b></td>
+                <td class="${biasClass}">${r.bias}</td><td>${r.bull_bear_line}</td>
+                <td><span class="state-badge ${state.toLowerCase()}">${state}</span></td>
+                <td><span class="range-badge">${range}</span></td><td>${r.s1}</td><td>${r.r1}</td>
+            </tr>`;
+        }).join('') : '<tr><td colspan="8">No data for selected filters.</td></tr>';
     }
 
     function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
-    
     init();
 </script>
 </body>
