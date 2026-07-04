@@ -2,97 +2,57 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Analyst Wire | Admin Upload</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <title>Admin Upload</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <style>
-        body { background: #0f1115; color: white; padding: 40px; font-family: sans-serif; }
-        .upload-container { max-width: 500px; background: #1a1d23; padding: 25px; border-radius: 8px; border: 1px solid #333; }
-        input[type="file"] { margin: 20px 0; display: block; }
-        button { background: #2962ff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #1e4bd8; }
-        #status { margin-top: 20px; font-size: 14px; }
-    </style>
+    <style>body{background:#0f1115; color:white; padding:40px; font-family:sans-serif;}</style>
 </head>
 <body>
-
-    <div class="upload-container">
-        <h2>Upload Key Levels (CSV)</h2>
-        <p style="color: #888; font-size: 13px;">Format: Ticker, SUPPORT, RESISTANCE, S.T. Bias, BULL/BEAR LINE</p>
+    <div style="max-width:500px; background:#1a1d23; padding:25px; border-radius:8px;">
+        <h2>Upload Data</h2>
         <input type="file" id="csvFile" accept=".csv" />
         <button onclick="processUpload()">Upload & Process</button>
         <div id="status"></div>
-        <a href="admin.html" style="color: #787b86; display: block; margin-top: 20px; font-size: 12px;">← Back to Admin</a>
     </div>
 
     <script>
-        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-
-        async function init() {
-            const { data: { session } } = await client.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
-
-            // ADMIN BOUNCER: Only allow access if is_admin is true
-            const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
-            
-            if (!profile || profile.is_admin !== true) {
-                alert("Unauthorized: Admin access required.");
-                window.location.href = 'terminal.html';
-                return;
-            }
-        }
-
-        // Helper to extract specific numeric values from combined strings like "S1: 1.1385 S2: 1.1372"
-        function extractValue(text, label) {
-            if (!text) return 0;
-            const regex = new RegExp(`${label}:\\s*([\\d\\.]+)`);
-            const match = text.match(regex);
-            return match ? parseFloat(match[1]) : 0;
-        }
+        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'YOUR_SUPABASE_KEY');
 
         async function processUpload() {
-            const fileInput = document.getElementById('csvFile');
-            const statusDiv = document.getElementById('status');
-            if (!fileInput.files[0]) { alert("Please select a file first."); return; }
-
-            statusDiv.innerText = "Processing and Cleaning Data...";
-
-            Papa.parse(fileInput.files[0], {
+            const file = document.getElementById('csvFile').files[0];
+            Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
                 complete: async (results) => {
-                    try {
-                        const cleanData = results.data.map(row => ({
-                            ticker: row['Ticker'],
-                            bias: row['S.T. Bias'],
-                            bull_bear_line: parseFloat(row['BULL/BEAR LINE']) || 0,
-                            s1: extractValue(row['SUPPORT'], 'S1'),
-                            s2: extractValue(row['SUPPORT'], 'S2'),
-                            r1: extractValue(row['RESISTANCE'], 'R1'),
-                            r2: extractValue(row['RESISTANCE'], 'R2'),
-                            trade_date: new Date().toISOString().split('T')[0]
-                        }));
-
-                        const { error } = await client.from('key_levels').insert(cleanData);
+                    const cleanData = results.data.map(row => {
+                        // Extracting values specifically from your headers
+                        const bbLine = parseFloat(row['BULL/BEAR LINE']) || 0;
+                        const s1 = parseFloat(row['SUPPORT']?.split('S1:')[1]) || 0;
+                        const r1 = parseFloat(row['RESISTANCE']?.split('R1:')[1]) || 0;
                         
-                        if (error) {
-                            statusDiv.innerText = "Error: " + error.message;
-                            statusDiv.style.color = "#f23645";
-                            console.error(error);
-                        } else {
-                            statusDiv.innerText = "Success! Data uploaded and old records cleared.";
-                            statusDiv.style.color = "#089981";
+                        // AUTO-BIAS ENGINE: If CSV is empty, calculate based on where BB Line sits relative to range
+                        let bias = row['S.T. Bias'];
+                        if (!bias || bias.trim() === "") {
+                            bias = (bbLine > (s1 + (r1-s1)/2)) ? "↑ Bullish" : "↓ Bearish";
                         }
-                    } catch (e) {
-                        statusDiv.innerText = "Parsing Error: Ensure CSV headers match exactly.";
-                        statusDiv.style.color = "#f23645";
-                        console.error(e);
-                    }
+
+                        return {
+                            ticker: row['Ticker'],
+                            bias: bias,
+                            bull_bear_line: bbLine,
+                            s1: s1,
+                            s2: parseFloat(row['SUPPORT']?.split('S2:')[1]) || 0,
+                            r1: r1,
+                            r2: parseFloat(row['RESISTANCE']?.split('R2:')[1]) || 0,
+                            trade_date: new Date().toISOString().split('T')[0]
+                        };
+                    });
+
+                    const { error } = await client.from('key_levels').insert(cleanData);
+                    document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Data Uploaded.";
                 }
             });
         }
-
-        init();
     </script>
 </body>
 </html>
