@@ -18,7 +18,7 @@
 
     <div class="upload-container">
         <h2>Upload Key Levels (CSV)</h2>
-        <p style="color: #888; font-size: 13px;">Format: trade_date, ticker, s1, s2, r1, r2, bias, bull_bear_line</p>
+        <p style="color: #888; font-size: 13px;">Processing your raw file format automatically...</p>
         <input type="file" id="csvFile" accept=".csv" />
         <button onclick="processUpload()">Upload & Process</button>
         <div id="status"></div>
@@ -42,26 +42,51 @@
             }
         }
 
+        // Helper to extract numeric values from strings like "S1: 1.1385"
+        function extractValue(text, label) {
+            if (!text) return 0;
+            const regex = new RegExp(`${label}:\\s*([\\d\\.]+)`);
+            const match = text.match(regex);
+            return match ? parseFloat(match[1]) : 0;
+        }
+
         async function processUpload() {
             const fileInput = document.getElementById('csvFile');
             const statusDiv = document.getElementById('status');
             if (!fileInput.files[0]) { alert("Please select a file first."); return; }
 
-            statusDiv.innerText = "Processing...";
+            statusDiv.innerText = "Processing and Cleaning Data...";
 
             Papa.parse(fileInput.files[0], {
                 header: true,
                 skipEmptyLines: true,
                 complete: async (results) => {
-                    // results.data is your array of objects
-                    const { error } = await client.from('key_levels').insert(results.data);
-                    
-                    if (error) {
-                        statusDiv.innerText = "Error: " + error.message;
+                    try {
+                        // Clean/Map the data to match database columns
+                        const cleanData = results.data.map(row => ({
+                            ticker: row['Ticker'],
+                            bias: row['S.T. Bias'],
+                            bull_bear_line: parseFloat(row['BULL/BEAR LINE']) || 0,
+                            s1: extractValue(row['SUPPORT'], 'S1'),
+                            s2: extractValue(row['SUPPORT'], 'S2'),
+                            r1: extractValue(row['RESISTANCE'], 'R1'),
+                            r2: extractValue(row['RESISTANCE'], 'R2'),
+                            trade_date: new Date().toISOString().split('T')[0]
+                        }));
+
+                        const { error } = await client.from('key_levels').insert(cleanData);
+                        
+                        if (error) {
+                            statusDiv.innerText = "Error: " + error.message;
+                            statusDiv.style.color = "#f23645";
+                            console.error(error);
+                        } else {
+                            statusDiv.innerText = "Success! Data uploaded and old records cleared.";
+                            statusDiv.style.color = "#089981";
+                        }
+                    } catch (e) {
+                        statusDiv.innerText = "Parsing Error: Ensure CSV headers match exactly.";
                         statusDiv.style.color = "#f23645";
-                    } else {
-                        statusDiv.innerText = "Success! Data uploaded and old records cleared.";
-                        statusDiv.style.color = "#089981";
                     }
                 }
             });
