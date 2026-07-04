@@ -6,13 +6,47 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { background: #0f1115; color: white; padding: 40px; font-family: sans-serif; }
-        .upload-container { max-width: 500px; background: #1a1d23; padding: 25px; border-radius: 8px; border: 1px solid #333; }
+        body { background: #0f1115; color: white; padding: 0; margin: 0; font-family: sans-serif; padding-top: 70px; }
+        
+        /* Navigation Styles */
+        .top-nav { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; }
+        .nav-links { display: flex; align-items: center; }
+        .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; }
+        .nav-links a.active { color: #2962ff; font-weight: bold; }
+        
+        .dropdown { position: relative; margin-left: 20px; }
+        .dropbtn { background: none; border: none; color: #787b86; cursor: pointer; font-size: 18px; padding: 5px; }
+        .dropdown-content { display: none; position: absolute; right: 0; background-color: #1c2230; min-width: 150px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); border: 1px solid #2a2e39; z-index: 1000; border-radius: 4px; }
+        .dropdown-content a { color: #d1d4dc; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; margin: 0; cursor: pointer; }
+        .dropdown-content a:hover { background-color: #2a2e39; }
+
+        /* Upload Container Styles */
+        .upload-container { max-width: 500px; margin: 0 auto; background: #1a1d23; padding: 25px; border-radius: 8px; border: 1px solid #333; }
         input[type="file"], input[type="date"] { margin: 15px 0; display: block; width: 100%; padding: 8px; background: #1a1d23; color: white; border: 1px solid #333; }
         button { background: #2962ff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
+
+    <div class="top-nav">
+        <div style="height: 50px; display: flex; align-items: center;">
+            <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px;">
+        </div>
+        <div class="nav-links">
+            <a href="terminal.html">Dashboard</a>
+            <a href="/newsfeed">Newsfeed</a>
+            <a href="key-levels.html">Key Levels</a>
+            <div class="dropdown">
+                <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+                <div id="settingsDropdown" class="dropdown-content">
+                    <a href="account.html">Account</a>
+                    <a href="admin.html" style="color:#2962ff;">Admin</a>
+                    <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="upload-container">
         <h2>Upload Key Levels</h2>
         <label>Select Date:</label>
@@ -23,7 +57,11 @@
     </div>
 
     <script>
-        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'YOUR_SUPABASE_KEY');
+
+        // Navigation helpers
+        function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
+        document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
 
         function findVal(rowArray, label) {
             if (!Array.isArray(rowArray)) return 0;
@@ -50,7 +88,6 @@
                         const bbl = parseFloat(row[4]) || 0;
                         const mid = (s1 + r1) / 2;
                         
-                        // AUTO-CALCULATE BIAS
                         const calculatedBias = (bbl > mid) ? '↑ Bullish' : (bbl < mid ? '↓ Bearish' : 'Neutral');
 
                         return {
