@@ -48,6 +48,7 @@
         <a href="terminal.html">Dashboard</a>
         <a href="/newsfeed">Newsfeed</a>
         <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
+        <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
         
         <div class="dropdown">
             <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
@@ -87,7 +88,7 @@
             document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block";
     }
 
-    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'YOUR_SUPABASE_KEY');
     
     async function init() {
         // 1. Session check
@@ -100,8 +101,11 @@
         if (profile) {
             // Menu Visibility Logic
             if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'block';
+            
+            // Show Courses and Key Levels for Pro/Admin
             if (profile.is_admin === true || profile.subscription_tag === 'pro') {
                 document.getElementById('nav-courses').style.display = 'block';
+                document.getElementById('nav-key-levels').style.display = 'block';
             }
 
             // Profile Data
