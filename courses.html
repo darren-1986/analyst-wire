@@ -36,19 +36,20 @@
     </div>
     
     <div class="nav-links">
-    <a href="terminal.html">Dashboard</a>
-    <a href="/newsfeed">Newsfeed</a>
-    <a href="courses.html" class="active">Courses</a>
-    
-    <div class="dropdown">
-        <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
-        <div id="settingsDropdown" class="dropdown-content">
-            <a href="account.html">Account</a>
-            <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
-            <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
+        <a href="terminal.html">Dashboard</a>
+        <a href="/newsfeed">Newsfeed</a>
+        <a href="courses.html" class="active">Courses</a>
+        <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
+        
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+            <div id="settingsDropdown" class="dropdown-content">
+                <a href="account.html">Account</a>
+                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
+            </div>
         </div>
     </div>
-</div>
 </div>
 
 <div class="page-container">
@@ -106,6 +107,11 @@
             // Show Admin link if admin
             if (profile.is_admin === true) {
                 document.getElementById('nav-admin').style.display = 'block';
+            }
+
+            // Show Key Levels link if Pro or Admin
+            if (profile.is_admin === true || profile.subscription_tag === 'pro') {
+                document.getElementById('nav-key-levels').style.display = 'block';
             }
         }
     }
