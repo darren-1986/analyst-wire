@@ -75,6 +75,7 @@
             <li class="module-item">
                 <span class="module-title">1. Laying The Groundwork</span>
                 <div class="lesson-item active">What Are Financial Markets <span>5:17</span></div>
+                <div class="lesson-item">Global Macro Connection <span>4:00</span></div>
                 <div class="lesson-item">Everything Is Connected <span>3:28</span></div>
                 <div class="lesson-item">Raw Basics Of Fundamentals <span>4:36</span></div>
             </li>
@@ -87,7 +88,7 @@
 
     <div class="video-content">
         <div class="video-container">
-            <div style="color: #2962ff; margin-bottom: 10px; font-weight: bold;">Macro Fundamental Masterclass / What Are Financial Markets</div>
+            <div style="color: #2962ff; margin-bottom: 10px; font-weight: bold;">Macro Fundamental Masterclass / Part 1</div>
             <iframe
                 src="https://player.mux.com/GfaPZCUcaIwYRCWKJB3QxKF01I74grPH3ELWFYNAr5Pg?metadata-video-title=Global_Financial_Markets+Part+1&video-title=Global_Financial_Markets+Part+1"
                 style="width: 100%; border: none; aspect-ratio: 16/9; border-radius: 8px;"
@@ -95,7 +96,17 @@
                 allowfullscreen>
             </iframe>
             <h1 style="margin-top: 20px;">What Are Financial Markets</h1>
-            <p style="color: #787b86;">5:17 min</p>
+            <p style="color: #787b86; margin-bottom: 40px;">5:17 min</p>
+
+            <div style="color: #2962ff; margin-bottom: 10px; font-weight: bold;">Macro Fundamental Masterclass / Part 2</div>
+            <iframe
+                src="https://player.mux.com/vtkhuEii1gsyt00uw2X7fj4UBOdZu8vw5b601pDcQ1RCU?metadata-video-title=Global_Macro_Connection+p2&video-title=Global_Macro_Connection+p2"
+                style="width: 100%; border: none; aspect-ratio: 16/9; border-radius: 8px;"
+                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                allowfullscreen>
+            </iframe>
+            <h1 style="margin-top: 20px;">Global Macro Connection</h1>
+            <p style="color: #787b86;">4:00 min</p>
         </div>
     </div>
 </div>
@@ -117,7 +128,6 @@
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    // The Bouncer Logic
     async function verifyAccess(profile) {
         if (profile.is_admin !== true && profile.subscription_tag !== 'pro') {
             alert("Access Denied: This page is for Pro subscribers only.");
@@ -132,7 +142,6 @@
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
 
-        // Fetch data
         const { data: profile } = await client
             .from('profiles')
             .select('is_admin, subscription_tag')
@@ -140,16 +149,13 @@
             .single();
 
         if (profile) {
-            // Apply Bouncer Logic immediately
             const hasAccess = await verifyAccess(profile);
             if (!hasAccess) return;
 
-            // Show Admin link if admin
             if (profile.is_admin === true) {
                 document.getElementById('nav-admin').style.display = 'block';
             }
 
-            // Show Key Levels link if Pro or Admin
             if (profile.is_admin === true || profile.subscription_tag === 'pro') {
                 document.getElementById('nav-key-levels').style.display = 'block';
             }
