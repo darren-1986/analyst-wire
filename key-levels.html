@@ -20,10 +20,17 @@
         .dropdown-content a { color: #d1d4dc; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; }
         .dropdown-content a:hover { background-color: #2a2e39; }
 
-        /* Container */
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); }
+        .modal-content { background-color: #131722; margin: 5% auto; padding: 30px; border: 1px solid #2a2e39; width: 80%; max-width: 700px; color: #d1d4dc; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
+        .close-btn { color: #787b86; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: #fff; }
+
+        /* Content */
         .container { padding: 30px; }
         .filter-section { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; }
         select, input[type="date"] { background: #131722; color: white; padding: 8px; border: 1px solid #2a2e39; border-radius: 4px; }
+        .info-btn { background: #2962ff; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-left: 10px; }
 
         table { width: 100%; border-collapse: collapse; background: #131722; margin-top: 20px; border: 1px solid #2a2e39; }
         th { background: #1c2230; padding: 12px; text-align: left; border: 1px solid #2a2e39; color: #787b86; font-size: 11px; text-transform: uppercase; }
@@ -39,6 +46,25 @@
     </style>
 </head>
 <body>
+
+<div id="infoModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2>How to Use the Radar</h2>
+        <h3>Understanding the Columns</h3>
+        <p><strong>Bias:</strong> Indicates market direction (Bullish/Bearish/Neutral). Prioritize trades in the direction of the bias.</p>
+        <p><strong>Bull/Bear Line:</strong> Your key pivot point. Above = Bullish sentiment, Below = Bearish sentiment.</p>
+        <p><strong>Market State:</strong> "Trending" (momentum based) or "Consolidated" (range-bound). Adjust strategy accordingly.</p>
+        <p><strong>Volatility:</strong> The range distance (R1 - S1). Higher numbers indicate a wider trading range.</p>
+        <h3>Trader's Workflow</h3>
+        <ol>
+            <li>Filter by Category/Ticker to find your asset.</li>
+            <li>Identify the Bias to know which direction to trade.</li>
+            <li>Use the Bull/Bear Line to validate your entries.</li>
+            <li>Respect the Volatility metrics for stop-loss sizing.</li>
+        </ol>
+    </div>
+</div>
 
 <div class="top-nav">
     <div style="height: 50px; display: flex; align-items: center;">
@@ -62,7 +88,10 @@
 </div>
 
 <div class="container">
-    <h1>Market Trade Radar</h1>
+    <div style="display: flex; align-items: center;">
+        <h1>Market Trade Radar</h1>
+        <button class="info-btn" onclick="openModal()">Info ℹ️</button>
+    </div>
     
     <div class="filter-section">
         <input type="date" id="date-filter" onchange="render()">
@@ -81,17 +110,17 @@
     <table id="levels-table">
         <thead>
             <tr>
-                <th>Date</th><th>Ticker</th><th>Bias</th><th>Bull/Bear Line</th><th>Market State</th><th>Volatility (R1-S1)</th><th>S1</th><th>R1</th>
+                <th>Date</th><th>Ticker</th><th>Bias</th><th>Bull/Bear Line</th><th>Market State</th><th>Volatility</th>
             </tr>
         </thead>
         <tbody id="levels-body">
-            <tr><td colspan="8">Loading radar data...</td></tr>
+            <tr><td colspan="6">Loading radar data...</td></tr>
         </tbody>
     </table>
 </div>
 
 <script>
-    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'YOUR_SUPABASE_KEY');
 
     // Categorization Map
     const categoryMap = {
@@ -109,6 +138,11 @@
 
     let cachedData = [];
 
+    // Modal Logic
+    function openModal() { document.getElementById("infoModal").style.display = "block"; }
+    function closeModal() { document.getElementById("infoModal").style.display = "none"; }
+    window.onclick = function(event) { if (event.target == document.getElementById("infoModal")) closeModal(); }
+
     async function init() {
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
@@ -123,7 +157,6 @@
             return;
         }
 
-        // Show Admin/Upload Links
         if (profile.is_admin === true) {
             document.getElementById('nav-admin').style.display = 'block';
             document.getElementById('nav-upload').style.display = 'block';
@@ -140,7 +173,6 @@
         if (error) { console.error(error); return; }
         cachedData = data || [];
         
-        // Populate Ticker Filter
         const tickerSelect = document.getElementById('ticker-filter');
         tickerSelect.innerHTML = '<option value="all">All Tickers</option>';
         [...new Set(cachedData.map(r => r.ticker))].sort().forEach(t => {
@@ -176,11 +208,9 @@
                     <td>${r.bull_bear_line}</td>
                     <td><span class="state-badge ${stateClass}">${state}</span></td>
                     <td><span class="range-badge">${range}</span></td>
-                    <td>${r.s1}</td>
-                    <td>${r.r1}</td>
                 </tr>
             `;
-        }).join('') : '<tr><td colspan="8">No data for selected filters.</td></tr>';
+        }).join('') : '<tr><td colspan="6">No data for selected filters.</td></tr>';
     }
 
     function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
