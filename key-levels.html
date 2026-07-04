@@ -73,7 +73,8 @@
     <div class="nav-links">
         <a href="terminal.html">Dashboard</a>
         <a href="/newsfeed">Newsfeed</a>
-        <a href="key_levels.html" class="active">Key Levels</a>
+        <a href="key-levels.html" class="active">Key Levels</a>
+        <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
         
         <div class="dropdown">
             <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
@@ -157,9 +158,15 @@
             return;
         }
 
+        // Show Admin/Upload Links
         if (profile.is_admin === true) {
             document.getElementById('nav-admin').style.display = 'block';
             document.getElementById('nav-upload').style.display = 'block';
+        }
+
+        // Show Courses Link for Admin or Pro
+        if (profile.is_admin === true || profile.subscription_tag === 'pro') {
+            document.getElementById('nav-courses').style.display = 'block';
         }
 
         document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
@@ -173,6 +180,7 @@
         if (error) { console.error(error); return; }
         cachedData = data || [];
         
+        // Populate Ticker Filter
         const tickerSelect = document.getElementById('ticker-filter');
         tickerSelect.innerHTML = '<option value="all">All Tickers</option>';
         [...new Set(cachedData.map(r => r.ticker))].sort().forEach(t => {
