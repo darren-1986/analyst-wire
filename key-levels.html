@@ -44,8 +44,7 @@
     <div class="nav-links">
         <a href="terminal.html">Dashboard</a>
         <a href="/newsfeed">Newsfeed</a>
-        <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
-        <a href="key-levels.html" class="active">Key Levels</a>
+        <a href="key_levels.html" class="active">Key Levels</a>
         
         <div class="dropdown">
             <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
@@ -61,6 +60,9 @@
 
 <div class="container">
     <h1>Market Trade Radar</h1>
+    <label style="color: #787b86; font-size: 12px;">Select Date to View:</label>
+    <input type="date" id="date-filter" onchange="fetchData(this.value)" style="background:#131722; color:white; border:1px solid #2a2e39; padding:8px; margin-bottom: 20px; display: block;">
+
     <table id="levels-table">
         <thead>
             <tr>
@@ -82,31 +84,36 @@
 
         const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
         
-        // --- IRONCLAD ACCESS CHECK ---
-        // Access is granted if they are an ADMIN OR have a qualified tag.
+        // --- ACCESS CHECK ---
         const allowedTags = ['pro', 'newsfeed', 'squawk'];
         const isAuthorized = (profile && profile.is_admin === true) || (profile && allowedTags.includes(profile.subscription_tag));
 
         if (!isAuthorized) {
-            alert("This page is for Pro or Admin members only.");
+            alert("Access Denied: This page is for Pro or Admin members only.");
             window.location.href = 'terminal.html';
             return;
         }
 
-        // UI Visibility
+        // Show Admin/Upload Links
         if (profile.is_admin === true) {
             document.getElementById('nav-admin').style.display = 'block';
             document.getElementById('nav-upload').style.display = 'block';
         }
-        if (profile.is_admin === true || profile.subscription_tag === 'pro') {
-            document.getElementById('nav-courses').style.display = 'block';
-        }
 
-        // Fetch Radar Data
-        const { data, error } = await client.from('key_levels').select('*').order('trade_date', {ascending: false});
-        if (error) { document.getElementById('levels-body').innerHTML = "<tr><td colspan='8'>Error loading data.</td></tr>"; return; }
-        
+        // Initialize Date Filter to Today
+        document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
+        fetchData(document.getElementById('date-filter').value);
+    }
+
+    async function fetchData(date) {
         const tbody = document.getElementById('levels-body');
+        tbody.innerHTML = "<tr><td colspan='8'>Loading...</td></tr>";
+
+        const { data, error } = await client.from('key_levels').select('*').eq('trade_date', date).order('ticker', {ascending: true});
+        
+        if (error) { tbody.innerHTML = "<tr><td colspan='8'>Error loading data.</td></tr>"; return; }
+        if (!data || data.length === 0) { tbody.innerHTML = "<tr><td colspan='8'>No data found for this date.</td></tr>"; return; }
+        
         tbody.innerHTML = data.map(r => {
             const range = Math.abs(r.r1 - r.s1).toFixed(4);
             const isTrending = range > 0.0050; 
