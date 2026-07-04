@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>body{background:#0f1115; color:white; padding:40px; font-family:sans-serif;}</style>
+</head>
+<body>
+    <h2>Upload Daily Key Levels</h2>
+    <input type="file" id="csvFile" accept=".csv" />
+    <button onclick="processUpload()">Upload & Process</button>
+    <div id="status"></div>
+
+    <script>
+        const client = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_KEY');
+        async function processUpload() {
+            const file = document.getElementById('csvFile').files[0];
+            Papa.parse(file, {
+                header: true,
+                complete: async (results) => {
+                    const { error } = await client.from('key_levels').insert(results.data);
+                    if(error) document.getElementById('status').innerText = "Error: " + error.message;
+                    else document.getElementById('status').innerText = "Success! Old data removed, new data added.";
+                }
+            });
+        }
+    </script>
+</body>
+</html>
