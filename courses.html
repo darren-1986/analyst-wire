@@ -75,7 +75,7 @@
 
     <div class="video-content">
         <div class="video-container">
-            <wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player>
+            <div class="wistia_embed wistia_async_adta4iwh2c129uo videoFoam=true" style="width:100%; aspect-ratio: 16/9; border-radius: 8px; background: #000;">&nbsp;</div>
             
             <h1 id="video-title" style="margin-top: 20px;">Course Loaded</h1>
             <p id="video-meta" style="color: #787b86;">Select a lesson from the menu to jump to the relevant section.</p>
@@ -122,7 +122,6 @@
     function toggleModule(idx) { document.getElementById(`mod-${idx}`).classList.toggle('active'); }
 
     // --- JUMP LOGIC ---
-    // Wistia API Setup
     window._wq = window._wq || [];
     _wq.push({ id: "adta4iwh2c129uo", onReady: function(video) {
         window.myWistiaVideo = video;
