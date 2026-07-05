@@ -6,27 +6,24 @@
     <title>Analyst Wire | Courses</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <script src="https://fast.wistia.com/player.js" async></script>
-    <script src="https://fast.wistia.com/embed/adta4iwh2c129uo.js" async type="module"></script>
-    
     <style>
-        /* This hides the "Hosted by Wistia" look by using your specific player */
-        wistia-player:not(:defined) { display: none; }
-
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000000; color: #d1d4dc; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
+        /* Navigation */
         .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; z-index: 1001; }
         .nav-links { display: flex; align-items: center; }
         .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: color 0.2s; }
         .nav-links a:hover { color: #d1d4dc; }
         .nav-links a.active { color: #2962ff; font-weight: bold; }
 
+        /* Dropdown */
         .dropdown { position: relative; margin-left: 20px; }
         .dropbtn { background: none; border: none; color: #787b86; cursor: pointer; font-size: 18px; padding: 5px; }
         .dropdown-content { display: none; position: absolute; right: 0; background-color: #1c2230; min-width: 150px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); border: 1px solid #2a2e39; z-index: 1000; border-radius: 4px; }
         .dropdown-content a { color: #d1d4dc; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; margin: 0; cursor: pointer; }
         .dropdown-content a:hover { background-color: #2a2e39; }
 
+        /* Layout */
         .page-container { display: flex; flex-grow: 1; overflow: hidden; }
         .sidebar { width: 320px; min-width: 320px; background: #0b0e14; border-right: 1px solid #2a2e39; overflow-y: auto; }
         .sidebar h3 { color: white; padding: 20px; font-size: 16px; margin: 0; border-bottom: 1px solid #2a2e39; }
@@ -34,11 +31,12 @@
         .video-content { flex-grow: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
         .video-container { width: 100%; max-width: 900px; position: relative; }
         
-        /* Player Visibility Logic */
-        .player-wrapper { display: none; }
-        .player-wrapper.active { display: block; }
+        /* Lesson Iframe Visibility */
+        .lesson-iframe { display: none; width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px; background: #000; }
+        .lesson-iframe.active { display: block; }
         
-        .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #d1d4dc; user-select: none; }
+        /* Sidebar Modules */
+        .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #d1d4dc; }
         .module-header:hover { background: #1c2230; }
         .lesson-list { display: none; background: #0b0e14; border-bottom: 1px solid #2a2e39; }
         .lesson-list.active { display: block; }
@@ -55,17 +53,8 @@
     </div>
     <div class="nav-links">
         <a href="terminal.html">Dashboard</a>
-        <a href="/newsfeed">Newsfeed</a>
         <a href="courses.html" class="active">Courses</a>
-        <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
-        <div class="dropdown">
-            <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
-            <div id="settingsDropdown" class="dropdown-content">
-                <a href="account.html">Account</a>
-                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
-                <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
-            </div>
-        </div>
+        <div id="logoutBtn" style="color: #f23645; cursor: pointer; margin-left: 20px;">Logout</div>
     </div>
 </div>
 
@@ -75,15 +64,15 @@
     </div>
 
     <div class="video-content">
-        <div class="video-container" id="video-wrapper">
-            <div id="wrapper-0" class="player-wrapper active"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="wrapper-1" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="wrapper-2" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="wrapper-3" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="wrapper-4" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="wrapper-5" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="wrapper-6" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="wrapper-7" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
+        <div class="video-container">
+            <iframe id="iframe-0" class="lesson-iframe active" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=11s&videoFoam=true" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-1" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=437s&videoFoam=true" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-2" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=940s&videoFoam=true" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-3" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=1347s&videoFoam=true" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-4" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=1962s&videoFoam=true" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-5" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=2395s&videoFoam=true" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-6" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=2728s&videoFoam=true" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-7" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=3259s&videoFoam=true" allow="autoplay; fullscreen" allowfullscreen></iframe>
             
             <h1 id="video-title" style="margin-top: 20px;">Module 1 - Lesson 1</h1>
         </div>
@@ -91,76 +80,31 @@
 </div>
 
 <script>
-    const courseData = [
-        { title: "1. Module One", lessons: [
-            { title: "Lesson 1", time: 11 },
-            { title: "Lesson 2", time: 437 },
-            { title: "Lesson 3", time: 940 },
-            { title: "Lesson 4", time: 1347 },
-            { title: "Lesson 5", time: 1962 },
-            { title: "Lesson 6", time: 2395 },
-            { title: "Lesson 7", time: 2728 },
-            { title: "Lesson 8", time: 3259 }
-        ]},
-        { title: "2. Module Two", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "3. Module Three", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "4. Module Four", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "5. Module Five", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "6. Module Six", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "7. Module Seven", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "8. Module Eight", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "9. Module Nine", lessons: Array(5).fill({title: "Lesson", time: 0}) }
-    ];
-
+    const lessons = ["Lesson 1", "Lesson 2", "Lesson 3", "Lesson 4", "Lesson 5", "Lesson 6", "Lesson 7", "Lesson 8"];
     const sidebar = document.getElementById('sidebar');
-    courseData.forEach((mod, mIdx) => {
-        const modEl = document.createElement('div');
-        modEl.innerHTML = `
-            <div class="module-header" onclick="toggleModule(${mIdx})">${mod.title}</div>
-            <div class="lesson-list" id="mod-${mIdx}">
-                ${mod.lessons.map((less, lIdx) => `<div class="lesson-item" onclick="switchLesson(${lIdx}, ${less.time}, '${mod.title} - ${less.title}', this)">${less.title}</div>`).join('')}
-            </div>
-        `;
-        sidebar.appendChild(modEl);
-    });
+    
+    // Sidebar render
+    const modEl = document.createElement('div');
+    modEl.innerHTML = `
+        <div class="module-header" onclick="document.getElementById('m1').classList.toggle('active')">1. Module One</div>
+        <div class="lesson-list active" id="m1">
+            ${lessons.map((name, i) => `<div class="lesson-item ${i === 0 ? 'active' : ''}" onclick="switchLesson(${i}, '${name}', this)">${name}</div>`).join('')}
+        </div>
+    `;
+    sidebar.appendChild(modEl);
 
-    function toggleModule(idx) { document.getElementById(`mod-${idx}`).classList.toggle('active'); }
-
-    function switchLesson(idx, time, title, el) {
-        document.querySelectorAll('.player-wrapper').forEach(p => p.classList.remove('active'));
-        document.getElementById(`wrapper-${idx}`).classList.add('active');
-        
-        const player = document.getElementById(`wrapper-${idx}`).querySelector('wistia-player');
-        if (player) {
-            player.video().then(v => {
-                v.time(time);
-                v.play();
-            });
-        }
-        
-        document.getElementById('video-title').innerText = title;
+    // Switch iframe visibility
+    function switchLesson(idx, title, el) {
+        document.querySelectorAll('.lesson-iframe').forEach(i => i.classList.remove('active'));
+        document.getElementById(`iframe-${idx}`).classList.add('active');
+        document.getElementById('video-title').innerText = "Module 1 - " + title;
         document.querySelectorAll('.lesson-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
     }
 
-    function toggleDropdown() { document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
+    // Auth & Logout
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-
-    async function init() {
-        const { data: { session } } = await client.auth.getSession();
-        if (!session) { window.location.href = 'index.html'; return; }
-        const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
-        if (!profile || (profile.is_admin !== true && profile.subscription_tag !== 'pro')) {
-            alert("Access Denied.");
-            await client.auth.signOut();
-            window.location.href = 'index.html';
-            return;
-        }
-        if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'block';
-        if (profile.is_admin === true || profile.subscription_tag === 'pro') document.getElementById('nav-key-levels').style.display = 'block';
-    }
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
-    init();
 </script>
 </body>
 </html>
