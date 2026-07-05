@@ -75,8 +75,8 @@
     <div class="video-content">
         <div class="video-container">
             <iframe id="iframe-0" class="lesson-iframe active" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=11s" allow="autoplay; fullscreen" allowfullscreen width="960" height="540" frameborder="0"></iframe>
-            <iframe id="iframe-1" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=437s" allow="autoplay; fullscreen" allowfullscreen width="960" height="540" frameborder="0"></iframe>
-            <iframe id="iframe-2" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=940s" allow="autoplay; fullscreen" allowfullscreen width="960" height="540" frameborder="0"></iframe>
+            <iframe id="iframe-1" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=497s" allow="autoplay; fullscreen" allowfullscreen width="960" height="540" frameborder="0"></iframe>
+            <iframe id="iframe-2" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=948s" allow="autoplay; fullscreen" allowfullscreen width="960" height="540" frameborder="0"></iframe>
             <iframe id="iframe-3" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=1347s" allow="autoplay; fullscreen" allowfullscreen width="960" height="540" frameborder="0"></iframe>
             <iframe id="iframe-4" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=1962s" allow="autoplay; fullscreen" allowfullscreen width="960" height="540" frameborder="0"></iframe>
             <iframe id="iframe-5" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=2395s" allow="autoplay; fullscreen" allowfullscreen width="960" height="540" frameborder="0"></iframe>
@@ -105,9 +105,9 @@
     courseData.forEach((mod, mIdx) => {
         const modEl = document.createElement('div');
         modEl.innerHTML = `
-            <div class="module-header" onclick="document.getElementById('m${mIdx}').classList.toggle('active')">${mod.title}</div>
-            <div class="lesson-list" id="m${mIdx}">
-                ${mod.lessons.map((less, lIdx) => `<div class="lesson-item" onclick="switchLesson(${lIdx}, '${mod.title} - ${less} ${lIdx+1}', this)">${less} ${lIdx+1}</div>`).join('')}
+            <div class="module-header" onclick="document.getElementById('mod-${mIdx}').classList.toggle('active')">${mod.title}</div>
+            <div class="lesson-list" id="mod-${mIdx}">
+                ${mod.lessons.map((less, lIdx) => `<div class="lesson-item ${mIdx === 0 && lIdx === 0 ? 'active' : ''}" onclick="switchLesson(${lIdx}, '${mod.title} - ${less} ${lIdx+1}', this)">${less} ${lIdx+1}</div>`).join('')}
             </div>
         `;
         sidebar.appendChild(modEl);
