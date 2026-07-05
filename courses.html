@@ -43,7 +43,8 @@
         .lesson-item:hover { color: #fff; background: #161a22; }
         .lesson-item.active { color: #2962ff; border-left: 3px solid #2962ff; background: #161a22; }
 
-        wistia-player[media-id='adta4iwh2c129uo']:not(:defined) { background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/adta4iwh2c129uo/swatch'); display: block; filter: blur(5px); padding-top:56.25%; }
+        /* Ensure Wistia doesn't have a black screen by sizing it correctly */
+        wistia-player[media-id='adta4iwh2c129uo']:not(:defined) { background: #000; display: block; padding-top:56.25%; }
     </style>
 </head>
 <body>
@@ -75,7 +76,7 @@
 
     <div class="video-content">
         <div class="video-container">
-            <div class="wistia_embed wistia_async_adta4iwh2c129uo videoFoam=true" style="width:100%; aspect-ratio: 16/9; border-radius: 8px; background: #000;">&nbsp;</div>
+            <wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player>
             
             <h1 id="video-title" style="margin-top: 20px;">Course Loaded</h1>
             <p id="video-meta" style="color: #787b86;">Select a lesson from the menu to jump to the relevant section.</p>
@@ -122,15 +123,14 @@
     function toggleModule(idx) { document.getElementById(`mod-${idx}`).classList.toggle('active'); }
 
     // --- JUMP LOGIC ---
-    window._wq = window._wq || [];
-    _wq.push({ id: "adta4iwh2c129uo", onReady: function(video) {
-        window.myWistiaVideo = video;
-    }});
-
     function jumpTo(seconds, title, el) {
-        if (window.myWistiaVideo) {
-            window.myWistiaVideo.time(seconds);
-            window.myWistiaVideo.play();
+        const player = document.querySelector('wistia-player');
+        // Wistia web components expose the api after initialization
+        if (player && typeof player.video === "function") {
+            player.video().then(v => {
+                v.time(seconds);
+                v.play();
+            });
         }
         document.getElementById('video-title').innerText = title;
         document.querySelectorAll('.lesson-item').forEach(i => i.classList.remove('active'));
