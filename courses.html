@@ -6,17 +6,6 @@
     <title>Analyst Wire | Courses</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <script src="https://fast.wistia.com/player.js" async></script>
-    <script src="https://fast.wistia.com/embed/adta4iwh2c129uo.js" async type="module"></script>
-    <style>
-        wistia-player[media-id='adta4iwh2c129uo']:not(:defined) { 
-            background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/adta4iwh2c129uo/swatch'); 
-            display: block; 
-            filter: blur(5px); 
-            padding-top:56.25%; 
-        }
-    </style>
-    
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000000; color: #d1d4dc; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
@@ -40,7 +29,11 @@
         .sidebar h3 { color: white; padding: 20px; font-size: 16px; margin: 0; border-bottom: 1px solid #2a2e39; }
         
         .video-content { flex-grow: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
-        .video-container { width: 100%; max-width: 900px; }
+        .video-container { width: 100%; max-width: 900px; position: relative; }
+        
+        /* Iframe Styles */
+        .lesson-iframe { display: none; width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px; background: #000; }
+        .lesson-iframe.active { display: block; }
         
         /* Modules */
         .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #d1d4dc; user-select: none; }
@@ -80,45 +73,42 @@
     </div>
 
     <div class="video-content">
-        <div class="video-container">
-            <wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player>
+        <div class="video-container" id="video-wrapper">
+            <iframe id="iframe-0" class="lesson-iframe active" src="https://fast.wistia.net/embed/iframe/adta4iwh2c129uo?time=11s" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-1" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/adta4iwh2c129uo?time=437s" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-2" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/adta4iwh2c129uo?time=940s" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-3" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/adta4iwh2c129uo?time=1347s" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-4" class="lesson-iframe" src="https://fast.wistia.com/embed/iframe/adta4iwh2c129uo?time=1962s" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-5" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/adta4iwh2c129uo?time=2395s" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-6" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/adta4iwh2c129uo?time=2728s" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <iframe id="iframe-7" class="lesson-iframe" src="https://fast.wistia.net/embed/iframe/adta4iwh2c129uo?time=3259s" allow="autoplay; fullscreen" allowfullscreen></iframe>
             
-            <h1 id="video-title" style="margin-top: 20px;">Course Loaded</h1>
+            <h1 id="video-title" style="margin-top: 20px;">Module 1 - Lesson 1</h1>
         </div>
     </div>
 </div>
 
 <script>
-    // --- COURSE DATA (Timestamps in seconds) ---
+    // --- COURSE DATA ---
     const courseData = [
-        { title: "1. Module One", lessons: [
-            { title: "Lesson 1", time: 11 },
-            { title: "Lesson 2", time: 437 },
-            { title: "Lesson 3", time: 940 },
-            { title: "Lesson 4", time: 1347 },
-            { title: "Lesson 5", time: 1962 },
-            { title: "Lesson 6", time: 2395 },
-            { title: "Lesson 7", time: 2728 },
-            { title: "Lesson 8", time: 3259 }
-        ]},
-        { title: "2. Module Two", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "3. Module Three", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "4. Module Four", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "5. Module Five", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "6. Module Six", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "7. Module Seven", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "8. Module Eight", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "9. Module Nine", lessons: Array(5).fill({title: "Lesson", time: 0}) }
+        { title: "1. Module One", lessons: ["Lesson 1", "Lesson 2", "Lesson 3", "Lesson 4", "Lesson 5", "Lesson 6", "Lesson 7", "Lesson 8"] },
+        { title: "2. Module Two", lessons: ["Lesson"] },
+        { title: "3. Module Three", lessons: ["Lesson"] },
+        { title: "4. Module Four", lessons: ["Lesson"] },
+        { title: "5. Module Five", lessons: ["Lesson"] },
+        { title: "6. Module Six", lessons: ["Lesson"] },
+        { title: "7. Module Seven", lessons: ["Lesson"] },
+        { title: "8. Module Eight", lessons: ["Lesson"] },
+        { title: "9. Module Nine", lessons: ["Lesson"] }
     ];
 
-    // --- SIDEBAR RENDER ---
     const sidebar = document.getElementById('sidebar');
     courseData.forEach((mod, mIdx) => {
         const modEl = document.createElement('div');
         modEl.innerHTML = `
             <div class="module-header" onclick="toggleModule(${mIdx})">${mod.title}</div>
             <div class="lesson-list" id="mod-${mIdx}">
-                ${mod.lessons.map((less) => `<div class="lesson-item" onclick="jumpTo(${less.time}, '${mod.title} - ${less.title}', this)">${less.title}</div>`).join('')}
+                ${mod.lessons.map((less, lIdx) => `<div class="lesson-item" onclick="switchLesson(${lIdx}, '${mod.title} - ${less}', this)">${less}</div>`).join('')}
             </div>
         `;
         sidebar.appendChild(modEl);
@@ -126,15 +116,13 @@
 
     function toggleModule(idx) { document.getElementById(`mod-${idx}`).classList.toggle('active'); }
 
-    // --- JUMP LOGIC ---
-    function jumpTo(seconds, title, el) {
-        const player = document.querySelector('wistia-player');
-        if (player) {
-            player.video().then(v => {
-                v.time(seconds);
-                v.play();
-            });
-        }
+    // --- SWITCH LESSON ---
+    function switchLesson(idx, title, el) {
+        // Hide all iframes
+        document.querySelectorAll('.lesson-iframe').forEach(i => i.classList.remove('active'));
+        // Show selected
+        document.getElementById(`iframe-${idx}`).classList.add('active');
+        
         document.getElementById('video-title').innerText = title;
         document.querySelectorAll('.lesson-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
@@ -160,6 +148,5 @@
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
     init();
 </script>
-
 </body>
 </html>
