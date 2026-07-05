@@ -88,18 +88,18 @@
             <div class="panel-content">
                <div class="market-sessions-widget">
     <div class="msw-header">
-        <h3 class="msw-title">Market Sessions</h3>
+       
         <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
     </div>
     <div id="msw-sessions-container"></div>
 </div>
 
 <style>
-    /* Scoped Styles: Prevents conflict with existing page styles */
+    /* Scoped Styles */
     .market-sessions-widget {
         box-sizing: border-box; 
-        width: 100%; /* Automatically fills parent container width */
-        min-width: 280px; /* Prevents squashing on very small screens */
+        width: 100%; 
+        min-width: 280px; 
         background-color: #0f172a; 
         border: 1px solid #334155;
         border-radius: 12px; 
@@ -118,7 +118,12 @@
     
     .msw-session-info { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
     .msw-session-name { display: flex; align-items: center; gap: 10px; }
-    .msw-icon-img { width: 20px; height: 20px; object-fit: contain; }
+    
+    /* Updated Icon Color Filter: Applied light blue tint */
+    .msw-icon-img { 
+        width: 20px; height: 20px; object-fit: contain; 
+        filter: brightness(0) saturate(100%) invert(80%) sepia(50%) saturate(1200%) hue-rotate(180deg);
+    }
     
     .msw-status-dot { height: 8px; width: 8px; border-radius: 50%; background-color: #475569; flex-shrink: 0; }
     .msw-status-dot.open { background-color: #10b981; }
@@ -142,6 +147,9 @@
     ];
 
     const container = document.getElementById('msw-sessions-container');
+    // Clear container to prevent duplication if script re-runs
+    container.innerHTML = '';
+    
     SESSIONS.forEach(s => {
         const row = document.createElement('div');
         row.className = 'msw-session-row';
