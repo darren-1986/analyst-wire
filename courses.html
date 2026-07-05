@@ -35,7 +35,7 @@
         .lesson-iframe { display: none; width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px; background: #000; }
         .lesson-iframe.active { display: block; }
         
-        /* Sidebar Modules */
+        /* Modules */
         .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #d1d4dc; user-select: none; }
         .module-header:hover { background: #1c2230; }
         .lesson-list { display: none; background: #0b0e14; border-bottom: 1px solid #2a2e39; }
@@ -90,27 +90,24 @@
 
 <script>
     const courseData = [
-        { title: "1. Module One", lessons: [
-            { title: "Lesson 1" }, { title: "Lesson 2" }, { title: "Lesson 3" }, { title: "Lesson 4" },
-            { title: "Lesson 5" }, { title: "Lesson 6" }, { title: "Lesson 7" }, { title: "Lesson 8" }
-        ]},
-        { title: "2. Module Two", lessons: Array(5).fill({title: "Lesson"}) },
-        { title: "3. Module Three", lessons: Array(5).fill({title: "Lesson"}) },
-        { title: "4. Module Four", lessons: Array(5).fill({title: "Lesson"}) },
-        { title: "5. Module Five", lessons: Array(5).fill({title: "Lesson"}) },
-        { title: "6. Module Six", lessons: Array(5).fill({title: "Lesson"}) },
-        { title: "7. Module Seven", lessons: Array(5).fill({title: "Lesson"}) },
-        { title: "8. Module Eight", lessons: Array(5).fill({title: "Lesson"}) },
-        { title: "9. Module Nine", lessons: Array(5).fill({title: "Lesson"}) }
+        { title: "1. Module One", lessons: ["Lesson 1", "Lesson 2", "Lesson 3", "Lesson 4", "Lesson 5", "Lesson 6", "Lesson 7", "Lesson 8"] },
+        { title: "2. Module Two", lessons: Array(5).fill("Lesson") },
+        { title: "3. Module Three", lessons: Array(5).fill("Lesson") },
+        { title: "4. Module Four", lessons: Array(5).fill("Lesson") },
+        { title: "5. Module Five", lessons: Array(5).fill("Lesson") },
+        { title: "6. Module Six", lessons: Array(5).fill("Lesson") },
+        { title: "7. Module Seven", lessons: Array(5).fill("Lesson") },
+        { title: "8. Module Eight", lessons: Array(5).fill("Lesson") },
+        { title: "9. Module Nine", lessons: Array(5).fill("Lesson") }
     ];
 
     const sidebar = document.getElementById('sidebar');
     courseData.forEach((mod, mIdx) => {
         const modEl = document.createElement('div');
         modEl.innerHTML = `
-            <div class="module-header" onclick="document.getElementById('m${mIdx}').classList.toggle('active')">${mod.title}</div>
-            <div class="lesson-list" id="m${mIdx}">
-                ${mod.lessons.map((less, lIdx) => `<div class="lesson-item" onclick="switchLesson(${lIdx}, '${mod.title} - ${less.title}', this)">${less.title} ${lIdx+1}</div>`).join('')}
+            <div class="module-header" onclick="document.getElementById('mod-${mIdx}').classList.toggle('active')">${mod.title}</div>
+            <div class="lesson-list" id="mod-${mIdx}">
+                ${mod.lessons.map((less, lIdx) => `<div class="lesson-item ${mIdx === 0 && lIdx === 0 ? 'active' : ''}" onclick="switchLesson(${lIdx}, '${mod.title} - ${less} ${lIdx+1}', this)">${less} ${lIdx+1}</div>`).join('')}
             </div>
         `;
         sidebar.appendChild(modEl);
