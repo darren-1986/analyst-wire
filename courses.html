@@ -16,6 +16,7 @@
         .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; z-index: 1001; }
         .nav-links { display: flex; align-items: center; }
         .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: color 0.2s; }
+        .nav-links a:hover { color: #d1d4dc; }
         .nav-links a.active { color: #2962ff; font-weight: bold; }
 
         /* Dropdown */
@@ -83,16 +84,27 @@
 </div>
 
 <script>
-    // --- COURSE DATA (9 Modules, 5 Lessons Each) ---
-    const courseData = [];
-    const timestamps = [0, 60, 120, 180, 240]; 
-    for(let i = 1; i <= 9; i++) {
-        let lessons = [];
-        for(let j = 1; j <= 5; j++) {
-            lessons.push({ title: `Lesson ${j}`, time: timestamps[j-1] });
-        }
-        courseData.push({ title: `${i}. Module Name`, lessons: lessons });
-    }
+    // --- COURSE DATA ---
+    const courseData = [
+        { title: "1. Module One", lessons: [
+            { title: "Lesson 1", time: 11 },
+            { title: "Lesson 2", time: 437 },
+            { title: "Lesson 3", time: 940 },
+            { title: "Lesson 4", time: 1347 },
+            { title: "Lesson 5", time: 1962 },
+            { title: "Lesson 6", time: 2395 },
+            { title: "Lesson 7", time: 2728 },
+            { title: "Lesson 8", time: 3259 }
+        ]},
+        { title: "2. Module Two", lessons: [{title: "Lesson 1", time: 0}, {title: "Lesson 2", time: 60}, {title: "Lesson 3", time: 120}, {title: "Lesson 4", time: 180}, {title: "Lesson 5", time: 240}] },
+        { title: "3. Module Three", lessons: Array(5).fill({title: "Lesson", time: 0}) },
+        { title: "4. Module Four", lessons: Array(5).fill({title: "Lesson", time: 0}) },
+        { title: "5. Module Five", lessons: Array(5).fill({title: "Lesson", time: 0}) },
+        { title: "6. Module Six", lessons: Array(5).fill({title: "Lesson", time: 0}) },
+        { title: "7. Module Seven", lessons: Array(5).fill({title: "Lesson", time: 0}) },
+        { title: "8. Module Eight", lessons: Array(5).fill({title: "Lesson", time: 0}) },
+        { title: "9. Module Nine", lessons: Array(5).fill({title: "Lesson", time: 0}) }
+    ];
 
     // --- RENDER SIDEBAR ---
     const sidebar = document.getElementById('sidebar');
@@ -101,7 +113,7 @@
         modEl.innerHTML = `
             <div class="module-header" onclick="toggleModule(${mIdx})">${mod.title}</div>
             <div class="lesson-list" id="mod-${mIdx}">
-                ${mod.lessons.map((less, lIdx) => `<div class="lesson-item" onclick="jumpTo(${less.time}, '${mod.title} - ${less.title}', this)">${less.title}</div>`).join('')}
+                ${mod.lessons.map((less) => `<div class="lesson-item" onclick="jumpTo(${less.time}, '${mod.title} - ${less.title}', this)">${less.title}</div>`).join('')}
             </div>
         `;
         sidebar.appendChild(modEl);
@@ -123,7 +135,7 @@
 
     // --- AUTH & NAV ---
     function toggleDropdown() { document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
-    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'YOUR_SUPABASE_KEY');
 
     async function init() {
         const { data: { session } } = await client.auth.getSession();
