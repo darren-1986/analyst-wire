@@ -35,8 +35,9 @@
         .lesson-iframe { display: block; width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px; background: #000; }
         
         /* Module Headers */
-        .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #d1d4dc; }
-        .module-header:hover { background: #1c2230; }
+        .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #787b86; transition: 0.2s; }
+        .module-header:hover { background: #1c2230; color: #d1d4dc; }
+        .module-header.active { color: #2962ff; border-left: 3px solid #2962ff; background: #161a22; }
         
         /* Reference List */
         .lesson-reference { background: #131722; padding: 20px; margin-top: 20px; border-radius: 8px; width: 100%; }
@@ -82,23 +83,30 @@
 
 <script>
     const courseData = [
-        { 
-            title: "1. Module One", 
-            video: "https://fast.wistia.net/embed/iframe/z4ly46xelg", 
-            lessons: [
-                { title: "Lesson 1", time: "11s", summary: "Introduction to macro analysis." },
-                { title: "Lesson 2", time: "437s", summary: "Understanding interest rates." }
-            ] 
-        },
-        { title: "2. Module Two", video: "https://fast.wistia.net/embed/iframe/z4ly46xelg", lessons: [{title: "Overview", time: "0s", summary: "Coming soon."}] },
-        { title: "3. Module Three", video: "https://fast.wistia.net/embed/iframe/z4ly46xelg", lessons: [{title: "Overview", time: "0s", summary: "Coming soon."}] }
-        // Add remaining modules here following the same structure
+        { title: "1. Module One", video: "https://fast.wistia.net/embed/iframe/z4ly46xelg", lessons: [
+            { title: "Financial Market", time: "11s", summary: "Market structure basics." },
+            { title: "Macro Connection", time: "497s", summary: "Global economic linkages." },
+            { title: "Intrinsic Compass", time: "940s", summary: "Navigating market value." },
+            { title: "The Market Machine", time: "1347s", summary: "Understanding order flow." },
+            { title: "Market Driver", time: "1962s", summary: "Identifying key catalysts." },
+            { title: "FX Participant Hierarchy", time: "2395s", summary: "Institutional vs Retail." },
+            { title: "Master Market Moves", time: "2728s", summary: "Analyzing trend changes." },
+            { title: "Market Sentiment Foundations", time: "3259s", summary: "Psychology of the market." }
+        ]},
+        ...Array.from({length: 8}, (_, i) => ({
+            title: `${i + 2}. Module ${['Two','Three','Four','Five','Six','Seven','Eight','Nine'][i]}`,
+            video: "https://fast.wistia.net/embed/iframe/z4ly46xelg",
+            lessons: Array.from({length: 15}, (_, l) => ({ title: `Lesson ${l+1}`, time: "0s", summary: "Placeholder description." }))
+        }))
     ];
 
     const sidebar = document.getElementById('sidebar');
     courseData.forEach((mod, mIdx) => {
         const modEl = document.createElement('div');
-        modEl.innerHTML = `<div class="module-header" onclick="selectModule(${mIdx})">${mod.title}</div>`;
+        modEl.id = `mod-header-${mIdx}`;
+        modEl.className = "module-header";
+        modEl.innerText = mod.title;
+        modEl.onclick = () => selectModule(mIdx);
         sidebar.appendChild(modEl);
     });
 
@@ -106,11 +114,15 @@
         const mod = courseData[idx];
         const player = document.getElementById('lesson-player');
         
-        // Update Video Source
+        // Highlight active
+        document.querySelectorAll('.module-header').forEach(el => el.classList.remove('active'));
+        document.getElementById(`mod-header-${idx}`).classList.add('active');
+
+        // Update Video
         player.src = `${mod.video}?wtime=${mod.lessons[0].time}&resume=false&videoFoam=true&_t=${Date.now()}`;
         document.getElementById('module-title').innerText = mod.title;
         
-        // Update Reference List
+        // Update List
         const list = document.getElementById('lesson-ref-list');
         list.innerHTML = mod.lessons.map(l => `
             <div class="ref-item">
