@@ -10,23 +10,23 @@
     <script src="https://fast.wistia.com/embed/adta4iwh2c129uo.js" async type="module"></script>
     
     <style>
+        /* This hides the "Hosted by Wistia" look by using your specific player */
+        wistia-player:not(:defined) { display: none; }
+
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000000; color: #d1d4dc; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* Navigation */
         .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; z-index: 1001; }
         .nav-links { display: flex; align-items: center; }
         .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: color 0.2s; }
         .nav-links a:hover { color: #d1d4dc; }
         .nav-links a.active { color: #2962ff; font-weight: bold; }
 
-        /* Dropdown */
         .dropdown { position: relative; margin-left: 20px; }
         .dropbtn { background: none; border: none; color: #787b86; cursor: pointer; font-size: 18px; padding: 5px; }
         .dropdown-content { display: none; position: absolute; right: 0; background-color: #1c2230; min-width: 150px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); border: 1px solid #2a2e39; z-index: 1000; border-radius: 4px; }
         .dropdown-content a { color: #d1d4dc; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; margin: 0; cursor: pointer; }
         .dropdown-content a:hover { background-color: #2a2e39; }
 
-        /* Layout */
         .page-container { display: flex; flex-grow: 1; overflow: hidden; }
         .sidebar { width: 320px; min-width: 320px; background: #0b0e14; border-right: 1px solid #2a2e39; overflow-y: auto; }
         .sidebar h3 { color: white; padding: 20px; font-size: 16px; margin: 0; border-bottom: 1px solid #2a2e39; }
@@ -34,11 +34,10 @@
         .video-content { flex-grow: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
         .video-container { width: 100%; max-width: 900px; position: relative; }
         
-        /* Hidden Players */
-        .wistia-wrapper { display: none; }
-        .wistia-wrapper.active { display: block; }
+        /* Player Visibility Logic */
+        .player-wrapper { display: none; }
+        .player-wrapper.active { display: block; }
         
-        /* Modules */
         .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #d1d4dc; user-select: none; }
         .module-header:hover { background: #1c2230; }
         .lesson-list { display: none; background: #0b0e14; border-bottom: 1px solid #2a2e39; }
@@ -77,14 +76,14 @@
 
     <div class="video-content">
         <div class="video-container" id="video-wrapper">
-            <div id="player-0" class="wistia-wrapper active"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="player-1" class="wistia-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="player-2" class="wistia-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="player-3" class="wistia-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="player-4" class="wistia-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="player-5" class="wistia-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="player-6" class="wistia-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
-            <div id="player-7" class="wistia-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
+            <div id="wrapper-0" class="player-wrapper active"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
+            <div id="wrapper-1" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
+            <div id="wrapper-2" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
+            <div id="wrapper-3" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
+            <div id="wrapper-4" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
+            <div id="wrapper-5" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
+            <div id="wrapper-6" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
+            <div id="wrapper-7" class="player-wrapper"><wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player></div>
             
             <h1 id="video-title" style="margin-top: 20px;">Module 1 - Lesson 1</h1>
         </div>
@@ -92,7 +91,6 @@
 </div>
 
 <script>
-    // --- COURSE DATA ---
     const courseData = [
         { title: "1. Module One", lessons: [
             { title: "Lesson 1", time: 11 },
@@ -128,15 +126,11 @@
 
     function toggleModule(idx) { document.getElementById(`mod-${idx}`).classList.toggle('active'); }
 
-    // --- SWITCH LESSON ---
     function switchLesson(idx, time, title, el) {
-        // Hide all players
-        document.querySelectorAll('.wistia-wrapper').forEach(p => p.classList.remove('active'));
-        // Show target
-        document.getElementById(`player-${idx}`).classList.add('active');
+        document.querySelectorAll('.player-wrapper').forEach(p => p.classList.remove('active'));
+        document.getElementById(`wrapper-${idx}`).classList.add('active');
         
-        // Jump player
-        const player = document.getElementById(`player-${idx}`).querySelector('wistia-player');
+        const player = document.getElementById(`wrapper-${idx}`).querySelector('wistia-player');
         if (player) {
             player.video().then(v => {
                 v.time(time);
@@ -149,7 +143,6 @@
         el.classList.add('active');
     }
 
-    // --- AUTH & NAV ---
     function toggleDropdown() { document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
