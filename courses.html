@@ -6,9 +6,6 @@
     <title>Analyst Wire | Courses</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <script src="https://fast.wistia.com/player.js" async></script>
-    <script src="https://fast.wistia.com/embed/z4ly46xelg.js" async type="module"></script>
-    
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000000; color: #d1d4dc; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
@@ -34,7 +31,10 @@
         .video-content { flex-grow: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
         .video-container { width: 100%; max-width: 900px; position: relative; }
         
-        /* Modules - ALL CLOSED BY DEFAULT */
+        /* Iframe */
+        .lesson-iframe { display: block; width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px; background: #000; }
+        
+        /* Sidebar Modules - ALL CLOSED BY DEFAULT */
         .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #d1d4dc; user-select: none; }
         .module-header:hover { background: #1c2230; }
         .lesson-list { display: none; background: #0b0e14; border-bottom: 1px solid #2a2e39; }
@@ -72,7 +72,7 @@
 
     <div class="video-content">
         <div class="video-container">
-            <wistia-player id="wistia-player" media-id="z4ly46xelg" aspect="1.7777777777777777"></wistia-player>
+            <iframe id="lesson-player" class="lesson-iframe" src="" allow="autoplay; fullscreen" allowfullscreen width="960" height="540" frameborder="0"></iframe>
             <h1 id="video-title" style="margin-top: 20px;"></h1>
         </div>
     </div>
@@ -81,27 +81,25 @@
 <script>
     const courseData = [
         { title: "1. Module One", lessons: [
-            { title: "Lesson 1", time: 11 }, { title: "Lesson 2", time: 437 },
-            { title: "Lesson 3", time: 940 }, { title: "Lesson 4", time: 1347 },
-            { title: "Lesson 5", time: 1962 }, { title: "Lesson 6", time: 2395 },
-            { title: "Lesson 7", time: 2728 }, { title: "Lesson 8", time: 3259 }
+            { title: "Lesson 1", time: "11s" }, { title: "Lesson 2", time: "437s" },
+            { title: "Lesson 3", time: "940s" }, { title: "Lesson 4", time: "1347s" },
+            { title: "Lesson 5", time: "1962s" }, { title: "Lesson 6", time: "2395s" },
+            { title: "Lesson 7", time: "2728s" }, { title: "Lesson 8", time: "3259s" }
         ]},
-        { title: "2. Module Two", lessons: [{title: "Lesson", time: 0}] },
-        { title: "3. Module Three", lessons: [{title: "Lesson", time: 0}] },
-        { title: "4. Module Four", lessons: [{title: "Lesson", time: 0}] },
-        { title: "5. Module Five", lessons: [{title: "Lesson", time: 0}] },
-        { title: "6. Module Six", lessons: [{title: "Lesson", time: 0}] },
-        { title: "7. Module Seven", lessons: [{title: "Lesson", time: 0}] },
-        { title: "8. Module Eight", lessons: [{title: "Lesson", time: 0}] },
-        { title: "9. Module Nine", lessons: [{title: "Lesson", time: 0}] }
+        { title: "2. Module Two", lessons: [{title: "Lesson", time: "0s"}] },
+        { title: "3. Module Three", lessons: [{title: "Lesson", time: "0s"}] },
+        { title: "4. Module Four", lessons: [{title: "Lesson", time: "0s"}] },
+        { title: "5. Module Five", lessons: [{title: "Lesson", time: "0s"}] },
+        { title: "6. Module Six", lessons: [{title: "Lesson", time: "0s"}] },
+        { title: "7. Module Seven", lessons: [{title: "Lesson", time: "0s"}] },
+        { title: "8. Module Eight", lessons: [{title: "Lesson", time: "0s"}] },
+        { title: "9. Module Nine", lessons: [{title: "Lesson", time: "0s"}] }
     ];
 
     const urlParams = new URLSearchParams(window.location.search);
     const m = parseInt(urlParams.get('m')) || 0;
     const l = parseInt(urlParams.get('l')) || 0;
-    const startTime = courseData[m].lessons[l].time;
 
-    // Sidebar
     const sidebar = document.getElementById('sidebar');
     courseData.forEach((mod, mIdx) => {
         const modEl = document.createElement('div');
@@ -114,14 +112,12 @@
         sidebar.appendChild(modEl);
     });
 
-    // Force Jump to Timestamp
-    const player = document.getElementById('wistia-player');
-    player.video().then(v => {
-        v.time(startTime);
-        v.play();
-    });
-
-    document.getElementById('video-title').innerText = courseData[m].title + " - " + courseData[m].lessons[l].title + " " + (l+1);
+    // --- FORCE START AT TIMESTAMP ---
+    // Appending a cache buster '&_t=' forces the iframe to reload fresh,
+    // ignoring the browser's "resume watching" cookie.
+    const activeLesson = courseData[m].lessons[l];
+    document.getElementById('lesson-player').src = `https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=${activeLesson.time}&resume=false&videoFoam=true&_t=${Date.now()}`;
+    document.getElementById('video-title').innerText = courseData[m].title + " - " + activeLesson.title + " " + (l+1);
 
     // --- AUTH & NAV ---
     function toggleDropdown() { document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
