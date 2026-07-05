@@ -31,12 +31,12 @@
         .video-content { flex-grow: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
         .video-container { width: 100%; max-width: 900px; position: relative; }
         
-        /* Lesson Iframe Visibility */
+        /* Iframe Styles */
         .lesson-iframe { display: none; width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px; background: #000; }
         .lesson-iframe.active { display: block; }
         
-        /* Sidebar Modules */
-        .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #d1d4dc; }
+        /* Modules */
+        .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #d1d4dc; user-select: none; }
         .module-header:hover { background: #1c2230; }
         .lesson-list { display: none; background: #0b0e14; border-bottom: 1px solid #2a2e39; }
         .lesson-list.active { display: block; }
@@ -53,8 +53,17 @@
     </div>
     <div class="nav-links">
         <a href="terminal.html">Dashboard</a>
+        <a href="/newsfeed">Newsfeed</a>
         <a href="courses.html" class="active">Courses</a>
-        <div id="logoutBtn" style="color: #f23645; cursor: pointer; margin-left: 20px;">Logout</div>
+        <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+            <div id="settingsDropdown" class="dropdown-content">
+                <a href="account.html">Account</a>
+                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -80,31 +89,58 @@
 </div>
 
 <script>
-    const lessons = ["Lesson 1", "Lesson 2", "Lesson 3", "Lesson 4", "Lesson 5", "Lesson 6", "Lesson 7", "Lesson 8"];
-    const sidebar = document.getElementById('sidebar');
-    
-    // Sidebar render
-    const modEl = document.createElement('div');
-    modEl.innerHTML = `
-        <div class="module-header" onclick="document.getElementById('m1').classList.toggle('active')">1. Module One</div>
-        <div class="lesson-list active" id="m1">
-            ${lessons.map((name, i) => `<div class="lesson-item ${i === 0 ? 'active' : ''}" onclick="switchLesson(${i}, '${name}', this)">${name}</div>`).join('')}
-        </div>
-    `;
-    sidebar.appendChild(modEl);
+    // --- COURSE DATA ---
+    const courseData = [
+        { title: "1. Module One", lessons: ["Lesson 1", "Lesson 2", "Lesson 3", "Lesson 4", "Lesson 5", "Lesson 6", "Lesson 7", "Lesson 8"] },
+        { title: "2. Module Two", lessons: Array(5).fill("Lesson") },
+        { title: "3. Module Three", lessons: Array(5).fill("Lesson") },
+        { title: "4. Module Four", lessons: Array(5).fill("Lesson") },
+        { title: "5. Module Five", lessons: Array(5).fill("Lesson") },
+        { title: "6. Module Six", lessons: Array(5).fill("Lesson") },
+        { title: "7. Module Seven", lessons: Array(5).fill("Lesson") },
+        { title: "8. Module Eight", lessons: Array(5).fill("Lesson") },
+        { title: "9. Module Nine", lessons: Array(5).fill("Lesson") }
+    ];
 
-    // Switch iframe visibility
+    const sidebar = document.getElementById('sidebar');
+    courseData.forEach((mod, mIdx) => {
+        const modEl = document.createElement('div');
+        modEl.innerHTML = `
+            <div class="module-header" onclick="document.getElementById('mod-${mIdx}').classList.toggle('active')">${mod.title}</div>
+            <div class="lesson-list active" id="mod-${mIdx}">
+                ${mod.lessons.map((less, lIdx) => `<div class="lesson-item ${mIdx === 0 && lIdx === 0 ? 'active' : ''}" onclick="switchLesson(${lIdx}, '${mod.title} - ${less} ${lIdx+1}', this)">${less} ${lIdx+1}</div>`).join('')}
+            </div>
+        `;
+        sidebar.appendChild(modEl);
+    });
+
     function switchLesson(idx, title, el) {
         document.querySelectorAll('.lesson-iframe').forEach(i => i.classList.remove('active'));
         document.getElementById(`iframe-${idx}`).classList.add('active');
-        document.getElementById('video-title').innerText = "Module 1 - " + title;
+        document.getElementById('video-title').innerText = title;
         document.querySelectorAll('.lesson-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
     }
 
-    // Auth & Logout
+    // --- AUTH & NAV ---
+    function toggleDropdown() { document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+
+    async function init() {
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) { window.location.href = 'index.html'; return; }
+        const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
+        if (!profile || (profile.is_admin !== true && profile.subscription_tag !== 'pro')) {
+            alert("Access Denied.");
+            await client.auth.signOut();
+            window.location.href = 'index.html';
+            return;
+        }
+        if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'block';
+        if (profile.is_admin === true || profile.subscription_tag === 'pro') document.getElementById('nav-key-levels').style.display = 'block';
+    }
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+    init();
 </script>
 </body>
 </html>
