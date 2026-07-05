@@ -34,14 +34,13 @@
         /* Iframe Styles */
         .lesson-iframe { display: block; width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px; background: #000; }
         
-        /* Modules - ALL CLOSED BY DEFAULT */
+        /* Modules - DEFAULT COLLAPSED */
         .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #d1d4dc; user-select: none; }
         .module-header:hover { background: #1c2230; }
         .lesson-list { display: none; background: #0b0e14; border-bottom: 1px solid #2a2e39; }
         .lesson-list.active { display: block; }
         .lesson-item { padding: 12px 20px 12px 35px; cursor: pointer; color: #787b86; font-size: 13px; border-bottom: 1px solid #161a22; text-decoration: none; display: block; }
         .lesson-item:hover { color: #fff; background: #161a22; }
-        .lesson-item.active { color: #2962ff; border-left: 3px solid #2962ff; background: #161a22; }
     </style>
 </head>
 <body>
@@ -101,22 +100,21 @@
     const m = parseInt(urlParams.get('m')) || 0;
     const l = parseInt(urlParams.get('l')) || 0;
 
-    // Sidebar
     const sidebar = document.getElementById('sidebar');
     courseData.forEach((mod, mIdx) => {
         const modEl = document.createElement('div');
         modEl.innerHTML = `
             <div class="module-header" onclick="document.getElementById('mod-${mIdx}').classList.toggle('active')">${mod.title}</div>
-            <div class="lesson-list ${mIdx === m ? 'active' : ''}" id="mod-${mIdx}">
-                ${mod.lessons.map((less, lIdx) => `<a href="?m=${mIdx}&l=${lIdx}" class="lesson-item ${mIdx === m && lIdx === l ? 'active' : ''}">${less.title} ${lIdx+1}</a>`).join('')}
+            <div class="lesson-list" id="mod-${mIdx}">
+                ${mod.lessons.map((less, lIdx) => `<a href="?m=${mIdx}&l=${lIdx}" class="lesson-item">${less.title} ${lIdx+1}</a>`).join('')}
             </div>
         `;
         sidebar.appendChild(modEl);
     });
 
-    // Set src directly
+    // Set src with cache-buster '&_=' to kill resume cookie
     const activeLesson = courseData[m].lessons[l];
-    document.getElementById('lesson-player').src = `https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=${activeLesson.time}&resume=false&videoFoam=true`;
+    document.getElementById('lesson-player').src = `https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=${activeLesson.time}&resume=false&videoFoam=true&_=${Date.now()}`;
     document.getElementById('video-title').innerText = courseData[m].title + " - " + activeLesson.title + " " + (l+1);
 
     // --- AUTH & NAV ---
