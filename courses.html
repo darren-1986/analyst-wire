@@ -43,8 +43,8 @@
         .lesson-item:hover { color: #fff; background: #161a22; }
         .lesson-item.active { color: #2962ff; border-left: 3px solid #2962ff; background: #161a22; }
 
-        /* Ensure Wistia doesn't have a black screen by sizing it correctly */
-        wistia-player[media-id='adta4iwh2c129uo']:not(:defined) { background: #000; display: block; padding-top:56.25%; }
+        /* Wistia Player Style */
+        wistia-player[media-id='adta4iwh2c129uo']:not(:defined) { background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/adta4iwh2c129uo/swatch'); display: block; filter: blur(5px); padding-top:56.25%; }
     </style>
 </head>
 <body>
@@ -125,12 +125,9 @@
     // --- JUMP LOGIC ---
     function jumpTo(seconds, title, el) {
         const player = document.querySelector('wistia-player');
-        // Wistia web components expose the api after initialization
-        if (player && typeof player.video === "function") {
-            player.video().then(v => {
-                v.time(seconds);
-                v.play();
-            });
+        if (player && player.api) {
+            player.api.time(seconds);
+            player.api.play();
         }
         document.getElementById('video-title').innerText = title;
         document.querySelectorAll('.lesson-item').forEach(i => i.classList.remove('active'));
