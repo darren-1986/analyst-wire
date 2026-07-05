@@ -105,9 +105,9 @@
     courseData.forEach((mod, mIdx) => {
         const modEl = document.createElement('div');
         modEl.innerHTML = `
-            <div class="module-header" onclick="document.getElementById('mod-${mIdx}').classList.toggle('active')">${mod.title}</div>
-            <div class="lesson-list" id="mod-${mIdx}">
-                ${mod.lessons.map((less, lIdx) => `<div class="lesson-item ${mIdx === 0 && lIdx === 0 ? 'active' : ''}" onclick="switchLesson(${lIdx}, '${mod.title} - ${less} ${lIdx+1}', this)">${less} ${lIdx+1}</div>`).join('')}
+            <div class="module-header" onclick="document.getElementById('m${mIdx}').classList.toggle('active')">${mod.title}</div>
+            <div class="lesson-list" id="m${mIdx}">
+                ${mod.lessons.map((less, lIdx) => `<div class="lesson-item" onclick="switchLesson(${lIdx}, '${mod.title} - ${less} ${lIdx+1}', this)">${less} ${lIdx+1}</div>`).join('')}
             </div>
         `;
         sidebar.appendChild(modEl);
