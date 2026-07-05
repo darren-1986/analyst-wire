@@ -6,35 +6,35 @@
     <title>Analyst Wire | Courses</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
+    <!-- Wistia Embed -->
     <script src="https://fast.wistia.com/player.js" async></script>
-    <script src="https://fast.wistia.com/embed/adta4iwh2c129uo.js" async type="module"></script>
     
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000000; color: #d1d4dc; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* Navigation */
-        .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; z-index: 1001; }
+        /* Top Navigation */
+        .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; position: relative; }
         .nav-links { display: flex; align-items: center; }
         .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: color 0.2s; }
         .nav-links a:hover { color: #d1d4dc; }
         .nav-links a.active { color: #2962ff; font-weight: bold; }
 
-        /* Dropdown */
+        /* Dropdown Styling */
         .dropdown { position: relative; margin-left: 20px; }
         .dropbtn { background: none; border: none; color: #787b86; cursor: pointer; font-size: 18px; padding: 5px; }
+        .dropbtn:hover { color: #fff; }
         .dropdown-content { display: none; position: absolute; right: 0; background-color: #1c2230; min-width: 150px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); border: 1px solid #2a2e39; z-index: 1000; border-radius: 4px; }
         .dropdown-content a { color: #d1d4dc; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; margin: 0; cursor: pointer; }
         .dropdown-content a:hover { background-color: #2a2e39; }
 
-        /* Layout */
+        /* Course Layout */
         .page-container { display: flex; flex-grow: 1; overflow: hidden; }
         .sidebar { width: 320px; min-width: 320px; background: #0b0e14; border-right: 1px solid #2a2e39; overflow-y: auto; }
         .sidebar h3 { color: white; padding: 20px; font-size: 16px; margin: 0; border-bottom: 1px solid #2a2e39; }
-        
         .video-content { flex-grow: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
         .video-container { width: 100%; max-width: 900px; }
         
-        /* Modules */
+        /* Module/Lesson Styling */
         .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #d1d4dc; user-select: none; }
         .module-header:hover { background: #1c2230; }
         .lesson-list { display: none; background: #0b0e14; border-bottom: 1px solid #2a2e39; }
@@ -42,16 +42,13 @@
         .lesson-item { padding: 12px 20px 12px 35px; cursor: pointer; color: #787b86; font-size: 13px; border-bottom: 1px solid #161a22; }
         .lesson-item:hover { color: #fff; background: #161a22; }
         .lesson-item.active { color: #2962ff; border-left: 3px solid #2962ff; background: #161a22; }
-
-        /* Wistia Player Style */
-        wistia-player[media-id='adta4iwh2c129uo']:not(:defined) { background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/adta4iwh2c129uo/swatch'); display: block; filter: blur(5px); padding-top:56.25%; }
     </style>
 </head>
 <body>
 
 <div class="top-nav">
-    <div style="height: 50px; display: flex; align-items: center;">
-        <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px; width: auto; object-fit: contain;">
+    <div style="height: 50px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 5px 0;">
+        <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px; width: auto; object-fit: contain; display: block;">
     </div>
     <div class="nav-links">
         <a href="terminal.html">Dashboard</a>
@@ -76,35 +73,52 @@
 
     <div class="video-content">
         <div class="video-container">
-            <wistia-player media-id="adta4iwh2c129uo" aspect="1.7777777777777777"></wistia-player>
-            
-            <h1 id="video-title" style="margin-top: 20px;">Course Loaded</h1>
-            <p id="video-meta" style="color: #787b86;">Select a lesson from the menu to jump to the relevant section.</p>
+            <!-- Iframe Embed -->
+            <iframe id="wistia_player" 
+                src="https://analyst-wire-1.wistia.com/s/adta4iwh2c129uo" 
+                style="width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px;" 
+                allowfullscreen>
+            </iframe>
+            <h1 id="video-title" style="margin-top: 20px;">Module 1, Lesson 1</h1>
         </div>
     </div>
 </div>
 
 <script>
+    function toggleDropdown() {
+        document.getElementById("settingsDropdown").style.display = 
+            document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block";
+    }
+    
+    window.onclick = function(event) {
+        if (!event.target.matches('.dropbtn')) {
+            var dropdowns = document.getElementsByClassName("dropdown-content");
+            for (var i = 0; i < dropdowns.length; i++) {
+                dropdowns[i].style.display = "none";
+            }
+        }
+    }
+
     // --- COURSE DATA ---
     const courseData = [
         { title: "1. Module One", lessons: [
-            { title: "Lesson 1", time: 11 },
-            { title: "Lesson 2", time: 437 },
-            { title: "Lesson 3", time: 940 },
-            { title: "Lesson 4", time: 1347 },
-            { title: "Lesson 5", time: 1962 },
-            { title: "Lesson 6", time: 2395 },
-            { title: "Lesson 7", time: 2728 },
-            { title: "Lesson 8", time: 3259 }
+            { title: "Lesson 1", url: "https://analyst-wire-1.wistia.com/s/adta4iwh2c129uo?wtime=11s" },
+            { title: "Lesson 2", url: "https://analyst-wire-1.wistia.com/s/adta4iwh2c129uo?wtime=7m17s" },
+            { title: "Lesson 3", url: "https://analyst-wire-1.wistia.com/s/adta4iwh2c129uo?wtime=15m40s" },
+            { title: "Lesson 4", url: "https://analyst-wire-1.wistia.com/s/adta4iwh2c129uo?wtime=22m27s" },
+            { title: "Lesson 5", url: "https://analyst-wire-1.wistia.com/s/adta4iwh2c129uo?wtime=32m42s" },
+            { title: "Lesson 6", url: "https://analyst-wire-1.wistia.com/s/adta4iwh2c129uo?wtime=39m55s" },
+            { title: "Lesson 7", url: "https://analyst-wire-1.wistia.com/s/adta4iwh2c129uo?wtime=45m28s" },
+            { title: "Lesson 8", url: "https://analyst-wire-1.wistia.com/s/adta4iwh2c129uo?wtime=54m19s" }
         ]},
-        { title: "2. Module Two", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "3. Module Three", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "4. Module Four", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "5. Module Five", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "6. Module Six", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "7. Module Seven", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "8. Module Eight", lessons: Array(5).fill({title: "Lesson", time: 0}) },
-        { title: "9. Module Nine", lessons: Array(5).fill({title: "Lesson", time: 0}) }
+        { title: "2. Module Two", lessons: Array(5).fill({title: "Lesson", url: "#"}) },
+        { title: "3. Module Three", lessons: Array(5).fill({title: "Lesson", url: "#"}) },
+        { title: "4. Module Four", lessons: Array(5).fill({title: "Lesson", url: "#"}) },
+        { title: "5. Module Five", lessons: Array(5).fill({title: "Lesson", url: "#"}) },
+        { title: "6. Module Six", lessons: Array(5).fill({title: "Lesson", url: "#"}) },
+        { title: "7. Module Seven", lessons: Array(5).fill({title: "Lesson", url: "#"}) },
+        { title: "8. Module Eight", lessons: Array(5).fill({title: "Lesson", url: "#"}) },
+        { title: "9. Module Nine", lessons: Array(5).fill({title: "Lesson", url: "#"}) }
     ];
 
     // --- RENDER SIDEBAR ---
@@ -114,7 +128,7 @@
         modEl.innerHTML = `
             <div class="module-header" onclick="toggleModule(${mIdx})">${mod.title}</div>
             <div class="lesson-list" id="mod-${mIdx}">
-                ${mod.lessons.map((less) => `<div class="lesson-item" onclick="jumpTo(${less.time}, '${mod.title} - ${less.title}', this)">${less.title}</div>`).join('')}
+                ${mod.lessons.map((less) => `<div class="lesson-item" onclick="loadVideo('${less.url}', '${mod.title} - ${less.title}', this)">${less.title}</div>`).join('')}
             </div>
         `;
         sidebar.appendChild(modEl);
@@ -122,38 +136,43 @@
 
     function toggleModule(idx) { document.getElementById(`mod-${idx}`).classList.toggle('active'); }
 
-    // --- JUMP LOGIC ---
-    function jumpTo(seconds, title, el) {
-        const player = document.querySelector('wistia-player');
-        if (player && player.api) {
-            player.api.time(seconds);
-            player.api.play();
-        }
+    function loadVideo(url, title, el) {
+        document.getElementById('wistia_player').src = url;
         document.getElementById('video-title').innerText = title;
         document.querySelectorAll('.lesson-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
     }
 
-    // --- AUTH & NAV ---
-    function toggleDropdown() { document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+
+    async function verifyAccess(profile) {
+        if (profile.is_admin !== true && profile.subscription_tag !== 'pro') {
+            alert("Access Denied: This page is for Pro subscribers only.");
+            await client.auth.signOut();
+            window.location.href = 'index.html';
+            return false;
+        }
+        return true;
+    }
 
     async function init() {
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
         const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
 
-        if (!profile || (profile.is_admin !== true && profile.subscription_tag !== 'pro')) {
-            alert("Access Denied.");
-            await client.auth.signOut();
-            window.location.href = 'index.html';
-            return;
+        if (profile) {
+            const hasAccess = await verifyAccess(profile);
+            if (!hasAccess) return;
+            if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'block';
+            if (profile.is_admin === true || profile.subscription_tag === 'pro') document.getElementById('nav-key-levels').style.display = 'block';
         }
-        if (profile.is_admin === true) document.getElementById('nav-admin').style.display = 'block';
-        if (profile.is_admin === true || profile.subscription_tag === 'pro') document.getElementById('nav-key-levels').style.display = 'block';
     }
 
-    document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+    document.getElementById('logoutBtn').addEventListener('click', async () => { 
+        await client.auth.signOut(); 
+        window.location.href = 'index.html'; 
+    });
+
     init();
 </script>
 
