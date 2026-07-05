@@ -34,7 +34,7 @@
         /* Iframe Styles */
         .lesson-iframe { display: block; width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px; background: #000; }
         
-        /* Modules */
+        /* Modules - ALL CLOSED BY DEFAULT */
         .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #d1d4dc; user-select: none; }
         .module-header:hover { background: #1c2230; }
         .lesson-list { display: none; background: #0b0e14; border-bottom: 1px solid #2a2e39; }
@@ -74,7 +74,7 @@
     <div class="video-content">
         <div class="video-container">
             <iframe id="lesson-player" class="lesson-iframe" src="" allow="autoplay; fullscreen" allowfullscreen width="960" height="540" frameborder="0"></iframe>
-            <h1 id="video-title" style="margin-top: 20px;">Module 1 - Lesson 1</h1>
+            <h1 id="video-title" style="margin-top: 20px;"></h1>
         </div>
     </div>
 </div>
@@ -97,7 +97,6 @@
         { title: "9. Module Nine", lessons: [{title: "Lesson", time: "0s"}] }
     ];
 
-    // Load Params
     const urlParams = new URLSearchParams(window.location.search);
     const m = parseInt(urlParams.get('m')) || 0;
     const l = parseInt(urlParams.get('l')) || 0;
@@ -115,10 +114,9 @@
         sidebar.appendChild(modEl);
     });
 
-    // Set Player URL with &resume=false
+    // Set src directly
     const activeLesson = courseData[m].lessons[l];
-    const player = document.getElementById('lesson-player');
-    player.src = `https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=${activeLesson.time}&resume=false&videoFoam=true`;
+    document.getElementById('lesson-player').src = `https://fast.wistia.net/embed/iframe/z4ly46xelg?wtime=${activeLesson.time}&resume=false&videoFoam=true`;
     document.getElementById('video-title').innerText = courseData[m].title + " - " + activeLesson.title + " " + (l+1);
 
     // --- AUTH & NAV ---
