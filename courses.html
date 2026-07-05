@@ -35,7 +35,7 @@
         .lesson-iframe { display: block; width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px; background: #000; }
         
         /* Module Headers */
-        .module-header { padding: 15px 20px; background: #131722; cursor: pointer; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #787b86; transition: 0.2s; }
+        .module-header { padding: 15px 20px; background: #131722; font-weight: bold; font-size: 13px; border-bottom: 1px solid #2a2e39; color: #787b86; text-decoration: none; display: block; }
         .module-header:hover { background: #1c2230; color: #d1d4dc; }
         .module-header.active { color: #2962ff; border-left: 3px solid #2962ff; background: #161a22; }
         
@@ -84,49 +84,56 @@
 <script>
     const courseData = [
         { title: "1. Module One", video: "https://fast.wistia.net/embed/iframe/z4ly46xelg", lessons: [
-            { title: "Financial Market", time: "11s", summary: "Market structure basics." },
-            { title: "Macro Connection", time: "497s", summary: "Global economic linkages." },
-            { title: "Intrinsic Compass", time: "940s", summary: "Navigating market value." },
-            { title: "The Market Machine", time: "1347s", summary: "Understanding order flow." },
-            { title: "Market Driver", time: "1962s", summary: "Identifying key catalysts." },
-            { title: "FX Participant Hierarchy", time: "2395s", summary: "Institutional vs Retail." },
-            { title: "Master Market Moves", time: "2728s", summary: "Analyzing trend changes." },
-            { title: "Market Sentiment Foundations", time: "3259s", summary: "Psychology of the market." }
+            { title: "Financial Market", time: 11 },
+            { title: "Macro Connection", time: 497 },
+            { title: "Intrinsic Compass", time: 940 },
+            { title: "The Market Machine", time: 1347 },
+            { title: "Market Driver", time: 1962 },
+            { title: "FX Participant Hierarchy", time: 2395 },
+            { title: "Master Market Moves", time: 2728 },
+            { title: "Market Sentiment Foundations", time: 3259 }
         ]},
         ...Array.from({length: 8}, (_, i) => ({
             title: `${i + 2}. Module ${['Two','Three','Four','Five','Six','Seven','Eight','Nine'][i]}`,
             video: "https://fast.wistia.net/embed/iframe/z4ly46xelg",
-            lessons: Array.from({length: 15}, (_, l) => ({ title: `Lesson ${l+1}`, time: "0s", summary: "Placeholder description." }))
+            lessons: Array.from({length: 15}, (_, l) => ({ title: `Lesson ${l+1}`, time: 0 }))
         }))
     ];
 
+    // Helper: Seconds to H:MM:SS
+    function formatTime(s) {
+        const total = parseInt(s);
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const sec = total % 60;
+        return `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const m = parseInt(urlParams.get('m')) || 0;
+
     const sidebar = document.getElementById('sidebar');
     courseData.forEach((mod, mIdx) => {
-        const modEl = document.createElement('div');
-        modEl.id = `mod-header-${mIdx}`;
-        modEl.className = "module-header";
+        const modEl = document.createElement('a');
+        modEl.href = `?m=${mIdx}`;
+        modEl.className = `module-header ${mIdx === m ? 'active' : ''}`;
         modEl.innerText = mod.title;
-        modEl.onclick = () => selectModule(mIdx);
         sidebar.appendChild(modEl);
     });
 
-    function selectModule(idx) {
-        const mod = courseData[idx];
+    if (m < courseData.length) {
+        const mod = courseData[m];
         const player = document.getElementById('lesson-player');
         
-        // Highlight active
-        document.querySelectorAll('.module-header').forEach(el => el.classList.remove('active'));
-        document.getElementById(`mod-header-${idx}`).classList.add('active');
-
-        // Update Video
-        player.src = `${mod.video}?wtime=${mod.lessons[0].time}&resume=false&videoFoam=true&_t=${Date.now()}`;
+        // Force start at first lesson of the module
+        const startTime = mod.lessons[0].time;
+        player.src = `${mod.video}?wtime=${startTime}&resume=false&videoFoam=true&_t=${Date.now()}`;
         document.getElementById('module-title').innerText = mod.title;
         
-        // Update List
         const list = document.getElementById('lesson-ref-list');
         list.innerHTML = mod.lessons.map(l => `
             <div class="ref-item">
-                <span class="ref-time">${l.time}</span> <strong>${l.title}</strong>: ${l.summary}
+                <span class="ref-time">${formatTime(l.time)}</span> <strong>${l.title}</strong>
             </div>
         `).join('');
     }
