@@ -9,6 +9,7 @@
     
     <style>
         body, .messenger__outer { transition: background 0.3s, color 0.3s; }
+        /* Dark grey (#0a0a0a) */
         body.dark, body.dark .messenger__outer { background-color: #0a0a0a !important; color: #ffffff !important; }
         body.light, body.light .messenger__outer { background-color: #ffffff !important; color: #000000 !important; }
         body.dark .messenger__outer, body.dark .messenger__outer * { color: #e2e8f0 !important; }
@@ -16,23 +17,52 @@
         .messenger__outer .newsfeed__title { display: none !important; }
 
         .controls { display: flex; justify-content: center; margin-bottom: 5px; gap: 20px; align-items: center; padding: 5px; }
+        
         .audio-container { display: flex; align-items: center; gap: 10px; }
-        .audio-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid #00b4f9; padding: 4px 10px; border-radius: 6px; background: #0a0a0a; }
+        .audio-container img { height: 25px; width: auto; }
+        
+        .audio-wrapper { 
+            display: flex; align-items: center; gap: 10px; 
+            border: 1px solid #00b4f9; padding: 4px 10px; 
+            border-radius: 6px; background: #0a0a0a;
+        }
         #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 6px; min-width: 150px; font-size: 12px; }
+        
         .status-on { color: #22c55e !important; }
 
-        /* --- ZOOM & LIMITER --- */
-        .feed-section { margin-top: 20px; }
-        .feed-header { color: #00b4f9; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; font-size: 14px; text-align: center; }
-        
-        #livesquawk_messenger_outer, #livesquawk_briefing_outer {
+        .vol-slider {
+            -webkit-appearance: none;
+            width: 60px;
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            outline: none;
+        }
+        .vol-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 10px;
+            height: 10px;
+            background: #00b4f9;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* --- ADAPTIVE ZOOM --- */
+        #livesquawk_messenger_outer {
             transform-origin: top center;
+            margin-top: 20px;
             transition: transform 0.3s ease;
         }
 
-        @media (min-width: 1200px) { #livesquawk_messenger_outer, #livesquawk_briefing_outer { transform: scale(1.15); } }
-        
-        .messenger__outer .news__item__outer:nth-child(n+4) { display: none !important; }
+        /* Large screens */
+        @media (min-width: 1200px) { #livesquawk_messenger_outer { transform: scale(1.15); } }
+        /* Medium screens */
+        @media (min-width: 768px) and (max-width: 1199px) { #livesquawk_messenger_outer { transform: scale(1.05); } }
+        /* Mobile */
+        @media (max-width: 767px) { #livesquawk_messenger_outer { transform: scale(1.0); } }
+
+        /* THE 3-ITEM LIMIT HAS BEEN REMOVED SO THE FILTER CAN WORK */
+
         .messenger__outer { padding-top: 0 !important; margin-top: 0 !important; }
         .news__item__latest, .newsfeed__latest { display: none !important; }
         .newsfeed__list { margin-top: -10px !important; }
@@ -42,6 +72,7 @@
 
     <div class="controls">
         <div class="audio-container">
+            <img src="media/squawkimage.png" alt="Logo" />
             <div class="audio-wrapper">
                 <button id="audioToggle" onclick="handleAudioToggle()">🔊 <span id="audioLabel">Disconnected</span> <span id="timerText"></span></button>
                 <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
@@ -49,39 +80,12 @@
         </div>
     </div>
 
-    <div class="feed-section">
-        <div class="feed-header">Main Feed</div>
-        <div class="messenger__outer" id="livesquawk_messenger_outer"></div>
-    </div>
-
-    <div class="feed-section">
-        <div class="feed-header">Briefing Feed</div>
-        <div class="messenger__outer" id="livesquawk_briefing_outer"></div>
-    </div>
+    <div class="messenger__outer" id="livesquawk_messenger_outer"></div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-        
-        // --- BRIEFING FILTER LOGIC ---
-        new MutationObserver((mutations) => {
-            mutations.forEach(m => m.addedNodes.forEach(node => {
-                if (node.classList && node.classList.contains('news__item__outer')) {
-                    if (!node.innerText.toLowerCase().includes('briefing')) {
-                        node.style.display = 'none';
-                    }
-                }
-            }));
-        }).observe(document.getElementById('livesquawk_briefing_outer'), { childList: true, subtree: true });
 
-        window.messenger_start_init = function() { 
-            if (typeof Messenger !== 'undefined') {
-                Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' });
-                Messenger.init({ container: '#livesquawk_briefing_outer', product: 'forexanalytic' });
-            }
-        };
-
-        // ... [Rest of Auth, Timer, Audio Toggle, and Observer logic remains same] ...
         async function checkPermissions() {
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
@@ -126,14 +130,28 @@
             btn.disabled = false;
         }
 
+        window.messenger_start_init = function() { if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); };
+        
         const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'CPI', 'GDP'];
+        const feedContainer = document.getElementById('livesquawk_messenger_outer');
+        
         new MutationObserver((mutations) => {
             mutations.forEach(m => m.addedNodes.forEach(node => {
                 if (node.classList && node.classList.contains('news__item__outer')) {
                     if (audioTriggerKeywords.some(kw => node.innerText.toLowerCase().includes(kw.toLowerCase()))) speakText(node.innerText);
                 }
             }));
-        }).observe(document.getElementById('livesquawk_messenger_outer'), { childList: true, subtree: true });
+        }).observe(feedContainer, { childList: true, subtree: true });
+
+        // --- NEW: BULLETPROOF FILTER FOR "BRIEFING" ---
+        // This loop checks twice a second to force-hide anything without the keyword.
+        setInterval(() => {
+            document.querySelectorAll('.news__item__outer').forEach(item => {
+                if (item.innerText && !item.innerText.toLowerCase().includes('briefing')) {
+                    item.style.setProperty('display', 'none', 'important');
+                }
+            });
+        }, 500);
 
         Object.defineProperty(window, 'self', { get: () => window.top });
         window.addEventListener('load', () => { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); });
