@@ -7,28 +7,44 @@
     <link rel="stylesheet" href="https://www.livesquawk.com/partner_messenger/css/partner_messenger.css">
     
     <style>
-        /* Dark Theme Fixes */
+        /* Force background color */
         body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; }
         
-        /* 1. HIDE YELLOW ELEMENTS & TITLES */
-        .news__item__latest, .newsfeed__latest, .newsfeed__title, .newsfeed__filter, .newsfeed__header, .latest-badge { 
+        /* 1. FORCE THE FEED TO SHOW */
+        #livesquawk_messenger_outer { display: block !important; width: 100% !important; }
+
+        /* 2. KILL THE YELLOW BOXES, TITLES, FILTERS, AND HEADERS */
+        .news__item__latest, 
+        .newsfeed__latest, 
+        .newsfeed__title, 
+        .newsfeed__filter,
+        .newsfeed__header,
+        .latest-badge,
+        .newsfeed__menu { 
             display: none !important; 
         }
 
-        /* 2. FULL WIDTH FEED */
-        .messenger__outer { width: 100% !important; max-width: 100% !important; }
+        /* 3. SHOW ONLY THE TOP 3 HEADLINES AND STRETCH TO FULL WIDTH */
         .messenger__outer .news__item__outer { 
-            display: flex !important; 
+            display: none !important; 
             width: 100% !important; 
             border-bottom: 1px solid #1e293b !important; 
-            padding: 12px 5px !important; 
+            padding: 12px 10px !important; 
+        }
+        
+        /* Show only the first 3 items */
+        .messenger__outer .news__item__outer:nth-child(-n+3) { 
+            display: flex !important; 
+            flex-direction: row !important;
+            align-items: center !important;
         }
 
-        /* 3. WHITE TEXT */
+        /* 4. TEXT COLOR FIXES */
         .news__item__title, .news__item__text, .news__item__time { color: #ffffff !important; font-size: 14px !important; }
+        .news__item__time { min-width: 60px !important; font-family: monospace; opacity: 0.7; margin-right: 15px !important; }
 
         /* Audio Controls */
-        .controls { display: flex; justify-content: center; padding: 10px; background: #0f172a; }
+        .controls { display: flex; justify-content: center; padding: 8px; background: #0f172a; }
         .audio-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid #00b4f9; padding: 4px 10px; border-radius: 6px; }
         #audioToggle { cursor: pointer; background: none; border: none; color: #ffffff; font-size: 13px; }
         .status-on { color: #22c55e !important; }
@@ -45,19 +61,6 @@
     <div class="messenger__outer" id="livesquawk_messenger_outer"></div>
 
     <script>
-        // --- SAFE HEADLINE LIMITER (3 Headlines Only) ---
-        const observer = new MutationObserver(() => {
-            const items = document.querySelectorAll('.messenger__outer .news__item__outer');
-            items.forEach((item, index) => {
-                if (index >= 3) {
-                    item.style.display = 'none';
-                } else {
-                    item.style.display = 'flex'; // Ensure the first 3 are visible
-                }
-            });
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-
         // --- AUTH ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
         
@@ -76,8 +79,11 @@
             lbl.className = audioEnabled ? "status-on" : "";
         }
         
+        // --- LIVESQUAWK INIT ---
         window.messenger_start_init = function() { 
-            if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); 
+            if (typeof Messenger !== 'undefined') {
+                Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); 
+            }
         };
         
         Object.defineProperty(window, 'self', { get: () => window.top });
