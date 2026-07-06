@@ -9,8 +9,8 @@
     
     <style>
         body, .messenger__outer { transition: background 0.3s, color 0.3s; }
-        /* Updated background to a near-black dark grey (#121212) */
-        body.dark, body.dark .messenger__outer { background-color: #121212 !important; color: #ffffff !important; }
+        /* Updated background to a near-black dark grey (#0a0a0a) */
+        body.dark, body.dark .messenger__outer { background-color: #0a0a0a !important; color: #ffffff !important; }
         body.light, body.light .messenger__outer { background-color: #ffffff !important; color: #000000 !important; }
         body.dark .messenger__outer, body.dark .messenger__outer * { color: #e2e8f0 !important; }
 
@@ -24,7 +24,7 @@
         .audio-wrapper { 
             display: flex; align-items: center; gap: 10px; 
             border: 1px solid #00b4f9; padding: 4px 10px; 
-            border-radius: 6px; background: #121212;
+            border-radius: 6px; background: #0a0a0a;
         }
         #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 6px; min-width: 150px; font-size: 12px; }
         
@@ -64,86 +64,4 @@
         #livesquawk_messenger_outer .news__item__outer:nth-child(n+4) { display: none !important; }
         .messenger__outer { padding-top: 0 !important; margin-top: 0 !important; }
         .news__item__latest, .newsfeed__latest { display: none !important; }
-        .newsfeed__list { margin-top: -10px !important; }
-    </style>
-</head>
-<body class="dark">
-
-    <div class="controls">
-        <div class="audio-container">
-            <img src="media/squawkimage.png" alt="Logo" />
-            <div class="audio-wrapper">
-                <button id="audioToggle" onclick="handleAudioToggle()">🔊 <span id="audioLabel">Disconnected</span> <span id="timerText"></span></button>
-                <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
-            </div>
-        </div>
-    </div>
-
-    <div class="messenger__outer" id="livesquawk_messenger_outer"></div>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-
-        async function checkPermissions() {
-            const { data: { session } } = await client.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
-            const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
-            const allowedTags = ['pro', 'newsfeed', 'squawk', 'admin'];
-            const isAuthorized = profile && (profile.is_admin === true || allowedTags.includes(profile.subscription_tag));
-            if (!isAuthorized) { alert("Access denied."); await client.auth.signOut(); window.location.href = 'index.html'; return; }
-        }
-        checkPermissions();
-
-        let audioEnabled = false, seconds = 0, timerInterval;
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                seconds++;
-                const h = Math.floor(seconds/3600), m = Math.floor((seconds%3600)/60), s = seconds%60;
-                document.getElementById('timerText').innerText = `(${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')})`;
-            }, 1000);
-        }
-        function speakText(text) {
-            if (!audioEnabled) return;
-            const u = new SpeechSynthesisUtterance(text);
-            u.volume = document.getElementById('volSlider').value;
-            window.speechSynthesis.speak(u);
-        }
-        async function handleAudioToggle() {
-            const btn = document.getElementById('audioToggle'), lbl = document.getElementById('audioLabel');
-            btn.disabled = true;
-            if (audioEnabled) {
-                lbl.innerText = "Disconnecting...";
-                lbl.classList.remove('status-on');
-                await new Promise(r => setTimeout(r, 800));
-                clearInterval(timerInterval);
-                audioEnabled = false; lbl.innerText = "Disconnected";
-                document.getElementById('timerText').innerText = "";
-            } else {
-                lbl.innerText = "Connecting...";
-                await new Promise(r => setTimeout(r, 800));
-                audioEnabled = true; seconds = 0; startTimer(); 
-                lbl.innerText = "On Air";
-                lbl.classList.add('status-on');
-            }
-            btn.disabled = false;
-        }
-
-        window.messenger_start_init = function() { if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); };
-        
-        const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'CPI', 'GDP'];
-        const feedContainer = document.getElementById('livesquawk_messenger_outer');
-        new MutationObserver((mutations) => {
-            mutations.forEach(m => m.addedNodes.forEach(node => {
-                if (node.classList && node.classList.contains('news__item__outer')) {
-                    if (audioTriggerKeywords.some(kw => node.innerText.toLowerCase().includes(kw.toLowerCase()))) speakText(node.innerText);
-                }
-            }));
-        }).observe(feedContainer, { childList: true, subtree: true });
-
-        Object.defineProperty(window, 'self', { get: () => window.top });
-        window.addEventListener('load', () => { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); });
-    </script>
-    <script src="https://www.livesquawk.com/partner_messenger/js/include_forexanalytic.js?v=3"></script>
-</body>
-</html>
+        .newsfeed
