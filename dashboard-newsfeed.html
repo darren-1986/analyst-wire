@@ -8,34 +8,50 @@
     
     <style>
         /* Force Dark Theme */
-        body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; }
-        
-        /* 1. FORCE HIDE EVERYTHING RELATED TO 'LATEST' OR HEADERS */
-        [class*="latest"], [class*="header"], [class*="title"], [class*="filter"] { 
+        body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; width: 100% !important; }
+
+        /* 1. FORCE HIDE THE "LATEST" BOX AND HEADERS (Highest Specificity) */
+        .news__item__latest, 
+        .newsfeed__latest, 
+        .newsfeed__title, 
+        .newsfeed__filter,
+        .newsfeed__header,
+        .latest-badge,
+        .newsfeed__menu,
+        #latest { 
             display: none !important; 
+            width: 0 !important; 
+            height: 0 !important; 
+            visibility: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
-        /* 2. STRETCH FEED TO FULL WIDTH */
-        .messenger__outer { width: 100% !important; max-width: 100% !important; }
+        /* 2. FORCE FULL WIDTH FOR HEADLINES */
+        .messenger__outer { width: 100% !important; max-width: 100% !important; padding: 0 !important; }
         
         /* 3. SHOW ONLY FIRST 3 ITEMS, FULL WIDTH */
-        .messenger__outer .news__item__outer { display: none !important; }
+        /* Initially hide all items */
+        .messenger__outer .news__item__outer { 
+            display: none !important; 
+            width: 100% !important; 
+        }
+        /* Override to show only the first 3 */
         .messenger__outer .news__item__outer:nth-child(-n+3) { 
             display: flex !important; 
-            width: 100% !important; 
             border-bottom: 1px solid #1e293b !important; 
             padding: 12px 5px !important; 
+            width: 100% !important;
         }
 
         /* 4. TEXT STYLING */
         .news__item__title, .news__item__text, .news__item__time { 
             color: #ffffff !important; 
             font-size: 14px !important; 
-            margin-right: 10px !important;
         }
 
         /* Audio Controls */
-        .controls { display: flex; justify-content: center; padding: 8px; background: #0f172a; }
+        .controls { display: flex; justify-content: center; padding: 5px; background: #0f172a; }
         .audio-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid #00b4f9; padding: 4px 10px; border-radius: 6px; }
         #audioToggle { cursor: pointer; background: none; border: none; color: #ffffff; font-size: 13px; }
         .status-on { color: #22c55e !important; }
@@ -52,11 +68,19 @@
     <div class="messenger__outer" id="livesquawk_messenger_outer"></div>
 
     <script>
-        // --- SAFE CLEANUP (Runs once per second to ensure stability) ---
-        setInterval(() => {
-            // Remove lingering header elements that CSS might have missed
-            document.querySelectorAll('.newsfeed__header, .newsfeed__title, .latest-badge').forEach(el => el.remove());
-        }, 1000);
+        // --- TARGETED CLEANUP ---
+        // This watches specifically for changes to the news container and hides the "latest" badge 
+        // using the element's actual properties instead of just CSS.
+        const observer = new MutationObserver(() => {
+            const forbiddenClasses = ['.news__item__latest', '.newsfeed__latest', '.newsfeed__title', '.newsfeed__header', '.latest-badge'];
+            forbiddenClasses.forEach(selector => {
+                document.querySelectorAll(selector).forEach(el => {
+                    el.style.display = 'none';
+                    el.remove(); // Physically remove from DOM
+                });
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
 
         // --- AUTH ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
