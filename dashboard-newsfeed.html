@@ -46,12 +46,19 @@
             cursor: pointer;
         }
 
-        /* --- ZOOM & LIMITER --- */
+        /* --- ADAPTIVE ZOOM & LIMITER --- */
         #livesquawk_messenger_outer {
-            transform: scale(1.15); /* Zooms the feed by 15% */
-            transform-origin: top center; /* Keeps it centered */
-            margin-top: 20px; 
+            transform-origin: top center;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
         }
+
+        /* Large screens */
+        @media (min-width: 1200px) { #livesquawk_messenger_outer { transform: scale(1.15); } }
+        /* Medium screens */
+        @media (min-width: 768px) and (max-width: 1199px) { #livesquawk_messenger_outer { transform: scale(1.05); } }
+        /* Mobile */
+        @media (max-width: 767px) { #livesquawk_messenger_outer { transform: scale(1.0); } }
 
         #livesquawk_messenger_outer .news__item__outer:nth-child(n+4) { display: none !important; }
         .messenger__outer { padding-top: 0 !important; margin-top: 0 !important; }
