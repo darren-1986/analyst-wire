@@ -18,7 +18,6 @@
         .custom-newsfeed-header { display: flex; align-items: center; padding: 15px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 16px; }
         .green-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; margin-right: 12px; }
 
-        /* Compact Centered Controls */
         .controls { display: flex; justify-content: center; margin-bottom: 10px; gap: 20px; align-items: center; padding: 10px; }
         
         #filterDropdown { 
@@ -61,6 +60,10 @@
             transition: background 0.2s;
         }
         .vol-slider::-webkit-slider-thumb:hover { background: #ffffff; }
+
+        /* --- LIMIT TO 3 HEADLINES --- */
+        #livesquawk_messenger_outer .news__item__outer { display: none !important; }
+        #livesquawk_messenger_outer .news__item__outer:nth-child(-n+3) { display: block !important; }
     </style>
 </head>
 <body class="dark">
@@ -89,31 +92,19 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // --- AUTH & PERMISSION CHECK ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
         async function checkPermissions() {
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
-            
             const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
-            
-            // HARD BOUNCER LOGIC
             const allowedTags = ['pro', 'newsfeed', 'squawk', 'admin'];
             const isAuthorized = profile && (profile.is_admin === true || allowedTags.includes(profile.subscription_tag));
-            
-            if (!isAuthorized) {
-                alert("Your subscription does not include access to this page.");
-                await client.auth.signOut();
-                window.location.href = 'index.html';
-                return;
-            }
+            if (!isAuthorized) { alert("Access denied."); await client.auth.signOut(); window.location.href = 'index.html'; return; }
         }
         checkPermissions();
 
-        // --- LIVESQUAWK & FILTER LOGIC (Unchanged) ---
         let audioEnabled = false, seconds = 0, timerInterval;
-        
         function startTimer() {
             timerInterval = setInterval(() => {
                 seconds++;
@@ -121,14 +112,12 @@
                 document.getElementById('timerText').innerText = `(${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')})`;
             }, 1000);
         }
-
         function speakText(text) {
             if (!audioEnabled) return;
             const u = new SpeechSynthesisUtterance(text);
             u.volume = document.getElementById('volSlider').value;
             window.speechSynthesis.speak(u);
         }
-
         async function handleAudioToggle() {
             const btn = document.getElementById('audioToggle'), lbl = document.getElementById('audioLabel');
             btn.disabled = true;
@@ -151,25 +140,9 @@
 
         let currentFilter = 'all';
         const filters = { commodities: ['oil', 'gold', 'metal', 'copper', 'gas', 'brent', 'wti', 'silver'], forex: ['usd', 'eur', 'jpy', 'gbp', 'fx', 'forex', 'currency', 'yield'], equities: ['stock', 'equity', 'sp500', 'nasdaq', 'dow', 'nikkei', 'shares'], crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'coin'], centralBanks: ['fed', 'ecb', 'boj', 'bank of england', 'rba', 'central bank', 'interest rate', 'hike', 'cut'] };
-        
-        const audioTriggerKeywords = [
-            'hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 
-            'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'S&P Global Manufacturing', 
-            'ISM Manufacturing', 'CPI', 'JOLTS', 'ADP', 'S&P Global Services', 'ISM Non-Manufacturing', 
-            'Crude Oil Inventories', 'Initial Jobless Claims', 'New Home Sales', 'Average Hourly Earnings', 
-            'Nonfarm Payrolls', 'Unemployment Rate', 'GDP', 'Core CPI', 'BoC Interest Rate Decision', 
-            'BoJ Interest Rate Decision', 'Fed Interest Rate Decision', 'SNB Interest Rate Decision', 
-            'BoE Interest Rate Decision', 'Retail Sales', 'Core Retail Sales', 'RBA Interest Rate Decision', 
-            'Core PCE Price Index', 'Durable Goods Orders', 'Philadelphia Fed Manufacturing Index', 
-            '10-Year Note Auction', 'ECB Interest Rate Decision', 'PPI', 'German CPI', 
-            'Manufacturing PMI', 'CB Consumer Confidence', 'Chicago PMI', 'HCOB Spain Manufacturing PMI'
-        ];
+        const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'CPI', 'GDP'];
 
-        function setFilter(type) { 
-            currentFilter = type; 
-            filterFeed(); 
-        }
-
+        function setFilter(type) { currentFilter = type; filterFeed(); }
         function filterFeed() { 
             document.querySelectorAll('.news__item__outer').forEach(item => { 
                 const text = item.innerText.toLowerCase(); 
@@ -189,16 +162,9 @@
             }));
         }).observe(feedContainer, { childList: true, subtree: true });
 
-        Object.defineProperty(window, 'self', {
-            get: () => window.top
-        });
-
-        window.addEventListener('load', () => {
-            const height = document.body.scrollHeight;
-            window.parent.postMessage({ height }, '*');
-        });
+        Object.defineProperty(window, 'self', { get: () => window.top });
+        window.addEventListener('load', () => { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); });
     </script>
-    
     <script src="https://www.livesquawk.com/partner_messenger/js/include_forexanalytic.js?v=3"></script>
 </body>
 </html>
