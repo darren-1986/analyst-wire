@@ -8,62 +8,44 @@
     <link rel="stylesheet" href="https://www.livesquawk.com/partner_messenger/css/partner_messenger.css">
     
     <style>
-        body, .messenger__outer { transition: background 0.3s, color 0.3s; background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; }
+        body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; }
         
-        /* Remove unused UI */
-        .messenger__outer .newsfeed__title { display: none !important; }
+        /* 1. FORCE FULL WIDTH & REMOVE WASTED SPACE */
+        .messenger__outer { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 5px !important; }
+        
+        /* 2. LIMIT TO 3 HEADLINES */
+        .messenger__outer .news__item__outer { display: none !important; }
+        .messenger__outer .news__item__outer:nth-child(-n+3) { display: block !important; border-bottom: 1px solid #1e293b !important; padding: 12px 5px !important; }
 
-        /* Compact Newsfeed Styling */
-        .messenger__outer { width: 100% !important; padding: 0 10px !important; }
-        
-        /* Force limit to 3 items */
-        .messenger__outer .news__item__outer:nth-child(n+4) { display: none !important; }
-        
-        /* Compact Item Styling */
-        .news__item__outer { padding: 8px 0 !important; border-bottom: 1px solid #1e293b !important; font-size: 13px !important; }
-        .news__item__title { font-weight: 500 !important; }
+        /* 3. ENSURE TEXT IS WHITE */
+        .news__item__title, .news__item__text, .news__item__time { color: #ffffff !important; }
 
-        /* Audio Controls */
-        .controls { display: flex; justify-content: center; margin-bottom: 10px; gap: 20px; align-items: center; padding: 10px; background: #0f172a; }
-        
-        .audio-container { display: flex; align-items: center; gap: 10px; }
-        .audio-container img { height: 25px; width: auto; }
-        
-        .audio-wrapper { 
-            display: flex; align-items: center; gap: 15px; 
-            border: 1px solid #00b4f9; padding: 4px 12px; 
-            border-radius: 8px; background: #0f172a;
+        /* 4. FIX "LATEST" BOX VISIBILITY */
+        .news__item__latest { 
+            color: #000000 !important; /* Make text black for visibility */
+            font-weight: bold !important;
+            padding: 2px 5px !important;
         }
-        #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 8px; min-width: 170px; }
-        
+
+        /* Hide specific elements */
+        .messenger__outer .newsfeed__title, .messenger__outer .newsfeed__filter { display: none !important; }
+
+        /* Compact Audio Controls */
+        .controls { display: flex; justify-content: center; margin-bottom: 5px; gap: 10px; align-items: center; padding: 5px; }
+        .audio-container img { height: 20px; width: auto; }
+        .audio-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid #00b4f9; padding: 4px 10px; border-radius: 6px; background: #0f172a; }
+        #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-size: 13px; display: flex; align-items: center; gap: 6px; }
         .status-on { color: #22c55e !important; }
-
-        .vol-slider {
-            -webkit-appearance: none;
-            width: 70px;
-            height: 4px;
-            background: #334155;
-            border-radius: 2px;
-            outline: none;
-        }
-        .vol-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 12px;
-            height: 12px;
-            background: #00b4f9;
-            border-radius: 50%;
-            cursor: pointer;
-        }
+        .vol-slider { width: 60px; height: 4px; background: #334155; border-radius: 2px; }
     </style>
 </head>
 <body class="dark">
 
     <div class="controls">
         <div class="audio-container">
-            <img src="media/squawkimage.png" alt="Logo" />
             <div class="audio-wrapper">
                 <button id="audioToggle" onclick="handleAudioToggle()">🔊 <span id="audioLabel">Disconnected</span> <span id="timerText"></span></button>
-                <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
+                <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1">
             </div>
         </div>
     </div>
@@ -72,30 +54,23 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // --- AUTH & PERMISSION CHECK ---
+        // --- AUTH & PERMISSION ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
         async function checkPermissions() {
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
-            
-            const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
-            
+            const { data: profile } = await client.from('profiles').select('subscription_tag').eq('id', session.user.id).single();
             const allowedTags = ['pro', 'newsfeed', 'squawk', 'admin'];
-            const isAuthorized = profile && (profile.is_admin === true || allowedTags.includes(profile.subscription_tag));
-            
-            if (!isAuthorized) {
-                alert("Your subscription does not include access to this page.");
+            if (!profile || !allowedTags.includes(profile.subscription_tag)) {
                 await client.auth.signOut();
                 window.location.href = 'index.html';
-                return;
             }
         }
         checkPermissions();
 
-        // --- LIVESQUAWK LOGIC ---
+        // --- LIVESQUAWK & AUDIO LOGIC ---
         let audioEnabled = false, seconds = 0, timerInterval;
-        
         function startTimer() {
             timerInterval = setInterval(() => {
                 seconds++;
@@ -104,49 +79,21 @@
             }, 1000);
         }
 
-        function speakText(text) {
-            if (!audioEnabled) return;
-            const u = new SpeechSynthesisUtterance(text);
-            u.volume = document.getElementById('volSlider').value;
-            window.speechSynthesis.speak(u);
-        }
-
         async function handleAudioToggle() {
             const btn = document.getElementById('audioToggle'), lbl = document.getElementById('audioLabel');
-            btn.disabled = true;
             if (audioEnabled) {
-                lbl.innerText = "Disconnecting...";
-                lbl.classList.remove('status-on');
-                await new Promise(r => setTimeout(r, 800));
                 clearInterval(timerInterval);
                 audioEnabled = false; lbl.innerText = "Disconnected";
-                document.getElementById('timerText').innerText = "";
+                lbl.classList.remove('status-on');
             } else {
-                lbl.innerText = "Connecting...";
-                await new Promise(r => setTimeout(r, 800));
                 audioEnabled = true; seconds = 0; startTimer(); 
                 lbl.innerText = "On Air";
                 lbl.classList.add('status-on');
             }
-            btn.disabled = false;
         }
-        
-        const audioTriggerKeywords = [
-            'hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 
-            'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'CPI', 'Nonfarm Payrolls', 'GDP'
-        ];
         
         window.messenger_start_init = function() { if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); };
         
-        const feedContainer = document.getElementById('livesquawk_messenger_outer');
-        new MutationObserver((mutations) => {
-            mutations.forEach(m => m.addedNodes.forEach(node => {
-                if (node.classList && node.classList.contains('news__item__outer')) {
-                    if (audioTriggerKeywords.some(kw => node.innerText.toLowerCase().includes(kw.toLowerCase()))) speakText(node.innerText);
-                }
-            }));
-        }).observe(feedContainer, { childList: true, subtree: true });
-
         Object.defineProperty(window, 'self', { get: () => window.top });
 
         window.addEventListener('load', () => {
