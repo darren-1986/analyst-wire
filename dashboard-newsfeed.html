@@ -15,7 +15,7 @@
 
         .messenger__outer .newsfeed__title { display: none !important; }
 
-        .controls { display: flex; justify-content: center; margin-bottom: 5px; align-items: center; padding: 5px; }
+        .controls { display: flex; justify-content: center; margin-bottom: 5px; gap: 20px; align-items: center; padding: 5px; }
         
         .audio-container { display: flex; align-items: center; gap: 10px; }
         .audio-container img { height: 25px; width: auto; }
@@ -46,12 +46,17 @@
             cursor: pointer;
         }
 
-        /* --- COMPACTING STYLES (No more row-hiding to keep alignment perfect) --- */
-        #livesquawk_messenger_outer { margin-top: -20px !important; }
-        .news__item__outer { padding-top: 2px !important; padding-bottom: 2px !important; min-height: 20px !important; }
-        .news__item__title, .news__item__time { font-size: 13px !important; }
-        .newsfeed__list { margin-top: -5px !important; }
+        /* --- ZOOM & LIMITER --- */
+        #livesquawk_messenger_outer {
+            transform: scale(1.15); /* Zooms the feed by 15% */
+            transform-origin: top center; /* Keeps it centered */
+            margin-top: 20px; 
+        }
+
+        #livesquawk_messenger_outer .news__item__outer:nth-child(n+4) { display: none !important; }
+        .messenger__outer { padding-top: 0 !important; margin-top: 0 !important; }
         .news__item__latest, .newsfeed__latest { display: none !important; }
+        .newsfeed__list { margin-top: -10px !important; }
     </style>
 </head>
 <body class="dark">
