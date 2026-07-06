@@ -25,36 +25,37 @@
             border: 1px solid #00b4f9; padding: 4px 10px; 
             border-radius: 6px; background: #0f172a;
         }
-        #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 6px; min-width: 150px; font-size: 12px; }
+        #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 6px; min-width: 150px; font-size: 14px; }
         
         .status-on { color: #22c55e !important; }
 
         .vol-slider {
             -webkit-appearance: none;
-            width: 60px;
-            height: 4px;
+            width: 80px;
+            height: 6px;
             background: #334155;
-            border-radius: 2px;
+            border-radius: 3px;
             outline: none;
         }
-        .vol-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 10px;
-            height: 10px;
-            background: #00b4f9;
-            border-radius: 50%;
-            cursor: pointer;
+
+        /* --- INCREASED SIZE & SPACING --- */
+        /* Expand individual news items */
+        #livesquawk_messenger_outer .news__item__outer {
+            padding: 20px 10px !important; /* Increased padding makes rows taller */
         }
 
-        /* --- COMPACTING & HEADLINE LIMITER --- */
-        /* Hide rows 4+ */
+        /* Increase font size for better readability and size */
+        .news__item__title, .news__item__time {
+            font-size: 18px !important; /* Increased font size */
+        }
+
+        /* Limit to 3 headlines and remove background */
         #livesquawk_messenger_outer .news__item__outer:nth-child(n+4) { display: none !important; }
+        #livesquawk_messenger_outer .news__item__outer { background: transparent !important; }
         
-        /* Remove internal spacing and yellow badge */
+        /* Remove empty gaps */
         .messenger__outer { padding-top: 0 !important; margin-top: 0 !important; }
         .news__item__latest, .newsfeed__latest { display: none !important; }
-        
-        /* Reduce gap between Date and items */
         .newsfeed__list { margin-top: -10px !important; }
     </style>
 </head>
