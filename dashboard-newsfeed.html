@@ -4,22 +4,27 @@
     <meta charset="UTF-8">
     <title>LiveSquawk Premium Feed</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
-    <link rel="stylesheet" href="https://www.livesquawk.com/partner_messenger/css/partner_messenger.css">
     
     <style>
-        /* Force background color */
-        body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; }
+        /* 1. RESET AND DARK THEME */
+        body { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; font-family: sans-serif; }
         
-        /* 1. HIDE THE YELLOW "LATEST" BADGE WITHOUT BREAKING THE FEED */
-        .news__item__latest { display: none !important; }
-        .newsfeed__title, .newsfeed__header, .newsfeed__filter { display: none !important; }
+        /* 2. FULL WIDTH CONTAINER */
+        #livesquawk_messenger_outer { width: 100% !important; padding: 0 !important; }
 
-        /* 2. LIMIT TO TOP 3 HEADLINES AND STRETCH TO FULL WIDTH */
-        /* First, hide everything by default */
-        .messenger__outer .news__item__outer { display: none !important; }
-        
-        /* Then, show only the top 3 and stretch them */
-        .messenger__outer .news__item__outer:nth-child(-n+3) { 
+        /* 3. AGGRESSIVELY HIDE THE YELLOW BADGES AND HEADER */
+        .news__item__latest, 
+        .newsfeed__latest, 
+        .newsfeed__title, 
+        .newsfeed__filter,
+        .newsfeed__header,
+        .latest-badge { 
+            display: none !important; 
+        }
+
+        /* 4. SHOW ONLY TOP 3 HEADLINES AND STRETCH */
+        .news__item__outer { display: none !important; } /* Hide all by default */
+        .news__item__outer:nth-child(-n+3) { 
             display: flex !important; 
             width: 100% !important; 
             border-bottom: 1px solid #1e293b !important; 
@@ -28,12 +33,16 @@
             align-items: center !important;
         }
 
-        /* 3. ENSURE TEXT IS WHITE & READABLE */
-        .news__item__title, .news__item__text, .news__item__time { color: #ffffff !important; font-size: 14px !important; }
-        .news__item__time { min-width: 50px !important; font-family: monospace; opacity: 0.7; margin-right: 15px !important; }
+        /* 5. TEXT STYLING */
+        .news__item__title, .news__item__text, .news__item__time { 
+            color: #ffffff !important; 
+            font-size: 14px !important; 
+            margin-right: 10px !important;
+        }
+        .news__item__time { min-width: 50px !important; opacity: 0.7; }
 
         /* Audio Controls */
-        .controls { display: flex; justify-content: center; padding: 8px; background: #0f172a; }
+        .controls { display: flex; justify-content: center; padding: 10px; background: #0f172a; }
         .audio-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid #00b4f9; padding: 4px 10px; border-radius: 6px; }
         #audioToggle { cursor: pointer; background: none; border: none; color: #ffffff; font-size: 13px; }
         .status-on { color: #22c55e !important; }
