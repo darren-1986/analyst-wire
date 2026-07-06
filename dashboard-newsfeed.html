@@ -8,34 +8,39 @@
     <link rel="stylesheet" href="https://www.livesquawk.com/partner_messenger/css/partner_messenger.css">
     
     <style>
-        body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; }
+        /* Force Dark Theme & Full Width */
+        body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; width: 100% !important; }
         
-        /* 1. HIDE UNWANTED ELEMENTS */
-        .messenger__outer .newsfeed__title, 
-        .messenger__outer .newsfeed__filter,
-        .messenger__outer .news__item__latest { display: none !important; }
+        /* 1. Nuke the 'LATEST' sections and titles */
+        .news__item__latest, 
+        .newsfeed__latest, 
+        .newsfeed__title, 
+        .newsfeed__filter { 
+            display: none !important; 
+            visibility: hidden !important; 
+            width: 0 !important; 
+            height: 0 !important; 
+        }
 
-        /* 2. FORCE FULL WIDTH & REMOVE WASTED SPACE */
-        .messenger__outer { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        /* 2. Compact Feed Layout */
+        .messenger__outer { width: 100% !important; max-width: 100% !important; padding: 0 !important; }
         
-        /* 3. LIMIT TO 3 HEADLINES */
+        /* 3. Limit to 3 headlines, Full Width */
         .messenger__outer .news__item__outer { display: none !important; width: 100% !important; }
         .messenger__outer .news__item__outer:nth-child(-n+3) { 
             display: flex !important; 
             border-bottom: 1px solid #1e293b !important; 
-            padding: 12px 10px !important; 
+            padding: 10px 5px !important; 
             width: 100% !important;
             flex-direction: row !important;
         }
 
-        /* 4. ENSURE TEXT IS WHITE & ALIGNED */
-        .news__item__title, .news__item__text, .news__item__time { color: #ffffff !important; margin-right: 10px !important; }
-        .news__item__time { font-family: monospace; opacity: 0.8; }
+        /* 4. White text for readability */
+        .news__item__title, .news__item__text, .news__item__time { color: #ffffff !important; font-size: 14px !important; }
 
         /* Audio Controls */
-        .controls { display: flex; justify-content: center; margin-bottom: 5px; gap: 10px; align-items: center; padding: 5px; }
-        .audio-container img { height: 20px; width: auto; }
-        .audio-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid #00b4f9; padding: 4px 10px; border-radius: 6px; background: #0f172a; }
+        .controls { display: flex; justify-content: center; margin-bottom: 5px; gap: 10px; align-items: center; padding: 5px; background: #0f172a; }
+        .audio-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid #00b4f9; padding: 4px 10px; border-radius: 6px; }
         #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-size: 13px; display: flex; align-items: center; gap: 6px; }
         .status-on { color: #22c55e !important; }
         .vol-slider { width: 60px; height: 4px; background: #334155; border-radius: 2px; }
@@ -44,11 +49,9 @@
 <body class="dark">
 
     <div class="controls">
-        <div class="audio-container">
-            <div class="audio-wrapper">
-                <button id="audioToggle" onclick="handleAudioToggle()">🔊 <span id="audioLabel">Disconnected</span> <span id="timerText"></span></button>
-                <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1">
-            </div>
+        <div class="audio-wrapper">
+            <button id="audioToggle" onclick="handleAudioToggle()">🔊 <span id="audioLabel">Disconnected</span> <span id="timerText"></span></button>
+            <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1">
         </div>
     </div>
 
@@ -56,6 +59,12 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // --- NUKE SCRIPT: Actively remove the 'LATEST' elements ---
+        setInterval(() => {
+            const elementsToKill = document.querySelectorAll('.news__item__latest, .newsfeed__latest, .newsfeed__title, .newsfeed__filter');
+            elementsToKill.forEach(el => el.remove());
+        }, 100);
+
         // --- AUTH & PERMISSION ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
