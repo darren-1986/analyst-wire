@@ -7,53 +7,56 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <style>
-        /* 1. Reset everything */
-        body, #livesquawk_messenger_outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; width: 100% !important; }
+        /* Dark Theme */
+        body { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; }
 
-        /* 2. Hide the yellow Latest badge */
-        .news__item__latest, .newsfeed__latest { display: none !important; }
+        /* Force hide the yellow banner */
+        .news__item__latest, .newsfeed__latest, .latest-badge { display: none !important; }
 
-        /* 3. Limit to top 3 headlines */
-        #livesquawk_messenger_outer .news__item__outer { display: none !important; }
-        #livesquawk_messenger_outer .news__item__outer:nth-child(-n+3) { 
-            display: flex !important; 
+        /* Headlines: Force them to full width and hide everything after 3rd item */
+        #livesquawk_messenger_outer .news__item__outer { 
+            display: none !important; 
             width: 100% !important; 
-            padding: 10px !important; 
-            border-bottom: 1px solid #1e293b !important;
+            border-bottom: 1px solid #1e293b !important; 
+            padding: 10px 5px !important; 
         }
+        
+        /* Show only the top 3 items */
+        #livesquawk_messenger_outer .news__item__outer:nth-child(-n+3) { display: block !important; }
 
-        /* 4. Basic text visibility */
+        /* Text colors */
         .news__item__title, .news__item__time { color: #ffffff !important; font-size: 14px !important; }
     </style>
 </head>
 <body>
 
-    <div id="controls">
-        <button id="audioToggle" onclick="handleAudioToggle()">Audio: Off</button>
-    </div>
-
     <div id="livesquawk_messenger_outer"></div>
 
     <script>
+        // --- RELIABLE LIMITER ---
+        // This script watches the container. When items are added, it ensures only 3 are visible.
+        const targetNode = document.getElementById('livesquawk_messenger_outer');
+        const observer = new MutationObserver(() => {
+            const items = targetNode.querySelectorAll('.news__item__outer');
+            items.forEach((item, index) => {
+                if (index < 3) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        observer.observe(targetNode, { childList: true, subtree: true });
+
         // --- AUTH ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
         
-        async function checkPermissions() {
-            const { data: { session } } = await client.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
-        }
-        checkPermissions();
-
-        // --- LIVESQUAWK INIT ---
         window.messenger_start_init = function() { 
             if (typeof Messenger !== 'undefined') {
                 Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); 
             }
         };
         
-        // --- AUDIO TOGGLE ---
-        function handleAudioToggle() { /* Audio logic */ }
-
         Object.defineProperty(window, 'self', { get: () => window.top });
     </script>
     
