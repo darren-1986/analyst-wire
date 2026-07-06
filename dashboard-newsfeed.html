@@ -13,20 +13,10 @@
         body.light, body.light .messenger__outer { background-color: #ffffff !important; color: #000000 !important; }
         body.dark .messenger__outer, body.dark .messenger__outer * { color: #e2e8f0 !important; }
 
-        /* REMOVED: .custom-newsfeed-header and .messenger__outer .newsfeed__title are now hidden */
         .messenger__outer .newsfeed__title { display: none !important; }
 
-        .controls { display: flex; justify-content: center; margin-bottom: 5px; gap: 20px; align-items: center; padding: 5px; }
-        
-        #filterDropdown { 
-            padding: 2px 10px; 
-            cursor: pointer; 
-            border-radius: 4px; 
-            border: 1px solid #475569; 
-            background: #1e293b; 
-            color: white; 
-            font-size: 12px;
-        }
+        /* Compact Controls (Filter removed) */
+        .controls { display: flex; justify-content: center; margin-bottom: 5px; align-items: center; padding: 5px; }
         
         .audio-container { display: flex; align-items: center; gap: 10px; }
         .audio-container img { height: 25px; width: auto; }
@@ -57,7 +47,7 @@
             cursor: pointer;
         }
 
-        /* --- LIMIT TO 3 HEADLINES & FIX BACKGROUND --- */
+        /* Limit to 3 headlines and transparent background */
         #livesquawk_messenger_outer .news__item__outer:nth-child(n+4) { display: none !important; }
         #livesquawk_messenger_outer .news__item__outer { background: transparent !important; }
     </style>
@@ -72,15 +62,6 @@
                 <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
             </div>
         </div>
-        
-        <select id="filterDropdown" onchange="setFilter(this.value)">
-            <option value="all">All</option>
-            <option value="commodities">Commodities</option>
-            <option value="forex">Forex</option>
-            <option value="equities">Equities</option>
-            <option value="crypto">Crypto</option>
-            <option value="centralBanks">Central Banks</option>
-        </select>
     </div>
 
     <div class="messenger__outer" id="livesquawk_messenger_outer"></div>
@@ -133,21 +114,9 @@
             btn.disabled = false;
         }
 
-        let currentFilter = 'all';
-        const filters = { commodities: ['oil', 'gold', 'metal', 'copper', 'gas', 'brent', 'wti', 'silver'], forex: ['usd', 'eur', 'jpy', 'gbp', 'fx', 'forex', 'currency', 'yield'], equities: ['stock', 'equity', 'sp500', 'nasdaq', 'dow', 'nikkei', 'shares'], crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'coin'], centralBanks: ['fed', 'ecb', 'boj', 'bank of england', 'rba', 'central bank', 'interest rate', 'hike', 'cut'] };
-        const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'CPI', 'GDP'];
-
-        function setFilter(type) { currentFilter = type; filterFeed(); }
-        function filterFeed() { 
-            document.querySelectorAll('.news__item__outer').forEach(item => { 
-                const text = item.innerText.toLowerCase(); 
-                const matchesCategory = (currentFilter === 'all' || filters[currentFilter].some(word => text.includes(word))); 
-                item.style.display = (matchesCategory) ? '' : 'none'; 
-            }); 
-        }
-        
         window.messenger_start_init = function() { if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); };
         
+        const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'CPI', 'GDP'];
         const feedContainer = document.getElementById('livesquawk_messenger_outer');
         new MutationObserver((mutations) => {
             mutations.forEach(m => m.addedNodes.forEach(node => {
