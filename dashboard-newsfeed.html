@@ -9,7 +9,8 @@
     
     <style>
         body, .messenger__outer { transition: background 0.3s, color 0.3s; }
-        body.dark, body.dark .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; }
+        /* Changed background-color from #0f172a to #1e1e1e (Dark Grey) */
+        body.dark, body.dark .messenger__outer { background-color: #1e1e1e !important; color: #ffffff !important; }
         body.light, body.light .messenger__outer { background-color: #ffffff !important; color: #000000 !important; }
         body.dark .messenger__outer, body.dark .messenger__outer * { color: #e2e8f0 !important; }
 
@@ -23,7 +24,7 @@
         .audio-wrapper { 
             display: flex; align-items: center; gap: 10px; 
             border: 1px solid #00b4f9; padding: 4px 10px; 
-            border-radius: 6px; background: #0f172a;
+            border-radius: 6px; background: #1e1e1e;
         }
         #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 6px; min-width: 150px; font-size: 12px; }
         
