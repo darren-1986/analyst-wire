@@ -114,6 +114,7 @@
             .msw-header { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 24px; }
             .msw-local-clock { font-family: monospace; font-size: 12px; background-color: #1e293b; padding: 4px 8px; border-radius: 4px; color: #10b981; }
             .msw-session-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+            .msw-session-row:last-child { margin-bottom: 0; }
             .msw-session-info { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
             .msw-session-name { display: flex; align-items: center; gap: 10px; font-weight: 500; }
             .msw-icon-img { width: 20px; height: 20px; object-fit: contain; filter: brightness(0) saturate(100%) invert(80%) sepia(50%) saturate(1200%) hue-rotate(180deg); }
@@ -184,15 +185,28 @@
                         s.row.querySelector('.msw-countdown-text').innerText = `Closes in ${Math.floor(rem/3600)}h ${Math.floor((rem%3600)/60)}m`;
                     } else {
                         s.row.querySelector('.msw-progress-bar-fill').style.width = '0%';
+                        
                         let target = new Date(dateInZone);
                         target.setHours(Math.floor(s.open), (s.open % 1) * 60, 0, 0);
-                        if (dateInZone >= target) target.setDate(target.getDate() + 1);
-                        while (target.getDay() === 0 || target.getDay() === 6) target.setDate(target.getDate() + 1);
+
+                        // If already past open time today, move to next day
+                        if (dateInZone >= target) {
+                            target.setDate(target.getDate() + 1);
+                        }
+
+                        // Skip weekends
+                        while (target.getDay() === 0 || target.getDay() === 6) {
+                            target.setDate(target.getDate() + 1);
+                        }
+
                         const diff = target - dateInZone;
                         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
                         const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        s.row.querySelector('.msw-countdown-text').innerText = `Opens in ${(d > 0) ? d + 'd ' : ''}${h}h ${m}m`;
+                        
+                        let display = (d > 0) ? `${d}d ` : "";
+                        display += `${h}h ${m}m`;
+                        s.row.querySelector('.msw-countdown-text').innerText = `Opens in ${display}`;
                     }
                 });
             }
