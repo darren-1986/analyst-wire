@@ -7,36 +7,30 @@
     <link rel="stylesheet" href="https://www.livesquawk.com/partner_messenger/css/partner_messenger.css">
     
     <style>
-        /* Force Dark Theme */
-        body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; width: 100% !important; }
-
-        /* Nuke the 'LATEST' headers and filters */
-        .newsfeed__title, .newsfeed__filter, .newsfeed__header, .latest-badge, .newsfeed__latest { 
+        /* Dark Theme Fixes */
+        body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; }
+        
+        /* 1. HIDE YELLOW ELEMENTS & TITLES */
+        .news__item__latest, .newsfeed__latest, .newsfeed__title, .newsfeed__filter, .newsfeed__header, .latest-badge { 
             display: none !important; 
-            height: 0 !important; 
-            padding: 0 !important; 
-            margin: 0 !important; 
         }
 
-        /* Full Screen News Items */
+        /* 2. FULL WIDTH FEED */
         .messenger__outer { width: 100% !important; max-width: 100% !important; }
-        
-        /* Force stretch and limit to top 3 */
-        .messenger__outer .news__item__outer { display: none !important; }
-        .messenger__outer .news__item__outer:nth-child(-n+3) { 
+        .messenger__outer .news__item__outer { 
             display: flex !important; 
             width: 100% !important; 
             border-bottom: 1px solid #1e293b !important; 
             padding: 12px 5px !important; 
         }
 
-        /* Typography */
+        /* 3. WHITE TEXT */
         .news__item__title, .news__item__text, .news__item__time { color: #ffffff !important; font-size: 14px !important; }
-        .news__item__time { min-width: 50px !important; font-family: monospace; opacity: 0.7; }
 
-        .controls { display: flex; justify-content: center; padding: 5px; background: #0f172a; }
+        /* Audio Controls */
+        .controls { display: flex; justify-content: center; padding: 10px; background: #0f172a; }
         .audio-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid #00b4f9; padding: 4px 10px; border-radius: 6px; }
-        #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-size: 13px; }
+        #audioToggle { cursor: pointer; background: none; border: none; color: #ffffff; font-size: 13px; }
         .status-on { color: #22c55e !important; }
     </style>
 </head>
@@ -51,27 +45,18 @@
     <div class="messenger__outer" id="livesquawk_messenger_outer"></div>
 
     <script>
-        // --- NUCLEAR CLEANUP ---
-        setInterval(() => {
-            // Find any element containing the text "LATEST" and nuke the parent row
-            const allElements = document.querySelectorAll('*');
-            allElements.forEach(el => {
-                // If the element is a container for "Latest" or the text itself
-                if (el.textContent.includes('LATEST') && el.offsetHeight > 0) {
-                    el.style.display = 'none';
-                    el.style.setProperty('display', 'none', 'important');
-                }
-            });
-
-            // Ensure only 3 items show
+        // --- SAFE HEADLINE LIMITER (3 Headlines Only) ---
+        const observer = new MutationObserver(() => {
             const items = document.querySelectorAll('.messenger__outer .news__item__outer');
             items.forEach((item, index) => {
                 if (index >= 3) {
                     item.style.display = 'none';
-                    item.style.setProperty('display', 'none', 'important');
+                } else {
+                    item.style.display = 'flex'; // Ensure the first 3 are visible
                 }
             });
-        }, 50);
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
 
         // --- AUTH ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
@@ -82,13 +67,6 @@
         }
         checkPermissions();
 
-        // --- LIVESQUAWK INITIALIZATION ---
-        window.messenger_start_init = function() { 
-            if (typeof Messenger !== 'undefined') {
-                Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); 
-            }
-        };
-
         // --- AUDIO ---
         let audioEnabled = false;
         async function handleAudioToggle() {
@@ -98,8 +76,11 @@
             lbl.className = audioEnabled ? "status-on" : "";
         }
         
+        window.messenger_start_init = function() { 
+            if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); 
+        };
+        
         Object.defineProperty(window, 'self', { get: () => window.top });
-        window.addEventListener('load', () => { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); });
     </script>
     
     <script src="https://www.livesquawk.com/partner_messenger/js/include_forexanalytic.js?v=3"></script>
