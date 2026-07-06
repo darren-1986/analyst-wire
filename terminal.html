@@ -149,7 +149,7 @@
                         <div class="msw-session-name">
                             <span class="msw-status-dot"></span>
                             <img src="${s.img}" class="msw-icon-img" alt="${s.name}">
-                            <span>${s.name}<small class="msw-zone-time" id="time-${s.name}"></small></span>
+                            <span>${s.name}<small class="msw-zone-time" id="time-${s.name.replace(/\s+/g, '-')}"></small></span>
                         </div>
                         <span class="msw-session-status-text"></span>
                     </div>
@@ -158,7 +158,8 @@
                 `;
                 container.appendChild(row);
                 s.row = row;
-                s.timeEl = row.querySelector(`#time-${s.name}`);
+                // Correct ID selector
+                s.timeEl = row.querySelector(`#time-${s.name.replace(/\s+/g, '-')}`);
             });
 
             function update() {
@@ -168,7 +169,7 @@
                 
                 SESSIONS.forEach(s => {
                     const dateInZone = new Date(now.toLocaleString('en-US', { timeZone: s.zone }));
-                    s.timeEl.innerText = dateInZone.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    if(s.timeEl) s.timeEl.innerText = dateInZone.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     
                     const hours = dateInZone.getHours() + (dateInZone.getMinutes() / 60);
                     const day = dateInZone.getDay();
@@ -189,15 +190,8 @@
                         let target = new Date(dateInZone);
                         target.setHours(Math.floor(s.open), (s.open % 1) * 60, 0, 0);
 
-                        // If already past open time today, move to next day
-                        if (dateInZone >= target) {
-                            target.setDate(target.getDate() + 1);
-                        }
-
-                        // Skip weekends
-                        while (target.getDay() === 0 || target.getDay() === 6) {
-                            target.setDate(target.getDate() + 1);
-                        }
+                        if (dateInZone >= target) target.setDate(target.getDate() + 1);
+                        while (target.getDay() === 0 || target.getDay() === 6) target.setDate(target.getDate() + 1);
 
                         const diff = target - dateInZone;
                         const d = Math.floor(diff / (1000 * 60 * 60 * 24));
