@@ -7,25 +7,32 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <style>
-        /* Dark Theme */
+        /* Force dark background and remove default margins */
         body { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; }
 
-        /* Force hide the yellow banner */
-        .news__item__latest, .newsfeed__latest, .latest-badge { display: none !important; }
+        /* 1. FORCE HIDE THE "LATEST" BADGE AND FEED TITLE */
+        /* We use !important to override the external library's style */
+        .news__item__latest, 
+        .newsfeed__latest, 
+        .newsfeed__title, 
+        .newsfeed__header { 
+            display: none !important; 
+        }
 
-        /* Headlines: Force them to full width and hide everything after 3rd item */
+        /* 2. LIMIT TO 3 HEADLINES AND STRETCH */
+        /* First, hide all items, then show only the first 3 */
         #livesquawk_messenger_outer .news__item__outer { 
             display: none !important; 
+        }
+        #livesquawk_messenger_outer .news__item__outer:nth-child(-n+3) { 
+            display: flex !important; 
             width: 100% !important; 
             border-bottom: 1px solid #1e293b !important; 
             padding: 10px 5px !important; 
         }
         
-        /* Show only the top 3 items */
-        #livesquawk_messenger_outer .news__item__outer:nth-child(-n+3) { display: block !important; }
-
-        /* Text colors */
-        .news__item__title, .news__item__time { color: #ffffff !important; font-size: 14px !important; }
+        /* 3. ENSURE TEXT IS WHITE */
+        .news__item__title { color: #ffffff !important; }
     </style>
 </head>
 <body>
@@ -33,30 +40,13 @@
     <div id="livesquawk_messenger_outer"></div>
 
     <script>
-        // --- RELIABLE LIMITER ---
-        // This script watches the container. When items are added, it ensures only 3 are visible.
-        const targetNode = document.getElementById('livesquawk_messenger_outer');
-        const observer = new MutationObserver(() => {
-            const items = targetNode.querySelectorAll('.news__item__outer');
-            items.forEach((item, index) => {
-                if (index < 3) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        });
-        observer.observe(targetNode, { childList: true, subtree: true });
-
-        // --- AUTH ---
-        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-        
+        // --- LIVESQUAWK INIT ---
         window.messenger_start_init = function() { 
             if (typeof Messenger !== 'undefined') {
                 Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); 
             }
         };
-        
+
         Object.defineProperty(window, 'self', { get: () => window.top });
     </script>
     
