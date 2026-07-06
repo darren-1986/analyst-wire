@@ -15,8 +15,7 @@
 
         .messenger__outer .newsfeed__title { display: none !important; }
 
-        /* Compact Controls (Filter removed) */
-        .controls { display: flex; justify-content: center; margin-bottom: 5px; align-items: center; padding: 5px; }
+        .controls { display: flex; justify-content: center; margin-bottom: 5px; gap: 20px; align-items: center; padding: 5px; }
         
         .audio-container { display: flex; align-items: center; gap: 10px; }
         .audio-container img { height: 25px; width: auto; }
@@ -47,9 +46,16 @@
             cursor: pointer;
         }
 
-        /* Limit to 3 headlines and transparent background */
+        /* --- COMPACTING & HEADLINE LIMITER --- */
+        /* Hide rows 4+ */
         #livesquawk_messenger_outer .news__item__outer:nth-child(n+4) { display: none !important; }
-        #livesquawk_messenger_outer .news__item__outer { background: transparent !important; }
+        
+        /* Remove internal spacing and yellow badge */
+        .messenger__outer { padding-top: 0 !important; margin-top: 0 !important; }
+        .news__item__latest, .newsfeed__latest { display: none !important; }
+        
+        /* Reduce gap between Date and items */
+        .newsfeed__list { margin-top: -10px !important; }
     </style>
 </head>
 <body class="dark">
