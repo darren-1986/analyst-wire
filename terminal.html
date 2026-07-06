@@ -6,7 +6,7 @@
     <title>Analyst Wire | Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     <style>
-        /* Hide TradingView branding link */
+        /* Force hide TradingView branding link */
         .bottom-link { display: none !important; }
 
         /* Refinitiv-inspired Dark Theme */
@@ -79,21 +79,20 @@
             <div class="panel-header">Economic Calendar</div>
             <div class="panel-content" style="padding: 15px;">
                 <div class="tradingview-widget-container">
-  <div class="tradingview-widget-container__widget"></div>
-  
-  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
-  {
-  "colorTheme": "dark",
-  "isTransparent": false,
-  "locale": "en",
-  "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
-  "importanceFilter": "-1,0,1",
-  "width": "100%",
-  "height": "100%"
-}
-  </script>
-</div>
-</div>
+                    <div class="tradingview-widget-container__widget"></div>
+                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
+                    {
+                      "colorTheme": "dark",
+                      "isTransparent": false,
+                      "locale": "en",
+                      "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
+                      "importanceFilter": "-1,0,1",
+                      "width": "100%",
+                      "height": "100%"
+                    }
+                    </script>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -102,122 +101,98 @@
             <div class="panel-header">Market Time Zones</div>
             <div class="panel-content">
                <div class="market-sessions-widget">
-    <div class="msw-header">
-        <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
-    </div>
-    <div id="msw-sessions-container"></div>
-</div>
-
-<style>
-    /* Scoped Styles */
-    .market-sessions-widget {
-        box-sizing: border-box; 
-        width: 100%; 
-        min-width: 280px; 
-        background-color: #0f172a; 
-        border: 1px solid #334155;
-        border-radius: 12px; 
-        padding: 24px; 
-        color: #f8fafc;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-    }
-    
-    .msw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .msw-title { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; color: #94a3b8; text-transform: uppercase; margin: 0; }
-    .msw-local-clock { font-family: monospace; font-size: 12px; background-color: #1e293b; padding: 4px 8px; border-radius: 4px; color: #10b981; }
-    
-    .msw-session-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
-    .msw-session-row:last-child { margin-bottom: 0; }
-    
-    .msw-session-info { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
-    .msw-session-name { display: flex; align-items: center; gap: 10px; }
-    
-    .msw-icon-img { 
-        width: 20px; height: 20px; object-fit: contain; 
-        filter: brightness(0) saturate(100%) invert(80%) sepia(50%) saturate(1200%) hue-rotate(180deg);
-    }
-    
-    .msw-status-dot { height: 8px; width: 8px; border-radius: 50%; background-color: #475569; flex-shrink: 0; }
-    .msw-status-dot.open { background-color: #10b981; }
-    
-    .msw-session-status-text { font-size: 11px; font-weight: bold; font-family: monospace; }
-    .msw-session-status-text.open { color: #10b981; }
-    .msw-session-status-text.closed { color: #f97316; }
-    
-    .msw-progress-bar-track { width: 100%; background-color: #1e293b; height: 6px; border-radius: 9999px; overflow: hidden; }
-    .msw-progress-bar-fill { height: 100%; background-color: #10b981; width: 0%; transition: width 0.5s; }
-    .msw-countdown-text { font-size: 11px; color: #94a3b8; font-family: monospace; text-align: right; }
-</style>
-
-<script>
-(function() {
-    const SESSIONS = [
-        { name: 'Sydney', zone: 'Australia/Sydney', open: 10, close: 16, img: 'media/sydney.png' },
-        { name: 'Tokyo', zone: 'Asia/Tokyo', open: 9, close: 15, img: 'media/tokyo.png' },
-        { name: 'London', zone: 'Europe/London', open: 8, close: 16.5, img: 'media/london.png' },
-        { name: 'New York', zone: 'America/New_York', open: 9.5, close: 16, img: 'media/new-york.png' }
-    ];
-
-    const container = document.getElementById('msw-sessions-container');
-    container.innerHTML = '';
-    
-    SESSIONS.forEach(s => {
-        const row = document.createElement('div');
-        row.className = 'msw-session-row';
-        row.innerHTML = `
-            <div class="msw-session-info">
-                <div class="msw-session-name">
-                    <span class="msw-status-dot"></span>
-                    <img src="${s.img}" class="msw-icon-img" alt="${s.name}">
-                    ${s.name}
+                    <div class="msw-header">
+                        <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
+                    </div>
+                    <div id="msw-sessions-container"></div>
                 </div>
-                <span class="msw-session-status-text"></span>
-            </div>
-            <div class="msw-progress-bar-track"><div class="msw-progress-bar-fill"></div></div>
-            <div class="msw-countdown-text"></div>
-        `;
-        container.appendChild(row);
-        s.row = row;
-    });
 
-    function update() {
-        const now = new Date();
-        const clock = document.getElementById('msw-user-time');
-        if(clock) clock.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-        
-        SESSIONS.forEach(s => {
-            const dateInZone = new Date(now.toLocaleString('en-US', { timeZone: s.zone }));
-            const hours = dateInZone.getHours() + (dateInZone.getMinutes() / 60);
-            const day = dateInZone.getDay();
-            const isOpen = (day > 0 && day < 6) && (hours >= s.open && hours < s.close);
-            
-            s.row.querySelector('.msw-status-dot').className = `msw-status-dot ${isOpen ? 'open' : ''}`;
-            const txt = s.row.querySelector('.msw-session-status-text');
-            txt.innerText = isOpen ? 'OPEN' : 'CLOSED';
-            txt.className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
-            
-            if (isOpen) {
-                s.row.querySelector('.msw-progress-bar-fill').style.width = (((hours - s.open) / (s.close - s.open)) * 100) + '%';
-                const rem = (s.close - hours) * 3600;
-                s.row.querySelector('.msw-countdown-text').innerText = `Closes in ${Math.floor(rem/3600)}h ${Math.floor((rem%3600)/60)}m`;
-            } else {
-                s.row.querySelector('.msw-progress-bar-fill').style.width = '0%';
-                let target = new Date(dateInZone);
-                target.setHours(Math.floor(s.open), (s.open % 1) * 60, 0, 0);
-                let daysToAdd = (1 - target.getDay() + 7) % 7;
-                if (daysToAdd === 0 && (target <= dateInZone)) daysToAdd = 7;
-                target.setDate(target.getDate() + daysToAdd);
-                const diff = target - dateInZone;
-                s.row.querySelector('.msw-countdown-text').innerText = `Opens in ${Math.floor(diff/86400000)}d ${Math.floor((diff%86400000)/3600000)}h ${Math.floor((diff%3600000)/60000)}m`;
-            }
-        });
-    }
-    
-    update();
-    setInterval(update, 1000);
-})();
-</script>
+                <style>
+                    .market-sessions-widget { box-sizing: border-box; width: 100%; min-width: 280px; background-color: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 24px; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
+                    .msw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+                    .msw-local-clock { font-family: monospace; font-size: 12px; background-color: #1e293b; padding: 4px 8px; border-radius: 4px; color: #10b981; }
+                    .msw-session-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+                    .msw-session-row:last-child { margin-bottom: 0; }
+                    .msw-session-info { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+                    .msw-session-name { display: flex; align-items: center; gap: 10px; }
+                    .msw-icon-img { width: 20px; height: 20px; object-fit: contain; filter: brightness(0) saturate(100%) invert(80%) sepia(50%) saturate(1200%) hue-rotate(180deg); }
+                    .msw-status-dot { height: 8px; width: 8px; border-radius: 50%; background-color: #475569; flex-shrink: 0; }
+                    .msw-status-dot.open { background-color: #10b981; }
+                    .msw-session-status-text { font-size: 11px; font-weight: bold; font-family: monospace; }
+                    .msw-session-status-text.open { color: #10b981; }
+                    .msw-session-status-text.closed { color: #f97316; }
+                    .msw-progress-bar-track { width: 100%; background-color: #1e293b; height: 6px; border-radius: 9999px; overflow: hidden; }
+                    .msw-progress-bar-fill { height: 100%; background-color: #10b981; width: 0%; transition: width 0.5s; }
+                    .msw-countdown-text { font-size: 11px; color: #94a3b8; font-family: monospace; text-align: right; }
+                </style>
+
+                <script>
+                (function() {
+                    const SESSIONS = [
+                        { name: 'Sydney', zone: 'Australia/Sydney', open: 10, close: 16, img: 'media/sydney.png' },
+                        { name: 'Tokyo', zone: 'Asia/Tokyo', open: 9, close: 15, img: 'media/tokyo.png' },
+                        { name: 'London', zone: 'Europe/London', open: 8, close: 16.5, img: 'media/london.png' },
+                        { name: 'New York', zone: 'America/New_York', open: 9.5, close: 16, img: 'media/new-york.png' }
+                    ];
+
+                    const container = document.getElementById('msw-sessions-container');
+                    container.innerHTML = '';
+                    
+                    SESSIONS.forEach(s => {
+                        const row = document.createElement('div');
+                        row.className = 'msw-session-row';
+                        row.innerHTML = `
+                            <div class="msw-session-info">
+                                <div class="msw-session-name">
+                                    <span class="msw-status-dot"></span>
+                                    <img src="${s.img}" class="msw-icon-img" alt="${s.name}">
+                                    ${s.name}
+                                </div>
+                                <span class="msw-session-status-text"></span>
+                            </div>
+                            <div class="msw-progress-bar-track"><div class="msw-progress-bar-fill"></div></div>
+                            <div class="msw-countdown-text"></div>
+                        `;
+                        container.appendChild(row);
+                        s.row = row;
+                    });
+
+                    function update() {
+                        const now = new Date();
+                        const clock = document.getElementById('msw-user-time');
+                        if(clock) clock.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                        
+                        SESSIONS.forEach(s => {
+                            const dateInZone = new Date(now.toLocaleString('en-US', { timeZone: s.zone }));
+                            const hours = dateInZone.getHours() + (dateInZone.getMinutes() / 60);
+                            const day = dateInZone.getDay();
+                            const isOpen = (day > 0 && day < 6) && (hours >= s.open && hours < s.close);
+                            
+                            s.row.querySelector('.msw-status-dot').className = `msw-status-dot ${isOpen ? 'open' : ''}`;
+                            const txt = s.row.querySelector('.msw-session-status-text');
+                            txt.innerText = isOpen ? 'OPEN' : 'CLOSED';
+                            txt.className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
+                            
+                            if (isOpen) {
+                                s.row.querySelector('.msw-progress-bar-fill').style.width = (((hours - s.open) / (s.close - s.open)) * 100) + '%';
+                                const rem = (s.close - hours) * 3600;
+                                s.row.querySelector('.msw-countdown-text').innerText = `Closes in ${Math.floor(rem/3600)}h ${Math.floor((rem%3600)/60)}m`;
+                            } else {
+                                s.row.querySelector('.msw-progress-bar-fill').style.width = '0%';
+                                let target = new Date(dateInZone);
+                                target.setHours(Math.floor(s.open), (s.open % 1) * 60, 0, 0);
+                                let daysToAdd = (1 - target.getDay() + 7) % 7;
+                                if (daysToAdd === 0 && (target <= dateInZone)) daysToAdd = 7;
+                                target.setDate(target.getDate() + daysToAdd);
+                                const diff = target - dateInZone;
+                                s.row.querySelector('.msw-countdown-text').innerText = `Opens in ${Math.floor(diff/86400000)}d ${Math.floor((diff%86400000)/3600000)}h ${Math.floor((diff%3600000)/60000)}m`;
+                            }
+                        });
+                    }
+                    update();
+                    setInterval(update, 1000);
+                })();
+                </script>
             </div>
         </div>
         <div class="panel" style="flex: 1;">
@@ -232,6 +207,12 @@
 <script>
     function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
     
+    // Watchdog script to kill TradingView watermark
+    setInterval(() => {
+        const watermarks = document.querySelectorAll('.bottom-link');
+        watermarks.forEach(el => el.style.display = 'none');
+    }, 500);
+
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
     async function init() {
