@@ -61,9 +61,16 @@
         }
         .vol-slider::-webkit-slider-thumb:hover { background: #ffffff; }
 
-        /* --- LIMIT TO 3 HEADLINES --- */
-        #livesquawk_messenger_outer .news__item__outer { display: none !important; }
-        #livesquawk_messenger_outer .news__item__outer:nth-child(-n+3) { display: block !important; }
+        /* --- STYLING FIXES FOR 3 HEADLINES --- */
+        /* Hide row 4 and beyond */
+        #livesquawk_messenger_outer .news__item__outer:nth-child(n+4) { 
+            display: none !important; 
+        }
+        
+        /* Ensure the remaining rows have transparent backgrounds to stop artifacts */
+        #livesquawk_messenger_outer .news__item__outer {
+            background: transparent !important;
+        }
     </style>
 </head>
 <body class="dark">
@@ -97,14 +104,22 @@
         async function checkPermissions() {
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
+            
             const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
             const allowedTags = ['pro', 'newsfeed', 'squawk', 'admin'];
             const isAuthorized = profile && (profile.is_admin === true || allowedTags.includes(profile.subscription_tag));
-            if (!isAuthorized) { alert("Access denied."); await client.auth.signOut(); window.location.href = 'index.html'; return; }
+            
+            if (!isAuthorized) {
+                alert("Access denied.");
+                await client.auth.signOut();
+                window.location.href = 'index.html';
+                return;
+            }
         }
         checkPermissions();
 
         let audioEnabled = false, seconds = 0, timerInterval;
+        
         function startTimer() {
             timerInterval = setInterval(() => {
                 seconds++;
@@ -112,12 +127,14 @@
                 document.getElementById('timerText').innerText = `(${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')})`;
             }, 1000);
         }
+
         function speakText(text) {
             if (!audioEnabled) return;
             const u = new SpeechSynthesisUtterance(text);
             u.volume = document.getElementById('volSlider').value;
             window.speechSynthesis.speak(u);
         }
+
         async function handleAudioToggle() {
             const btn = document.getElementById('audioToggle'), lbl = document.getElementById('audioLabel');
             btn.disabled = true;
@@ -140,9 +157,11 @@
 
         let currentFilter = 'all';
         const filters = { commodities: ['oil', 'gold', 'metal', 'copper', 'gas', 'brent', 'wti', 'silver'], forex: ['usd', 'eur', 'jpy', 'gbp', 'fx', 'forex', 'currency', 'yield'], equities: ['stock', 'equity', 'sp500', 'nasdaq', 'dow', 'nikkei', 'shares'], crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'coin'], centralBanks: ['fed', 'ecb', 'boj', 'bank of england', 'rba', 'central bank', 'interest rate', 'hike', 'cut'] };
+        
         const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'CPI', 'GDP'];
 
         function setFilter(type) { currentFilter = type; filterFeed(); }
+
         function filterFeed() { 
             document.querySelectorAll('.news__item__outer').forEach(item => { 
                 const text = item.innerText.toLowerCase(); 
@@ -165,6 +184,7 @@
         Object.defineProperty(window, 'self', { get: () => window.top });
         window.addEventListener('load', () => { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); });
     </script>
+    
     <script src="https://www.livesquawk.com/partner_messenger/js/include_forexanalytic.js?v=3"></script>
 </body>
 </html>
