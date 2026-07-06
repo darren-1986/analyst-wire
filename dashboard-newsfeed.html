@@ -8,10 +8,10 @@
     <link rel="stylesheet" href="https://www.livesquawk.com/partner_messenger/css/partner_messenger.css">
     
     <style>
-        /* Force Dark Theme */
+        /* 1. FORCE THE DARK BACKGROUND */
         body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; width: 100% !important; }
         
-        /* 1. AGGRESSIVE REMOVAL OF LATEST/YELLOW BOXES */
+        /* 2. KILL THE YELLOW BOXES & TITLES (Aggressive CSS) */
         .news__item__latest, 
         .newsfeed__latest, 
         .newsfeed__title, 
@@ -21,33 +21,34 @@
             display: none !important; 
             width: 0 !important; 
             height: 0 !important; 
-            opacity: 0 !important;
             padding: 0 !important;
             margin: 0 !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
         }
 
-        /* 2. FORCE FULL WIDTH & STRETCH */
+        /* 3. STRETCH THE FEED TO FILL WIDTH */
         .messenger__outer { width: 100% !important; max-width: 100% !important; padding: 0 !important; }
         
-        /* 3. SHOW ONLY 3 HEADLINES, FULL WIDTH */
+        /* 4. FORCE HEADLINES TO SHOW AND STRETCH */
         .messenger__outer .news__item__outer { 
             display: none !important; 
             width: 100% !important; 
+            border-bottom: 1px solid #1e293b !important; 
+            padding: 10px 5px !important;
         }
+        /* Show only first 3 items */
         .messenger__outer .news__item__outer:nth-child(-n+3) { 
             display: flex !important; 
-            border-bottom: 1px solid #1e293b !important; 
-            padding: 12px 5px !important; 
-            width: 100% !important;
             flex-direction: row !important;
             align-items: center !important;
         }
 
-        /* 4. TEXT STYLING */
+        /* 5. TEXT STYLING */
         .news__item__title, .news__item__text, .news__item__time { 
             color: #ffffff !important; 
             font-size: 14px !important; 
-            margin: 0 5px !important;
+            margin-right: 10px !important;
         }
         .news__item__time { min-width: 50px !important; font-family: monospace; opacity: 0.7; }
 
@@ -72,13 +73,13 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // --- AGGRESSIVE CLEANUP: Remove yellow boxes and force hide excess items ---
+        // --- NUCLEAR CLEANUP: Runs every 50ms ---
         setInterval(() => {
-            // Remove all elements identified as 'latest' (the yellow boxes)
+            // Remove the yellow 'Latest' elements by ID/Class
             const badElements = document.querySelectorAll('.news__item__latest, .newsfeed__latest, .newsfeed__title, .newsfeed__header, .latest-badge');
             badElements.forEach(el => el.remove());
             
-            // Re-apply style to force 3 items only
+            // Force items 4+ to be hidden
             const items = document.querySelectorAll('.messenger__outer .news__item__outer');
             items.forEach((item, index) => {
                 if (index >= 3) {
