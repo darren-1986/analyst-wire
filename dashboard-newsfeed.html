@@ -235,4 +235,19 @@
         }
 
         if (profile) {
-            if (profile.is_admin === true)
+            if (profile.is_admin === true) {
+                document.getElementById('nav-admin').style.display = 'block';
+            }
+            if (profile.is_admin === true || profile.subscription_tag === 'pro') {
+                document.getElementById('nav-courses').style.display = 'block';
+                document.getElementById('nav-key-levels').style.display = 'block';
+            }
+        }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+    
+    init();
+</script>
+</body>
+</html>
