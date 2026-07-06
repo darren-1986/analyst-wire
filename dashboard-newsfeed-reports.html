@@ -16,37 +16,6 @@
 
         .messenger__outer .newsfeed__title { display: none !important; }
 
-        .controls { display: flex; justify-content: center; margin-bottom: 5px; gap: 20px; align-items: center; padding: 5px; }
-        
-        .audio-container { display: flex; align-items: center; gap: 10px; }
-        .audio-container img { height: 25px; width: auto; }
-        
-        .audio-wrapper { 
-            display: flex; align-items: center; gap: 10px; 
-            border: 1px solid #00b4f9; padding: 4px 10px; 
-            border-radius: 6px; background: #0a0a0a;
-        }
-        #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 6px; min-width: 150px; font-size: 12px; }
-        
-        .status-on { color: #22c55e !important; }
-
-        .vol-slider {
-            -webkit-appearance: none;
-            width: 60px;
-            height: 4px;
-            background: #334155;
-            border-radius: 2px;
-            outline: none;
-        }
-        .vol-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 10px;
-            height: 10px;
-            background: #00b4f9;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
         /* --- ADAPTIVE ZOOM --- */
         #livesquawk_messenger_outer {
             transform-origin: top center;
@@ -61,24 +30,12 @@
         /* Mobile */
         @media (max-width: 767px) { #livesquawk_messenger_outer { transform: scale(1.0); } }
 
-        /* THE 3-ITEM LIMIT HAS BEEN REMOVED SO THE FILTER CAN WORK */
-
         .messenger__outer { padding-top: 0 !important; margin-top: 0 !important; }
         .news__item__latest, .newsfeed__latest { display: none !important; }
         .newsfeed__list { margin-top: -10px !important; }
     </style>
 </head>
 <body class="dark">
-
-    <div class="controls">
-        <div class="audio-container">
-            <img src="media/squawkimage.png" alt="Logo" />
-            <div class="audio-wrapper">
-                <button id="audioToggle" onclick="handleAudioToggle()">🔊 <span id="audioLabel">Disconnected</span> <span id="timerText"></span></button>
-                <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
-            </div>
-        </div>
-    </div>
 
     <div class="messenger__outer" id="livesquawk_messenger_outer"></div>
 
@@ -96,54 +53,9 @@
         }
         checkPermissions();
 
-        let audioEnabled = false, seconds = 0, timerInterval;
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                seconds++;
-                const h = Math.floor(seconds/3600), m = Math.floor((seconds%3600)/60), s = seconds%60;
-                document.getElementById('timerText').innerText = `(${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')})`;
-            }, 1000);
-        }
-        function speakText(text) {
-            if (!audioEnabled) return;
-            const u = new SpeechSynthesisUtterance(text);
-            u.volume = document.getElementById('volSlider').value;
-            window.speechSynthesis.speak(u);
-        }
-        async function handleAudioToggle() {
-            const btn = document.getElementById('audioToggle'), lbl = document.getElementById('audioLabel');
-            btn.disabled = true;
-            if (audioEnabled) {
-                lbl.innerText = "Disconnecting...";
-                lbl.classList.remove('status-on');
-                await new Promise(r => setTimeout(r, 800));
-                clearInterval(timerInterval);
-                audioEnabled = false; lbl.innerText = "Disconnected";
-                document.getElementById('timerText').innerText = "";
-            } else {
-                lbl.innerText = "Connecting...";
-                await new Promise(r => setTimeout(r, 800));
-                audioEnabled = true; seconds = 0; startTimer(); 
-                lbl.innerText = "On Air";
-                lbl.classList.add('status-on');
-            }
-            btn.disabled = false;
-        }
-
         window.messenger_start_init = function() { if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); };
         
-        const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'CPI', 'GDP'];
-        const feedContainer = document.getElementById('livesquawk_messenger_outer');
-        
-        new MutationObserver((mutations) => {
-            mutations.forEach(m => m.addedNodes.forEach(node => {
-                if (node.classList && node.classList.contains('news__item__outer')) {
-                    if (audioTriggerKeywords.some(kw => node.innerText.toLowerCase().includes(kw.toLowerCase()))) speakText(node.innerText);
-                }
-            }));
-        }).observe(feedContainer, { childList: true, subtree: true });
-
-        // --- NEW: BULLETPROOF FILTER FOR "BRIEFING" ---
+        // --- BULLETPROOF FILTER FOR "BRIEFING" ---
         // This loop checks twice a second to force-hide anything without the keyword.
         setInterval(() => {
             document.querySelectorAll('.news__item__outer').forEach(item => {
