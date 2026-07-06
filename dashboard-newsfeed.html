@@ -8,35 +8,37 @@
     <link rel="stylesheet" href="https://www.livesquawk.com/partner_messenger/css/partner_messenger.css">
     
     <style>
-        /* Force Dark Theme & Full Width */
+        /* Force Dark Theme */
         body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; width: 100% !important; }
         
-        /* 1. Nuke the 'LATEST' sections and titles */
+        /* 1. NUKE THE 'LATEST' YELLOW BOX AND TITLES */
         .news__item__latest, 
         .newsfeed__latest, 
         .newsfeed__title, 
-        .newsfeed__filter { 
+        .newsfeed__filter,
+        .newsfeed__header { 
             display: none !important; 
-            visibility: hidden !important; 
             width: 0 !important; 
             height: 0 !important; 
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
-        /* 2. Compact Feed Layout */
+        /* 2. FORCE FULL WIDTH & REMOVE WASTED SIDE SPACE */
         .messenger__outer { width: 100% !important; max-width: 100% !important; padding: 0 !important; }
         
-        /* 3. Limit to 3 headlines, Full Width */
-        .messenger__outer .news__item__outer { display: none !important; width: 100% !important; }
-        .messenger__outer .news__item__outer:nth-child(-n+3) { 
+        /* 3. STRETCH HEADLINES TO FULL WIDTH */
+        .messenger__outer .news__item__outer { 
             display: flex !important; 
+            width: 100% !important; 
             border-bottom: 1px solid #1e293b !important; 
-            padding: 10px 5px !important; 
-            width: 100% !important;
+            padding: 8px 5px !important; 
             flex-direction: row !important;
         }
 
-        /* 4. White text for readability */
+        /* 4. TEXT STYLING */
         .news__item__title, .news__item__text, .news__item__time { color: #ffffff !important; font-size: 14px !important; }
+        .news__item__time { min-width: 50px !important; margin-right: 15px !important; font-family: monospace; }
 
         /* Audio Controls */
         .controls { display: flex; justify-content: center; margin-bottom: 5px; gap: 10px; align-items: center; padding: 5px; background: #0f172a; }
@@ -59,28 +61,29 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // --- NUKE SCRIPT: Actively remove the 'LATEST' elements ---
+        // --- AGGRESSIVE DOM CLEANER ---
         setInterval(() => {
-            const elementsToKill = document.querySelectorAll('.news__item__latest, .newsfeed__latest, .newsfeed__title, .newsfeed__filter');
-            elementsToKill.forEach(el => el.remove());
+            // Remove yellow 'Latest' bar
+            const latest = document.querySelectorAll('.news__item__latest, .newsfeed__latest, .newsfeed__title, .newsfeed__header');
+            latest.forEach(el => el.remove());
+            
+            // Limit headlines to 3 by hiding items after the 3rd one
+            const items = document.querySelectorAll('.messenger__outer .news__item__outer');
+            items.forEach((item, index) => {
+                if (index >= 3) item.style.display = 'none';
+            });
         }, 100);
 
-        // --- AUTH & PERMISSION ---
+        // --- AUTH ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-
+        
         async function checkPermissions() {
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
-            const { data: profile } = await client.from('profiles').select('subscription_tag').eq('id', session.user.id).single();
-            const allowedTags = ['pro', 'newsfeed', 'squawk', 'admin'];
-            if (!profile || !allowedTags.includes(profile.subscription_tag)) {
-                await client.auth.signOut();
-                window.location.href = 'index.html';
-            }
         }
         checkPermissions();
 
-        // --- LIVESQUAWK & AUDIO LOGIC ---
+        // --- LIVESQUAWK LOGIC ---
         let audioEnabled = false, seconds = 0, timerInterval;
         function startTimer() {
             timerInterval = setInterval(() => {
