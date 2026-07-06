@@ -10,27 +10,29 @@
     <style>
         body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; }
         
-        /* 1. FORCE FULL WIDTH & REMOVE WASTED SPACE */
-        .messenger__outer { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 5px !important; }
+        /* 1. HIDE UNWANTED ELEMENTS */
+        .messenger__outer .newsfeed__title, 
+        .messenger__outer .newsfeed__filter,
+        .messenger__outer .news__item__latest { display: none !important; }
+
+        /* 2. FORCE FULL WIDTH & REMOVE WASTED SPACE */
+        .messenger__outer { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
         
-        /* 2. LIMIT TO 3 HEADLINES */
-        .messenger__outer .news__item__outer { display: none !important; }
-        .messenger__outer .news__item__outer:nth-child(-n+3) { display: block !important; border-bottom: 1px solid #1e293b !important; padding: 12px 5px !important; }
-
-        /* 3. ENSURE TEXT IS WHITE */
-        .news__item__title, .news__item__text, .news__item__time { color: #ffffff !important; }
-
-        /* 4. FIX "LATEST" BOX VISIBILITY */
-        .news__item__latest { 
-            color: #000000 !important; /* Make text black for visibility */
-            font-weight: bold !important;
-            padding: 2px 5px !important;
+        /* 3. LIMIT TO 3 HEADLINES */
+        .messenger__outer .news__item__outer { display: none !important; width: 100% !important; }
+        .messenger__outer .news__item__outer:nth-child(-n+3) { 
+            display: flex !important; 
+            border-bottom: 1px solid #1e293b !important; 
+            padding: 12px 10px !important; 
+            width: 100% !important;
+            flex-direction: row !important;
         }
 
-        /* Hide specific elements */
-        .messenger__outer .newsfeed__title, .messenger__outer .newsfeed__filter { display: none !important; }
+        /* 4. ENSURE TEXT IS WHITE & ALIGNED */
+        .news__item__title, .news__item__text, .news__item__time { color: #ffffff !important; margin-right: 10px !important; }
+        .news__item__time { font-family: monospace; opacity: 0.8; }
 
-        /* Compact Audio Controls */
+        /* Audio Controls */
         .controls { display: flex; justify-content: center; margin-bottom: 5px; gap: 10px; align-items: center; padding: 5px; }
         .audio-container img { height: 20px; width: auto; }
         .audio-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid #00b4f9; padding: 4px 10px; border-radius: 6px; background: #0f172a; }
