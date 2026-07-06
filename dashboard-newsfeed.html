@@ -11,34 +11,45 @@
         /* Force Dark Theme */
         body, .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; margin: 0; padding: 0; width: 100% !important; }
         
-        /* 1. NUKE THE 'LATEST' YELLOW BOX AND TITLES */
+        /* 1. AGGRESSIVE REMOVAL OF LATEST/YELLOW BOXES */
         .news__item__latest, 
         .newsfeed__latest, 
         .newsfeed__title, 
         .newsfeed__filter,
-        .newsfeed__header { 
+        .newsfeed__header,
+        .latest-badge { 
             display: none !important; 
             width: 0 !important; 
             height: 0 !important; 
+            opacity: 0 !important;
             padding: 0 !important;
             margin: 0 !important;
         }
 
-        /* 2. FORCE FULL WIDTH & REMOVE WASTED SIDE SPACE */
+        /* 2. FORCE FULL WIDTH & STRETCH */
         .messenger__outer { width: 100% !important; max-width: 100% !important; padding: 0 !important; }
         
-        /* 3. STRETCH HEADLINES TO FULL WIDTH */
+        /* 3. SHOW ONLY 3 HEADLINES, FULL WIDTH */
         .messenger__outer .news__item__outer { 
-            display: flex !important; 
+            display: none !important; 
             width: 100% !important; 
+        }
+        .messenger__outer .news__item__outer:nth-child(-n+3) { 
+            display: flex !important; 
             border-bottom: 1px solid #1e293b !important; 
-            padding: 8px 5px !important; 
+            padding: 12px 5px !important; 
+            width: 100% !important;
             flex-direction: row !important;
+            align-items: center !important;
         }
 
         /* 4. TEXT STYLING */
-        .news__item__title, .news__item__text, .news__item__time { color: #ffffff !important; font-size: 14px !important; }
-        .news__item__time { min-width: 50px !important; margin-right: 15px !important; font-family: monospace; }
+        .news__item__title, .news__item__text, .news__item__time { 
+            color: #ffffff !important; 
+            font-size: 14px !important; 
+            margin: 0 5px !important;
+        }
+        .news__item__time { min-width: 50px !important; font-family: monospace; opacity: 0.7; }
 
         /* Audio Controls */
         .controls { display: flex; justify-content: center; margin-bottom: 5px; gap: 10px; align-items: center; padding: 5px; background: #0f172a; }
@@ -61,18 +72,21 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // --- AGGRESSIVE DOM CLEANER ---
+        // --- AGGRESSIVE CLEANUP: Remove yellow boxes and force hide excess items ---
         setInterval(() => {
-            // Remove yellow 'Latest' bar
-            const latest = document.querySelectorAll('.news__item__latest, .newsfeed__latest, .newsfeed__title, .newsfeed__header');
-            latest.forEach(el => el.remove());
+            // Remove all elements identified as 'latest' (the yellow boxes)
+            const badElements = document.querySelectorAll('.news__item__latest, .newsfeed__latest, .newsfeed__title, .newsfeed__header, .latest-badge');
+            badElements.forEach(el => el.remove());
             
-            // Limit headlines to 3 by hiding items after the 3rd one
+            // Re-apply style to force 3 items only
             const items = document.querySelectorAll('.messenger__outer .news__item__outer');
             items.forEach((item, index) => {
-                if (index >= 3) item.style.display = 'none';
+                if (index >= 3) {
+                    item.style.display = 'none';
+                    item.style.setProperty('display', 'none', 'important');
+                }
             });
-        }, 100);
+        }, 50);
 
         // --- AUTH ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
@@ -83,7 +97,7 @@
         }
         checkPermissions();
 
-        // --- LIVESQUAWK LOGIC ---
+        // --- AUDIO LOGIC ---
         let audioEnabled = false, seconds = 0, timerInterval;
         function startTimer() {
             timerInterval = setInterval(() => {
@@ -107,13 +121,8 @@
         }
         
         window.messenger_start_init = function() { if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); };
-        
         Object.defineProperty(window, 'self', { get: () => window.top });
-
-        window.addEventListener('load', () => {
-            const height = document.body.scrollHeight;
-            window.parent.postMessage({ height }, '*');
-        });
+        window.addEventListener('load', () => { window.parent.postMessage({ height: document.body.scrollHeight }, '*'); });
     </script>
     
     <script src="https://www.livesquawk.com/partner_messenger/js/include_forexanalytic.js?v=3"></script>
