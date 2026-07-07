@@ -393,4 +393,13 @@
                     <td class="live-price-cell" data-ticker="${r.ticker}">${displayPrice}</td>
                 </tr>
             `;
-        }).j
+        }).join('') : '<tr><td colspan="7">No data for selected filters.</td></tr>';
+    }
+
+    function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
+    document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+    
+    init();
+</script>
+</body>
+</html>
