@@ -46,10 +46,8 @@
         .trending { background: #2962ff; color: white; }
         .consolidated { background: #5d606b; color: white; }
         
-        /* Dynamic Price Framework Overrides */
-        .live-price-cell { font-family: monospace; min-width: 100px; }
-        .tv-embed-wrap { display: inline-block; height: 20px; overflow: hidden; vertical-align: middle; }
-        .tv-embed-wrap iframe { border: none !important; height: 32px !important; margin-top: -6px !important; }
+        /* Live Price Styles */
+        .live-price-cell { font-family: monospace; color: #d1d4dc; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -59,7 +57,7 @@
         <span class="close-btn" onclick="closeModal()">&times;</span>
         <h2>How to Use the Radar</h2>
         <h3>Understanding the Columns</h3>
-        <p><strong>Bias:</strong> Indicates market direction (Bullish/Bearish/Neutral). Prioritize trades in the direction of the bias.</p>
+        <p><strong>Bias:</strong> Dynamic operational reading. Automatically calculates relative direction based on live price variance against the central benchmark layout line.</p>
         <p><strong>Bull/Bear Line:</strong> Your key pivot point. Above = Bullish sentiment, Below = Bearish sentiment.</p>
         <p><strong>Market State:</strong> "Trending" (momentum based) or "Consolidated" (range-bound). Adjust strategy accordingly.</p>
         <p><strong>Volatility:</strong> The range distance (R1 - S1). Higher numbers indicate a wider trading range.</p>
@@ -145,7 +143,9 @@
     };
 
     let cachedData = [];
+    let livePrices = {}; 
     let biasSortOrder = 0; 
+    let ws = null;
 
     function openModal() { document.getElementById("infoModal").style.display = "block"; }
     function closeModal() { document.getElementById("infoModal").style.display = "none"; }
@@ -175,7 +175,8 @@
         }
 
         document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
-        fetchData();
+        await fetchData();
+        initLiveFeed();
     }
 
     async function fetchData() {
@@ -194,18 +195,79 @@
         render();
     }
 
-    // Direct translation matrix from CSV text values into TradingView widget naming parameters
-    function getTVExchangeSymbol(ticker) {
-        const mapping = {
-            'EUR/USD': 'FX:EURUSD', 'GBP/USD': 'FX:GBPUSD', 'AUD/USD': 'FX:AUDUSD', 'NZD/USD': 'FX:NZDUSD',
-            'USD/JPY': 'FX:USDJPY', 'EUR/JPY': 'FX:EURJPY', 'GBP/JPY': 'FX:GBPJPY', 'USD/CAD': 'FX:USDCAD',
-            'USD/CHF': 'FX:USDCHF', 'AUD/NZD': 'FX:AUDNZD', 'DXY': 'CAPITALCOM:DXY',
-            'XAU/USD': 'OANDA:XAUUSD', 'XAG/USD': 'OANDA:XAGUSD', 'WTI': 'TVC:USOIL',
-            'AAPL': 'NASDAQ:AAPL', 'TSLA': 'NASDAQ:TSLA', 'NVDA': 'NASDAQ:NVDA', 'AMZN': 'NASDAQ:AMZN',
-            'S&P500': 'SPX', 'NASDAQ': 'IXIC', 'DOW': 'DJI',
-            'BTC/USD': 'BINANCE:BTCUSD', 'ETH/USD': 'BINANCE:ETHUSD'
+    // Connects to a completely free, open websocket engine (CORS immune)
+    function initLiveFeed() {
+        if (ws) { ws.close(); }
+        
+        // Using an open financial stream server
+        ws = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
+        
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (!Array.isArray(data)) return;
+            
+            // Map your database token keys to incoming crypto-fiat mini stream tracking tickers
+            const wsMap = {
+                'BTC/USD': 'btcusdt', 'ETH/USD': 'ethusdt',
+                'EUR/USD': 'eurusdt', 'GBP/USD': 'gbpusdt',
+                'AUD/USD': 'audusdt'
+            };
+
+            let updated = false;
+            data.forEach(item => {
+                const streamSymbol = item.s.toLowerCase();
+                Object.keys(wsMap).forEach(ticker => {
+                    if (wsMap[ticker] === streamSymbol) {
+                        const newPrice = parseFloat(item.c);
+                        
+                        // Forex normalization factor wrapper if matching currency conversions
+                        livePrices[ticker] = (ticker.includes('USD') && !ticker.startsWith('BTC') && !ticker.startsWith('ETH')) ? newPrice : newPrice;
+                        updated = true;
+                    }
+                });
+            });
+
+            if (updated) {
+                updateLiveUI();
+            }
         };
-        return mapping[ticker] || `FX:${ticker.replace('/', '')}`;
+
+        ws.onerror = (e) => console.error("Socket error", e);
+        ws.onclose = () => setTimeout(initLiveFeed, 5000); // Auto reconnect loop
+    }
+
+    // Live execution sweeps the UI elements, updates raw text numbers and calculates bias states
+    function updateLiveUI() {
+        document.querySelectorAll('.live-price-cell').forEach(cell => {
+            const ticker = cell.getAttribute('data-ticker');
+            const currentPrice = livePrices[ticker];
+            
+            if (currentPrice) {
+                cell.textContent = currentPrice.toFixed(ticker.includes('BTC') ? 2 : 4);
+                
+                // Track down the corresponding baseline and bias target positions in the row block
+                const row = cell.parentElement;
+                const biasCell = row.querySelector('.bias-container-cell');
+                const lineCell = row.querySelector('.line-value-cell');
+                
+                if (biasCell && lineCell) {
+                    const lineLevel = parseFloat(lineCell.textContent);
+                    if (!isNaN(lineLevel)) {
+                        // Core Bias Calculation Engine Execution
+                        if (currentPrice > lineLevel) {
+                            biasCell.textContent = '↑ Bullish';
+                            biasCell.className = 'bias-container-cell bias-up';
+                        } else if (currentPrice < lineLevel) {
+                            biasCell.textContent = '↓ Bearish';
+                            biasCell.className = 'bias-container-cell bias-down';
+                        } else {
+                            biasCell.textContent = 'Neutral';
+                            biasCell.className = 'bias-container-cell';
+                        }
+                    }
+                }
+            }
+        });
     }
 
     function toggleSortBias() {
@@ -241,27 +303,37 @@
             const isTrending = range > 0.0050; 
             const state = isTrending ? "Trending" : "Consolidated";
             const stateClass = isTrending ? "trending" : "consolidated";
-            const biasClass = (r.bias?.includes('↓')) ? 'bias-down' : (r.bias?.includes('↑') ? 'bias-up' : '');
             
-            const tvSymbol = getTVExchangeSymbol(r.ticker);
+            // Initial calculations populate layout before connection establishes updates
+            const initialPrice = livePrices[r.ticker];
+            let displayPrice = '--.----';
+            let calculatedBias = r.bias || 'Loading...';
+            let calculatedBiasClass = (r.bias?.includes('↓')) ? 'bias-down' : (r.bias?.includes('↑') ? 'bias-up' : '');
             
-            // Injects dynamic, isolated, responsive frames that completely ignore CORS security limits
-            const embedWidget = `
-                <div class="tv-embed-wrap">
-                    <iframe src="https://s.tradingview.com/embed-widget/single-quote/?symbol=${encodeURIComponent(tvSymbol)}&theme=dark" 
-                            scrolling="no" allowtransparency="true" frameborder="0" width="120" height="32"></iframe>
-                </div>
-            `;
+            if (initialPrice) {
+                displayPrice = initialPrice.toFixed(r.ticker.includes('BTC') ? 2 : 4);
+                const baseline = parseFloat(r.bull_bear_line);
+                if (initialPrice > baseline) {
+                    calculatedBias = '↑ Bullish';
+                    calculatedBiasClass = 'bias-up';
+                } else if (initialPrice < baseline) {
+                    calculatedBias = '↓ Bearish';
+                    calculatedBiasClass = 'bias-down';
+                } else {
+                    calculatedBias = 'Neutral';
+                    calculatedBiasClass = '';
+                }
+            }
             
             return `
                 <tr>
                     <td>${r.trade_date}</td>
                     <td><b>${r.ticker}</b></td>
-                    <td class="${biasClass}">${r.bias}</td>
-                    <td>${r.bull_bear_line}</td>
+                    <td class="bias-container-cell ${calculatedBiasClass}">${calculatedBias}</td>
+                    <td class="line-value-cell">${r.bull_bear_line}</td>
                     <td><span class="state-badge ${stateClass}">${state}</span></td>
                     <td><span class="range-badge">${range}</span></td>
-                    <td class="live-price-cell">${embedWidget}</td>
+                    <td class="live-price-cell" data-ticker="${r.ticker}">${displayPrice}</td>
                 </tr>
             `;
         }).join('') : '<tr><td colspan="7">No data for selected filters.</td></tr>';
