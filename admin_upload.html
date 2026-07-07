@@ -72,10 +72,18 @@
                     const bbl = parseFloat(row[4]) || 0;
                     const livePrice = parseFloat(row[5]) || 0;
                     
-                    // Bias calculation rule based on live price vs bull bear line pivot
+                    // --- Upgraded 5-Tier Calculation Logic Matrix ---
                     let calculatedBias = 'Neutral';
                     if (livePrice > 0 && bbl > 0) {
-                        calculatedBias = (livePrice >= bbl) ? '↑ Bullish' : '↓ Bearish';
+                        const diff = Math.abs(livePrice - bbl);
+                        
+                        if (diff <= 0.01) {
+                            calculatedBias = 'Neutral';
+                        } else if (livePrice > bbl) {
+                            calculatedBias = (livePrice - bbl > 2.5) ? 'Strong Bullish' : 'Medium Bullish';
+                        } else if (livePrice < bbl) {
+                            calculatedBias = (bbl - livePrice > 2.5) ? 'Strong Bearish' : 'Medium Bearish';
+                        }
                     }
 
                     return {
@@ -84,15 +92,14 @@
                         s2: findVal(row, 'S2'),
                         r1: r1,
                         r2: findVal(row, 'R2'),
-                        bias: calculatedBias,
+                        bias: calculatedBias, // Pushes clean evaluated tier string up to your standard text column
                         bull_bear_line: bbl,
-                        live_price: livePrice, // Saves into your new Supabase database column
                         trade_date: date
                     };
                 });
 
                 const { error } = await client.from('key_levels').insert(cleanData);
-                document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Levels and live prices uploaded.";
+                document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Levels and calculated biases uploaded.";
             }
         });
     }
