@@ -111,7 +111,7 @@
         <div class="market-sessions-widget">
             <div class="msw-header">
                 <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
-                <!-- Added title attribute for hover tooltip -->
+                <!-- Alert automatically hides/shows via script -->
                 <div id="msw-hot-alert" 
                      class="msw-hot-alert" 
                      style="display:none;" 
@@ -123,10 +123,10 @@
         </div>
 
         <style>
-            .market-sessions-widget { box-sizing: border-box; width: 100%; background-color: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #f8fafc; font-family: sans-serif; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
+            /* Background updated to #0A0A0A */
+            .market-sessions-widget { box-sizing: border-box; width: 100%; background-color: #0A0A0A; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #f8fafc; font-family: sans-serif; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
             .msw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
             
-            /* Added cursor:help to indicate interactivity */
             .msw-hot-alert { 
                 font-size: 9px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.15); 
                 padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3); 
@@ -140,9 +140,11 @@
             .msw-icon-img { width: 16px; height: 16px; object-fit: contain; filter: brightness(0) saturate(100%) invert(80%) sepia(50%) saturate(1200%) hue-rotate(180deg); }
             .msw-status-dot { height: 6px; width: 6px; border-radius: 50%; background: #475569; }
             .msw-status-dot.open { background: #10b981; }
+            
             .msw-session-status-text { font-size: 9px; font-weight: bold; font-family: monospace; text-align: left; }
             .msw-session-status-text.open { color: #10b981; }
             .msw-session-status-text.closed { color: #f97316; }
+            
             .msw-zone-time { font-size: 9px; color: #64748b; font-family: monospace; display: block; margin-top: 1px; }
             .msw-countdown-text { font-size: 9px; color: #94a3b8; font-family: monospace; text-align: right; min-width: 60px; }
         </style>
