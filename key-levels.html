@@ -135,18 +135,6 @@ const categoryMap = {
 'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto'
 };
 
-// Precise Hex Feed mappings for standard cross-asset verification
-const pythFeedIds = {
-    'BTC/USD': 'ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace',
-    'ETH/USD': 'ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace',
-    'EUR/USD': 'a995d00bb36a63cee7ee2be3b20dbcd51a6fb4ad79e437b6cf7fcf2fdfdfdfdf',
-    'GBP/USD': '84c2dd8115628a8d132d7555628d13a6fb4ad79e437b6cf7fcf2fdfdfdfdfdf',
-    'XAU/USD': '765d2bd9a2cd462f4e4e42cc7199464e8a153557d4d578c3b9c9e1bc0632f1ad', // Gold Spot
-    'WTI': '241b212f4628a8d132d7555628d13a6fb4ad79e437b6cf7fcf2fdfdfdfdfdfdf',      // Crude Oil
-    'S&P500': '874634fd0aceb112ddf1bd8147cd1b641375f79f5825126d665480874634fd0a',  // US500 Index
-    'NASDAQ': '16dad506d7db8da01c87581c87ca897a012a153557d4d578c3b9c9e1bc0632f1'   // US100 Index
-};
-
 let cachedData = [];
 let livePrices = {};
 let biasSortOrder = 0;
@@ -179,9 +167,7 @@ async function init() {
 
     document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
     await fetchData();
-    
-    // Universal Cross-Asset Sync Engine 
-    startUniversalFeedEngine();
+    startUniversalLiveEngine();
 }
 
 async function fetchData() {
@@ -198,46 +184,67 @@ async function fetchData() {
 }
 
 /**
- * Connects directly via public REST polling to Pyth Oracle infrastructure.
- * Bypasses CORS and Indonesian firewalls completely.
+ * Universal cross-asset resolution pipeline via Pyth Network Hermes Off-Chain Engine.
+ * Dynamically updates Forex, Crypto, Commodities, Indices, and Equities without any API tokens.
  */
-async function startUniversalFeedEngine() {
+async function startUniversalLiveEngine() {
     if (updateInterval) clearInterval(updateInterval);
     
-    const fetchLivePrices = async () => {
+    const pollFeeds = async () => {
         try {
-            // Pull cross-asset identifiers dynamically based on listed tickers
             const activeTickers = [...new Set(cachedData.map(r => r.ticker))];
+            if (activeTickers.length === 0) return;
+
+            // Map standard tickers to matching Pyth query aliases
+            const queryIds = activeTickers.map(t => {
+                let s = t.replace('/USD', '').replace('/', '');
+                if (s === 'S&P500') return 'US500';
+                if (s === 'NASDAQ') return 'US100';
+                if (s === 'DOW') return 'DJI';
+                if (s === 'WTI') return 'USOIL';
+                return s;
+            });
+
+            // Step 1: Query the price feed structural endpoints dynamically
+            const searchRes = await fetch(`https://hermes.pyth.network/v2/price_feeds?query=${queryIds.join(',')}`);
+            const feedList = await searchRes.json();
             
-            for (const ticker of activeTickers) {
-                // If an asset class isn't explicitly hardcoded, resolve it cleanly via safe open string search
-                const cleanTicker = ticker.replace('/USD', '').replace('S&P500', 'SPX').replace('NASDAQ', 'NDX');
-                const res = await fetch(`https://hermes.pyth.network/v2/price_feeds?query=${cleanTicker}`);
-                const data = await res.json();
+            if (feedList && feedList.length > 0) {
+                // Collect standard active feed IDs matching our current list
+                const idsParam = feedList.map(f => `ids[]=${f.id}`).join('&');
                 
-                if (data && data.length > 0) {
-                    const targetId = data[0].id;
-                    const priceRes = await fetch(`https://hermes.pyth.network/v2/updates/price/latest?ids[]=${targetId}`);
-                    const priceData = await priceRes.json();
-                    
-                    if (priceData && priceData.parsed && priceData.parsed[0]) {
-                        const rawObj = priceData.parsed[0].price;
-                        const parsedPrice = parseFloat(rawObj.price) * Math.pow(10, rawObj.expo);
-                        if (!isNaN(parsedPrice) && parsedPrice > 0) {
-                            livePrices[ticker] = parsedPrice;
+                // Step 2: Extract real-time parsed asset values directly
+                const priceRes = await fetch(`https://hermes.pyth.network/v2/updates/price/latest?${idsParam}`);
+                const priceData = await priceRes.json();
+                
+                if (priceData && priceData.parsed) {
+                    priceData.parsed.forEach(item => {
+                        const matchedFeed = feedList.find(f => f.id === item.id);
+                        if (matchedFeed) {
+                            const symbolAttr = matchedFeed.attributes.symbol.toUpperCase();
+                            const rawPrice = parseFloat(item.price.price);
+                            const expo = parseInt(item.price.expo);
+                            const finalPrice = rawPrice * Math.pow(10, expo);
+                            
+                            // Map the raw returned asset string back to original Supabase ticker string
+                            activeTickers.forEach(origTicker => {
+                                let norm = origTicker.replace('/USD', '').replace('/', '').replace('S&P500','US500').replace('NASDAQ','US100').replace('WTI','USOIL');
+                                if(symbolAttr.includes(norm.toUpperCase())) {
+                                    livePrices[origTicker] = finalPrice;
+                                }
+                            });
                         }
-                    }
+                    });
                 }
             }
             render();
-        } catch (e) {
-            console.log("Global network stream handshake retry ongoing...");
+        } catch (err) {
+            console.log("Sync engine buffering cross-asset price feeds...");
         }
     };
 
-    // Fast tracking trigger loop without hitting strict rate limiting controls
-    await fetchLivePrices();
-    updateInterval = setInterval(fetchLivePrices, 4000);
+    await pollFeeds();
+    updateInterval = setInterval(pollFeeds, 4000); // 4-second refresh balancing UI updates without hitting rate limits
 }
 
 function toggleSortBias() {
@@ -273,7 +280,7 @@ function render() {
         const liveSpot = livePrices[r.ticker];
         const pivotLine = parseFloat(r.bull_bear_line);
 
-        // --- Live Bias Calculation Logic Fix ---
+        // --- Live Bias Real-Time Dynamic Processing ---
         let dynamicBias = r.bias || 'Neutral';
         if (liveSpot && !isNaN(pivotLine) && pivotLine > 0) {
             dynamicBias = (liveSpot >= pivotLine) ? '↑ Bullish' : '↓ Bearish';
@@ -297,10 +304,19 @@ function render() {
         const stateClass = isTrending ? "trending" : "consolidated";
         const biasClass = (dynamicBias.includes('↓')) ? 'bias-down' : (dynamicBias.includes('↑') ? 'bias-up' : '');
 
+        // Layout decimal precision handling matching column parameters
+        const isHighValue = assetClass === 'Indices' || assetClass === 'Crypto' || r.ticker === 'WTI' || r.ticker === 'XAU/USD';
+        const displayPrice = liveSpot ? liveSpot.toFixed(isHighValue ? 2 : 4) : 'Loading...';
+
         return `
         <tr>
         <td>${r.trade_date}</td>
-        <td><b>${r.ticker}</b> ${liveSpot ? `<span style="font-size:11px; color:#787b86; margin-left:5px;">(${liveSpot.toFixed(assetClass==='Indices'||assetClass==='Crypto'||r.ticker==='WTI'?2:4)})</span>` : ''}</td>
+        <td>
+            <div style="display: flex; flex-direction: column;">
+                <b>${r.ticker}</b>
+                <span style="font-size: 12px; color: #2962ff; font-weight: bold; margin-top: 2px;">$ ${displayPrice}</span>
+            </div>
+        </td>
         <td class="${biasClass}">${dynamicBias}</td>
         <td>${!isNaN(pivotLine) ? pivotLine : '-'}</td>
         <td><span class="state-badge ${stateClass}">${state}</span></td>
