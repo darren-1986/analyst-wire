@@ -48,6 +48,10 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 .state-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; }
 .trending { background: #2962ff; color: white; }
 .consolidated { background: #5d606b; color: white; }
+
+/* Interactive Ticker Element */
+.clickable-ticker { color: #2962ff; cursor: pointer; transition: color 0.15s ease; }
+.clickable-ticker:hover { color: #00ffaa; text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -166,7 +170,6 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 <script>
 const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-// Categorization Map
 const categoryMap = {
 'EUR/USD': 'Forex', 'GBP/USD': 'Forex', 'AUD/USD': 'Forex', 'NZD/USD': 'Forex', 'AUD/NZD': 'Forex', 'EUR/CHF': 'Forex',
 'USD/CHF': 'Forex', 'USD/CAD': 'Forex', 'USD/NOK': 'Forex', 'USD/MXN': 'Forex', 'USD/JPY': 'Forex', 'EUR/JPY': 'Forex',
@@ -233,12 +236,42 @@ else biasSortOrder = 0;
 render();
 }
 
+// --- Dynamic Popup Window Chart Target Selector Engine ---
+function openChart(ticker) {
+    // Exact mapping dictionary matching your category arrays to clear TradingView symbol syntax
+    const tvSymbolMap = {
+        'S&P500': 'SPY',
+        'NASDAQ': 'QQQ',
+        'DOW': 'DIA',
+        'WTI': 'USOIL',
+        'COPPER': 'HG1!',
+        'COCOA': 'CC1!',
+        'COFFEE': 'KC1!',
+        'CORN': 'ZC1!',
+        'WHEAT': 'ZW1!',
+        'SOYBEANS': 'ZS1!',
+        'COTTONSUGAR': 'CT1!'
+    };
+
+    let targetSymbol = tvSymbolMap[ticker] || ticker.replace('/', '');
+
+    // Standard high performance layout URL syntax
+    const chartUrl = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(targetSymbol)}`;
+    
+    // Precise screen centering settings for standalone window bounds
+    const width = 1100;
+    const height = 650;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+
+    window.open(chartUrl, '_blank', `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`);
+}
+
 function render() {
 const cat = document.getElementById('cat-filter').value;
 const tick = document.getElementById('ticker-filter').value;
 const tbody = document.getElementById('levels-body');
 
-// 5-Tier Sorting Priority Index Array Map
 const biasMap = { 'Strong Bullish': 2, 'Medium Bullish': 1, 'Neutral': 0, 'Medium Bearish': -1, 'Strong Bearish': -2 };
 
 let filtered = cachedData.filter(r => {
@@ -258,7 +291,6 @@ return biasSortOrder * (valA - valB);
 tbody.innerHTML = filtered.length ? filtered.map(r => {
     const assetClass = categoryMap[r.ticker] || 'Forex';
     
-    // Extract raw numerical decimals safely out of string structures via Regex
     const s1Match = String(r.s1 || '').match(/[\d.]+/);
     const r1Match = String(r.r1 || '').match(/[\d.]+/);
     
@@ -270,33 +302,31 @@ tbody.innerHTML = filtered.length ? filtered.map(r => {
     let isTrending = false;
     let pipDistance = 0;
 
-    // --- High Accuracy Volatility & Market State Matrix Engine ---
     if (assetClass === 'Indices' || assetClass === 'Crypto') {
         rangeFormatted = rawDiff.toFixed(2);
-        isTrending = rawDiff > 80.00; // Requires an 80 point intraday range expansion to trend
+        isTrending = rawDiff > 80.00;
     } else if (r.ticker === 'XAU/USD') {
         rangeFormatted = rawDiff.toFixed(2);
-        isTrending = rawDiff > 15.00; // Gold requires a $15 spread between R1 and S1 to trend
+        isTrending = rawDiff > 15.00;
     } else if (assetClass === 'Commodities') {
         rangeFormatted = rawDiff.toFixed(2);
-        isTrending = rawDiff > 3.00;  // Oil / Soft Commodities need a $3 spread
+        isTrending = rawDiff > 3.00;
     } else if (r.ticker.includes('JPY')) {
         rangeFormatted = rawDiff.toFixed(3);
         pipDistance = rawDiff * 100;
-        isTrending = pipDistance > 90.0; // JPY crosses need over 90 real pips to trend
+        isTrending = pipDistance > 90.0;
     } else if (r.ticker === 'USD/NOK' || r.ticker === 'USD/MXN') {
         rangeFormatted = rawDiff.toFixed(4);
-        isTrending = rawDiff > 0.1500;  // Exotic pairs require wide percentage shifts
+        isTrending = rawDiff > 0.1500;
     } else {
         rangeFormatted = rawDiff.toFixed(4);
         pipDistance = rawDiff * 10000;
-        isTrending = pipDistance > 75.0; // Standard Forex pairs (75 pips true range threshold)
+        isTrending = pipDistance > 75.0;
     }
 
     const state = isTrending ? "Trending" : "Consolidated";
     const stateClass = isTrending ? "trending" : "consolidated";
     
-    // Maps the database text field to the proper UI component styles
     const rawBiasText = r.bias || 'Neutral';
     let biasClass = 'bias-neutral';
     let directionalArrow = '➔ Neutral';
@@ -318,7 +348,7 @@ tbody.innerHTML = filtered.length ? filtered.map(r => {
     return `
     <tr>
     <td>${r.trade_date}</td>
-    <td><b>${r.ticker}</b></td>
+    <td class="clickable-ticker" onclick="openChart('${r.ticker}')"><b>${r.ticker}</b></td>
     <td class="${biasClass}">${directionalArrow}</td>
     <td>${r.bull_bear_line}</td>
     <td><span class="state-badge ${stateClass}">${state}</span></td>
