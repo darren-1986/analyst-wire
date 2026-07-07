@@ -178,9 +178,9 @@
         document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
         await fetchData();
         
-        // Start proxy feed engine immediately
+        // Start open public market data query immediately
         fetchLivePrices();
-        setInterval(fetchLivePrices, 30000); 
+        setInterval(fetchLivePrices, 60000); // Check engine every 60s
     }
 
     async function fetchData() {
@@ -199,46 +199,48 @@
         render();
     }
 
-    // Direct Browser Fetch using a public cross-origin proxy (100% Free, No registration)
+    // Completely open, keyless public JSON endpoint (Supports CORS natively)
     async function fetchLivePrices() {
         if (!cachedData.length) return;
         try {
-            const uniqueTickers = [...new Set(cachedData.map(r => r.ticker))];
-            if (uniqueTickers.length === 0) return;
-
-            // Converter map to translate database naming logic into public finance symbols
-            const tickerMap = {
-                'EUR/USD': 'EURUSD=X', 'GBP/USD': 'GBPUSD=X', 'AUD/USD': 'AUDUSD=X', 'NZD/USD': 'NZDUSD=X',
-                'USD/JPY': 'JPY=X', 'EUR/JPY': 'EURJPY=X', 'GBP/JPY': 'GBPJPY=X',
-                'XAU/USD': 'GC=F', 'XAG/USD': 'SI=F', 'WTI': 'CL=F',
-                'AAPL': 'AAPL', 'TSLA': 'TSLA', 'NVDA': 'NVDA',
-                'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'DOW': '^DJI',
-                'BTC/USD': 'BTC-USD', 'ETH/USD': 'ETH-USD'
-            };
-
-            const querySymbols = uniqueTickers.map(t => tickerMap[t] || t.replace('/', '') + '=X');
-            const symbolsParam = querySymbols.join(',');
-            
-            // Running through a free, zero-config CORS text-proxy encoder
-            const targetUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbolsParam}`;
-            const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
+            const response = await fetch('https://open.er-api.com/v6/latest/USD');
             const data = await response.json();
 
-            if (data && data.quoteResponse && data.quoteResponse.result) {
-                const results = data.quoteResponse.result;
-
+            if (data && data.rates) {
+                const uniqueTickers = [...new Set(cachedData.map(r => r.ticker))];
+                
                 uniqueTickers.forEach(ticker => {
-                    const targetSymbol = tickerMap[ticker] || ticker.replace('/', '') + '=X';
-                    const marketItem = results.find(item => item.symbol === targetSymbol);
-                    
-                    if (marketItem && marketItem.regularMarketPrice) {
-                        livePrices[ticker] = parseFloat(marketItem.regularMarketPrice);
+                    // 1. Standard USD Base Direct Quote (e.g., USD/JPY)
+                    if (ticker.startsWith('USD/')) {
+                        const quoteCurrency = ticker.split('/')[1];
+                        if (data.rates[quoteCurrency]) {
+                            livePrices[ticker] = data.rates[quoteCurrency];
+                        }
+                    } 
+                    // 2. Inverted Quote pairs (e.g., EUR/USD, GBP/USD, AUD/USD)
+                    else if (ticker.endsWith('/USD')) {
+                        const baseCurrency = ticker.split('/')[0];
+                        
+                        // Handle Gold (XAU) and Silver (XAG) which are tracked under standard ISO codes
+                        const currencyCode = baseCurrency === 'XAU' ? 'XAU' : (baseCurrency === 'XAG' ? 'XAG' : baseCurrency);
+                        
+                        if (data.rates[currencyCode]) {
+                            livePrices[ticker] = 1 / data.rates[currencyCode];
+                        }
+                    }
+                    // 3. Cross Currency logic (e.g., EUR/JPY)
+                    else if (ticker.includes('/')) {
+                        const parts = ticker.split('/');
+                        if (data.rates[parts[0]] && data.rates[parts[1]]) {
+                            // Convert through base USD rate
+                            livePrices[ticker] = data.rates[parts[1]] / data.rates[parts[0]];
+                        }
                     }
                 });
                 updateLiveUI();
             }
         } catch (e) {
-            console.error("Live free stream exception: ", e);
+            console.error("Open feed tracking issue: ", e);
         }
     }
 
