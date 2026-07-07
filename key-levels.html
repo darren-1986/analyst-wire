@@ -67,16 +67,14 @@
 
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-    let cachedData = [];
-    let livePrices = {};
-    let biasSortOrder = 0;
+    let cachedData = [], livePrices = {}, biasSortOrder = 0;
 
     async function init() {
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
         const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
-        if (profile.is_admin) { document.getElementById('nav-admin').style.display = 'block'; document.getElementById('nav-upload').style.display = 'block'; }
-        if (profile.is_admin || profile.subscription_tag === 'pro') { document.getElementById('nav-courses').style.display = 'block'; }
+        if (profile?.is_admin) { document.getElementById('nav-admin').style.display = 'block'; document.getElementById('nav-upload').style.display = 'block'; }
+        if (profile?.is_admin || profile?.subscription_tag === 'pro') { document.getElementById('nav-courses').style.display = 'block'; }
         
         document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
         await fetchData();
@@ -84,46 +82,46 @@
     }
 
     async function fetchData() {
-        const date = document.getElementById('date-filter').value;
-        const { data } = await client.from('key_levels').select('*').eq('trade_date', date);
+        const { data } = await client.from('key_levels').select('*').eq('trade_date', document.getElementById('date-filter').value);
         cachedData = data || [];
         render();
     }
 
     async function startHybridFeedEngine() {
-        // Use a direct reliable proxy for Forex
-        const refresh = async () => {
+        // Reliable public Forex feed
+        const updatePrices = async () => {
             try {
                 const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
                 const data = await res.json();
                 cachedData.forEach(r => {
-                    const pair = r.ticker.split('/');
-                    if(data.rates[pair[1]]) livePrices[r.ticker] = data.rates[pair[1]];
+                    if(data.rates[r.ticker.split('/')[1]]) livePrices[r.ticker] = data.rates[r.ticker.split('/')[1]];
                 });
                 render();
-            } catch (e) { console.error("Engine failure", e); }
+            } catch (e) { console.warn("Forex data unreachable"); }
         };
-        refresh();
-        setInterval(refresh, 30000);
+        updatePrices();
+        setInterval(updatePrices, 60000);
     }
 
     function render() {
         const tbody = document.getElementById('levels-body');
-        tbody.innerHTML = cachedData.length ? cachedData.map(r => {
-            const price = livePrices[r.ticker] || 0;
-            const range = Math.abs(r.r1 - r.s1).toFixed(4);
+        tbody.innerHTML = cachedData.length > 0 ? cachedData.map(r => {
+            const price = livePrices[r.ticker];
+            const isUp = price > r.bull_bear_line;
             return `
             <tr>
                 <td>${r.trade_date}</td><td>${r.ticker}</td>
-                <td class="${price > r.bull_bear_line ? 'bias-up' : 'bias-down'}">${price > r.bull_bear_line ? '↑ Bullish' : '↓ Bearish'}</td>
+                <td class="${isUp ? 'bias-up' : 'bias-down'}">${price ? (isUp ? '↑ Bullish' : '↓ Bearish') : '---'}</td>
                 <td>${r.bull_bear_line}</td>
-                <td><span class="state-badge ${range > 0.005 ? 'trending' : 'consolidated'}">${range > 0.005 ? 'Trending' : 'Consolidated'}</span></td>
-                <td><span class="range-badge">${range}</span></td>
-                <td class="live-price-cell" data-ticker="${r.ticker}">${price > 0 ? price.toFixed(4) : 'Loading...'}</td>
-            </tr>`).join('') : '<tr><td colspan="7">No data.</td></tr>';
+                <td><span class="state-badge ${Math.abs(r.r1 - r.s1) > 0.005 ? 'trending' : 'consolidated'}">State</span></td>
+                <td><span class="range-badge">${Math.abs(r.r1 - r.s1).toFixed(4)}</span></td>
+                <td class="live-price-cell">${price ? price.toFixed(4) : '---'}</td>
+            </tr>`;
+        }).join('') : '<tr><td colspan="7">No data.</td></tr>';
     }
 
     function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
+    function toggleSortBias() { biasSortOrder = biasSortOrder === 0 ? 1 : 0; render(); }
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
     init();
 </script>
