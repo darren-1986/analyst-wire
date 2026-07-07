@@ -46,8 +46,10 @@
         .trending { background: #2962ff; color: white; }
         .consolidated { background: #5d606b; color: white; }
         
-        /* Live Price Styles */
-        .live-price-cell { font-family: monospace; color: #d1d4dc; font-weight: 500; }
+        /* Dynamic Price Framework Overrides */
+        .live-price-cell { font-family: monospace; min-width: 100px; }
+        .tv-embed-wrap { display: inline-block; height: 20px; overflow: hidden; vertical-align: middle; }
+        .tv-embed-wrap iframe { border: none !important; height: 32px !important; margin-top: -6px !important; }
     </style>
 </head>
 <body>
@@ -61,7 +63,7 @@
         <p><strong>Bull/Bear Line:</strong> Your key pivot point. Above = Bullish sentiment, Below = Bearish sentiment.</p>
         <p><strong>Market State:</strong> "Trending" (momentum based) or "Consolidated" (range-bound). Adjust strategy accordingly.</p>
         <p><strong>Volatility:</strong> The range distance (R1 - S1). Higher numbers indicate a wider trading range.</p>
-        <p><strong>Live Price:</strong> The real-time market price fetched live in the browser.</p>
+        <p><strong>Live Price:</strong> Streamed open execution data container.</p>
         <h3>Trader's Workflow</h3>
         <ol>
             <li>Filter by Category/Ticker to find your asset.</li>
@@ -129,7 +131,6 @@
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    // Categorization Map
     const categoryMap = {
         'EUR/USD': 'Forex', 'GBP/USD': 'Forex', 'AUD/USD': 'Forex', 'NZD/USD': 'Forex', 'AUD/NZD': 'Forex', 'EUR/CHF': 'Forex', 
         'USD/CHF': 'Forex', 'USD/CAD': 'Forex', 'USD/NOK': 'Forex', 'USD/MXN': 'Forex', 'USD/JPY': 'Forex', 'EUR/JPY': 'Forex',
@@ -139,15 +140,13 @@
         'COFFEE': 'Commodities', 'COTTONSUGAR': 'Commodities', 'CORN': 'Commodities', 'SOYBEANS': 'Commodities', 'WHEAT': 'Commodities',
         'AAPL': 'Equities', 'AMZN': 'Equities', 'GOOG': 'Equities', 'MSFT': 'Equities', 'TSLA': 'Equities', 'META': 'Equities', 'V': 'Equities', 
         'JPM': 'Equities', 'KO': 'Equities', 'MCD': 'Equities', 'AMD': 'Equities', 'BABA': 'Equities', 'JNJ': 'Equities', 'NVDA': 'Equities',
-        'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'DOW': '^DJI', 'RUSSEL': '^RUT', 'FTSE': '^FTSE', 'NIKKEI': '^N225', 'HANG': '^HSI',
+        'S&P500': 'Indices', 'NASDAQ': 'Indices', 'DOW': 'Indices', 'RUSSEL': 'Indices', 'FTSE': 'Indices', 'NIKKEI': 'Indices', 'HANG': 'Indices',
         'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto'
     };
 
     let cachedData = [];
-    let livePrices = {}; 
     let biasSortOrder = 0; 
 
-    // Modal Logic
     function openModal() { document.getElementById("infoModal").style.display = "block"; }
     function closeModal() { document.getElementById("infoModal").style.display = "none"; }
     window.onclick = function(event) { if (event.target == document.getElementById("infoModal")) closeModal(); }
@@ -176,11 +175,7 @@
         }
 
         document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
-        await fetchData();
-        
-        // Start continuous live pricing engine
-        fetchLivePrices();
-        setInterval(fetchLivePrices, 30000); 
+        fetchData();
     }
 
     async function fetchData() {
@@ -199,62 +194,18 @@
         render();
     }
 
-    // Direct Browser Fetch using AllOrigins open CORS pipe + Yahoo Engine
-    async function fetchLivePrices() {
-        if (!cachedData.length) return;
-        try {
-            const uniqueTickers = [...new Set(cachedData.map(r => r.ticker))];
-            if (uniqueTickers.length === 0) return;
-
-            // Strict lookups mapping your database labels to public market streaming tickers
-            const tickerMap = {
-                'EUR/USD': 'EURUSD=X', 'GBP/USD': 'GBPUSD=X', 'AUD/USD': 'AUDUSD=X', 'NZD/USD': 'NZDUSD=X',
-                'USD/JPY': 'JPY=X', 'EUR/JPY': 'EURJPY=X', 'GBP/JPY': 'GBPJPY=X', 'USD/CAD': 'CAD=X',
-                'USD/CHF': 'CHF=X', 'AUD/NZD': 'AUDNZD=X', 'EUR/CHF': 'EURCHF=X', 'USD/NOK': 'NOK=X',
-                'USD/MXN': 'MXN=X', 'CAD/JPY': 'CADJPY=X', 'EUR/GBP': 'EURGBP=X', 'EUR/AUD': 'EURAUD=X',
-                'EUR/NZD': 'EURNZD=X', 'GBP/AUD': 'GBPAUD=X', 'GBP/NZD': 'GBPNZD=X', 'DXY': 'DX-Y.NYB',
-                'XAU/USD': 'GC=F', 'XAG/USD': 'SI=F', 'WTI': 'CL=F', 'COPPER': 'HG=F', 'COCOA': 'CC=F',
-                'COFFEE': 'KC=F', 'CORN': 'ZC=F', 'SOYBEANS': 'ZS=F', 'WHEAT': 'ZW=F',
-                'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'DOW': '^DJI', 'RUSSEL': '^RUT', 
-                'FTSE': '^FTSE', 'NIKKEI': '^N225', 'HANG': '^HSI',
-                'BTC/USD': 'BTC-USD', 'ETH/USD': 'ETH-USD'
-            };
-
-            const querySymbols = uniqueTickers.map(t => tickerMap[t] || t).join(',');
-            const targetUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${querySymbols}`;
-            
-            // Fetching via public, uncapped AllOrigins CORS developer utility wrapper
-            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
-            const wrapper = await response.json();
-            
-            if (wrapper && wrapper.contents) {
-                const data = JSON.parse(wrapper.contents);
-                if (data && data.quoteResponse && data.quoteResponse.result) {
-                    const results = data.quoteResponse.result;
-
-                    uniqueTickers.forEach(ticker => {
-                        const targetSymbol = tickerMap[ticker] || ticker;
-                        const marketItem = results.find(item => item.symbol === targetSymbol);
-                        
-                        if (marketItem && marketItem.regularMarketPrice) {
-                            livePrices[ticker] = parseFloat(marketItem.regularMarketPrice);
-                        }
-                    });
-                    updateLiveUI();
-                }
-            }
-        } catch (e) {
-            console.error("Live free stream network bypass failure: ", e);
-        }
-    }
-
-    function updateLiveUI() {
-        document.querySelectorAll('.live-price-cell').forEach(cell => {
-            const ticker = cell.getAttribute('data-ticker');
-            if (livePrices[ticker]) {
-                cell.textContent = livePrices[ticker].toFixed(4);
-            }
-        });
+    // Direct translation matrix from CSV text values into TradingView widget naming parameters
+    function getTVExchangeSymbol(ticker) {
+        const mapping = {
+            'EUR/USD': 'FX:EURUSD', 'GBP/USD': 'FX:GBPUSD', 'AUD/USD': 'FX:AUDUSD', 'NZD/USD': 'FX:NZDUSD',
+            'USD/JPY': 'FX:USDJPY', 'EUR/JPY': 'FX:EURJPY', 'GBP/JPY': 'FX:GBPJPY', 'USD/CAD': 'FX:USDCAD',
+            'USD/CHF': 'FX:USDCHF', 'AUD/NZD': 'FX:AUDNZD', 'DXY': 'CAPITALCOM:DXY',
+            'XAU/USD': 'OANDA:XAUUSD', 'XAG/USD': 'OANDA:XAGUSD', 'WTI': 'TVC:USOIL',
+            'AAPL': 'NASDAQ:AAPL', 'TSLA': 'NASDAQ:TSLA', 'NVDA': 'NASDAQ:NVDA', 'AMZN': 'NASDAQ:AMZN',
+            'S&P500': 'SPX', 'NASDAQ': 'IXIC', 'DOW': 'DJI',
+            'BTC/USD': 'BINANCE:BTCUSD', 'ETH/USD': 'BINANCE:ETHUSD'
+        };
+        return mapping[ticker] || `FX:${ticker.replace('/', '')}`;
     }
 
     function toggleSortBias() {
@@ -272,14 +223,11 @@
         const biasMap = { '↑ Bullish': 1, 'Neutral': 0, '↓ Bearish': -1 };
         
         let filtered = cachedData.filter(r => {
-            // Clean up internal names to match standard category lookups
-            const lookupName = r.ticker === '^GSPC' ? 'S&P500' : (r.ticker === '^IXIC' ? 'NASDAQ' : (r.ticker === '^DJI' ? 'DOW' : (r.ticker === '^RUT' ? 'RUSSEL' : (r.ticker === '^FTSE' ? 'FTSE' : (r.ticker === '^N225' ? 'NIKKEI' : (r.ticker === '^HSI' ? 'HANG' : r.ticker))))));
-            const matchesCat = (cat === 'all' || categoryMap[lookupName] === cat);
+            const matchesCat = (cat === 'all' || categoryMap[r.ticker] === cat);
             const matchesTick = (tick === 'all' || r.ticker === tick);
             return matchesCat && matchesTick;
         });
 
-        // Apply Sorting
         if (biasSortOrder !== 0) {
             filtered.sort((a, b) => {
                 const valA = biasMap[a.bias] || 0;
@@ -295,7 +243,15 @@
             const stateClass = isTrending ? "trending" : "consolidated";
             const biasClass = (r.bias?.includes('↓')) ? 'bias-down' : (r.bias?.includes('↑') ? 'bias-up' : '');
             
-            const currentLiveVal = livePrices[r.ticker] ? livePrices[r.ticker].toFixed(4) : '--.----';
+            const tvSymbol = getTVExchangeSymbol(r.ticker);
+            
+            // Injects dynamic, isolated, responsive frames that completely ignore CORS security limits
+            const embedWidget = `
+                <div class="tv-embed-wrap">
+                    <iframe src="https://s.tradingview.com/embed-widget/single-quote/?symbol=${encodeURIComponent(tvSymbol)}&theme=dark" 
+                            scrolling="no" allowtransparency="true" frameborder="0" width="120" height="32"></iframe>
+                </div>
+            `;
             
             return `
                 <tr>
@@ -305,7 +261,7 @@
                     <td>${r.bull_bear_line}</td>
                     <td><span class="state-badge ${stateClass}">${state}</span></td>
                     <td><span class="range-badge">${range}</span></td>
-                    <td class="live-price-cell" data-ticker="${r.ticker}">${currentLiveVal}</td>
+                    <td class="live-price-cell">${embedWidget}</td>
                 </tr>
             `;
         }).join('') : '<tr><td colspan="7">No data for selected filters.</td></tr>';
