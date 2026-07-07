@@ -49,9 +49,14 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 .trending { background: #2962ff; color: white; }
 .consolidated { background: #5d606b; color: white; }
 
-/* Interactive Ticker Element */
-.clickable-ticker { color: #2962ff; cursor: pointer; transition: color 0.15s ease; }
-.clickable-ticker:hover { color: #00ffaa; text-decoration: underline; }
+/* Interactive Ticker Element & SVG Sync */
+.clickable-ticker { cursor: pointer; transition: background-color 0.15s ease; }
+.clickable-ticker:hover { background-color: #1c2230; }
+.clickable-ticker:hover .ticker-text { color: #2962ff; text-decoration: underline; }
+.clickable-ticker:hover svg { fill: #2962ff; }
+.ticker-flex { display: flex; align-items: center; gap: 8px; }
+.ticker-text { font-weight: bold; color: #fff; transition: color 0.15s ease; }
+.chart-icon-svg { fill: #787b86; transition: fill 0.15s ease; display: inline-block; vertical-align: middle; }
 </style>
 </head>
 <body>
@@ -88,6 +93,7 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 <h3>2. Playbook: How to Find Trade Ideas</h3>
 <p style="color: #fff; font-weight: bold;">💡 Strategy A: The Breakout / Momentum Play</p>
 <ul>
+    <li>options testing strategy items...
     <li><strong>The Setup:</strong> Look for assets displaying a <span style="color: #00ffaa;">Strong Bullish</span> or <span style="color: #ff0055;">Strong Bearish</span> Bias combined with a <span style="background: #2962ff; color: #fff; padding: 2px 5px; border-radius: 3px; font-size: 11px;">TRENDING</span> Market State.</li>
     <li><strong>Execution:</strong> Avoid fading these moves. Instead, filter for these tickers, open your charts, and look for pullback entries (e.g., buying a minor dip toward the Bull/Bear Line in a Strong Bullish trend) to ride the expansion wave.</li>
 </ul>
@@ -236,9 +242,7 @@ else biasSortOrder = 0;
 render();
 }
 
-// --- Dynamic Popup Window Chart Target Selector Engine ---
 function openChart(ticker) {
-    // Exact mapping dictionary matching your category arrays to clear TradingView symbol syntax
     const tvSymbolMap = {
         'S&P500': 'SPY',
         'NASDAQ': 'QQQ',
@@ -254,11 +258,8 @@ function openChart(ticker) {
     };
 
     let targetSymbol = tvSymbolMap[ticker] || ticker.replace('/', '');
-
-    // Standard high performance layout URL syntax
     const chartUrl = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(targetSymbol)}`;
     
-    // Precise screen centering settings for standalone window bounds
     const width = 1100;
     const height = 650;
     const left = (window.screen.width - width) / 2;
@@ -348,7 +349,12 @@ tbody.innerHTML = filtered.length ? filtered.map(r => {
     return `
     <tr>
     <td>${r.trade_date}</td>
-    <td class="clickable-ticker" onclick="openChart('${r.ticker}')"><b>${r.ticker}</b></td>
+    <td class="clickable-ticker" onclick="openChart('${r.ticker}')">
+        <div class="ticker-flex">
+            <svg class="chart-icon-svg" width="14" height="14" viewBox="0 0 24 24"><path d="M3.5 18.5v-13h2v13h-2zm5 0v-7h2v7h-2zm5 0v-11h2v11h-2zm5 0v-5h2v5h-2z"/></svg>
+            <span class="ticker-text">${r.ticker}</span>
+        </div>
+    </td>
     <td class="${biasClass}">${directionalArrow}</td>
     <td>${r.bull_bear_line}</td>
     <td><span class="state-badge ${stateClass}">${state}</span></td>
