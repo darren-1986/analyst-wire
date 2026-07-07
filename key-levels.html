@@ -218,7 +218,7 @@ return biasSortOrder * (valA - valB);
 tbody.innerHTML = filtered.length ? filtered.map(r => {
     const assetClass = categoryMap[r.ticker] || 'Forex';
     
-    // --- ACCURACY FIX: Extract raw numerical decimals safely out of string structures via Regex ---
+    // Extract raw numerical decimals safely out of string structures via Regex
     const s1Match = String(r.s1 || '').match(/[\d.]+/);
     const r1Match = String(r.r1 || '').match(/[\d.]+/);
     
@@ -228,23 +228,29 @@ tbody.innerHTML = filtered.length ? filtered.map(r => {
     
     let rangeFormatted;
     let isTrending = false;
+    let pipDistance = 0;
 
-    // --- ACCURACY FIX: Optimized Volatility Thresholds across Mixed Asset Matrices ---
+    // --- High Accuracy Volatility & Market State Matrix Engine ---
     if (assetClass === 'Indices' || assetClass === 'Crypto') {
         rangeFormatted = rawDiff.toFixed(2);
-        isTrending = rawDiff > 15.00; // Requires a 15 point spread to flag trending momentum
+        isTrending = rawDiff > 80.00; // Requires an 80 point intraday range expansion to trend
     } else if (r.ticker === 'XAU/USD') {
         rangeFormatted = rawDiff.toFixed(2);
-        isTrending = rawDiff > 10.00; // Gold requires a $10 move to flash trending
+        isTrending = rawDiff > 15.00; // Gold requires a $15 spread between R1 and S1 to trend
     } else if (assetClass === 'Commodities') {
         rangeFormatted = rawDiff.toFixed(2);
-        isTrending = rawDiff > 2.00;  // Oil / Coffee requires a $2 spread
-    } else if (r.ticker.includes('JPY') || r.ticker === 'USD/NOK' || r.ticker === 'USD/MXN') {
+        isTrending = rawDiff > 3.00;  // Oil / Soft Commodities need a $3 spread
+    } else if (r.ticker.includes('JPY')) {
+        rangeFormatted = rawDiff.toFixed(3);
+        pipDistance = rawDiff * 100;
+        isTrending = pipDistance > 90.0; // JPY crosses need over 90 real pips to trend
+    } else if (r.ticker === 'USD/NOK' || r.ticker === 'USD/MXN') {
         rangeFormatted = rawDiff.toFixed(4);
-        isTrending = rawDiff > 0.2500;
+        isTrending = rawDiff > 0.1500;  // Exotic pairs require wide percentage shifts
     } else {
         rangeFormatted = rawDiff.toFixed(4);
-        isTrending = rawDiff > 0.0035; // Standard Forex pairs (35 pips)
+        pipDistance = rawDiff * 10000;
+        isTrending = pipDistance > 75.0; // Standard Forex pairs (75 pips true range threshold)
     }
 
     const state = isTrending ? "Trending" : "Consolidated";
