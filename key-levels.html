@@ -47,7 +47,7 @@
         .consolidated { background: #5d606b; color: white; }
         
         /* Live Price Styles */
-        .live-price-cell { font-family: monospace; color: #d1d4dc; font-weight: 500; }
+        .live-price-cell { font-family: monospace; color: #ffffff; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -57,11 +57,11 @@
         <span class="close-btn" onclick="closeModal()">&times;</span>
         <h2>How to Use the Radar</h2>
         <h3>Understanding the Columns</h3>
-        <p><strong>Bias:</strong> Dynamic operational reading. Automatically calculates relative direction based on live price variance against the central benchmark layout line.</p>
+        <p><strong>Bias:</strong> Indicates market direction. Calculated dynamically inside the browser based on live streaming prices vs. the pivot level line.</p>
         <p><strong>Bull/Bear Line:</strong> Your key pivot point. Above = Bullish sentiment, Below = Bearish sentiment.</p>
         <p><strong>Market State:</strong> "Trending" (momentum based) or "Consolidated" (range-bound). Adjust strategy accordingly.</p>
         <p><strong>Volatility:</strong> The range distance (R1 - S1). Higher numbers indicate a wider trading range.</p>
-        <p><strong>Live Price:</strong> Streamed open execution data container.</p>
+        <p><strong>Live Price:</strong> Dynamic, live asset feeds displaying actual market conditions.</p>
         <h3>Trader's Workflow</h3>
         <ol>
             <li>Filter by Category/Ticker to find your asset.</li>
@@ -142,10 +142,24 @@
         'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto'
     };
 
+    // Global Translation Map to Match Yahoo Stream Protocol Identifiers
+    const tickerMap = {
+        'EUR/USD': 'EURUSD=X', 'GBP/USD': 'GBPUSD=X', 'AUD/USD': 'AUDUSD=X', 'NZD/USD': 'NZDUSD=X',
+        'USD/JPY': 'JPY=X', 'EUR/JPY': 'EURJPY=X', 'GBP/JPY': 'GBPJPY=X', 'USD/CAD': 'CAD=X',
+        'USD/CHF': 'CHF=X', 'AUD/NZD': 'AUDNZD=X', 'EUR/CHF': 'EURCHF=X', 'USD/NOK': 'NOK=X',
+        'USD/MXN': 'MXN=X', 'CAD/JPY': 'CADJPY=X', 'EUR/GBP': 'EURGBP=X', 'EUR/AUD': 'EURAUD=X',
+        'EUR/NZD': 'EURNZD=X', 'GBP/AUD': 'GBPAUD=X', 'GBP/NZD': 'GBPNZD=X', 'DXY': 'DX-Y.NYB',
+        'XAU/USD': 'GC=F', 'XAG/USD': 'SI=F', 'WTI': 'CL=F', 'COPPER': 'HG=F', 'COCOA': 'CC=F',
+        'COFFEE': 'KC=F', 'CORN': 'ZC=F', 'SOYBEANS': 'ZS=F', 'WHEAT': 'ZW=F',
+        'AAPL': 'AAPL', 'TSLA': 'TSLA', 'NVDA': 'NVDA', 'AMZN': 'AMZN', 'GOOG': 'GOOG', 'META': 'META',
+        'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'DOW': '^DJI', 'RUSSEL': '^RUT',
+        'BTC/USD': 'BTC-USD', 'ETH/USD': 'ETH-USD'
+    };
+
     let cachedData = [];
     let livePrices = {}; 
     let biasSortOrder = 0; 
-    let ws = null;
+    let loopInterval = null;
 
     function openModal() { document.getElementById("infoModal").style.display = "block"; }
     function closeModal() { document.getElementById("infoModal").style.display = "none"; }
@@ -176,7 +190,9 @@
 
         document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
         await fetchData();
-        initLiveFeed();
+        
+        // Start client-side polling cycle (Completely Free)
+        startPollingFeed();
     }
 
     async function fetchData() {
@@ -195,57 +211,46 @@
         render();
     }
 
-    // Connects to a completely free, open websocket engine (CORS immune)
-    function initLiveFeed() {
-        if (ws) { ws.close(); }
+    function startPollingFeed() {
+        if (loopInterval) clearInterval(loopInterval);
         
-        // Using an open financial stream server
-        ws = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
-        
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (!Array.isArray(data)) return;
+        const updatePrices = async () => {
+            if (!cachedData.length) return;
+            const uniqueTickers = [...new Set(cachedData.map(r => r.ticker))];
+            const symbols = uniqueTickers.map(t => tickerMap[t] || t).join(',');
             
-            // Map your database token keys to incoming crypto-fiat mini stream tracking tickers
-            const wsMap = {
-                'BTC/USD': 'btcusdt', 'ETH/USD': 'ethusdt',
-                'EUR/USD': 'eurusdt', 'GBP/USD': 'gbpusdt',
-                'AUD/USD': 'audusdt'
-            };
-
-            let updated = false;
-            data.forEach(item => {
-                const streamSymbol = item.s.toLowerCase();
-                Object.keys(wsMap).forEach(ticker => {
-                    if (wsMap[ticker] === streamSymbol) {
-                        const newPrice = parseFloat(item.c);
-                        
-                        // Forex normalization factor wrapper if matching currency conversions
-                        livePrices[ticker] = (ticker.includes('USD') && !ticker.startsWith('BTC') && !ticker.startsWith('ETH')) ? newPrice : newPrice;
-                        updated = true;
-                    }
-                });
-            });
-
-            if (updated) {
-                updateLiveUI();
+            try {
+                // Fetch direct open financial parameters bypassing local origin walls completely
+                const response = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`);
+                const resJson = await response.json();
+                
+                if (resJson && resJson.quoteResponse && resJson.quoteResponse.result) {
+                    resJson.quoteResponse.result.forEach(item => {
+                        // Locate matching UI dashboard ticker token name
+                        const originalTicker = Object.keys(tickerMap).find(key => tickerMap[key] === item.symbol) || item.symbol;
+                        if (item.regularMarketPrice) {
+                            livePrices[originalTicker] = parseFloat(item.regularMarketPrice);
+                        }
+                    });
+                    updateLiveUI();
+                }
+            } catch (err) {
+                console.warn("Retrying feed context refresh loop...", err);
             }
         };
 
-        ws.onerror = (e) => console.error("Socket error", e);
-        ws.onclose = () => setTimeout(initLiveFeed, 5000); // Auto reconnect loop
+        updatePrices();
+        loopInterval = setInterval(updatePrices, 15000); // 15s updates
     }
 
-    // Live execution sweeps the UI elements, updates raw text numbers and calculates bias states
     function updateLiveUI() {
         document.querySelectorAll('.live-price-cell').forEach(cell => {
             const ticker = cell.getAttribute('data-ticker');
             const currentPrice = livePrices[ticker];
             
-            if (currentPrice) {
-                cell.textContent = currentPrice.toFixed(ticker.includes('BTC') ? 2 : 4);
+            if (currentPrice !== undefined) {
+                cell.textContent = currentPrice.toFixed(ticker.includes('BTC') || ticker.includes('ETH') ? 2 : 4);
                 
-                // Track down the corresponding baseline and bias target positions in the row block
                 const row = cell.parentElement;
                 const biasCell = row.querySelector('.bias-container-cell');
                 const lineCell = row.querySelector('.line-value-cell');
@@ -253,7 +258,7 @@
                 if (biasCell && lineCell) {
                     const lineLevel = parseFloat(lineCell.textContent);
                     if (!isNaN(lineLevel)) {
-                        // Core Bias Calculation Engine Execution
+                        // Recalculates Bias natively inside user browser environment
                         if (currentPrice > lineLevel) {
                             biasCell.textContent = '↑ Bullish';
                             biasCell.className = 'bias-container-cell bias-up';
@@ -304,14 +309,13 @@
             const state = isTrending ? "Trending" : "Consolidated";
             const stateClass = isTrending ? "trending" : "consolidated";
             
-            // Initial calculations populate layout before connection establishes updates
             const initialPrice = livePrices[r.ticker];
             let displayPrice = '--.----';
             let calculatedBias = r.bias || 'Loading...';
             let calculatedBiasClass = (r.bias?.includes('↓')) ? 'bias-down' : (r.bias?.includes('↑') ? 'bias-up' : '');
             
-            if (initialPrice) {
-                displayPrice = initialPrice.toFixed(r.ticker.includes('BTC') ? 2 : 4);
+            if (initialPrice !== undefined) {
+                displayPrice = initialPrice.toFixed(r.ticker.includes('BTC') || r.ticker.includes('ETH') ? 2 : 4);
                 const baseline = parseFloat(r.bull_bear_line);
                 if (initialPrice > baseline) {
                     calculatedBias = '↑ Bullish';
