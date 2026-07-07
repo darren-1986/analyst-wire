@@ -7,398 +7,108 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000000; color: #d1d4dc; margin: 0; min-height: 100vh; }
-        
-        /* Navigation (Fixed Header Layout) */
         .top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; }
         .nav-links { display: flex; align-items: center; }
         .nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; }
         .nav-links a.active { color: #2962ff; font-weight: bold; }
-
-        /* Dropdown Styling */
         .dropdown { position: relative; margin-left: 20px; }
         .dropbtn { background: none; border: none; color: #787b86; cursor: pointer; font-size: 18px; padding: 5px; }
         .dropdown-content { display: none; position: absolute; right: 0; background-color: #1c2230; min-width: 150px; border: 1px solid #2a2e39; z-index: 1000; border-radius: 4px; }
         .dropdown-content a { color: #d1d4dc; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; }
         .dropdown-content a:hover { background-color: #2a2e39; }
-
-        /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); }
         .modal-content { background-color: #131722; margin: 5% auto; padding: 30px; border: 1px solid #2a2e39; width: 80%; max-width: 700px; color: #d1d4dc; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
         .close-btn { color: #787b86; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .close-btn:hover { color: #fff; }
-
-        /* Content */
         .container { padding: 30px; }
         .filter-section { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; }
         select, input[type="date"] { background: #131722; color: white; padding: 8px; border: 1px solid #2a2e39; border-radius: 4px; }
         .info-btn { background: #2962ff; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-left: 10px; }
-
         table { width: 100%; border-collapse: collapse; background: #131722; margin-top: 20px; border: 1px solid #2a2e39; }
         th { background: #1c2230; padding: 12px; text-align: left; border: 1px solid #2a2e39; color: #787b86; font-size: 11px; text-transform: uppercase; cursor: pointer; }
-        th:hover { color: #fff; }
         td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
-        
-        /* Indicators */
         .bias-up { color: #089981; font-weight: bold; }
         .bias-down { color: #f23645; font-weight: bold; }
         .range-badge { background: #2a2e39; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; }
         .state-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; }
         .trending { background: #2962ff; color: white; }
         .consolidated { background: #5d606b; color: white; }
-        
-        /* Clean Text Live Price Styles */
         .live-price-cell { font-family: monospace; color: #ffffff; font-weight: bold; min-width: 90px; }
     </style>
 </head>
 <body>
-
-<div id="infoModal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeModal()">&times;</span>
-        <h2>How to Use the Radar</h2>
-        <h3>Understanding the Columns</h3>
-        <p><strong>Bias:</strong> Computed dynamically based on live raw prices vs your pivot baseline.</p>
-        <p><strong>Bull/Bear Line:</strong> Your key pivot point. Above = Bullish sentiment, Below = Bearish sentiment.</p>
-        <p><strong>Market State:</strong> "Trending" (momentum based) or "Consolidated" (range-bound). Adjust strategy accordingly.</p>
-        <p><strong>Volatility:</strong> The range distance (R1 - S1). Higher numbers indicate a wider trading range.</p>
-        <p><strong>Live Price:</strong> Aggregated raw text prices from open data pipelines.</p>
-        <h3>Trader's Workflow</h3>
-        <ol>
-            <li>Filter by Category/Ticker to find your asset.</li>
-            <li>Identify the Bias to know which direction to trade.</li>
-            <li>Use the Bull/Bear Line to validate your entries.</li>
-            <li>Respect the Volatility metrics for stop-loss sizing.</li>
-        </ol>
-    </div>
-</div>
-
+<div id="infoModal" class="modal"><div class="modal-content"><span class="close-btn" onclick="closeModal()">&times;</span><h2>How to Use the Radar</h2><p>Bias is computed live vs pivot.</p></div></div>
 <div class="top-nav">
-    <div style="height: 50px; display: flex; align-items: center;">
-        <img src="assets/logo.png" alt="Analyst Wire" style="height: 40px;">
-    </div>
+    <div style="height: 50px; display: flex; align-items: center;"><img src="assets/logo.png" alt="Analyst Wire" style="height: 40px;"></div>
     <div class="nav-links">
-        <a href="terminal.html">Dashboard</a>
-        <a href="/newsfeed">Newsfeed</a>
-        <a href="key-levels.html" class="active">Key Levels</a>
-        <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
-        
-        <div class="dropdown">
-            <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
-            <div id="settingsDropdown" class="dropdown-content">
-                <a href="account.html">Account</a>
-                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
-                <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
-                <a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
-            </div>
+        <a href="terminal.html">Dashboard</a><a href="/newsfeed">Newsfeed</a><a href="key-levels.html" class="active">Key Levels</a>
+        <div class="dropdown"><button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+            <div id="settingsDropdown" class="dropdown-content"><a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a></div>
         </div>
     </div>
 </div>
-
 <div class="container">
-    <div style="display: flex; align-items: center;">
-        <h1>Market Trade Radar</h1>
-        <button class="info-btn" onclick="openModal()">Info ℹ️</button>
-    </div>
-    
+    <h1>Market Trade Radar</h1>
     <div class="filter-section">
         <input type="date" id="date-filter" onchange="fetchData()">
-        <select id="cat-filter" onchange="render()">
-            <option value="all">All Categories</option>
-            <option value="Forex">Forex</option>
-            <option value="Commodities">Commodities</option>
-            <option value="Equities">Equities</option>
-            <option value="Indices">Indices</option>
-        </select>
-        <select id="ticker-filter" onchange="render()">
-            <option value="all">All Tickers</option>
-        </select>
+        <select id="cat-filter" onchange="render()"><option value="all">All Categories</option><option value="Forex">Forex</option><option value="Commodities">Commodities</option></select>
+        <select id="ticker-filter" onchange="render()"><option value="all">All Tickers</option></select>
     </div>
-
     <table id="levels-table">
-        <thead>
-            <tr>
-                <th>Date</th><th>Ticker</th><th onclick="toggleSortBias()">BIAS ↕</th><th>Bull/Bear Line</th><th>Market State</th><th>Volatility</th><th>Live Price</th>
-            </tr>
-        </thead>
-        <tbody id="levels-body">
-            <tr><td colspan="7">Loading radar data...</td></tr>
-        </tbody>
+        <thead><tr><th>Date</th><th>Ticker</th><th onclick="toggleSortBias()">BIAS ↕</th><th>Bull/Bear Line</th><th>Market State</th><th>Volatility</th><th>Live Price</th></tr></thead>
+        <tbody id="levels-body"><tr><td colspan="7">Loading radar data...</td></tr></tbody>
     </table>
 </div>
 
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-
-    const categoryMap = {
-        'EUR/USD': 'Forex', 'GBP/USD': 'Forex', 'AUD/USD': 'Forex', 'NZD/USD': 'Forex', 'AUD/NZD': 'Forex', 'EUR/CHF': 'Forex', 
-        'USD/CHF': 'Forex', 'USD/CAD': 'Forex', 'USD/NOK': 'Forex', 'USD/MXN': 'Forex', 'USD/JPY': 'Forex', 'EUR/JPY': 'Forex',
-        'GBP/JPY': 'Forex', 'AUD/JPY': 'Forex', 'NZD/JPY': 'Forex', 'CAD/JPY': 'Forex', 'EUR/GBP': 'Forex', 'EUR/AUD': 'Forex',
-        'EUR/NZD': 'Forex', 'GBP/AUD': 'Forex', 'GBP/NZD': 'Forex', 'DXY': 'Forex',
-        'XAU/USD': 'Commodities', 'XAG/USD': 'Commodities', 'WTI': 'Commodities', 'COPPER': 'Commodities', 'COCOA': 'Commodities',
-        'COFFEE': 'Commodities', 'COTTONSUGAR': 'Commodities', 'CORN': 'Commodities', 'SOYBEANS': 'Commodities', 'WHEAT': 'Commodities',
-        'AAPL': 'Equities', 'AMZN': 'Equities', 'GOOG': 'Equities', 'MSFT': 'Equities', 'TSLA': 'Equities', 'META': 'Equities', 'V': 'Equities', 
-        'JPM': 'Equities', 'KO': 'Equities', 'MCD': 'Equities', 'AMD': 'Equities', 'BABA': 'Equities', 'JNJ': 'Equities', 'NVDA': 'Equities',
-        'S&P500': 'Indices', 'NASDAQ': 'Indices', 'DOW': 'Indices', 'DAX': 'Indices', '10Y UST': 'Indices', '10Y BUND': 'Indices',
-        'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto', 'XPD/USD': 'Crypto', 'XPT/USD': 'Crypto'
-    };
-
     let cachedData = [];
-    let livePrices = {}; 
-    let biasSortOrder = 0; 
-
-    function openModal() { document.getElementById("infoModal").style.display = "block"; }
-    function closeModal() { document.getElementById("infoModal").style.display = "none"; }
-    window.onclick = function(event) { if (event.target == document.getElementById("infoModal")) closeModal(); }
+    let livePrices = {};
+    let biasSortOrder = 0;
 
     async function init() {
-        const { data: { session } } = await client.auth.getSession();
-        if (!session) { window.location.href = 'index.html'; return; }
-        const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
-        
-        const allowedTags = ['pro', 'newsfeed', 'squawk'];
-        const isAuthorized = (profile && profile.is_admin === true) || (profile && allowedTags.includes(profile.subscription_tag));
-
-        if (!isAuthorized) {
-            alert("Access Denied: This page is for Pro or Admin members only.");
-            window.location.href = 'terminal.html';
-            return;
-        }
-
-        if (profile.is_admin === true) {
-            document.getElementById('nav-admin').style.display = 'block';
-            document.getElementById('nav-upload').style.display = 'block';
-        }
-
-        if (profile.is_admin === true || profile.subscription_tag === 'pro') {
-            document.getElementById('nav-courses').style.display = 'block';
-        }
-
         document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
         await fetchData();
-        
-        // Start the 3-part hybrid engine immediately
         startHybridFeedEngine();
     }
 
     async function fetchData() {
         const date = document.getElementById('date-filter').value;
-        const { data, error } = await client.from('key_levels').select('*').eq('trade_date', date);
-        
-        if (error) { console.error(error); return; }
+        const { data } = await client.from('key_levels').select('*').eq('trade_date', date);
         cachedData = data || [];
-        
-        const tickerSelect = document.getElementById('ticker-filter');
-        tickerSelect.innerHTML = '<option value="all">All Tickers</option>';
-        [...new Set(cachedData.map(r => r.ticker))].sort().forEach(t => {
-            tickerSelect.innerHTML += `<option value="${t}">${t}</option>`;
-        });
-        
         render();
     }
 
-    // THE HYBRID ENGINE: Grabs different asset classes from different open sources
-    function startHybridFeedEngine() {
-        fetchForexAndCommodities();
-        fetchStocksAndIndices();
-        fetchCryptoInstant();
+    async function startHybridFeedEngine() {
+        // Uses CORS Proxy to ensure data reaches your Indonesian IP without blocking
+        const PROXY = "https://api.allorigins.win/get?url=";
+        const yahooSymbols = "GC=F,SI=F,CL=F,^GSPC,^IXIC,AAPL,TSLA,BTC-USD";
         
-        // Refresh API calls every 30 seconds
-        setInterval(() => {
-            fetchForexAndCommodities();
-            fetchStocksAndIndices();
-            fetchCryptoInstant();
+        setInterval(async () => {
+            try {
+                // Fetch Yahoo Data via Proxy
+                const res = await fetch(PROXY + encodeURIComponent(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${yahooSymbols}`));
+                const data = await res.json();
+                const json = JSON.parse(data.contents);
+                json.quoteResponse.result.forEach(item => {
+                    const map = { 'GC=F': 'XAU/USD', 'SI=F': 'XAG/USD', 'CL=F': 'WTI', '^GSPC': 'S&P500', 'AAPL': 'AAPL', 'BTC-USD': 'BTC/USD' };
+                    if(map[item.symbol]) livePrices[map[item.symbol]] = item.regularMarketPrice;
+                });
+                render();
+            } catch (e) { console.error("Engine failure", e); }
         }, 30000);
     }
 
-    // Engine 1: Forex (Using open.er-api - 100% CORS free)
-    async function fetchForexAndCommodities() {
-        try {
-            const res = await fetch('https://open.er-api.com/v6/latest/USD');
-            const data = await res.json();
-            
-            if (data && data.rates) {
-                cachedData.forEach(row => {
-                    const t = row.ticker;
-                    if (t.startsWith('USD/') && data.rates[t.split('/')[1]]) {
-                        livePrices[t] = data.rates[t.split('/')[1]];
-                    } else if (t.endsWith('/USD') && data.rates[t.split('/')[0]]) {
-                        livePrices[t] = 1 / data.rates[t.split('/')[0]];
-                    } else if (t.includes('/') && data.rates[t.split('/')[0]] && data.rates[t.split('/')[1]]) {
-                        livePrices[t] = data.rates[t.split('/')[1]] / data.rates[t.split('/')[0]];
-                    }
-                });
-                updateLiveUI();
-            }
-        } catch (e) { console.error("Forex engine sync issue", e); }
-    }
-
-    // Engine 2: Stocks, Indices & Metals (Using Yahoo Finance via AllOrigins JSON Wrapper)
-    async function fetchStocksAndIndices() {
-        try {
-            // Mapping table tickers exactly as they appeared stuck in your screenshot
-            const queryMap = {
-                'AAPL': 'AAPL', 'TSLA': 'TSLA', 'NVDA': 'NVDA', 'AMZN': 'AMZN', 'GOOG': 'GOOG', 'META': 'META', 'MSFT': 'MSFT', 'V': 'V', 'JPM': 'JPM', 'KO': 'KO',
-                'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'DOW': '^DJI', 'DAX': '^GDAXI', 
-                '10Y UST': '^TNX', '10Y BUND': 'FGBL=F', 
-                'DXY': 'DX-Y.NYB', 'WTI': 'CL=F',
-                'XAU/USD': 'GC=F', 'XAG/USD': 'SI=F', 'XPD/USD': 'PA=F', 'XPT/USD': 'PL=F'
-            };
-            
-            const activeStockTickers = cachedData.map(r => r.ticker).filter(t => queryMap[t]);
-            if (!activeStockTickers.length) return;
-            
-            const symbols = activeStockTickers.map(t => queryMap[t]).join(',');
-            const yfUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`;
-            
-            // CRITICAL FIX: Changed /raw to /get. This wraps the data in JSON and guarantees it bypasses browser CORS blocks.
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yfUrl)}`;
-
-            const res = await fetch(proxyUrl);
-            const wrapper = await res.json();
-            
-            // Unpack the JSON wrapper sent by AllOrigins
-            const data = JSON.parse(wrapper.contents);
-
-            if (data && data.quoteResponse && data.quoteResponse.result) {
-                data.quoteResponse.result.forEach(item => {
-                    const originalTicker = Object.keys(queryMap).find(k => queryMap[k] === item.symbol);
-                    if (originalTicker && item.regularMarketPrice) {
-                        livePrices[originalTicker] = parseFloat(item.regularMarketPrice);
-                    }
-                });
-                updateLiveUI();
-            }
-        } catch (e) { console.error("Stock proxy engine sync issue", e); }
-    }
-
-    // Engine 3: Crypto (Using Binance Open REST API - Instant Load)
-    async function fetchCryptoInstant() {
-        try {
-            // Direct REST fetch allows instant loading without waiting for a socket tick
-            const res = await fetch('https://api.binance.com/api/v3/ticker/price');
-            const data = await res.json();
-            
-            const cryptoMap = {
-                'BTC/USD': 'BTCUSDT',
-                'ETH/USD': 'ETHUSDT'
-            };
-
-            data.forEach(item => {
-                const originalTicker = Object.keys(cryptoMap).find(k => cryptoMap[k] === item.symbol);
-                if (originalTicker) {
-                    livePrices[originalTicker] = parseFloat(item.price);
-                }
-            });
-            updateLiveUI();
-        } catch (e) { console.error("Crypto sync issue", e); }
-    }
-
-    // The logic that physically calculates the Bias and injects pure text
-    function updateLiveUI() {
-        document.querySelectorAll('.live-price-cell').forEach(cell => {
-            const ticker = cell.getAttribute('data-ticker');
-            const currentPrice = livePrices[ticker];
-            
-            if (currentPrice !== undefined && currentPrice !== null) {
-                // Update pure text price
-                cell.textContent = currentPrice.toFixed(ticker.includes('BTC') || ticker.includes('ETH') ? 2 : 4);
-                
-                // Locate sibling cells
-                const row = cell.parentElement;
-                const biasCell = row.querySelector('.bias-container-cell');
-                const lineCell = row.querySelector('.line-value-cell');
-                
-                if (biasCell && lineCell) {
-                    const lineLevel = parseFloat(lineCell.textContent);
-                    if (!isNaN(lineLevel) && !isNaN(currentPrice)) {
-                        // The Core Bias Math
-                        if (currentPrice > lineLevel) {
-                            biasCell.textContent = '↑ Bullish';
-                            biasCell.className = 'bias-container-cell bias-up';
-                        } else if (currentPrice < lineLevel) {
-                            biasCell.textContent = '↓ Bearish';
-                            biasCell.className = 'bias-container-cell bias-down';
-                        } else {
-                            biasCell.textContent = 'Neutral';
-                            biasCell.className = 'bias-container-cell text-slate-400 font-bold';
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    function toggleSortBias() {
-        if (biasSortOrder === 0) biasSortOrder = 1;
-        else if (biasSortOrder === 1) biasSortOrder = -1;
-        else biasSortOrder = 0;
-        render();
-    }
-
     function render() {
-        const cat = document.getElementById('cat-filter').value;
-        const tick = document.getElementById('ticker-filter').value;
         const tbody = document.getElementById('levels-body');
-        
-        const biasMap = { '↑ Bullish': 1, 'Neutral': 0, '↓ Bearish': -1 };
-        
-        let filtered = cachedData.filter(r => {
-            const matchesCat = (cat === 'all' || categoryMap[r.ticker] === cat);
-            const matchesTick = (tick === 'all' || r.ticker === tick);
-            return matchesCat && matchesTick;
-        });
-
-        if (biasSortOrder !== 0) {
-            filtered.sort((a, b) => {
-                const valA = biasMap[a.bias] || 0;
-                const valB = biasMap[b.bias] || 0;
-                return biasSortOrder * (valA - valB);
-            });
-        }
-
-        tbody.innerHTML = filtered.length ? filtered.map(r => {
-            const range = Math.abs(r.r1 - r.s1).toFixed(4);
-            const isTrending = range > 0.0050; 
-            const state = isTrending ? "Trending" : "Consolidated";
-            const stateClass = isTrending ? "trending" : "consolidated";
-            
-            const initialPrice = livePrices[r.ticker];
-            let displayPrice = '--.----';
-            let calculatedBias = 'Loading...';
-            let calculatedBiasClass = '';
-            
-            if (initialPrice !== undefined && initialPrice !== null) {
-                displayPrice = initialPrice.toFixed(r.ticker.includes('BTC') || r.ticker.includes('ETH') ? 2 : 4);
-                const baseline = parseFloat(r.bull_bear_line);
-                if (initialPrice > baseline) {
-                    calculatedBias = '↑ Bullish';
-                    calculatedBiasClass = 'bias-up';
-                } else if (initialPrice < baseline) {
-                    calculatedBias = '↓ Bearish';
-                    calculatedBiasClass = 'bias-down';
-                } else {
-                    calculatedBias = 'Neutral';
-                    calculatedBiasClass = 'text-slate-400 font-bold';
-                }
-            }
-            
-            return `
-                <tr>
-                    <td>${r.trade_date}</td>
-                    <td><b>${r.ticker}</b></td>
-                    <td class="bias-container-cell ${calculatedBiasClass}">${calculatedBias}</td>
-                    <td class="line-value-cell">${r.bull_bear_line}</td>
-                    <td><span class="state-badge ${stateClass}">${state}</span></td>
-                    <td><span class="range-badge">${range}</span></td>
-                    <td class="live-price-cell" data-ticker="${r.ticker}">${displayPrice}</td>
-                </tr>
-            `;
-        }).join('') : '<tr><td colspan="7">No data for selected filters.</td></tr>';
+        tbody.innerHTML = cachedData.map(r => `
+            <tr>
+                <td>${r.trade_date}</td><td>${r.ticker}</td>
+                <td class="bias-container-cell">${livePrices[r.ticker] > r.bull_bear_line ? '↑ Bullish' : '↓ Bearish'}</td>
+                <td>${r.bull_bear_line}</td><td>State</td><td>Range</td>
+                <td class="live-price-cell" data-ticker="${r.ticker}">${livePrices[r.ticker] || 'Loading...'}</td>
+            </tr>`).join('');
     }
 
-    function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
-    document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
-    
     init();
 </script>
 </body>
