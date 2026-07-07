@@ -145,7 +145,6 @@
     let cachedData = [];
     let livePrices = {}; 
     let biasSortOrder = 0; 
-    let cryptoSocket = null;
 
     function openModal() { document.getElementById("infoModal").style.display = "block"; }
     function closeModal() { document.getElementById("infoModal").style.display = "none"; }
@@ -177,7 +176,7 @@
         document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
         await fetchData();
         
-        // Start the 3-part hybrid engine
+        // Start the 3-part hybrid engine immediately
         startHybridFeedEngine();
     }
 
@@ -201,16 +200,17 @@
     function startHybridFeedEngine() {
         fetchForexAndCommodities();
         fetchStocksAndIndices();
-        startCryptoWebSocket();
+        fetchCryptoInstant();
         
         // Refresh API calls every 30 seconds
         setInterval(() => {
             fetchForexAndCommodities();
             fetchStocksAndIndices();
+            fetchCryptoInstant();
         }, 30000);
     }
 
-    // Engine 1: Forex & Gold (Using open.er-api - 100% CORS free)
+    // Engine 1: Forex (Using open.er-api - 100% CORS free)
     async function fetchForexAndCommodities() {
         try {
             const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -232,12 +232,16 @@
         } catch (e) { console.error("Forex engine sync issue", e); }
     }
 
-    // Engine 2: Stocks & Indices (Using Yahoo Finance via AllOrigins Raw Proxy)
+    // Engine 2: Stocks, Indices & Metals (Using Yahoo Finance via AllOrigins JSON Wrapper)
     async function fetchStocksAndIndices() {
         try {
+            // Mapping table tickers exactly as they appeared stuck in your screenshot
             const queryMap = {
-                'AAPL': 'AAPL', 'TSLA': 'TSLA', 'NVDA': 'NVDA', 'AMZN': 'AMZN', 'GOOG': 'GOOG', 'META': 'META', 'MSFT': 'MSFT',
-                'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'DOW': '^DJI', 'DAX': '^GDAXI', 'WTI': 'CL=F', 'DXY': 'DX-Y.NYB'
+                'AAPL': 'AAPL', 'TSLA': 'TSLA', 'NVDA': 'NVDA', 'AMZN': 'AMZN', 'GOOG': 'GOOG', 'META': 'META', 'MSFT': 'MSFT', 'V': 'V', 'JPM': 'JPM', 'KO': 'KO',
+                'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'DOW': '^DJI', 'DAX': '^GDAXI', 
+                '10Y UST': '^TNX', '10Y BUND': 'FGBL=F', 
+                'DXY': 'DX-Y.NYB', 'WTI': 'CL=F',
+                'XAU/USD': 'GC=F', 'XAG/USD': 'SI=F', 'XPD/USD': 'PA=F', 'XPT/USD': 'PL=F'
             };
             
             const activeStockTickers = cachedData.map(r => r.ticker).filter(t => queryMap[t]);
@@ -245,10 +249,15 @@
             
             const symbols = activeStockTickers.map(t => queryMap[t]).join(',');
             const yfUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`;
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yfUrl)}`;
+            
+            // CRITICAL FIX: Changed /raw to /get. This wraps the data in JSON and guarantees it bypasses browser CORS blocks.
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yfUrl)}`;
 
             const res = await fetch(proxyUrl);
-            const data = await res.json();
+            const wrapper = await res.json();
+            
+            // Unpack the JSON wrapper sent by AllOrigins
+            const data = JSON.parse(wrapper.contents);
 
             if (data && data.quoteResponse && data.quoteResponse.result) {
                 data.quoteResponse.result.forEach(item => {
@@ -262,23 +271,26 @@
         } catch (e) { console.error("Stock proxy engine sync issue", e); }
     }
 
-    // Engine 3: Crypto (Using Binance WebSocket - Instant, No CORS)
-    function startCryptoWebSocket() {
-        if (cryptoSocket) cryptoSocket.close();
-        cryptoSocket = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
-        
-        cryptoSocket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (!Array.isArray(data)) return;
+    // Engine 3: Crypto (Using Binance Open REST API - Instant Load)
+    async function fetchCryptoInstant() {
+        try {
+            // Direct REST fetch allows instant loading without waiting for a socket tick
+            const res = await fetch('https://api.binance.com/api/v3/ticker/price');
+            const data = await res.json();
             
-            let updated = false;
+            const cryptoMap = {
+                'BTC/USD': 'BTCUSDT',
+                'ETH/USD': 'ETHUSDT'
+            };
+
             data.forEach(item => {
-                if (item.s === 'BTCUSDT') { livePrices['BTC/USD'] = parseFloat(item.c); updated = true; }
-                if (item.s === 'ETHUSDT') { livePrices['ETH/USD'] = parseFloat(item.c); updated = true; }
+                const originalTicker = Object.keys(cryptoMap).find(k => cryptoMap[k] === item.symbol);
+                if (originalTicker) {
+                    livePrices[originalTicker] = parseFloat(item.price);
+                }
             });
-            if (updated) updateLiveUI();
-        };
-        cryptoSocket.onerror = () => setTimeout(startCryptoWebSocket, 5000);
+            updateLiveUI();
+        } catch (e) { console.error("Crypto sync issue", e); }
     }
 
     // The logic that physically calculates the Bias and injects pure text
@@ -381,13 +393,4 @@
                     <td class="live-price-cell" data-ticker="${r.ticker}">${displayPrice}</td>
                 </tr>
             `;
-        }).join('') : '<tr><td colspan="7">No data for selected filters.</td></tr>';
-    }
-
-    function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
-    document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
-    
-    init();
-</script>
-</body>
-</html>
+        }).j
