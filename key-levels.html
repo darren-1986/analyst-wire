@@ -76,7 +76,7 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 <a href="key-levels.html" class="active">Key Levels</a>
 <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
 <div class="dropdown">
-<button class="dropbtn" onclick="toggleDropdown()">⚙</button>
+<button class="dropbtn" onclick="toggleDropdown()">:gear:</button>
 <div id="settingsDropdown" class="dropdown-content">
 <a href="account.html">Account</a>
 <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
@@ -90,7 +90,7 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 <div class="container">
 <div style="display: flex; align-items: center;">
 <h1>Market Trade Radar</h1>
-<button class="info-btn" onclick="openModal()">Info ℹ</button>
+<button class="info-btn" onclick="openModal()">Info :information_source:</button>
 </div>
 <div class="filter-section">
 <input type="date" id="date-filter" onchange="fetchData()">
@@ -100,7 +100,6 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 <option value="Commodities">Commodities</option>
 <option value="Equities">Equities</option>
 <option value="Indices">Indices</option>
-<option value="Crypto">Crypto</option>
 </select>
 <select id="ticker-filter" onchange="render()">
 <option value="all">All Tickers</option>
@@ -122,6 +121,7 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 <script>
 const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
+// Categorization Map
 const categoryMap = {
 'EUR/USD': 'Forex', 'GBP/USD': 'Forex', 'AUD/USD': 'Forex', 'NZD/USD': 'Forex', 'AUD/NZD': 'Forex', 'EUR/CHF': 'Forex',
 'USD/CHF': 'Forex', 'USD/CAD': 'Forex', 'USD/NOK': 'Forex', 'USD/MXN': 'Forex', 'USD/JPY': 'Forex', 'EUR/JPY': 'Forex',
@@ -135,201 +135,102 @@ const categoryMap = {
 'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto'
 };
 
-// Stable Pyth V1 Benchmarks API Hash Registry (Direct global access without CORS constraints)
-const pythIdMap = {
-    'EUR/USD': 'ff64000000a995d00bb36a63cee7ee2be3b20dbcd51a6fb4ad79e437b6cf7fcf',
-    'GBP/USD': 'ff6400000084c2dd8115628a8d132d7555628d13a6fb4ad79e437b6cf7fcf2f',
-    'AUD/USD': 'ff64000000c96458d393fe39e10d18d9bb2662bb1dcbcf4ad79e437b6cf7fcf2f',
-    'NZD/USD': 'ff6400000061a0d8e2a2cd462f4e4e42cc7199464e8a153557d4d578c3b9c9e1',
-    'USD/CHF': 'ff64000000589b2c0f2425a8d132d7555628d13a6fb4ad79e437b6cf7fcf2fdf',
-    'USD/CAD': 'ff6400000014abb903b7cee7ee2be3b20dbcd51a6fb4ad79e437b6cf7fcf2fdf',
-    'USD/JPY': 'ff64000000161d99fb6e624d4554cd5be3b20dbcd51a6fb4ad79e437b6cf7fcf',
-    'XAU/USD': 'ff64000000765d2bd9a2cd462f4e4e42cc7199464e8a153557d4d578c3b9c9e1', // Gold Spot
-    'WTI': 'ff64000000241b212f4628a8d132d7555628d13a6fb4ad79e437b6cf7fcf2fdfdf',     // Crude Oil
-    'COFFEE': 'ff640000005cc2dd8115628a8d132d7555628d13a6fb4ad79e437b6cf7fcf2fdf',  // Coffee Arabica
-    'S&P500': 'ff64000000874634fd0aceb112ddf1bd8147cd1b641375f79f5825126d66548087', // US500
-    'NASDAQ': 'ff6400000016dad506d7db8da01c87581c87ca897a012a153557d4d578c3b9c9e', // US100
-    'BTC/USD': 'ff64000000e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b729358ac9e86',
-    'ETH/USD': 'ff64000000ff61491a931112ddf1bd8147cd1b641375f79f5825126d66548087'
-};
-
 let cachedData = [];
-let livePrices = {};
-let biasSortOrder = 0;
-let updateInterval = null;
+let biasSortOrder = 0; // 0: None, 1: Asc (Bearish->Neutral->Bullish), -1: Desc (Bullish->Neutral->Bearish)
 
+// Modal Logic
 function openModal() { document.getElementById("infoModal").style.display = "block"; }
 function closeModal() { document.getElementById("infoModal").style.display = "none"; }
 window.onclick = function(event) { if (event.target == document.getElementById("infoModal")) closeModal(); }
 
 async function init() {
-    const { data: { session } } = await client.auth.getSession();
-    if (!session) { window.location.href = 'index.html'; return; }
-    const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
-    const allowedTags = ['pro', 'newsfeed', 'squawk'];
-    const isAuthorized = (profile && profile.is_admin === true) || (profile && allowedTags.includes(profile.subscription_tag));
+const { data: { session } } = await client.auth.getSession();
+if (!session) { window.location.href = 'index.html'; return; }
+const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
+const allowedTags = ['pro', 'newsfeed', 'squawk'];
+const isAuthorized = (profile && profile.is_admin === true) || (profile && allowedTags.includes(profile.subscription_tag));
 
-    if (!isAuthorized) {
-        alert("Access Denied: This page is for Pro or Admin members only.");
-        window.location.href = 'terminal.html';
-        return;
-    }
+if (!isAuthorized) {
+alert("Access Denied: This page is for Pro or Admin members only.");
+window.location.href = 'terminal.html';
+return;
+}
 
-    if (profile.is_admin === true) {
-        document.getElementById('nav-admin').style.display = 'block';
-        document.getElementById('nav-upload').style.display = 'block';
-    }
-    if (profile.is_admin === true || profile.subscription_tag === 'pro') {
-        document.getElementById('nav-courses').style.display = 'block';
-    }
+if (profile.is_admin === true) {
+document.getElementById('nav-admin').style.display = 'block';
+document.getElementById('nav-upload').style.display = 'block';
+}
 
-    document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
-    await fetchData();
-    startUniversalLiveEngine();
+if (profile.is_admin === true || profile.subscription_tag === 'pro') {
+document.getElementById('nav-courses').style.display = 'block';
+}
+
+document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
+fetchData();
 }
 
 async function fetchData() {
-    const date = document.getElementById('date-filter').value;
-    const { data, error } = await client.from('key_levels').select('*').eq('trade_date', date);
-    if (error) { console.error(error); return; }
-    cachedData = data || [];
-    const tickerSelect = document.getElementById('ticker-filter');
-    tickerSelect.innerHTML = '<option value="all">All Tickers</option>';
-    [...new Set(cachedData.map(r => r.ticker))].sort().forEach(t => {
-        tickerSelect.innerHTML += `<option value="${t}">${t}</option>`;
-    });
-    render();
-}
-
-/**
- * Direct Benchmark Polling Engine.
- * Pulls clean price components instantly without proxy configurations.
- */
-async function startUniversalLiveEngine() {
-    if (updateInterval) clearInterval(updateInterval);
-    
-    const pollFeeds = async () => {
-        try {
-            const activeTickers = [...new Set(cachedData.map(r => r.ticker))];
-            if (activeTickers.length === 0) return;
-
-            // Gather valid registered tokens
-            const idList = activeTickers
-                .map(t => pythIdMap[t])
-                .filter(id => id !== undefined);
-
-            if (idList.length === 0) return;
-
-            const url = `https://benchmarks.pyth.network/v1/updates/price/latest?${idList.map(id => `ids[]=${id}`).join('&')}`;
-            const res = await fetch(url);
-            if (!res.ok) throw new Error();
-            const priceData = await res.json();
-            
-            if (priceData && priceData.parsed) {
-                priceData.parsed.forEach(item => {
-                    const normId = item.id.toLowerCase();
-                    
-                    for (const [ticker, mappedId] of Object.entries(pythIdMap)) {
-                        if (mappedId.toLowerCase() === normId) {
-                            const priceVal = parseFloat(item.price.price);
-                            const expo = parseInt(item.price.expo);
-                            livePrices[ticker] = priceVal * Math.pow(10, expo);
-                            break;
-                        }
-                    }
-                });
-                render();
-            }
-        } catch (err) {
-            console.log("Restructuring off-chain telemetry...");
-        }
-    };
-
-    await pollFeeds();
-    updateInterval = setInterval(pollFeeds, 4000);
+const date = document.getElementById('date-filter').value;
+const { data, error } = await client.from('key_levels').select('*').eq('trade_date', date);
+if (error) { console.error(error); return; }
+cachedData = data || [];
+const tickerSelect = document.getElementById('ticker-filter');
+tickerSelect.innerHTML = '<option value="all">All Tickers</option>';
+[...new Set(cachedData.map(r => r.ticker))].sort().forEach(t => {
+tickerSelect.innerHTML += `<option value="${t}">${t}</option>`;
+});
+render();
 }
 
 function toggleSortBias() {
-    if (biasSortOrder === 0) biasSortOrder = 1;
-    else if (biasSortOrder === 1) biasSortOrder = -1;
-    else biasSortOrder = 0;
-    render();
+if (biasSortOrder === 0) biasSortOrder = 1;
+else if (biasSortOrder === 1) biasSortOrder = -1;
+else biasSortOrder = 0;
+render();
 }
 
 function render() {
-    const cat = document.getElementById('cat-filter').value;
-    const tick = document.getElementById('ticker-filter').value;
-    const tbody = document.getElementById('levels-body');
-    const biasMap = { '↑ Bullish': 1, 'Neutral': 0, '↓ Bearish': -1 };
+const cat = document.getElementById('cat-filter').value;
+const tick = document.getElementById('ticker-filter').value;
+const tbody = document.getElementById('levels-body');
+const biasMap = { '↑ Bullish': 1, 'Neutral': 0, '↓ Bearish': -1 };
+let filtered = cachedData.filter(r => {
+const matchesCat = (cat === 'all' || categoryMap[r.ticker] === cat);
+const matchesTick = (tick === 'all' || r.ticker === tick);
+return matchesCat && matchesTick;
+});
 
-    let filtered = cachedData.filter(r => {
-        const matchesCat = (cat === 'all' || categoryMap[r.ticker] === cat);
-        const matchesTick = (tick === 'all' || r.ticker === tick);
-        return matchesCat && matchesTick;
-    });
+// Apply Sorting
+if (biasSortOrder !== 0) {
+filtered.sort((a, b) => {
+const valA = biasMap[a.bias] || 0;
+const valB = biasMap[b.bias] || 0;
+return biasSortOrder * (valA - valB);
+});
+}
 
-    if (biasSortOrder !== 0) {
-        filtered.sort((a, b) => {
-            const valA = biasMap[a.bias] || 0;
-            const valB = biasMap[b.bias] || 0;
-            return biasSortOrder * (valA - valB);
-        });
-    }
-
-    tbody.innerHTML = filtered.length ? filtered.map(r => {
-        const assetClass = categoryMap[r.ticker] || 'Forex';
-        const rawDiff = Math.abs((parseFloat(r.r1) || 0) - (parseFloat(r.s1) || 0));
-        const liveSpot = livePrices[r.ticker];
-        const pivotLine = parseFloat(r.bull_bear_line);
-
-        // --- Live Bias Real-Time Dynamic Processing ---
-        let dynamicBias = r.bias || 'Neutral';
-        if (liveSpot && !isNaN(pivotLine) && pivotLine > 0) {
-            dynamicBias = (liveSpot >= pivotLine) ? '↑ Bullish' : '↓ Bearish';
-        }
-
-        let rangeFormatted;
-        let isTrending = false;
-
-        if (assetClass === 'Indices' || assetClass === 'Crypto') {
-            rangeFormatted = rawDiff.toFixed(2);
-            isTrending = rawDiff > 15.00;
-        } else if (r.ticker.includes('JPY') || r.ticker === 'USD/NOK' || r.ticker === 'USD/MXN') {
-            rangeFormatted = rawDiff.toFixed(4);
-            isTrending = rawDiff > 0.2500;
-        } else {
-            rangeFormatted = rawDiff.toFixed(4);
-            isTrending = rawDiff > 0.0035;
-        }
-
-        const state = isTrending ? "Trending" : "Consolidated";
-        const stateClass = isTrending ? "trending" : "consolidated";
-        const biasClass = (dynamicBias.includes('↓')) ? 'bias-down' : (dynamicBias.includes('↑') ? 'bias-up' : '');
-
-        const isHighValue = assetClass === 'Indices' || assetClass === 'Crypto' || r.ticker === 'WTI' || r.ticker === 'XAU/USD' || r.ticker === 'COFFEE';
-        const displayPrice = liveSpot ? liveSpot.toFixed(isHighValue ? 2 : 4) : 'Loading...';
-
-        return `
-        <tr>
-        <td>${r.trade_date}</td>
-        <td>
-            <div style="display: flex; flex-direction: column;">
-                <b>${r.ticker}</b>
-                <span style="font-size: 12px; color: #2962ff; font-weight: bold; margin-top: 4px;">$ ${displayPrice}</span>
-            </div>
-        </td>
-        <td class="${biasClass}">${dynamicBias}</td>
-        <td>${!isNaN(pivotLine) ? pivotLine : '-'}</td>
-        <td><span class="state-badge ${stateClass}">${state}</span></td>
-        <td><span class="range-badge">${rangeFormatted}</span></td>
-        </tr>
-        `;
-    }).join('') : '<tr><td colspan="6">No data for selected filters.</td></tr>';
+tbody.innerHTML = filtered.length ? filtered.map(r => {
+const range = Math.abs(r.r1 - r.s1).toFixed(4);
+const isTrending = range > 0.0050;
+const state = isTrending ? "Trending" : "Consolidated";
+const stateClass = isTrending ? "trending" : "consolidated";
+const biasClass = (r.bias?.includes('↓')) ? 'bias-down' : (r.bias?.includes('↑') ? 'bias-up' : '');
+return `
+<tr>
+<td>${r.trade_date}</td>
+<td><b>${r.ticker}</b></td>
+<td class="${biasClass}">${r.bias}</td>
+<td>${r.bull_bear_line}</td>
+<td><span class="state-badge ${stateClass}">${state}</span></td>
+<td><span class="range-badge">${range}</span></td>
+</tr>
+`;
+}).join('') : '<tr><td colspan="6">No data for selected filters.</td></tr>';
 }
 
 function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
-document.getElementById('logoutBtn').addEventListener('click', async () => { if(updateInterval) clearInterval(updateInterval); await client.auth.signOut(); window.location.href = 'index.html'; });
+document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
 init();
 </script>
 </body>
-</html>
+</html> 
