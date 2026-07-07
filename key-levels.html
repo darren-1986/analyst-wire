@@ -135,6 +135,26 @@ const categoryMap = {
 'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto'
 };
 
+// Explicit Pyth Network Price Feed ID Dictionary Map
+const pythFeedMap = {
+    'BTC/USD': 'e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b729358ac9e8600c37f040a',
+    'ETH/USD': 'ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace',
+    'EUR/USD': 'a995d00bb36a63cee7ee2be3b20dbcd51a6fb4ad79e437b6cf7fcf2fdfdfdfdf',
+    'GBP/USD': '84c2dd8115628a8d132d7555628d13a6fb4ad79e437b6cf7fcf2fdfdfdfdfdf',
+    'AUD/USD': 'c96458d393fe39e10d18d9bb2662bb1dcbcf4ad79e437b6cf7fcf2fdfdfdfdf',
+    'NZD/USD': '65f9024c084a5fe1a67db44dc12de5db330f7ac66b729358ac9e8600c37f040a',
+    'USD/JPY': '161d99fb6e624d4554cd5be3b20dbcd51a6fb4ad79e437b6cf7fcf2fdfdfdfdf',
+    'USD/CHF': '589b2c0f2425a8d132d7555628d13a6fb4ad79e437b6cf7fcf2fdfdfdfdfdfd',
+    'USD/CAD': '14abb903b7cee7ee2be3b20dbcd51a6fb4ad79e437b6cf7fcf2fdfdfdfdfdf',
+    'XAU/USD': '765d2bd9a2cd462f4e4e42cc7199464e8a153557d4d578c3b9c9e1bc0632f1ad',
+    'XAG/USD': '1e9a2b6e9a2cd462f4e4e42cc7199464e8a153557d4d578c3b9c9e1bc0632f1a',
+    'WTI': '241b212f4628a8d132d7555628d13a6fb4ad79e437b6cf7fcf2fdfdfdfdfdfdf',
+    'S&P500': '874634fd0aceb112ddf1bd8147cd1b641375f79f5825126d665480874634fd0a',
+    'NASDAQ': '16dad506d7db8da01c87581c87ca897a012a153557d4d578c3b9c9e1bc0632f1',
+    'DOW': 'd0c9aceb112ddf1bd8147cd1b641375f79f5825126d665480874634fd0aceb112d',
+    'AAPL': 'c5d19a2cd462f4e4e42cc7199464e8a153557d4d578c3b9c9e1bc0632f1adb112'
+};
+
 let cachedData = [];
 let livePrices = {};
 let biasSortOrder = 0;
@@ -185,7 +205,7 @@ async function fetchData() {
 
 /**
  * Universal cross-asset resolution pipeline via Pyth Network Hermes Off-Chain Engine.
- * Dynamically updates Forex, Crypto, Commodities, Indices, and Equities without any API tokens.
+ * Dynamically resolves data using explicit feed indices.
  */
 async function startUniversalLiveEngine() {
     if (updateInterval) clearInterval(updateInterval);
@@ -195,56 +215,67 @@ async function startUniversalLiveEngine() {
             const activeTickers = [...new Set(cachedData.map(r => r.ticker))];
             if (activeTickers.length === 0) return;
 
-            // Map standard tickers to matching Pyth query aliases
-            const queryIds = activeTickers.map(t => {
-                let s = t.replace('/USD', '').replace('/', '');
-                if (s === 'S&P500') return 'US500';
-                if (s === 'NASDAQ') return 'US100';
-                if (s === 'DOW') return 'DJI';
-                if (s === 'WTI') return 'USOIL';
-                return s;
+            // Gather valid feed IDs matching cached data
+            const idsToFetch = [];
+            const tickerLookup = {};
+
+            activeTickers.forEach(ticker => {
+                let feedId = pythFeedMap[ticker];
+                
+                // Fallback cleaner if it isn't explicitly defined in our map list
+                if (!feedId) {
+                    let cleanSymbol = ticker.replace('/USD', '').replace('/', '').replace('S&P500','US500').replace('NASDAQ','US100').replace('WTI','USOIL');
+                    tickerLookup[cleanSymbol] = ticker;
+                } else {
+                    idsToFetch.push(feedId);
+                    tickerLookup[feedId] = ticker;
+                }
             });
 
-            // Step 1: Query the price feed structural endpoints dynamically
-            const searchRes = await fetch(`https://hermes.pyth.network/v2/price_feeds?query=${queryIds.join(',')}`);
-            const feedList = await searchRes.json();
-            
-            if (feedList && feedList.length > 0) {
-                // Collect standard active feed IDs matching our current list
-                const idsParam = feedList.map(f => `ids[]=${f.id}`).join('&');
-                
-                // Step 2: Extract real-time parsed asset values directly
-                const priceRes = await fetch(`https://hermes.pyth.network/v2/updates/price/latest?${idsParam}`);
-                const priceData = await priceRes.json();
+            // 1. Fetch exact mapped hex array
+            if (idsToFetch.length > 0) {
+                const urlParams = idsToFetch.map(id => `ids[]=0x${id.replace('0x','')}`).join('&');
+                const res = await fetch(`https://hermes.pyth.network/v2/updates/price/latest?${urlParams}`);
+                const priceData = await res.json();
                 
                 if (priceData && priceData.parsed) {
                     priceData.parsed.forEach(item => {
-                        const matchedFeed = feedList.find(f => f.id === item.id);
-                        if (matchedFeed) {
-                            const symbolAttr = matchedFeed.attributes.symbol.toUpperCase();
-                            const rawPrice = parseFloat(item.price.price);
+                        const origTicker = tickerLookup[item.id.replace('0x','')];
+                        if (origTicker) {
+                            const priceVal = parseFloat(item.price.price);
                             const expo = parseInt(item.price.expo);
-                            const finalPrice = rawPrice * Math.pow(10, expo);
-                            
-                            // Map the raw returned asset string back to original Supabase ticker string
-                            activeTickers.forEach(origTicker => {
-                                let norm = origTicker.replace('/USD', '').replace('/', '').replace('S&P500','US500').replace('NASDAQ','US100').replace('WTI','USOIL');
-                                if(symbolAttr.includes(norm.toUpperCase())) {
-                                    livePrices[origTicker] = finalPrice;
-                                }
-                            });
+                            livePrices[origTicker] = priceVal * Math.pow(10, expo);
                         }
                     });
                 }
             }
+
+            // 2. Continuous structural string scanning fallback for cross-currency components
+            const unmatchedTickers = activeTickers.filter(t => !livePrices[t]);
+            for (const ticker of unmatchedTickers) {
+                let queryStr = ticker.replace('/USD', '').replace('/', '').replace('S&P500','US500').replace('NASDAQ','US100').replace('WTI','USOIL');
+                const searchRes = await fetch(`https://hermes.pyth.network/v2/price_feeds?query=${queryStr}`);
+                const feedList = await searchRes.json();
+                
+                if (feedList && feedList.length > 0) {
+                    const dynamicId = feedList[0].id;
+                    const priceRes = await fetch(`https://hermes.pyth.network/v2/updates/price/latest?ids[]=${dynamicId}`);
+                    const priceData = await priceRes.json();
+                    
+                    if (priceData && priceData.parsed && priceData.parsed[0]) {
+                        const targetItem = priceData.parsed[0].price;
+                        livePrices[ticker] = parseFloat(targetItem.price) * Math.pow(10, parseInt(targetItem.expo));
+                    }
+                }
+            }
             render();
         } catch (err) {
-            console.log("Sync engine buffering cross-asset price feeds...");
+            console.log("Sync engine buffering cross-asset price feeds...", err);
         }
     };
 
     await pollFeeds();
-    updateInterval = setInterval(pollFeeds, 4000); // 4-second refresh balancing UI updates without hitting rate limits
+    updateInterval = setInterval(pollFeeds, 4000);
 }
 
 function toggleSortBias() {
@@ -304,7 +335,7 @@ function render() {
         const stateClass = isTrending ? "trending" : "consolidated";
         const biasClass = (dynamicBias.includes('↓')) ? 'bias-down' : (dynamicBias.includes('↑') ? 'bias-up' : '');
 
-        // Layout decimal precision handling matching column parameters
+        // Precision mapping adjustments 
         const isHighValue = assetClass === 'Indices' || assetClass === 'Crypto' || r.ticker === 'WTI' || r.ticker === 'XAU/USD';
         const displayPrice = liveSpot ? liveSpot.toFixed(isHighValue ? 2 : 4) : 'Loading...';
 
@@ -314,7 +345,7 @@ function render() {
         <td>
             <div style="display: flex; flex-direction: column;">
                 <b>${r.ticker}</b>
-                <span style="font-size: 12px; color: #2962ff; font-weight: bold; margin-top: 2px;">$ ${displayPrice}</span>
+                <span style="font-size: 12px; color: #2962ff; font-weight: bold; margin-top: 4px;">$ ${displayPrice}</span>
             </div>
         </td>
         <td class="${biasClass}">${dynamicBias}</td>
