@@ -119,23 +119,22 @@
             .market-sessions-widget { box-sizing: border-box; width: 100%; background-color: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #f8fafc; font-family: sans-serif; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
             .msw-header { display: flex; justify-content: flex-end; margin-bottom: 12px; }
             .msw-local-clock { font-family: monospace; font-size: 11px; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #10b981; }
-            .msw-session-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
-            .msw-session-name { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; min-width: 90px; }
+            
+            .msw-session-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px; margin-bottom: 10px; }
+            .msw-session-row:last-child { margin-bottom: 0; }
+            
+            .msw-session-name { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
             .msw-icon-img { width: 16px; height: 16px; object-fit: contain; filter: brightness(0) saturate(100%) invert(80%) sepia(50%) saturate(1200%) hue-rotate(180deg); }
-            .msw-status-dot { height: 6px; width: 6px; border-radius: 50%; background: #475569; flex-shrink: 0; }
+            
+            .msw-status-dot { height: 6px; width: 6px; border-radius: 50%; background: #475569; }
             .msw-status-dot.open { background: #10b981; }
-            .msw-session-status-text { font-size: 10px; font-weight: bold; font-family: monospace; min-width: 40px; text-align: center; }
+            
+            .msw-session-status-text { font-size: 10px; font-weight: bold; font-family: monospace; width: 45px; text-align: center; }
             .msw-session-status-text.open { color: #10b981; }
             .msw-session-status-text.closed { color: #f97316; }
-            .msw-zone-time { font-size: 9px; color: #64748b; font-family: monospace; display: block; }
-            .msw-progress-bar-track { display: none; } /* Hidden for compactness */
-            .msw-countdown-text { font-size: 10px; color: #94a3b8; font-family: monospace; text-align: right; white-space: nowrap; }
             
-            /* Responsive adjust */
-            @media (max-width: 350px) {
-                .market-sessions-widget { padding: 10px; }
-                .msw-session-name { font-size: 11px; }
-            }
+            .msw-zone-time { font-size: 9px; color: #64748b; font-family: monospace; display: block; }
+            .msw-countdown-text { font-size: 10px; color: #94a3b8; font-family: monospace; text-align: right; min-width: 65px; }
         </style>
 
         <script>
