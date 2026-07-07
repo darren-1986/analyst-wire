@@ -55,18 +55,58 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 <div id="infoModal" class="modal">
 <div class="modal-content">
 <span class="close-btn" onclick="closeModal()">&times;</span>
-<h2>How to Use the Radar</h2>
-<h3>Understanding the Columns</h3>
-<p><strong>Bias:</strong> Indicates market direction (Bullish/Bearish/Neutral). Prioritize trades in the direction of the bias.</p>
-<p><strong>Bull/Bear Line:</strong> Your key pivot point. Above = Bullish sentiment, Below = Bearish sentiment.</p>
-<p><strong>Market State:</strong> "Trending" (momentum based) or "Consolidated" (range-bound). Adjust strategy accordingly.</p>
-<p><strong>Volatility:</strong> The range distance (R1 - S1). Higher numbers indicate a wider trading range.</p>
-<h3>Trader's Workflow</h3>
+<h2>How to Use the Market Trade Radar</h2>
+<p style="color: #787b86; margin-top: -10px; font-size: 14px;">A professional-grade terminal guide to decoding intraday market structures and identifying top-tier trade ideas.</p>
+
+<hr style="border: 0; border-top: 1px solid #2a2e39; margin: 20px 0;">
+
+<h3>1. Structural Component Matrix</h3>
+<p><strong>BIAS (5-Tier Framework):</strong> Highlights current market direction and institutional momentum relative to the central pivot area.</p>
+<ul>
+    <li><span class="bias-strong-up">▲ Strong Bullish:</span> Heavy buying pressure. Look for momentum continuation.</li>
+    <li><span class="bias-medium-up">▲ Medium Bullish:</span> Moderate upward bias. Approaching pivot boundaries.</li>
+    <li><span class="bias-neutral">➔ Neutral:</span> Price is resting directly on or near the central pivot corridor. Equilibrium phase.</li>
+    <li><span class="bias-medium-down">▼ Medium Bearish:</span> Moderate downward bias. Testing pivot floors.</li>
+    <li><span class="bias-strong-down">▼ Strong Bearish:</span> Heavy distribution/selling pressure. Look for short continuations.</li>
+</ul>
+
+<p><strong>Bull/Bear Line:</strong> The primary institutional pivot point for the day. If the market is trading above this number, sentiment is fundamentally long; below this number, sentiment is fundamentally short.</p>
+
+<p><strong>Market State & Volatility Engine:</strong> Automatically measures the absolute distance between your primary intraday support ($S1$) and resistance ($R1$). 
+    <ul>
+        <li><strong>Trending:</strong> Volatility has expanded past standard asset true ranges (e.g., &gt;75 pips on major FX, &gt;80 points on Indices, &gt;$15 on Gold). Expect continuous follow-through.</li>
+        <li><strong>Consolidated:</strong> Volatility is compressed inside standard ranges. Expect range-bound, choppy, or mean-reverting price action.</li>
+    </ul>
+</p>
+
+<hr style="border: 0; border-top: 1px solid #2a2e39; margin: 20px 0;">
+
+<h3>2. Playbook: How to Find Trade Ideas</h3>
+<p style="color: #fff; font-weight: bold;">💡 Strategy A: The Breakout / Momentum Play</p>
+<ul>
+    <li><strong>The Setup:</strong> Look for assets displaying a <span style="color: #00ffaa;">Strong Bullish</span> or <span style="color: #ff0055;">Strong Bearish</span> Bias combined with a <span style="background: #2962ff; color: #fff; padding: 2px 5px; border-radius: 3px; font-size: 11px;">TRENDING</span> Market State.</li>
+    <li><strong>Execution:</strong> Avoid fading these moves. Instead, filter for these tickers, open your charts, and look for pullback entries (e.g., buying a minor dip toward the Bull/Bear Line in a Strong Bullish trend) to ride the expansion wave.</li>
+</ul>
+
+<p style="color: #fff; font-weight: bold;">💡 Strategy B: The Range Reversion Play</p>
+<ul>
+    <li><strong>The Setup:</strong> Look for assets displaying a <span style="color: #ffb700;">Neutral</span>, Medium Bullish, or Medium Bearish Bias combined with a <span style="background: #5d606b; color: #fff; padding: 2px 5px; border-radius: 3px; font-size: 11px;">CONSOLIDATED</span> Market State.</li>
+    <li><strong>Execution:</strong> These markets are trapped in ranges. Look for short opportunities at $R1 / R2$ or long opportunities at $S1 / S2$, targeting a price return back to the central Bull/Bear Line.</li>
+</ul>
+
+<p style="color: #fff; font-weight: bold;">💡 Strategy C: The Dynamic Pivot Shift</p>
+<ul>
+    <li><strong>The Setup:</strong> Monitor assets carrying a <span style="color: #ffb700;">Neutral</span> bias. This means the market is sitting dead on its institutional pivot line.</li>
+    <li><strong>Execution:</strong> This is a coiled spring. Watch for a directional breakout away from the Bull/Bear Line on your short-term execution charts to capture the early inception of a fresh trend.</li>
+</ul>
+
+<hr style="border: 0; border-top: 1px solid #2a2e39; margin: 20px 0;">
+
+<h3>3. Professional Trading Workflow</h3>
 <ol>
-<li>Filter by Category/Ticker to find your asset.</li>
-<li>Identify the Bias to know which direction to trade.</li>
-<li>Use the Bull/Bear Line to validate your entries.</li>
-<li>Respect the Volatility metrics for stop-loss sizing.</li>
+    <li><strong>Scan Categories:</strong> Use the dropdown menus to separate your focus (e.g., isolate FX from Equities depending on the session).</li>
+    <li><strong>Determine Playbook:</strong> Sort the table by the <strong>BIAS ↕</strong> column header to group all structural extremes together instantly.</li>
+    <li><strong>Risk Parameters:</strong> Use the <strong>Volatility</strong> badge to size your stops—higher volatility values dictate smaller position sizing to preserve trading capital.</li>
 </ol>
 </div>
 </div>
@@ -224,73 +264,4 @@ tbody.innerHTML = filtered.length ? filtered.map(r => {
     
     const s1Num = s1Match ? parseFloat(s1Match[0]) : 0;
     const r1Num = r1Match ? parseFloat(r1Match[0]) : 0;
-    const rawDiff = Math.abs(r1Num - s1Num);
-    
-    let rangeFormatted;
-    let isTrending = false;
-    let pipDistance = 0;
-
-    // --- High Accuracy Volatility & Market State Matrix Engine ---
-    if (assetClass === 'Indices' || assetClass === 'Crypto') {
-        rangeFormatted = rawDiff.toFixed(2);
-        isTrending = rawDiff > 80.00; // Requires an 80 point intraday range expansion to trend
-    } else if (r.ticker === 'XAU/USD') {
-        rangeFormatted = rawDiff.toFixed(2);
-        isTrending = rawDiff > 15.00; // Gold requires a $15 spread between R1 and S1 to trend
-    } else if (assetClass === 'Commodities') {
-        rangeFormatted = rawDiff.toFixed(2);
-        isTrending = rawDiff > 3.00;  // Oil / Soft Commodities need a $3 spread
-    } else if (r.ticker.includes('JPY')) {
-        rangeFormatted = rawDiff.toFixed(3);
-        pipDistance = rawDiff * 100;
-        isTrending = pipDistance > 90.0; // JPY crosses need over 90 real pips to trend
-    } else if (r.ticker === 'USD/NOK' || r.ticker === 'USD/MXN') {
-        rangeFormatted = rawDiff.toFixed(4);
-        isTrending = rawDiff > 0.1500;  // Exotic pairs require wide percentage shifts
-    } else {
-        rangeFormatted = rawDiff.toFixed(4);
-        pipDistance = rawDiff * 10000;
-        isTrending = pipDistance > 75.0; // Standard Forex pairs (75 pips true range threshold)
-    }
-
-    const state = isTrending ? "Trending" : "Consolidated";
-    const stateClass = isTrending ? "trending" : "consolidated";
-    
-    // Maps the database text field to the proper UI component styles
-    const rawBiasText = r.bias || 'Neutral';
-    let biasClass = 'bias-neutral';
-    let directionalArrow = '➔ Neutral';
-
-    if (rawBiasText === 'Strong Bullish') {
-        biasClass = 'bias-strong-up';
-        directionalArrow = '▲ Strong Bullish';
-    } else if (rawBiasText === 'Medium Bullish') {
-        biasClass = 'bias-medium-up';
-        directionalArrow = '▲ Medium Bullish';
-    } else if (rawBiasText === 'Strong Bearish') {
-        biasClass = 'bias-strong-down';
-        directionalArrow = '▼ Strong Bearish';
-    } else if (rawBiasText === 'Medium Bearish') {
-        biasClass = 'bias-medium-down';
-        directionalArrow = '▼ Medium Bearish';
-    }
-
-    return `
-    <tr>
-    <td>${r.trade_date}</td>
-    <td><b>${r.ticker}</b></td>
-    <td class="${biasClass}">${directionalArrow}</td>
-    <td>${r.bull_bear_line}</td>
-    <td><span class="state-badge ${stateClass}">${state}</span></td>
-    <td><span class="range-badge">${rangeFormatted}</span></td>
-    </tr>
-    `;
-}).join('') : '<tr><td colspan="6">No data for selected filters.</td></tr>';
-}
-
-function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
-document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
-init();
-</script>
-</body>
-</html>
+    const rawDiff = Math.abs(r1Num -
