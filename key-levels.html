@@ -135,15 +135,23 @@ const categoryMap = {
 'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto'
 };
 
-// Map Tickers straight to Binance system tickers (highly robust, bypasses firewall blocks)
-const binanceTickerMap = {
-    'BTC/USD': 'BTCUSDT',
-    'ETH/USD': 'ETHUSDT',
-    'EUR/USD': 'EURUSDT',
-    'GBP/USD': 'GBPUSDT',
-    'AUD/USD': 'AUDUSDT',
-    'XAU/USD': 'PAXGUSDT', // Gold tracking token proxy asset
-    'WTI': 'USDCUSDT'
+// Comprehensive Global Market Ticker Dictionary Mapping to Yahoo System Nodes
+const yahooTickerMap = {
+    // Forex
+    'EUR/USD': 'EURUSD=X', 'GBP/USD': 'GBPUSD=X', 'AUD/USD': 'AUDUSD=X', 'NZD/USD': 'NZDUSD=X',
+    'USD/CHF': 'CHF=X', 'USD/CAD': 'CAD=X', 'USD/JPY': 'JPY=X', 'USD/NOK': 'NOK=X', 'USD/MXN': 'MXN=X',
+    'EUR/CHF': 'EURCHF=X', 'AUD/NZD': 'AUDNZD=X', 'EUR/JPY': 'EURJPY=X', 'GBP/JPY': 'GBPJPY=X',
+    'AUD/JPY': 'AUDJPY=X', 'NZD/JPY': 'NZDJPY=X', 'CAD/JPY': 'CADJPY=X', 'EUR/GBP': 'EURGBP=X',
+    'EUR/AUD': 'EURAUD=X', 'EUR/NZD': 'EURNZD=X', 'GBP/AUD': 'GBPAUD=X', 'GBP/NZD': 'GBPNZD=X', 'DXY': 'DX-Y.NYB',
+    // Commodities
+    'XAU/USD': 'GC=F', 'XAG/USD': 'SI=F', 'WTI': 'CL=F', 'COPPER': 'HG=F', 'COCOA': 'CC=F',
+    'COFFEE': 'KC=F', 'COTTONSUGAR': 'CT=F', 'CORN': 'ZC=F', 'SOYBEANS': 'ZS=F', 'WHEAT': 'ZW=F',
+    // Indices
+    'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'DOW': '^DJI', 'RUSSEL': '^RUT', 'FTSE': '^FTSE', 'NIKKEI': '^N225', 'HANG': '^HSI',
+    // Crypto
+    'BTC/USD': 'BTC-USD', 'ETH/USD': 'ETH-USD',
+    // Equities
+    'AAPL': 'AAPL', 'AMZN': 'AMZN', 'GOOG': 'GOOG', 'MSFT': 'MSFT', 'TSLA': 'TSLA', 'META': 'META', 'NVDA': 'NVDA'
 };
 
 let cachedData = [];
@@ -195,50 +203,55 @@ async function fetchData() {
 }
 
 /**
- * Universal Price Polling Engine using direct unauthenticated REST tickers
+ * Robust Cross-Asset Telemetry Engine utilizing proxy routing.
+ * Bypasses CORS and returns true, unmanipulated real market metrics.
  */
 async function startUniversalLiveEngine() {
     if (updateInterval) clearInterval(updateInterval);
     
     const pollPrices = async () => {
         try {
-            const res = await fetch('https://api.binance.com/api/v3/ticker/price');
-            if (!res.ok) throw new Error();
-            const rawPrices = await res.json();
-            
-            // Map the parsed array fields directly to active screen tickers
-            rawPrices.forEach(item => {
-                for (const [origTicker, bTicker] of Object.entries(binanceTickerMap)) {
-                    if (item.symbol === bTicker) {
-                        livePrices[origTicker] = parseFloat(item.price);
-                    }
-                }
-            });
+            const activeTickers = [...new Set(cachedData.map(r => r.ticker))];
+            if (activeTickers.length === 0) return;
 
-            // Fallback: For equities/indices or missing fields, tie baseline to pivot point so it never hangs
-            cachedData.forEach(r => {
-                if (!livePrices[r.ticker]) {
-                    // Calculate a dynamic proxy layout price using the mid point of levels
-                    const mid = (parseFloat(r.r1) + parseFloat(r.s1)) / 2;
-                    livePrices[r.ticker] = !isNaN(mid) && mid > 0 ? mid : parseFloat(r.bull_bear_line) || 0;
-                }
-            });
+            // Map active display rows to exact Yahoo query symbols
+            const symbols = activeTickers
+                .map(t => yahooTickerMap[t])
+                .filter(sym => sym !== undefined);
+
+            if (symbols.length === 0) return;
+
+            // Raw unauthenticated quote stream endpoint
+            const targetUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols.join(',')}`;
             
-            render();
+            // Proxied tunnel routing bypassing browser security flags natively
+            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
+            if (!response.ok) throw new Error();
+            
+            const wrapper = await response.json();
+            const parsedData = JSON.parse(wrapper.contents);
+            
+            if (parsedData && parsedData.quoteResponse && parsedData.quoteResponse.result) {
+                parsedData.quoteResponse.result.forEach(quote => {
+                    const yahooSymbol = quote.symbol;
+                    
+                    // Match the incoming proxy tick directly back into the display map
+                    for (const [origTicker, bTicker] of Object.entries(yahooTickerMap)) {
+                        if (bTicker === yahooSymbol) {
+                            livePrices[origTicker] = parseFloat(quote.regularMarketPrice);
+                            break;
+                        }
+                    }
+                });
+                render();
+            }
         } catch (err) {
-            console.log("Re-establishing network pipelines...");
-            // Safe execution fallback block to eliminate "Loading..." text completely
-            cachedData.forEach(r => {
-                if (!livePrices[r.ticker]) {
-                    livePrices[r.ticker] = parseFloat(r.bull_bear_line) || 0;
-                }
-            });
-            render();
+            console.log("Telemetry engine refreshing channels...");
         }
     };
 
     await pollPrices();
-    updateInterval = setInterval(pollPrices, 3000);
+    updateInterval = setInterval(pollPrices, 6000); // Efficient polling rotation avoiding IP throttle thresholds
 }
 
 function toggleSortBias() {
@@ -298,8 +311,13 @@ function render() {
         const stateClass = isTrending ? "trending" : "consolidated";
         const biasClass = (dynamicBias.includes('↓')) ? 'bias-down' : (dynamicBias.includes('↑') ? 'bias-up' : '');
 
-        const isHighValue = assetClass === 'Indices' || assetClass === 'Crypto' || r.ticker === 'WTI' || r.ticker === 'XAU/USD';
-        const displayPrice = (liveSpot && liveSpot > 0) ? liveSpot.toFixed(isHighValue ? 2 : 4) : 'Calculating...';
+        // Standard dynamic numeric formatting block
+        const isHighValue = assetClass === 'Indices' || assetClass === 'Crypto' || r.ticker === 'WTI' || r.ticker === 'XAU/USD' || r.ticker === 'COFFEE';
+        
+        let displayPrice = 'Loading...';
+        if (liveSpot && liveSpot > 0) {
+            displayPrice = liveSpot.toFixed(isHighValue ? 2 : 4);
+        }
 
         return `
         <tr>
