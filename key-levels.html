@@ -76,7 +76,7 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 <a href="key-levels.html" class="active">Key Levels</a>
 <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
 <div class="dropdown">
-<button class="dropbtn" onclick="toggleDropdown()">:gear:</button>
+<button class="dropbtn" onclick="toggleDropdown()">⚙</button>
 <div id="settingsDropdown" class="dropdown-content">
 <a href="account.html">Account</a>
 <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
@@ -90,7 +90,7 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 <div class="container">
 <div style="display: flex; align-items: center;">
 <h1>Market Trade Radar</h1>
-<button class="info-btn" onclick="openModal()">Info :information_source:</button>
+<button class="info-btn" onclick="openModal()">Info ℹ</button>
 </div>
 <div class="filter-section">
 <input type="date" id="date-filter" onchange="fetchData()">
@@ -136,9 +136,8 @@ const categoryMap = {
 };
 
 let cachedData = [];
-let biasSortOrder = 0; // 0: None, 1: Asc (Bearish->Neutral->Bullish), -1: Desc (Bullish->Neutral->Bearish)
+let biasSortOrder = 0;
 
-// Modal Logic
 function openModal() { document.getElementById("infoModal").style.display = "block"; }
 function closeModal() { document.getElementById("infoModal").style.display = "none"; }
 window.onclick = function(event) { if (event.target == document.getElementById("infoModal")) closeModal(); }
@@ -200,7 +199,6 @@ const matchesTick = (tick === 'all' || r.ticker === tick);
 return matchesCat && matchesTick;
 });
 
-// Apply Sorting
 if (biasSortOrder !== 0) {
 filtered.sort((a, b) => {
 const valA = biasMap[a.bias] || 0;
@@ -210,21 +208,48 @@ return biasSortOrder * (valA - valB);
 }
 
 tbody.innerHTML = filtered.length ? filtered.map(r => {
-const range = Math.abs(r.r1 - r.s1).toFixed(4);
-const isTrending = range > 0.0050;
-const state = isTrending ? "Trending" : "Consolidated";
-const stateClass = isTrending ? "trending" : "consolidated";
-const biasClass = (r.bias?.includes('↓')) ? 'bias-down' : (r.bias?.includes('↑') ? 'bias-up' : '');
-return `
-<tr>
-<td>${r.trade_date}</td>
-<td><b>${r.ticker}</b></td>
-<td class="${biasClass}">${r.bias}</td>
-<td>${r.bull_bear_line}</td>
-<td><span class="state-badge ${stateClass}">${state}</span></td>
-<td><span class="range-badge">${range}</span></td>
-</tr>
-`;
+    const assetClass = categoryMap[r.ticker] || 'Forex';
+    const rawDiff = Math.abs((parseFloat(r.r1) || 0) - (parseFloat(r.s1) || 0));
+    
+    // Formatting Decimal Precision according to asset types
+    let rangeFormatted;
+    let isTrending = false;
+
+    if (assetClass === 'Indices' || assetClass === 'Crypto') {
+        rangeFormatted = rawDiff.toFixed(2);
+        isTrending = rawDiff > 15.00;
+    } else if (r.ticker.includes('JPY') || r.ticker === 'USD/NOK' || r.ticker === 'USD/MXN') {
+        rangeFormatted = rawDiff.toFixed(4);
+        isTrending = rawDiff > 0.2500;
+    } else {
+        rangeFormatted = rawDiff.toFixed(4);
+        isTrending = rawDiff > 0.0035;
+    }
+
+    const state = isTrending ? "Trending" : "Consolidated";
+    const stateClass = isTrending ? "trending" : "consolidated";
+    const biasClass = (r.bias?.includes('↓')) ? 'bias-down' : (r.bias?.includes('↑') ? 'bias-up' : '');
+    
+    // Grab uploaded live price cleanly from database row field
+    const livePriceVal = parseFloat(r.live_price);
+    const isHighValue = assetClass === 'Indices' || assetClass === 'Crypto' || r.ticker === 'WTI' || r.ticker === 'XAU/USD' || r.ticker === 'COFFEE';
+    const displayPrice = (!isNaN(livePriceVal) && livePriceVal > 0) ? livePriceVal.toFixed(isHighValue ? 2 : 4) : '-';
+
+    return `
+    <tr>
+    <td>${r.trade_date}</td>
+    <td>
+        <div style="display: flex; flex-direction: column;">
+            <b>${r.ticker}</b>
+            <span style="font-size: 12px; color: #2962ff; font-weight: bold; margin-top: 4px;">$ ${displayPrice}</span>
+        </div>
+    </td>
+    <td class="${biasClass}">${r.bias}</td>
+    <td>${r.bull_bear_line}</td>
+    <td><span class="state-badge ${stateClass}">${state}</span></td>
+    <td><span class="range-badge">${rangeFormatted}</span></td>
+    </tr>
+    `;
 }).join('') : '<tr><td colspan="6">No data for selected filters.</td></tr>';
 }
 
@@ -233,4 +258,4 @@ document.getElementById('logoutBtn').addEventListener('click', async () => { awa
 init();
 </script>
 </body>
-</html> 
+</html>
