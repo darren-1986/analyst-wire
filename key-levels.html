@@ -139,7 +139,7 @@
         'COFFEE': 'Commodities', 'COTTONSUGAR': 'Commodities', 'CORN': 'Commodities', 'SOYBEANS': 'Commodities', 'WHEAT': 'Commodities',
         'AAPL': 'Equities', 'AMZN': 'Equities', 'GOOG': 'Equities', 'MSFT': 'Equities', 'TSLA': 'Equities', 'META': 'Equities', 'V': 'Equities', 
         'JPM': 'Equities', 'KO': 'Equities', 'MCD': 'Equities', 'AMD': 'Equities', 'BABA': 'Equities', 'JNJ': 'Equities', 'NVDA': 'Equities',
-        'S&P500': 'Indices', 'NASDAQ': 'Indices', 'DOW': 'Indices', 'RUSSEL': 'Indices', 'FTSE': 'Indices', 'NIKKEI': 'Indices', 'HANG': 'Indices',
+        'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'DOW': '^DJI', 'RUSSEL': '^RUT', 'FTSE': '^FTSE', 'NIKKEI': '^N225', 'HANG': '^HSI',
         'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto'
     };
 
@@ -178,9 +178,9 @@
         document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
         await fetchData();
         
-        // Start open public market data query immediately
+        // Start continuous live pricing engine
         fetchLivePrices();
-        setInterval(fetchLivePrices, 60000); // Check engine every 60s
+        setInterval(fetchLivePrices, 30000); 
     }
 
     async function fetchData() {
@@ -199,48 +199,52 @@
         render();
     }
 
-    // Completely open, keyless public JSON endpoint (Supports CORS natively)
+    // Direct Browser Fetch using AllOrigins open CORS pipe + Yahoo Engine
     async function fetchLivePrices() {
         if (!cachedData.length) return;
         try {
-            const response = await fetch('https://open.er-api.com/v6/latest/USD');
-            const data = await response.json();
+            const uniqueTickers = [...new Set(cachedData.map(r => r.ticker))];
+            if (uniqueTickers.length === 0) return;
 
-            if (data && data.rates) {
-                const uniqueTickers = [...new Set(cachedData.map(r => r.ticker))];
-                
-                uniqueTickers.forEach(ticker => {
-                    // 1. Standard USD Base Direct Quote (e.g., USD/JPY)
-                    if (ticker.startsWith('USD/')) {
-                        const quoteCurrency = ticker.split('/')[1];
-                        if (data.rates[quoteCurrency]) {
-                            livePrices[ticker] = data.rates[quoteCurrency];
-                        }
-                    } 
-                    // 2. Inverted Quote pairs (e.g., EUR/USD, GBP/USD, AUD/USD)
-                    else if (ticker.endsWith('/USD')) {
-                        const baseCurrency = ticker.split('/')[0];
+            // Strict lookups mapping your database labels to public market streaming tickers
+            const tickerMap = {
+                'EUR/USD': 'EURUSD=X', 'GBP/USD': 'GBPUSD=X', 'AUD/USD': 'AUDUSD=X', 'NZD/USD': 'NZDUSD=X',
+                'USD/JPY': 'JPY=X', 'EUR/JPY': 'EURJPY=X', 'GBP/JPY': 'GBPJPY=X', 'USD/CAD': 'CAD=X',
+                'USD/CHF': 'CHF=X', 'AUD/NZD': 'AUDNZD=X', 'EUR/CHF': 'EURCHF=X', 'USD/NOK': 'NOK=X',
+                'USD/MXN': 'MXN=X', 'CAD/JPY': 'CADJPY=X', 'EUR/GBP': 'EURGBP=X', 'EUR/AUD': 'EURAUD=X',
+                'EUR/NZD': 'EURNZD=X', 'GBP/AUD': 'GBPAUD=X', 'GBP/NZD': 'GBPNZD=X', 'DXY': 'DX-Y.NYB',
+                'XAU/USD': 'GC=F', 'XAG/USD': 'SI=F', 'WTI': 'CL=F', 'COPPER': 'HG=F', 'COCOA': 'CC=F',
+                'COFFEE': 'KC=F', 'CORN': 'ZC=F', 'SOYBEANS': 'ZS=F', 'WHEAT': 'ZW=F',
+                'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'DOW': '^DJI', 'RUSSEL': '^RUT', 
+                'FTSE': '^FTSE', 'NIKKEI': '^N225', 'HANG': '^HSI',
+                'BTC/USD': 'BTC-USD', 'ETH/USD': 'ETH-USD'
+            };
+
+            const querySymbols = uniqueTickers.map(t => tickerMap[t] || t).join(',');
+            const targetUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${querySymbols}`;
+            
+            // Fetching via public, uncapped AllOrigins CORS developer utility wrapper
+            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
+            const wrapper = await response.json();
+            
+            if (wrapper && wrapper.contents) {
+                const data = JSON.parse(wrapper.contents);
+                if (data && data.quoteResponse && data.quoteResponse.result) {
+                    const results = data.quoteResponse.result;
+
+                    uniqueTickers.forEach(ticker => {
+                        const targetSymbol = tickerMap[ticker] || ticker;
+                        const marketItem = results.find(item => item.symbol === targetSymbol);
                         
-                        // Handle Gold (XAU) and Silver (XAG) which are tracked under standard ISO codes
-                        const currencyCode = baseCurrency === 'XAU' ? 'XAU' : (baseCurrency === 'XAG' ? 'XAG' : baseCurrency);
-                        
-                        if (data.rates[currencyCode]) {
-                            livePrices[ticker] = 1 / data.rates[currencyCode];
+                        if (marketItem && marketItem.regularMarketPrice) {
+                            livePrices[ticker] = parseFloat(marketItem.regularMarketPrice);
                         }
-                    }
-                    // 3. Cross Currency logic (e.g., EUR/JPY)
-                    else if (ticker.includes('/')) {
-                        const parts = ticker.split('/');
-                        if (data.rates[parts[0]] && data.rates[parts[1]]) {
-                            // Convert through base USD rate
-                            livePrices[ticker] = data.rates[parts[1]] / data.rates[parts[0]];
-                        }
-                    }
-                });
-                updateLiveUI();
+                    });
+                    updateLiveUI();
+                }
             }
         } catch (e) {
-            console.error("Open feed tracking issue: ", e);
+            console.error("Live free stream network bypass failure: ", e);
         }
     }
 
@@ -268,7 +272,9 @@
         const biasMap = { '↑ Bullish': 1, 'Neutral': 0, '↓ Bearish': -1 };
         
         let filtered = cachedData.filter(r => {
-            const matchesCat = (cat === 'all' || categoryMap[r.ticker] === cat);
+            // Clean up internal names to match standard category lookups
+            const lookupName = r.ticker === '^GSPC' ? 'S&P500' : (r.ticker === '^IXIC' ? 'NASDAQ' : (r.ticker === '^DJI' ? 'DOW' : (r.ticker === '^RUT' ? 'RUSSEL' : (r.ticker === '^FTSE' ? 'FTSE' : (r.ticker === '^N225' ? 'NIKKEI' : (r.ticker === '^HSI' ? 'HANG' : r.ticker))))));
+            const matchesCat = (cat === 'all' || categoryMap[lookupName] === cat);
             const matchesTick = (tick === 'all' || r.ticker === tick);
             return matchesCat && matchesTick;
         });
