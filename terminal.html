@@ -116,23 +116,26 @@
         </div>
 
         <style>
-            .market-sessions-widget { box-sizing: border-box; width: 100%; min-width: 280px; background-color: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 24px; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
-            .msw-header { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 24px; }
-            .msw-local-clock { font-family: monospace; font-size: 12px; background-color: #1e293b; padding: 4px 8px; border-radius: 4px; color: #10b981; }
-            .msw-session-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
-            .msw-session-row:last-child { margin-bottom: 0; }
-            .msw-session-info { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
-            .msw-session-name { display: flex; align-items: center; gap: 10px; font-weight: 500; }
-            .msw-icon-img { width: 20px; height: 20px; object-fit: contain; filter: brightness(0) saturate(100%) invert(80%) sepia(50%) saturate(1200%) hue-rotate(180deg); }
-            .msw-status-dot { height: 8px; width: 8px; border-radius: 50%; background-color: #475569; flex-shrink: 0; }
-            .msw-status-dot.open { background-color: #10b981; }
-            .msw-session-status-text { font-size: 11px; font-weight: bold; font-family: monospace; }
+            .market-sessions-widget { box-sizing: border-box; width: 100%; background-color: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #f8fafc; font-family: sans-serif; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
+            .msw-header { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+            .msw-local-clock { font-family: monospace; font-size: 11px; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #10b981; }
+            .msw-session-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+            .msw-session-name { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; min-width: 90px; }
+            .msw-icon-img { width: 16px; height: 16px; object-fit: contain; filter: brightness(0) saturate(100%) invert(80%) sepia(50%) saturate(1200%) hue-rotate(180deg); }
+            .msw-status-dot { height: 6px; width: 6px; border-radius: 50%; background: #475569; flex-shrink: 0; }
+            .msw-status-dot.open { background: #10b981; }
+            .msw-session-status-text { font-size: 10px; font-weight: bold; font-family: monospace; min-width: 40px; text-align: center; }
             .msw-session-status-text.open { color: #10b981; }
             .msw-session-status-text.closed { color: #f97316; }
-            .msw-zone-time { font-size: 10px; color: #64748b; font-family: monospace; display: block; margin-top: 2px; }
-            .msw-progress-bar-track { width: 100%; background-color: #1e293b; height: 6px; border-radius: 9999px; overflow: hidden; }
-            .msw-progress-bar-fill { height: 100%; background-color: #10b981; width: 0%; transition: width 0.5s; }
-            .msw-countdown-text { font-size: 11px; color: #94a3b8; font-family: monospace; text-align: right; }
+            .msw-zone-time { font-size: 9px; color: #64748b; font-family: monospace; display: block; }
+            .msw-progress-bar-track { display: none; } /* Hidden for compactness */
+            .msw-countdown-text { font-size: 10px; color: #94a3b8; font-family: monospace; text-align: right; white-space: nowrap; }
+            
+            /* Responsive adjust */
+            @media (max-width: 350px) {
+                .market-sessions-widget { padding: 10px; }
+                .msw-session-name { font-size: 11px; }
+            }
         </style>
 
         <script>
@@ -151,20 +154,16 @@
                 const row = document.createElement('div');
                 row.className = 'msw-session-row';
                 row.innerHTML = `
-                    <div class="msw-session-info">
-                        <div class="msw-session-name">
-                            <span class="msw-status-dot"></span>
-                            <img src="${s.img}" class="msw-icon-img" alt="${s.name}">
-                            <span>${s.name}<small class="msw-zone-time" id="time-${s.name.replace(/\s+/g, '-')}"></small></span>
-                        </div>
-                        <span class="msw-session-status-text"></span>
+                    <div class="msw-session-name">
+                        <span class="msw-status-dot"></span>
+                        <img src="${s.img}" class="msw-icon-img" alt="${s.name}">
+                        <span>${s.name}<small class="msw-zone-time" id="time-${s.name.replace(/\s+/g, '-')}"></small></span>
                     </div>
-                    <div class="msw-progress-bar-track"><div class="msw-progress-bar-fill"></div></div>
+                    <span class="msw-session-status-text"></span>
                     <div class="msw-countdown-text"></div>
                 `;
                 container.appendChild(row);
                 s.row = row;
-                // Correct ID selector
                 s.timeEl = row.querySelector(`#time-${s.name.replace(/\s+/g, '-')}`);
             });
 
@@ -186,27 +185,20 @@
                     txt.innerText = isOpen ? 'OPEN' : 'CLOSED';
                     txt.className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
                     
+                    const countEl = s.row.querySelector('.msw-countdown-text');
                     if (isOpen) {
-                        s.row.querySelector('.msw-progress-bar-fill').style.width = (((hours - s.open) / (s.close - s.open)) * 100) + '%';
                         const rem = (s.close - hours) * 3600;
-                        s.row.querySelector('.msw-countdown-text').innerText = `Closes in ${Math.floor(rem/3600)}h ${Math.floor((rem%3600)/60)}m`;
+                        countEl.innerText = `${Math.floor(rem/3600)}h ${Math.floor((rem%3600)/60)}m left`;
                     } else {
-                        s.row.querySelector('.msw-progress-bar-fill').style.width = '0%';
-                        
                         let target = new Date(dateInZone);
                         target.setHours(Math.floor(s.open), (s.open % 1) * 60, 0, 0);
-
                         if (dateInZone >= target) target.setDate(target.getDate() + 1);
                         while (target.getDay() === 0 || target.getDay() === 6) target.setDate(target.getDate() + 1);
-
                         const diff = target - dateInZone;
-                        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-                        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        
-                        let display = (d > 0) ? `${d}d ` : "";
-                        display += `${h}h ${m}m`;
-                        s.row.querySelector('.msw-countdown-text').innerText = `Opens in ${display}`;
+                        const d = Math.floor(diff / 86400000);
+                        const h = Math.floor((diff % 86400000) / 3600000);
+                        const m = Math.floor((diff % 3600000) / 60000);
+                        countEl.innerText = `${(d > 0) ? d + 'd ' : ''}${h}h ${m}m`;
                     }
                 });
             }
