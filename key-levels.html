@@ -67,7 +67,9 @@
 
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-    let cachedData = [], livePrices = {}, biasSortOrder = 0;
+    let cachedData = [];
+    let livePrices = {};
+    let biasSortOrder = 0;
 
     async function init() {
         const { data: { session } } = await client.auth.getSession();
@@ -82,46 +84,56 @@
     }
 
     async function fetchData() {
-        const { data } = await client.from('key_levels').select('*').eq('trade_date', document.getElementById('date-filter').value);
+        const date = document.getElementById('date-filter').value;
+        const { data } = await client.from('key_levels').select('*').eq('trade_date', date);
         cachedData = data || [];
         render();
     }
 
     async function startHybridFeedEngine() {
-        // Reliable public Forex feed
-        const updatePrices = async () => {
+        // Use a timeout to stop "Loading..." from getting stuck
+        const fetchWithTimeout = (url, options, timeout = 3000) => {
+            return Promise.race([
+                fetch(url, options),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout))
+            ]);
+        };
+
+        const updateData = async () => {
             try {
-                const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                // Forex
+                const res = await fetchWithTimeout('https://api.exchangerate-api.com/v4/latest/USD');
                 const data = await res.json();
                 cachedData.forEach(r => {
-                    if(data.rates[r.ticker.split('/')[1]]) livePrices[r.ticker] = data.rates[r.ticker.split('/')[1]];
+                    const pair = r.ticker.split('/');
+                    if(data.rates[pair[1]]) livePrices[r.ticker] = data.rates[pair[1]];
                 });
                 render();
-            } catch (e) { console.warn("Forex data unreachable"); }
+            } catch (e) { console.error("Data update issue"); }
         };
-        updatePrices();
-        setInterval(updatePrices, 60000);
+        updateData();
+        setInterval(updateData, 30000);
     }
 
     function render() {
         const tbody = document.getElementById('levels-body');
         tbody.innerHTML = cachedData.length > 0 ? cachedData.map(r => {
             const price = livePrices[r.ticker];
+            const range = Math.abs(r.r1 - r.s1).toFixed(4);
             const isUp = price > r.bull_bear_line;
             return `
             <tr>
                 <td>${r.trade_date}</td><td>${r.ticker}</td>
-                <td class="${isUp ? 'bias-up' : 'bias-down'}">${price ? (isUp ? '↑ Bullish' : '↓ Bearish') : '---'}</td>
+                <td class="${price ? (isUp ? 'bias-up' : 'bias-down') : ''}">${price ? (isUp ? '↑ Bullish' : '↓ Bearish') : 'N/A'}</td>
                 <td>${r.bull_bear_line}</td>
-                <td><span class="state-badge ${Math.abs(r.r1 - r.s1) > 0.005 ? 'trending' : 'consolidated'}">State</span></td>
-                <td><span class="range-badge">${Math.abs(r.r1 - r.s1).toFixed(4)}</span></td>
-                <td class="live-price-cell">${price ? price.toFixed(4) : '---'}</td>
+                <td><span class="state-badge ${range > 0.005 ? 'trending' : 'consolidated'}">${range > 0.005 ? 'Trending' : 'Consolidated'}</span></td>
+                <td><span class="range-badge">${range}</span></td>
+                <td class="live-price-cell">${price ? price.toFixed(4) : 'N/A'}</td>
             </tr>`;
         }).join('') : '<tr><td colspan="7">No data.</td></tr>';
     }
 
     function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
-    function toggleSortBias() { biasSortOrder = biasSortOrder === 0 ? 1 : 0; render(); }
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
     init();
 </script>
