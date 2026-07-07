@@ -36,9 +36,14 @@ table { width: 100%; border-collapse: collapse; background: #131722; margin-top:
 th { background: #1c2230; padding: 12px; text-align: left; border: 1px solid #2a2e39; color: #787b86; font-size: 11px; text-transform: uppercase; cursor: pointer; }
 th:hover { color: #fff; }
 td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
-/* Indicators */
-.bias-up { color: #089981; font-weight: bold; }
-.bias-down { color: #f23645; font-weight: bold; }
+
+/* 5-Tier Advanced UI Color Management Settings */
+.bias-strong-up { color: #00ffaa; font-weight: bold; }
+.bias-medium-up { color: #b1ff29; font-weight: 500; }
+.bias-neutral { color: #ffb700; font-weight: bold; }
+.bias-medium-down { color: #ffa6a6; font-weight: 500; }
+.bias-strong-down { color: #ff0055; font-weight: bold; }
+
 .range-badge { background: #2a2e39; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; }
 .state-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; }
 .trending { background: #2962ff; color: white; }
@@ -192,7 +197,10 @@ function render() {
 const cat = document.getElementById('cat-filter').value;
 const tick = document.getElementById('ticker-filter').value;
 const tbody = document.getElementById('levels-body');
-const biasMap = { '↑ Bullish': 1, 'Neutral': 0, '↓ Bearish': -1 };
+
+// Advanced 5-Tier Sorting Map Index Matrix
+const biasMap = { 'Strong Bullish': 2, 'Medium Bullish': 1, 'Neutral': 0, 'Medium Bearish': -1, 'Strong Bearish': -2 };
+
 let filtered = cachedData.filter(r => {
 const matchesCat = (cat === 'all' || categoryMap[r.ticker] === cat);
 const matchesTick = (tick === 'all' || r.ticker === tick);
@@ -201,8 +209,8 @@ return matchesCat && matchesTick;
 
 if (biasSortOrder !== 0) {
 filtered.sort((a, b) => {
-const valA = biasMap[a.bias] || 0;
-const valB = biasMap[b.bias] || 0;
+const valA = biasMap[a.bias] !== undefined ? biasMap[a.bias] : 0;
+const valB = biasMap[b.bias] !== undefined ? biasMap[b.bias] : 0;
 return biasSortOrder * (valA - valB);
 });
 }
@@ -228,34 +236,25 @@ tbody.innerHTML = filtered.length ? filtered.map(r => {
 
     const state = isTrending ? "Trending" : "Consolidated";
     const stateClass = isTrending ? "trending" : "consolidated";
-    const biasClass = (r.bias?.includes('↓')) ? 'bias-down' : (r.bias?.includes('↑') ? 'bias-up' : '');
+    
+    // --- Parse and Map the 5-Tier Bias Strings to Colors and Arrows Natively ---
+    const rawBiasText = r.bias || 'Neutral';
+    let biasClass = 'bias-neutral';
+    let directionalArrow = '➔ Neutral';
+
+    if (rawBiasText === 'Strong Bullish') {
+        biasClass = 'bias-strong-up';
+        directionalArrow = '▲ Strong Bullish';
+    } else if (rawBiasText === 'Medium Bullish') {
+        biasClass = 'bias-medium-up';
+        directionalArrow = '▲ Medium Bullish';
+    } else if (rawBiasText === 'Strong Bearish') {
+        biasClass = 'bias-strong-down';
+        directionalArrow = '▼ Strong Bearish';
+    } else if (rawBiasText === 'Medium Bearish') {
+        biasClass = 'bias-medium-down';
+        directionalArrow = '▼ Medium Bearish';
+    }
     
     // Grab uploaded live price cleanly from database row field
-    const livePriceVal = parseFloat(r.live_price);
-    const isHighValue = assetClass === 'Indices' || assetClass === 'Crypto' || r.ticker === 'WTI' || r.ticker === 'XAU/USD' || r.ticker === 'COFFEE';
-    const displayPrice = (!isNaN(livePriceVal) && livePriceVal > 0) ? livePriceVal.toFixed(isHighValue ? 2 : 4) : '-';
-
-    return `
-    <tr>
-    <td>${r.trade_date}</td>
-    <td>
-        <div style="display: flex; flex-direction: column;">
-            <b>${r.ticker}</b>
-            <span style="font-size: 12px; color: #2962ff; font-weight: bold; margin-top: 4px;">$ ${displayPrice}</span>
-        </div>
-    </td>
-    <td class="${biasClass}">${r.bias}</td>
-    <td>${r.bull_bear_line}</td>
-    <td><span class="state-badge ${stateClass}">${state}</span></td>
-    <td><span class="range-badge">${rangeFormatted}</span></td>
-    </tr>
-    `;
-}).join('') : '<tr><td colspan="6">No data for selected filters.</td></tr>';
-}
-
-function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
-document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
-init();
-</script>
-</body>
-</html>
+    const live
