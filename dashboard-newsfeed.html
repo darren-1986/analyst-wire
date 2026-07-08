@@ -131,7 +131,7 @@
 
         window.messenger_start_init = function() { if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); };
         
-        const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'CPI', 'GDP'];
+        const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'CPI', 'GDP', 'Yield Rises', 'Treasury Falls', 'Rate-Hike', 'Monetary Policy', 'Military Strikes', 'Missile Attack', 'Revokes', 'WTI Oil Jumps', 'Gold', 'Australia', 'AUD', 'US Military', 'Central Command', 'USA'];
         const feedContainer = document.getElementById('livesquawk_messenger_outer');
         new MutationObserver((mutations) => {
             mutations.forEach(m => m.addedNodes.forEach(node => {
