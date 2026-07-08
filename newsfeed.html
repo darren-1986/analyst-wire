@@ -12,7 +12,8 @@
         *, *:before, *:after { box-sizing: border-box; }
         
         body, .messenger__outer { transition: background 0.3s, color 0.3s; }
-        body.dark, .dark .messenger__outer { background-color: #0f172a !important; color: #ffffff !important; }
+        /* CHANGED: Replaced #0f172a with #0A0A0A for dark background colors */
+        body.dark, .dark .messenger__outer { background-color: #0A0A0a !important; color: #ffffff !important; }
         body.light, .light .messenger__outer { background-color: #ffffff !important; color: #000000 !important; }
         body.dark .messenger__outer, .dark .messenger__outer * { color: #e2e8f0 !important; }
 
@@ -38,14 +39,16 @@
         .custom-newsfeed-header { display: flex; align-items: center; padding: 15px 0 15px 165px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 16px; }
         .green-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; margin-right: 12px; }
 
-        .controls { display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px; background: #0f172a; }
+        /* CHANGED: Replaced #0f172a with #0A0A0A */
+        .controls { display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px; background: #0A0A0a; }
         .filter-btn { padding: 5px 10px; cursor: pointer; border-radius: 4px; border: 1px solid #475569; background: #1e293b; color: white; }
         .filter-btn.active { background: #00b4f9; border-color: #00b4f9; }
         #searchBar { padding: 5px 10px; border-radius: 4px; border: 1px solid #475569; }
         
         .audio-container { display: flex; align-items: center; gap: 10px; margin-right: auto; }
         .audio-container img { height: 30px; width: auto; }
-        .audio-wrapper { display: flex; align-items: center; gap: 15px; border: 1px solid #00b4f9; padding: 6px 14px; border-radius: 8px; background: #0f172a; }
+        /* CHANGED: Replaced #0f172a with #0A0A0A */
+        .audio-wrapper { display: flex; align-items: center; gap: 15px; border: 1px solid #00b4f9; padding: 6px 14px; border-radius: 8px; background: #0A0A0a; }
         #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 8px; min-width: 190px; }
         .status-on { color: #22c55e !important; }
 
