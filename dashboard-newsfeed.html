@@ -95,6 +95,37 @@
         }
         checkPermissions();
 
+        // --- WEB AUDIO API SETUP ---
+        let audioCtx = null;
+        
+        function initAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSynthesizedPing(volumeLevel) {
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+            
+            // Apply volume and fade-out to sound like a ping
+            gainNode.gain.setValueAtTime(volumeLevel * 0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.5);
+        }
+
         let audioEnabled = false, seconds = 0, timerInterval;
         function startTimer() {
             timerInterval = setInterval(() => {
@@ -121,6 +152,10 @@
                 document.getElementById('timerText').innerText = "";
             } else {
                 lbl.innerText = "Connecting...";
+                
+                // Initialize the Web Audio Context on explicit user click
+                initAudioContext();
+
                 await new Promise(r => setTimeout(r, 800));
                 audioEnabled = true; seconds = 0; startTimer(); 
                 lbl.innerText = "On Air";
@@ -133,10 +168,26 @@
         
         const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'CPI', 'GDP', 'Yield Rises', 'Treasury Falls', 'Rate-Hike', 'Monetary Policy', 'Military Strikes', 'Missile Attack', 'Revokes', 'WTI Oil Jumps', 'Gold', 'Australia', 'AUD', 'US Military', 'Central Command', 'USA'];
         const feedContainer = document.getElementById('livesquawk_messenger_outer');
+        
         new MutationObserver((mutations) => {
             mutations.forEach(m => m.addedNodes.forEach(node => {
                 if (node.classList && node.classList.contains('news__item__outer')) {
-                    if (audioTriggerKeywords.some(kw => node.innerText.toLowerCase().includes(kw.toLowerCase()))) speakText(node.innerText);
+                    if (audioEnabled) {
+                        const rawText = node.innerText;
+                        const lowerText = rawText.toLowerCase();
+                        
+                        // Check if headline matches our priority keywords
+                        const hasKeyword = audioTriggerKeywords.some(kw => lowerText.includes(kw.toLowerCase()));
+                        
+                        if (hasKeyword) {
+                            // If a keyword hits, only read the text out loud
+                            speakText(rawText);
+                        } else {
+                            // If no keyword hits, just play the ping
+                            const vol = parseFloat(document.getElementById('volSlider').value);
+                            playSynthesizedPing(vol);
+                        }
+                    }
                 }
             }));
         }).observe(feedContainer, { childList: true, subtree: true });
