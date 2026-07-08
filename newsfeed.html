@@ -109,6 +109,8 @@
     <div class="custom-newsfeed-header"><div class="green-dot"></div> NEWSFEED</div>
     <div class="messenger__outer" id="livesquawk_messenger_outer"></div>
 
+    <audio id="pingSound" src="media/ping.mp3" preload="auto"></audio>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // --- AUTH & PERMISSION CHECK ---
@@ -168,7 +170,26 @@
         document.getElementById('themeToggle').addEventListener('change', () => { document.body.classList.toggle('dark'); document.body.classList.toggle('light'); });
         
         const feedContainer = document.getElementById('livesquawk_messenger_outer');
-        new MutationObserver((mutations) => { mutations.forEach(m => m.addedNodes.forEach(node => { if (node.classList && node.classList.contains('news__item__outer')) { if (audioTriggerKeywords.some(kw => node.innerText.toLowerCase().includes(kw.toLowerCase()))) speakText(node.innerText); } })); }).observe(feedContainer, { childList: true, subtree: true });
+        const pingSound = document.getElementById('pingSound'); // Reference to the audio element
+        
+        new MutationObserver((mutations) => { 
+            mutations.forEach(m => m.addedNodes.forEach(node => { 
+                if (node.classList && node.classList.contains('news__item__outer')) { 
+                    
+                    // 1. Play the general alert ping if audio is connected
+                    if (audioEnabled) {
+                        pingSound.volume = document.getElementById('volSlider').value;
+                        pingSound.currentTime = 0;
+                        pingSound.play().catch(e => console.log("Audio play prevented:", e));
+                    }
+
+                    // 2. Read the headline if it matches priority keywords
+                    if (audioTriggerKeywords.some(kw => node.innerText.toLowerCase().includes(kw.toLowerCase()))) {
+                        speakText(node.innerText); 
+                    }
+                } 
+            })); 
+        }).observe(feedContainer, { childList: true, subtree: true });
         
         Object.defineProperty(window, 'self', { get: () => window.top });
         window.addEventListener('load', () => { const height = document.body.scrollHeight; window.parent.postMessage({ height }, '*'); });
