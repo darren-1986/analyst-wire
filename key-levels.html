@@ -49,7 +49,7 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 .trending { background: #2962ff; color: white; }
 .consolidated { background: #5d606b; color: white; }
 
-/* Interactive Ticker Element */
+/* Interactive Ticker Element & SVG Sync */
 .clickable-ticker { cursor: pointer; transition: background-color 0.15s ease; }
 .clickable-ticker:hover { background-color: #1c2230; }
 .clickable-ticker:hover .ticker-text { color: #2962ff; text-decoration: underline; }
@@ -58,14 +58,14 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 .ticker-text { font-weight: bold; color: #fff; transition: color 0.15s ease; }
 .chart-icon-svg { fill: #787b86; transition: fill 0.15s ease; display: inline-block; vertical-align: middle; }
 
-/* Expandable Drawer Framework Layout */
+/* Expandable Drawer UI Grid Architecture */
 .expand-toggle-btn { background: #1c2230; border: 1px solid #2a2e39; color: #787b86; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
 .expand-toggle-btn:hover { border-color: #2962ff; color: #fff; }
 .drawer-row { background: #0a0d14 !important; display: none; }
 .drawer-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; padding: 20px; border-left: 4px solid #2962ff; }
 .analysis-panel { display: flex; flex-direction: column; gap: 15px; overflow: hidden; }
 
-/* --- TRUE LOLLIPOP DISPLAY SYSTEM FIXED CSS CONFIG --- */
+/* Color-Coded Lollipop Display System Components */
 .lollipop-system { display: flex; align-items: center; gap: 12px; margin-top: 5px; height: 38px; }
 .lollipop-indicator-dot { width: 14px; height: 14px; border-radius: 50%; position: relative; flex-shrink: 0; }
 .lollipop-indicator-dot::after { content: ''; position: absolute; top: 14px; left: 6px; width: 2px; height: 22px; background: #2a2e39; }
@@ -223,10 +223,6 @@ const tvSymbolMap = {
 let cachedData = [];
 let biasSortOrder = 0;
 let stateSortOrder = 0;
-
-function openModal() { document.getElementById("infoModal").style.display = "block"; }
-function closeModal() { document.getElementById("infoModal").style.display = "none"; }
-window.onclick = function(event) { if (event.target == document.getElementById("infoModal")) closeModal(); }
 
 function toggleDrawer(index, ticker) {
     const row = document.getElementById(`drawer-row-${index}`);
@@ -386,7 +382,7 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
         biasClass = 'bias-medium-down'; directionalArrow = '▼ Medium Bearish';
     }
 
-    // --- COLOR-CODED LOLLIPOP MATRIX ---
+    // --- COLOR-CODED LOLLIPOP MATRIX MAP ENGINE ---
     const lollipopStatus = r.lollipop ? r.lollipop.trim() : 'INSIDE RANGE';
     let lollipopWrapperClass = 'lolli-range';
     let lollipopDesc = 'Price action compressed inside key horizontal structure levels.';
@@ -423,16 +419,19 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
             <div class="drawer-container">
                 <div class="analysis-panel">
                     
-                    <div>
+                    <div style="padding-bottom: 12px; position: relative; display: block;">
                         <span style="color:#787b86; font-size:11px; text-transform:uppercase; font-weight:bold; display:block; margin-bottom:6px;">Lollipop Momentum Status</span>
                         <div class="lollipop-system ${lollipopWrapperClass}">
                             <div class="lollipop-indicator-dot"></div>
                             <div class="lollipop-badge">${lollipopStatus}</div>
                         </div>
-                        <p style="margin:20px 0 0 0; font-size:12.5px; color:#787b86; line-height:1.4;">${lollipopDesc}</p>
                     </div>
                     
-                    <div style="margin-top:10px; border-top: 1px solid #1c2230; padding-top: 15px;">
+                    <div style="height: 10px; display: block;"></div>
+                    
+                    <p style="margin:0; font-size:12.5px; color:#787b86; line-height:1.4; display:block;">${lollipopDesc}</p>
+                    
+                    <div style="margin-top:10px; border-top: 1px solid #1c2230; padding-top: 15px; display: block;">
                         <span style="color:#787b86; font-size:11px; text-transform:uppercase; font-weight:bold; display:block; margin-bottom:4px;">Macro Commentary</span>
                         <p style="margin:0; font-size:13.5px; color:#fff; line-height:1.5; font-weight: 500;">${textualAnalysis}</p>
                     </div>
