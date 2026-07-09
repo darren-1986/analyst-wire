@@ -111,7 +111,7 @@
         <div class="market-sessions-widget">
             <div class="msw-header">
                 <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
-                <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;">HOT MARKET</div>
+                <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple sessions are open.">HOT MARKET</div>
             </div>
             <div id="msw-sessions-container"></div>
         </div>
@@ -136,48 +136,48 @@
 
         <script>
         (function() {
+            // Using standard IANA time zone strings for precision
             const SESSIONS = [
-                { name: 'Tokyo', utc: 9, open: 9, close: 15 },
-                { name: 'Sydney', utc: 10, open: 10, close: 16 },
-                { name: 'London', utc: 1, open: 8, close: 16.5 },
-                { name: 'New York', utc: -4, open: 9.5, close: 16 }
+                { name: 'Tokyo', zone: 'Asia/Tokyo', open: 9, close: 15 },
+                { name: 'Sydney', zone: 'Australia/Sydney', open: 10, close: 16 },
+                { name: 'London', zone: 'Europe/London', open: 8, close: 16.5 },
+                { name: 'New York', zone: 'America/New_York', open: 9.5, close: 16 }
             ];
 
             function tick() {
                 const now = new Date();
-                const nowUTC = now.getTime() + (now.getTimezoneOffset() * 60000);
                 document.getElementById('msw-user-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 
                 let openCount = 0;
                 SESSIONS.forEach(s => {
-                    const marketTimeMs = nowUTC + (s.utc * 3600000);
-                    const marketDate = new Date(marketTimeMs);
+                    // Use Intl to get the exact local time in the target city
+                    const formatter = new Intl.DateTimeFormat('en-US', {
+                        timeZone: s.zone,
+                        hour: '2-digit', minute: '2-digit', hour12: false
+                    });
+                    const parts = formatter.formatToParts(now);
+                    const hours = parseInt(parts.find(p => p.type === 'hour').value);
+                    const minutes = parseInt(parts.find(p => p.type === 'minute').value);
+                    const day = new Intl.DateTimeFormat('en-US', { timeZone: s.zone, weekday: 'long' }).format(now);
                     
-                    document.getElementById('time-'+s.name).innerText = marketDate.getUTCHours().toString().padStart(2,'0') + ':' + marketDate.getUTCMinutes().toString().padStart(2,'0');
+                    document.getElementById('time-'+s.name).innerText = `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}`;
                     
-                    const hours = marketDate.getUTCHours() + (marketDate.getUTCMinutes() / 60);
-                    const day = marketDate.getUTCDay();
-                    const isOpen = (day > 0 && day < 6) && (hours >= s.open && hours < s.close);
+                    const timeDecimal = hours + (minutes / 60);
+                    const isWeekday = !['Saturday', 'Sunday'].includes(day);
+                    const isOpen = isWeekday && (timeDecimal >= s.open && timeDecimal < s.close);
                     
                     if(isOpen) openCount++;
                     
                     document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
-                    const stat = document.getElementById('stat-'+s.name);
-                    stat.innerText = isOpen ? 'OPEN' : 'CLOSED';
-                    stat.className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
+                    document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
+                    document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
                     
-                    // Fixed Independent Countdown Calculation
-                    let target = new Date(marketTimeMs);
-                    target.setUTCHours(Math.floor(s.open), (s.open % 1) * 60, 0, 0);
-                    if (marketTimeMs >= target.getTime()) target.setUTCDate(target.getUTCDate() + 1);
-                    while (target.getUTCDay() === 0 || target.getUTCDay() === 6) target.setUTCDate(target.getUTCDate() + 1);
-                    
-                    const diff = target.getTime() - marketTimeMs;
-                    const h = Math.floor(diff / 3600000);
-                    const m = Math.floor((diff % 3600000) / 60000);
-                    
-                    const remUntilClose = (s.close - hours) * 3600000;
-                    document.getElementById('count-'+s.name).innerText = isOpen ? `${Math.floor(remUntilClose/3600000)}h ${Math.floor((remUntilClose%3600000)/60000)}m left` : `${h}h ${m}m`;
+                    // Simple countdown: if closed, hours until open
+                    let untilOpen = (s.open - timeDecimal);
+                    if (untilOpen < 0) untilOpen += 24;
+                    document.getElementById('count-'+s.name).innerText = isOpen 
+                        ? `${Math.floor((s.close - timeDecimal)*60/60)}h ${Math.round(((s.close - timeDecimal)*60)%60)}m left`
+                        : `${Math.floor(untilOpen)}h ${Math.round((untilOpen%1)*60)}m`;
                 });
                 document.getElementById('msw-hot-alert').style.display = (openCount > 1) ? 'block' : 'none';
             }
@@ -192,7 +192,6 @@
         })();
         </script>
     </div>
-</div>
 </div>
 
 
