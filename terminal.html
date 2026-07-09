@@ -122,32 +122,29 @@
             .msw-hot-alert { font-size: 9px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3); animation: pulse 1.5s infinite; cursor: help; }
             @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
             .msw-local-clock { font-family: monospace; font-size: 11px; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #10b981; }
-            
             .msw-session-row { display: grid; grid-template-columns: 1fr 50px auto; align-items: center; gap: 8px; margin-bottom: 10px; }
             .msw-session-name { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; }
             .msw-icon-img { width: 16px; height: 16px; object-fit: contain; filter: brightness(0) saturate(100%) invert(80%) sepia(50%) saturate(1200%) hue-rotate(180deg); }
             .msw-status-dot { height: 6px; width: 6px; border-radius: 50%; background: #475569; }
             .msw-status-dot.open { background: #10b981; }
-            
             .msw-session-status-text { font-size: 9px; font-weight: bold; font-family: monospace; text-align: left; }
             .msw-session-status-text.open { color: #10b981; }
             .msw-session-status-text.closed { color: #f97316; }
-            
             .msw-zone-time { font-size: 9px; color: #64748b; font-family: monospace; display: block; margin-top: 1px; }
             .msw-countdown-text { font-size: 9px; color: #94a3b8; font-family: monospace; text-align: right; min-width: 60px; }
         </style>
 
         <script>
         (function() {
+            // Hard-coded offsets: Sydney UTC+10, Tokyo UTC+9, London UTC+1, New York UTC-4
             const SESSIONS = [
-                { name: 'Sydney', zone: 'Australia/Sydney', open: 10, close: 16, img: 'media/sydney.png' },
-                { name: 'Tokyo', zone: 'Asia/Tokyo', open: 9, close: 15, img: 'media/tokyo.png' },
-                { name: 'London', zone: 'Europe/London', open: 8, close: 16.5, img: 'media/london.png' },
-                { name: 'New York', zone: 'America/New_York', open: 9.5, close: 16, img: 'media/new-york.png' }
+                { name: 'Sydney', offset: 10, open: 10, close: 16, img: 'media/sydney.png' },
+                { name: 'Tokyo', offset: 9, open: 9, close: 15, img: 'media/tokyo.png' },
+                { name: 'London', offset: 1, open: 8, close: 16.5, img: 'media/london.png' },
+                { name: 'New York', offset: -4, open: 9.5, close: 16, img: 'media/new-york.png' }
             ];
 
             const container = document.getElementById('msw-sessions-container');
-            const alertEl = document.getElementById('msw-hot-alert');
             container.innerHTML = '';
             
             SESSIONS.forEach(s => {
@@ -169,16 +166,16 @@
 
             function update() {
                 const now = new Date();
-                const clock = document.getElementById('msw-user-time');
-                if(clock) clock.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                document.getElementById('msw-user-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 
                 let openCount = 0;
                 SESSIONS.forEach(s => {
-                    const dateInZone = new Date(now.toLocaleString('en-US', { timeZone: s.zone }));
-                    if(s.timeEl) s.timeEl.innerText = dateInZone.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const localTime = new Date(utc + (3600000 * s.offset));
+                    s.timeEl.innerText = localTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     
-                    const hours = dateInZone.getHours() + (dateInZone.getMinutes() / 60);
-                    const day = dateInZone.getDay();
+                    const hours = localTime.getHours() + (localTime.getMinutes() / 60);
+                    const day = localTime.getDay();
                     const isOpen = (day > 0 && day < 6) && (hours >= s.open && hours < s.close);
                     if(isOpen) openCount++;
                     
@@ -192,18 +189,18 @@
                         const rem = (s.close - hours) * 3600;
                         countEl.innerText = `${Math.floor(rem/3600)}h ${Math.floor((rem%3600)/60)}m left`;
                     } else {
-                        let target = new Date(dateInZone);
+                        let target = new Date(localTime);
                         target.setHours(Math.floor(s.open), (s.open % 1) * 60, 0, 0);
-                        if (dateInZone >= target) target.setDate(target.getDate() + 1);
+                        if (localTime >= target) target.setDate(target.getDate() + 1);
                         while (target.getDay() === 0 || target.getDay() === 6) target.setDate(target.getDate() + 1);
-                        const diff = target - dateInZone;
+                        const diff = target - localTime;
                         const d = Math.floor(diff / 86400000);
                         const h = Math.floor((diff % 86400000) / 3600000);
                         const m = Math.floor((diff % 3600000) / 60000);
                         countEl.innerText = `${(d > 0) ? d + 'd ' : ''}${h}h ${m}m`;
                     }
                 });
-                if(alertEl) alertEl.style.display = (openCount > 1) ? 'block' : 'none';
+                document.getElementById('msw-hot-alert').style.display = (openCount > 1) ? 'block' : 'none';
             }
             update();
             setInterval(update, 1000);
@@ -211,6 +208,7 @@
         </script>
     </div>
 </div>
+
 
         <div class="panel" style="flex: 1;">
             <div class="panel-header">Bloomberg TV</div>
