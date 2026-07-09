@@ -114,7 +114,7 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 .drawer-section-title { color: #8b949e; font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; display: block; margin-bottom: 8px; }
 
 /* ---------------------------------------------------
-   4-QUADRANT GRID SYSTEM & COMPACTING STYLES
+   4-QUADRANT GRID SYSTEM & COMPACTING STYLES (ZOOMED OUT)
    --------------------------------------------------- */
 .grid-container {
     display: grid;
@@ -131,7 +131,7 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     background: #0d1117;
     border-radius: 10px;
     border: 1px solid #30363d;
-    padding: 15px;
+    padding: 12px; /* Zoomed out padding */
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -159,17 +159,17 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 }
 
 .quadrant .header-row { margin-bottom: 0; }
-.quadrant h1 { font-size: 17px; }
-.quadrant .info-btn { padding: 4px 8px; font-size: 10.5px; }
+.quadrant h1 { font-size: 15px; } /* Zoomed out title */
+.quadrant .info-btn { padding: 3px 6px; font-size: 9.5px; }
 
 .quadrant .filter-section {
     margin-bottom: 0;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px; /* Zoomed out spacing */
 }
 .quadrant select, .quadrant input[type="date"] {
-    padding: 4px 8px;
-    font-size: 11px;
+    padding: 3px 6px;
+    font-size: 10px; /* Zoomed out inputs */
 }
 
 .quadrant .table-container {
@@ -186,58 +186,59 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 .quadrant .table-container::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 .quadrant .table-container::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 
+/* Sticky Headers and highly compact text to maximize visible rows */
 .quadrant th {
-    padding: 6px 8px;
-    font-size: 9.5px;
+    padding: 5px 6px; /* Zoomed out padding */
+    font-size: 8.5px; /* Zoomed out header */
     position: sticky;
     top: 0;
     z-index: 10;
     background: #161b22;
 }
 .quadrant td {
-    padding: 6px 8px;
-    font-size: 10.5px;
+    padding: 5px 6px; /* Zoomed out padding */
+    font-size: 9.5px; /* Zoomed out rows */
 }
 
-.quadrant .state-badge { padding: 2px 6px; font-size: 8.5px; }
-.quadrant .range-badge { font-size: 10px; }
-.quadrant .expand-toggle-btn { padding: 3px 6px; font-size: 9px; }
+/* Aggressively scale down badges and buttons */
+.quadrant .state-badge { padding: 2px 5px; font-size: 7.5px; }
+.quadrant .range-badge { font-size: 9px; }
+.quadrant .expand-toggle-btn { padding: 2px 5px; font-size: 8.5px; }
 
-/* DRAWER COMPACTING: Side-by-side layout (Text Left, Chart Right) */
+/* DRAWER COMPACTING: Side-by-side layout (Text Left, Chart Right) - ZOOMED OUT */
 .quadrant .drawer-container {
-    grid-template-columns: 1.2fr 1fr;
-    gap: 15px;
-    padding: 12px 15px;
+    grid-template-columns: 1.3fr 1fr; /* Text takes slightly more space now that it's smaller */
+    gap: 10px;
+    padding: 10px 12px;
     align-items: stretch;
 }
-.quadrant .drawer-section-title { font-size: 9px; margin-bottom: 4px; }
-.quadrant .lollipop-system { height: 24px; margin-top: 0px; gap: 8px; }
-.quadrant .lollipop-indicator-dot { width: 10px; height: 10px; }
-.quadrant .lollipop-indicator-dot::after { top: 10px; left: 4px; height: 16px; }
-.quadrant .lollipop-badge { padding: 2px 8px; font-size: 9.5px; }
-.quadrant .drawer-desc-text { font-size: 10.5px; line-height: 1.4; }
-.quadrant .macro-commentary-box { margin-top: 10px; padding-top: 10px; }
-.quadrant .drawer-analysis-text { font-size: 11px; line-height: 1.4; }
+.quadrant .drawer-section-title { font-size: 8.5px; margin-bottom: 3px; }
+.quadrant .lollipop-system { height: 20px; margin-top: 0px; gap: 6px; }
+.quadrant .lollipop-indicator-dot { width: 8px; height: 8px; }
+.quadrant .lollipop-indicator-dot::after { top: 8px; left: 3px; height: 12px; width: 1.5px; }
+.quadrant .lollipop-badge { padding: 2px 6px; font-size: 8.5px; }
+.quadrant .drawer-desc-text { font-size: 9.5px; line-height: 1.3; }
+.quadrant .macro-commentary-box { margin-top: 8px; padding-top: 8px; }
+.quadrant .drawer-analysis-text { font-size: 10px; line-height: 1.3; }
 
 /* ---------------------------------------------------
-   THE CHART ZOOM HACK: Scale chart down to fit more data
+   THE CHART ZOOM HACK: Maximize visible data 
    --------------------------------------------------- */
 .quadrant .embedded-chart-frame {
     position: relative;
     height: 100%;
-    min-height: 180px; /* Slight bump to give the scaler some room */
+    min-height: 140px; /* Zoomed out height requirement */
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 6px;
 }
 
 .quadrant .embedded-chart-frame iframe {
     position: absolute;
     top: 0;
     left: 0;
-    /* Force iframe to be larger than its container, then scale it down */
-    width: 142.85%;  /* equivalent to 1 / 0.7 */
-    height: 142.85%;
-    transform: scale(0.7); /* Shrinks it by 30% to fit back inside the frame */
+    width: 166.66%;  /* equivalent to 1 / 0.6 */
+    height: 166.66%;
+    transform: scale(0.6); /* Shrinks it by 40% to fit back inside the frame */
     transform-origin: top left;
     border: none;
 }
@@ -422,7 +423,6 @@ function toggleDrawer(index, ticker) {
 
         let cleanSymbol = tvSymbolMap[ticker] || ticker.replace('/', '');
         
-        // HACK ADDED HERE: hide_top_toolbar=true and hide_legend=true to remove clutter
         container.innerHTML = `
             <iframe 
                 src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=${encodeURIComponent(cleanSymbol)}&interval=D&theme=dark&style=1&timezone=Etc%2FUTC&studies=%5B%5D&hide_side_toolbar=true&hide_top_toolbar=true&hide_legend=true&allow_symbol_change=false&save_image=false">
