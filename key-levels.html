@@ -90,7 +90,7 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 .macro-commentary-box { margin-top: 15px; border-top: 1px solid #1c2230; padding-top: 18px; display: block; }
 .drawer-analysis-text { margin: 0; font-size: 13.5px; color: #c9d1d9; line-height: 1.6; }
 
-/* Color-Coded Lollipop Display System Components (Spacing Preserved) */
+/* Color-Coded Lollipop Display System Components */
 .lollipop-system { display: flex; align-items: center; gap: 12px; margin-top: 5px; height: 38px; }
 .lollipop-indicator-dot { width: 12px; height: 12px; border-radius: 50%; position: relative; flex-shrink: 0; }
 .lollipop-indicator-dot::after { content: ''; position: absolute; top: 12px; left: 5px; width: 2px; height: 26px; background: #30363d; }
@@ -135,9 +135,9 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    height: 100%; /* Force quadrant to fill its grid space */
+    height: 100%;
     box-sizing: border-box;
-    overflow: hidden; /* Prevent quadrant itself from overflowing, let internal table scroll */
+    overflow: hidden;
 }
 
 .placeholder-quadrant {
@@ -149,7 +149,6 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     background: rgba(13, 17, 23, 0.4);
 }
 
-/* Flex Row to push Title left and Filters right */
 .quadrant-top-bar {
     display: flex;
     justify-content: space-between;
@@ -159,7 +158,6 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     gap: 10px;
 }
 
-/* Compacting the Radar components for the quadrant space */
 .quadrant .header-row { margin-bottom: 0; }
 .quadrant h1 { font-size: 17px; }
 .quadrant .info-btn { padding: 4px 8px; font-size: 10.5px; }
@@ -174,95 +172,74 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     font-size: 11px;
 }
 
-/* Allow table container to scroll internally */
 .quadrant .table-container {
     border: none;
     box-shadow: none;
     background: transparent;
-    flex: 1; /* Take up all remaining vertical space inside the quadrant */
-    overflow-y: auto; /* Scroll table vertically */
-    min-height: 0; /* Ensures flex container allows child to shrink and scroll */
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
 }
 
-/* Dark mode scrollbar styling */
-.quadrant .table-container::-webkit-scrollbar {
-    width: 6px;
-}
-.quadrant .table-container::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0.1);
-    border-radius: 3px;
-}
-.quadrant .table-container::-webkit-scrollbar-thumb {
-    background: #30363d;
-    border-radius: 3px;
-}
-.quadrant .table-container::-webkit-scrollbar-thumb:hover {
-    background: #4b5563;
-}
+.quadrant .table-container::-webkit-scrollbar { width: 6px; }
+.quadrant .table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
+.quadrant .table-container::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+.quadrant .table-container::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 
-/* Sticky Headers and tighter text to maximize visible rows */
 .quadrant th {
     padding: 6px 8px;
     font-size: 9.5px;
     position: sticky;
     top: 0;
     z-index: 10;
-    background: #161b22; /* Ensures solid background when scrolling */
+    background: #161b22;
 }
 .quadrant td {
     padding: 6px 8px;
     font-size: 10.5px;
 }
 
-/* Scale down badges and buttons to fit the narrow columns */
 .quadrant .state-badge { padding: 2px 6px; font-size: 8.5px; }
 .quadrant .range-badge { font-size: 10px; }
 .quadrant .expand-toggle-btn { padding: 3px 6px; font-size: 9px; }
 
 /* DRAWER COMPACTING: Side-by-side layout (Text Left, Chart Right) */
 .quadrant .drawer-container {
-    grid-template-columns: 1.2fr 1fr; /* Text on left, Chart on right */
+    grid-template-columns: 1.2fr 1fr;
     gap: 15px;
     padding: 12px 15px;
-    align-items: stretch; /* Allows chart to match text column height */
+    align-items: stretch;
 }
-.quadrant .drawer-section-title {
-    font-size: 9px;
-    margin-bottom: 4px;
-}
-.quadrant .lollipop-system {
-    height: 24px;
-    margin-top: 0px;
-    gap: 8px;
-}
-.quadrant .lollipop-indicator-dot {
-    width: 10px;
-    height: 10px;
-}
-.quadrant .lollipop-indicator-dot::after {
-    top: 10px;
-    left: 4px;
-    height: 16px; /* Shorter stem */
-}
-.quadrant .lollipop-badge {
-    padding: 2px 8px;
-    font-size: 9.5px;
-}
-.quadrant .drawer-desc-text {
-    font-size: 10.5px; /* Shrink description text */
-    line-height: 1.4;
-}
-.quadrant .macro-commentary-box {
-    margin-top: 10px;
-    padding-top: 10px;
-}
-.quadrant .drawer-analysis-text {
-    font-size: 11px; /* Shrink macro analysis text */
-    line-height: 1.4;
-}
+.quadrant .drawer-section-title { font-size: 9px; margin-bottom: 4px; }
+.quadrant .lollipop-system { height: 24px; margin-top: 0px; gap: 8px; }
+.quadrant .lollipop-indicator-dot { width: 10px; height: 10px; }
+.quadrant .lollipop-indicator-dot::after { top: 10px; left: 4px; height: 16px; }
+.quadrant .lollipop-badge { padding: 2px 8px; font-size: 9.5px; }
+.quadrant .drawer-desc-text { font-size: 10.5px; line-height: 1.4; }
+.quadrant .macro-commentary-box { margin-top: 10px; padding-top: 10px; }
+.quadrant .drawer-analysis-text { font-size: 11px; line-height: 1.4; }
+
+/* ---------------------------------------------------
+   THE CHART ZOOM HACK: Scale chart down to fit more data
+   --------------------------------------------------- */
 .quadrant .embedded-chart-frame {
+    position: relative;
     height: 100%;
-    min-height: 160px; /* Reduced chart height to keep it proportional */
+    min-height: 180px; /* Slight bump to give the scaler some room */
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.quadrant .embedded-chart-frame iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* Force iframe to be larger than its container, then scale it down */
+    width: 142.85%;  /* equivalent to 1 / 0.7 */
+    height: 142.85%;
+    transform: scale(0.7); /* Shrinks it by 30% to fit back inside the frame */
+    transform-origin: top left;
+    border: none;
 }
 </style>
 </head>
@@ -444,9 +421,11 @@ function toggleDrawer(index, ticker) {
         btn.innerText = "Close ▲";
 
         let cleanSymbol = tvSymbolMap[ticker] || ticker.replace('/', '');
+        
+        // HACK ADDED HERE: hide_top_toolbar=true and hide_legend=true to remove clutter
         container.innerHTML = `
-            <iframe style="width: 100%; height: 100%; border: none;"
-                src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=${encodeURIComponent(cleanSymbol)}&interval=D&theme=dark&style=1&timezone=Etc%2FUTC&studies=%5B%5D&hide_side_toolbar=true&allow_symbol_change=false&save_image=false">
+            <iframe 
+                src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=${encodeURIComponent(cleanSymbol)}&interval=D&theme=dark&style=1&timezone=Etc%2FUTC&studies=%5B%5D&hide_side_toolbar=true&hide_top_toolbar=true&hide_legend=true&allow_symbol_change=false&save_image=false">
             </iframe>
         `;
     }
