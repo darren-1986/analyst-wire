@@ -108,11 +108,11 @@
         window.location.href = 'index.html'; 
     });
 
-    function findVal(rowArray, label) {
-        if (!Array.isArray(rowArray)) return 0;
-        const fullText = rowArray.join(" ");
-        const regex = new RegExp(`${label}:\\s*([\\d\\.]+)`);
-        const match = fullText.match(regex);
+    // Enhanced extraction function to isolate stacked levels (S1 vs S2) precisely
+    function parseStackedLevel(text, label) {
+        if (!text) return 0;
+        const regex = new RegExp(`${label}:\\s*([\\d\\.]+)`, 'i');
+        const match = text.match(regex);
         return match ? parseFloat(match[1]) : 0;
     }
 
@@ -128,46 +128,37 @@
                 await client.from('key_levels').delete().eq('trade_date', date);
 
                 const cleanData = results.data.slice(1).filter(r => Array.isArray(r) && r[0]).map(row => {
-                    const s1 = findVal(row, 'S1');
-                    const r1 = findVal(row, 'R1');
+                    const rawSupportText = row[2] || '';
+                    const rawResistanceText = row[3] || '';
+                    
+                    const s1 = parseStackedLevel(rawSupportText, 'S1');
+                    const s2 = parseStackedLevel(rawSupportText, 'S2');
+                    const r1 = parseStackedLevel(rawResistanceText, 'R1');
+                    const r2 = parseStackedLevel(rawResistanceText, 'R2');
+                    
                     const bbl = parseFloat(row[4]) || 0;
-                    const livePrice = parseFloat(row[5]) || 0;
                     
-                    // Column L (Index 11): Lollipop Status
-                    const lollipopStatusText = row[11] ? row[11].trim() : 'Inside Range';
-                    
-                    // Column M (Index 12): Analysis Block text string
-                    const rawAnalysisText = row[12] ? row[12].trim() : '';
-                    
-                    // --- Upgraded 5-Tier Calculation Logic Matrix ---
-                    let calculatedBias = 'Neutral';
-                    if (livePrice > 0 && bbl > 0) {
-                        const diff = Math.abs(livePrice - bbl);
-                        
-                        if (diff <= 0.01) {
-                            calculatedBias = 'Neutral';
-                        } else if (livePrice > bbl) {
-                            calculatedBias = (livePrice - bbl > 2.5) ? 'Strong Bullish' : 'Medium Bullish';
-                        } else if (livePrice < bbl) {
-                            calculatedBias = (bbl - livePrice > 2.5) ? 'Strong Bearish' : 'Medium Bearish';
-                        }
-                    }
+                    // Pulling directly from your new pre-calculated spreadsheet format columns
+                    const sheetBias = row[1] ? row[1].trim() : 'Neutral';
+                    const lollipopText = row[11] ? row[11].trim() : 'Inside Range';
+                    const analysisText = row[12] ? row[12].trim() : '';
 
                     return {
                         ticker: row[0].trim(),
                         s1: s1,
-                        s2: lollipopStatusText, // Stores Lollipop string directly inside existing column space safely
+                        s2: s2, 
                         r1: r1,
-                        r2: findVal(row, 'R2'),
-                        bias: calculatedBias, 
+                        r2: r2,
+                        bias: sheetBias, 
                         bull_bear_line: bbl,
-                        analysis: rawAnalysisText, // Standard mapping property matching your table text entity
+                        lollipop: lollipopText, // Populates your newly initialized table field
+                        analysis: analysisText,   // Populates your newly initialized analysis field
                         trade_date: date
                     };
                 });
 
                 const { error } = await client.from('key_levels').insert(cleanData);
-                document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Levels, biases, lollipop markers, and analysis blocks uploaded.";
+                document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Complete multi-asset key levels matrix uploaded cleanly.";
             }
         });
     }
