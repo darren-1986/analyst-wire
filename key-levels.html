@@ -65,11 +65,11 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 .drawer-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; padding: 20px; border-left: 4px solid #2962ff; }
 .analysis-panel { display: flex; flex-direction: column; gap: 15px; }
 
-/* Upgraded Lollipop Tracking Display Components */
-.lollipop-system { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
-.lollipop-indicator-dot { width: 12px; height: 12px; border-radius: 50%; position: relative; }
+/* Lollipop Signaling System Styling Matrix */
+.lollipop-system { display: flex; align-items: center; gap: 10px; margin-top: 5px; height: 26px; }
+.lollipop-indicator-dot { width: 12px; height: 12px; border-radius: 50%; position: relative; flex-shrink: 0; }
 .lollipop-indicator-dot::after { content: ''; position: absolute; top: 12px; left: 5px; width: 2px; height: 16px; background: #2a2e39; }
-.lollipop-badge { padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.lollipop-badge { padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; }
 
 .lolli-upper { color: #00ffaa; }
 .lolli-upper .lollipop-indicator-dot { background: #00ffaa; box-shadow: 0 0 8px #00ffaa; }
@@ -315,10 +315,8 @@ function openChart(ticker) {
 
 function getAssetVolatilityMetrics(r) {
     const assetClass = categoryMap[r.ticker] || 'Forex';
-    const s1Match = String(r.s1 || '').match(/[\d.]+/);
-    const r1Match = String(r.r1 || '').match(/[\d.]+/);
-    const s1Num = s1Match ? parseFloat(s1Match[0]) : 0;
-    const r1Num = r1Match ? parseFloat(r1Match[0]) : 0;
+    const s1Num = parseFloat(r.s1) || 0;
+    const r1Num = parseFloat(r.r1) || 0;
     const rawDiff = Math.abs(r1Num - s1Num);
     
     let rangeFormatted;
@@ -388,20 +386,19 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
         biasClass = 'bias-medium-down'; directionalArrow = '▼ Medium Bearish';
     }
 
-    // --- TRUE LOLLIPOP DESIGN MAP MATRIX ---
+    // --- ACCURACY FIX: Pull status flags strictly from row property variables ---
     const lollipopStatus = r.lollipop ? r.lollipop.trim() : 'INSIDE RANGE';
     let lollipopWrapperClass = 'lolli-range';
     let lollipopDesc = 'Price action is currently compressed and oscillating safely inside major structural pivots.';
 
-    if (lollipopStatus.toUpperCase().includes('UPPER') || lollipopStatus.toUpperCase() === 'BREAK OUT') {
+    if (lollipopStatus.toUpperCase().includes('UPPER') || lollipopStatus.toUpperCase() === 'BREAK OUT' || lollipopStatus.toUpperCase() === 'UPPER BREAK') {
         lollipopWrapperClass = 'lolli-upper';
         lollipopDesc = 'Breakout alert. Price has expanded past primary overhead resistance barriers, signaling high upward continuation odds.';
-    } else if (lollipopStatus.toUpperCase().includes('LOWER') || lollipopStatus.toUpperCase() === 'BREAK DOWN') {
+    } else if (lollipopStatus.toUpperCase().includes('LOWER') || lollipopStatus.toUpperCase() === 'BREAK DOWN' || lollipopStatus.toUpperCase() === 'LOWER BREAK') {
         lollipopWrapperClass = 'lolli-lower';
         lollipopDesc = 'Breakdown alert. Price has fallen cleanly below historical support floors, signaling high localized distribution pressure.';
     }
 
-    // Fixed Variable Swap Error: Pulls text commentary from 'analysis' column natively
     const textualAnalysis = r.analysis && r.analysis.trim() !== '' ? r.analysis : 'Intraday tactical breakdown details pending calculation refresh for this level index.';
 
     return `
