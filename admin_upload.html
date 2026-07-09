@@ -108,14 +108,6 @@
         window.location.href = 'index.html'; 
     });
 
-    // Enhanced extraction function to isolate stacked levels (S1 vs S2) precisely
-    function parseStackedLevel(text, label) {
-        if (!text) return 0;
-        const regex = new RegExp(`${label}:\\s*([\\d\\.]+)`, 'i');
-        const match = text.match(regex);
-        return match ? parseFloat(match[1]) : 0;
-    }
-
     async function processUpload() {
         const file = document.getElementById('csvFile').files[0];
         const date = document.getElementById('upload-date').value;
@@ -128,20 +120,16 @@
                 await client.from('key_levels').delete().eq('trade_date', date);
 
                 const cleanData = results.data.slice(1).filter(r => Array.isArray(r) && r[0]).map(row => {
-                    const rawSupportText = row[2] || '';
-                    const rawResistanceText = row[3] || '';
-                    
-                    const s1 = parseStackedLevel(rawSupportText, 'S1');
-                    const s2 = parseStackedLevel(rawSupportText, 'S2');
-                    const r1 = parseStackedLevel(rawResistanceText, 'R1');
-                    const r2 = parseStackedLevel(rawResistanceText, 'R2');
-                    
+                    // Extracting numerical calculations based on single split columns natively
+                    const s1 = parseFloat(row[6]) || 0;
+                    const s2 = parseFloat(row[7]) || 0;
+                    const r1 = parseFloat(row[8]) || 0;
+                    const r2 = parseFloat(row[9]) || 0;
                     const bbl = parseFloat(row[4]) || 0;
                     
-                    // Pulling directly from your new pre-calculated spreadsheet format columns
-                    const sheetBias = row[1] ? row[1].trim() : 'Neutral';
-                    const lollipopText = row[11] ? row[11].trim() : 'Inside Range';
-                    const analysisText = row[12] ? row[12].trim() : '';
+                    // Aligns variables strictly with columns K and L of the sheet layout matrix
+                    const lollipopStatusText = row[10] ? row[10].trim() : 'Inside Range';
+                    const rawAnalysisText = row[11] ? row[11].trim() : '';
 
                     return {
                         ticker: row[0].trim(),
@@ -149,16 +137,16 @@
                         s2: s2, 
                         r1: r1,
                         r2: r2,
-                        bias: sheetBias, 
+                        bias: row[1] ? row[1].trim() : 'Neutral', 
                         bull_bear_line: bbl,
-                        lollipop: lollipopText, // Populates your newly initialized table field
-                        analysis: analysisText,   // Populates your newly initialized analysis field
+                        lollipop: lollipopStatusText, 
+                        analysis: rawAnalysisText,
                         trade_date: date
                     };
                 });
 
                 const { error } = await client.from('key_levels').insert(cleanData);
-                document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Complete multi-asset key levels matrix uploaded cleanly.";
+                document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Levels, calculated biases, lollipop signals, and macro commentary uploaded.";
             }
         });
     }
