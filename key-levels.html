@@ -63,7 +63,8 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 .expand-toggle-btn:hover { border-color: #2962ff; color: #fff; }
 .drawer-row { background: #0a0d14 !important; display: none; }
 .drawer-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; padding: 20px; border-left: 4px solid #2962ff; }
-.analysis-panel { display: flex; flex-direction: column; gap: 15px; overflow: hidden; }
+/* REMOVED overflow: hidden; from analysis-panel to stop the lollipop stick from clipping */
+.analysis-panel { display: flex; flex-direction: column; gap: 15px; }
 
 /* Color-Coded Lollipop Display System Components */
 .lollipop-system { display: flex; align-items: center; gap: 12px; margin-top: 5px; height: 38px; }
@@ -223,6 +224,11 @@ const tvSymbolMap = {
 let cachedData = [];
 let biasSortOrder = 0;
 let stateSortOrder = 0;
+
+// RESTORED INFO MODAL FUNCTIONS
+function openModal() { document.getElementById("infoModal").style.display = "block"; }
+function closeModal() { document.getElementById("infoModal").style.display = "none"; }
+window.onclick = function(event) { if (event.target == document.getElementById("infoModal")) closeModal(); }
 
 function toggleDrawer(index, ticker) {
     const row = document.getElementById(`drawer-row-${index}`);
