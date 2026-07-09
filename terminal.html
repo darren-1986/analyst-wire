@@ -111,7 +111,7 @@
         <div class="market-sessions-widget">
             <div class="msw-header">
                 <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
-                <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple trading sessions are currently open, indicating a period of high liquidity and market volatility.">HOT MARKET</div>
+                <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple sessions are open.">HOT MARKET</div>
             </div>
             <div id="msw-sessions-container"></div>
         </div>
@@ -136,10 +136,10 @@
 
         <script>
         (function() {
-            // Hard-coded offsets: Sydney UTC+10, Tokyo UTC+9, London UTC+1, New York UTC-4
+            // Sorted by opening time: Tokyo (9), Sydney (10), London (16), NY (21.5 UTC equivalent)
             const SESSIONS = [
-                { name: 'Sydney', offset: 10, open: 10, close: 16, img: 'media/sydney.png' },
                 { name: 'Tokyo', offset: 9, open: 9, close: 15, img: 'media/tokyo.png' },
+                { name: 'Sydney', offset: 10, open: 10, close: 16, img: 'media/sydney.png' },
                 { name: 'London', offset: 1, open: 8, close: 16.5, img: 'media/london.png' },
                 { name: 'New York', offset: -4, open: 9.5, close: 16, img: 'media/new-york.png' }
             ];
@@ -172,7 +172,7 @@
                 let openCount = 0;
                 SESSIONS.forEach(s => {
                     const localTime = new Date(utc + (3600000 * s.offset));
-                    s.timeEl.innerText = localTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    if(s.timeEl) s.timeEl.innerText = localTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     
                     const hours = localTime.getHours() + (localTime.getMinutes() / 60);
                     const day = localTime.getDay();
@@ -208,6 +208,7 @@
         </script>
     </div>
 </div>
+
 
 
         <div class="panel" style="flex: 1;">
