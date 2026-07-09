@@ -84,14 +84,11 @@
 </div>
 
 <script>
-    // Tab Switching Logic
     function switchTab(evt, tabId) {
         const tabPanes = document.querySelectorAll('.tab-pane');
         tabPanes.forEach(pane => pane.classList.remove('active'));
-        
         const tabButtons = document.querySelectorAll('.tab-button');
         tabButtons.forEach(btn => btn.classList.remove('active'));
-        
         document.getElementById(tabId).classList.add('active');
         evt.currentTarget.classList.add('active');
     }
@@ -109,41 +106,55 @@
         if (!file || !date) return alert("Select file AND date.");
 
         Papa.parse(file, {
-            header: true, // Forces header title mapping to stop column shifting index traps
+            header: false, // Turn off auto headers to avoid casing/spacing mismatch issues
             skipEmptyLines: true,
             complete: async (results) => {
+                if (results.data.length < 2) return alert("Empty file.");
+
+                // Normalize header text matches directly
+                const firstRow = results.data[0].map(h => String(h || '').trim().toLowerCase());
+                
+                // Fallback scan loop index parameters
+                let idxTicker = firstRow.indexOf('ticker');
+                let idxBias = firstRow.indexOf('s.t. bias');
+                let idxBbl = firstRow.indexOf('bull/bear line');
+                let idxS1 = firstRow.indexOf('s1');
+                let idxS2 = firstRow.indexOf('s2');
+                let idxR1 = firstRow.indexOf('r1');
+                let idxR2 = firstRow.indexOf('r2');
+                let idxLollipop = firstRow.indexOf('lollipop status');
+                let idxAnalysis = firstRow.indexOf('analysis');
+
+                // Hard fallback positions matching sheet structure if headers are missing
+                if (idxTicker === -1) idxTicker = 0;
+                if (idxBias === -1) idxBias = 1;
+                if (idxBbl === -1) idxBbl = 4;
+                if (idxS1 === -1) idxS1 = 6;
+                if (idxS2 === -1) idxS2 = 7;
+                if (idxR1 === -1) idxR1 = 8;
+                if (idxR2 === -1) idxR2 = 9;
+                if (idxLollipop === -1) idxLollipop = 10;
+                if (idxAnalysis === -1) idxAnalysis = 11;
+
                 await client.from('key_levels').delete().eq('trade_date', date);
 
-                const cleanData = results.data.filter(row => row.Ticker || row.ticker).map(row => {
-                    // Extracting names dynamically via header keys
-                    const tickerVal = (row['Ticker'] || row['ticker'] || '').trim();
-                    const s1Val = parseFloat(row['S1'] || row['s1']) || 0;
-                    const s2Val = parseFloat(row['S2'] || row['s2']) || 0;
-                    const r1Val = parseFloat(row['R1'] || row['r1']) || 0;
-                    const r2Val = parseFloat(row['R2'] || row['r2']) || 0;
-                    const bblVal = parseFloat(row['BULL/BEAR LINE'] || row['bull_bear_line']) || 0;
-                    const biasVal = (row['S.T. Bias'] || row['bias'] || 'Neutral').trim();
-                    
-                    // Maps exactly to header title words
-                    const lollipopStatusText = (row['Lollipop Status'] || row['lollipop'] || 'Inside Range').trim();
-                    const rawAnalysisText = (row['Analysis'] || row['analysis'] || '').trim();
-
+                const cleanData = results.data.slice(1).filter(row => row[idxTicker]).map(row => {
                     return {
-                        ticker: tickerVal,
-                        s1: s1Val,
-                        s2: s2Val, 
-                        r1: r1Val,
-                        r2: r2Val,
-                        bias: biasVal, 
-                        bull_bear_line: bblVal,
-                        lollipop: lollipopStatusText, 
-                        analysis: rawAnalysisText,
+                        ticker: String(row[idxTicker] || '').trim(),
+                        bias: String(row[idxBias] || 'Neutral').trim(),
+                        bull_bear_line: parseFloat(row[idxBbl]) || 0,
+                        s1: parseFloat(row[idxS1]) || 0,
+                        s2: parseFloat(row[idxS2]) || 0,
+                        r1: parseFloat(row[idxR1]) || 0,
+                        r2: parseFloat(row[idxR2]) || 0,
+                        lollipop: String(row[idxLollipop] || 'Inside Range').trim(),
+                        analysis: String(row[idxAnalysis] || '').trim(), // Force absolute string parsing
                         trade_date: date
                     };
                 });
 
                 const { error } = await client.from('key_levels').insert(cleanData);
-                document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Header-mapped matrices uploaded cleanly.";
+                document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Data uploaded completely.";
             }
         });
     }
