@@ -86,20 +86,15 @@
 <script>
     // Tab Switching Logic
     function switchTab(evt, tabId) {
-        // Hide all panes
         const tabPanes = document.querySelectorAll('.tab-pane');
         tabPanes.forEach(pane => pane.classList.remove('active'));
         
-        // Remove active state from all buttons
         const tabButtons = document.querySelectorAll('.tab-button');
         tabButtons.forEach(btn => btn.classList.remove('active'));
         
-        // Show the target pane and set button as active
         document.getElementById(tabId).classList.add('active');
         evt.currentTarget.classList.add('active');
     }
-
-    // --- Original Logic Below ---
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
@@ -114,31 +109,33 @@
         if (!file || !date) return alert("Select file AND date.");
 
         Papa.parse(file, {
-            header: false,
+            header: true, // Forces header title mapping to stop column shifting index traps
             skipEmptyLines: true,
             complete: async (results) => {
                 await client.from('key_levels').delete().eq('trade_date', date);
 
-                const cleanData = results.data.slice(1).filter(r => Array.isArray(r) && r[0]).map(row => {
-                    // Extracting numerical calculations based on single split columns natively
-                    const s1 = parseFloat(row[6]) || 0;
-                    const s2 = parseFloat(row[7]) || 0;
-                    const r1 = parseFloat(row[8]) || 0;
-                    const r2 = parseFloat(row[9]) || 0;
-                    const bbl = parseFloat(row[4]) || 0;
+                const cleanData = results.data.filter(row => row.Ticker || row.ticker).map(row => {
+                    // Extracting names dynamically via header keys
+                    const tickerVal = (row['Ticker'] || row['ticker'] || '').trim();
+                    const s1Val = parseFloat(row['S1'] || row['s1']) || 0;
+                    const s2Val = parseFloat(row['S2'] || row['s2']) || 0;
+                    const r1Val = parseFloat(row['R1'] || row['r1']) || 0;
+                    const r2Val = parseFloat(row['R2'] || row['r2']) || 0;
+                    const bblVal = parseFloat(row['BULL/BEAR LINE'] || row['bull_bear_line']) || 0;
+                    const biasVal = (row['S.T. Bias'] || row['bias'] || 'Neutral').trim();
                     
-                    // Aligns variables strictly with columns K and L of the sheet layout matrix
-                    const lollipopStatusText = row[10] ? row[10].trim() : 'Inside Range';
-                    const rawAnalysisText = row[11] ? row[11].trim() : '';
+                    // Maps exactly to header title words
+                    const lollipopStatusText = (row['Lollipop Status'] || row['lollipop'] || 'Inside Range').trim();
+                    const rawAnalysisText = (row['Analysis'] || row['analysis'] || '').trim();
 
                     return {
-                        ticker: row[0].trim(),
-                        s1: s1,
-                        s2: s2, 
-                        r1: r1,
-                        r2: r2,
-                        bias: row[1] ? row[1].trim() : 'Neutral', 
-                        bull_bear_line: bbl,
+                        ticker: tickerVal,
+                        s1: s1Val,
+                        s2: s2Val, 
+                        r1: r1Val,
+                        r2: r2Val,
+                        bias: biasVal, 
+                        bull_bear_line: bblVal,
                         lollipop: lollipopStatusText, 
                         analysis: rawAnalysisText,
                         trade_date: date
@@ -146,7 +143,7 @@
                 });
 
                 const { error } = await client.from('key_levels').insert(cleanData);
-                document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Levels, calculated biases, lollipop signals, and macro commentary uploaded.";
+                document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Header-mapped matrices uploaded cleanly.";
             }
         });
     }
