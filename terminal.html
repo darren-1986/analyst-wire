@@ -105,7 +105,7 @@
     </div>
     
     <div class="right-column">
-        <div class="panel" style="flex: 1;">
+      <div class="panel" style="flex: 1;">
     <div class="panel-header">Market Time Zones</div>
     <div class="panel-content">
         <div class="market-sessions-widget">
@@ -137,41 +137,42 @@
         <script>
         (function() {
             const SESSIONS = [
-                { name: 'Tokyo', utc: 9, open: 9, close: 15, img: 'media/tokyo.png' },
-                { name: 'Sydney', utc: 10, open: 10, close: 16, img: 'media/sydney.png' },
-                { name: 'London', utc: 1, open: 8, close: 16.5, img: 'media/london.png' },
-                { name: 'New York', utc: -4, open: 9.5, close: 16, img: 'media/new-york.png' }
+                { name: 'Tokyo', utc: 9, open: 9, close: 15 },
+                { name: 'Sydney', utc: 10, open: 10, close: 16 },
+                { name: 'London', utc: 1, open: 8, close: 16.5 },
+                { name: 'New York', utc: -4, open: 9.5, close: 16 }
             ];
 
             function tick() {
                 const now = new Date();
+                const nowUTC = now.getTime() + (now.getTimezoneOffset() * 60000);
                 document.getElementById('msw-user-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 
                 let openCount = 0;
                 SESSIONS.forEach(s => {
-                    // 1. Calculate Market Time independently
-                    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-                    const marketTime = new Date(utc + (3600000 * s.utc));
+                    const marketTimeMs = nowUTC + (s.utc * 3600000);
+                    const marketDate = new Date(marketTimeMs);
                     
-                    document.getElementById('time-'+s.name).innerText = marketTime.getHours().toString().padStart(2,'0') + ':' + marketTime.getMinutes().toString().padStart(2,'0');
+                    document.getElementById('time-'+s.name).innerText = marketDate.getUTCHours().toString().padStart(2,'0') + ':' + marketDate.getUTCMinutes().toString().padStart(2,'0');
                     
-                    // 2. Check if open
-                    const hours = marketTime.getHours() + (marketTime.getMinutes() / 60);
-                    const isOpen = (marketTime.getDay() > 0 && marketTime.getDay() < 6) && (hours >= s.open && hours < s.close);
+                    const hours = marketDate.getUTCHours() + (marketDate.getUTCMinutes() / 60);
+                    const day = marketDate.getUTCDay();
+                    const isOpen = (day > 0 && day < 6) && (hours >= s.open && hours < s.close);
+                    
                     if(isOpen) openCount++;
                     
-                    // 3. Update UI
                     document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
-                    document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
-                    document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
+                    const stat = document.getElementById('stat-'+s.name);
+                    stat.innerText = isOpen ? 'OPEN' : 'CLOSED';
+                    stat.className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
                     
-                    // 4. Calculate Countdown independently
-                    let target = new Date(marketTime);
-                    target.setHours(Math.floor(s.open), (s.open % 1) * 60, 0, 0);
-                    if (marketTime >= target) target.setDate(target.getDate() + 1);
-                    while (target.getDay() === 0 || target.getDay() === 6) target.setDate(target.getDate() + 1);
+                    // Fixed Independent Countdown Calculation
+                    let target = new Date(marketTimeMs);
+                    target.setUTCHours(Math.floor(s.open), (s.open % 1) * 60, 0, 0);
+                    if (marketTimeMs >= target.getTime()) target.setUTCDate(target.getUTCDate() + 1);
+                    while (target.getUTCDay() === 0 || target.getUTCDay() === 6) target.setUTCDate(target.getUTCDate() + 1);
                     
-                    const diff = target - marketTime;
+                    const diff = target.getTime() - marketTimeMs;
                     const h = Math.floor(diff / 3600000);
                     const m = Math.floor((diff % 3600000) / 60000);
                     
@@ -181,17 +182,17 @@
                 document.getElementById('msw-hot-alert').style.display = (openCount > 1) ? 'block' : 'none';
             }
 
-            // Initialization
             const container = document.getElementById('msw-sessions-container');
             container.innerHTML = '';
             SESSIONS.forEach(s => {
-                container.insertAdjacentHTML('beforeend', `<div class="msw-session-row"><div class="msw-session-name"><span class="msw-status-dot" id="dot-${s.name}"></span><img src="${s.img}" class="msw-icon-img"><span>${s.name}<small class="msw-zone-time" id="time-${s.name}"></small></span></div><span class="msw-session-status-text" id="stat-${s.name}"></span><div class="msw-countdown-text" id="count-${s.name}"></div></div>`);
+                container.insertAdjacentHTML('beforeend', `<div class="msw-session-row"><div class="msw-session-name"><span class="msw-status-dot" id="dot-${s.name}"></span><span>${s.name}<small class="msw-zone-time" id="time-${s.name}"></small></span></div><span class="msw-session-status-text" id="stat-${s.name}"></span><div class="msw-countdown-text" id="count-${s.name}"></div></div>`);
             });
             setInterval(tick, 1000);
             tick();
         })();
         </script>
     </div>
+</div>
 </div>
 
 
