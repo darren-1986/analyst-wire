@@ -12,9 +12,9 @@
 body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #090b10; color: #d1d4dc; margin: 0; min-height: 100vh; font-size: 13px; }
 
 /* Grid System Layout */
-.dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 20px; padding: 20px; height: calc(100vh - 75px); box-sizing: border-box; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 15px; padding: 15px; height: calc(100vh - 60px); box-sizing: border-box; }
 .grid-quadrant { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
-.quadrant-header { padding: 12px 16px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
+.quadrant-header { padding: 10px 15px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
 
 /* Navigation */
 .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; }
@@ -36,82 +36,26 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 .modal-content { background-color: #0d1117; margin: 5% auto; padding: 35px; border: 1px solid #30363d; width: 80%; max-width: 750px; color: #c9d1d9; border-radius: 12px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
 .close-btn { color: #8b949e; float: right; font-size: 24px; font-weight: normal; cursor: pointer; transition: color 0.2s; line-height: 1; }
 .close-btn:hover { color: #fff; }
-.modal-content h2 { margin-top: 0; font-weight: 600; color: #fff; }
-.modal-content h3 { font-weight: 600; color: #fff; margin-top: 25px; }
-.modal-content hr { border: 0; border-top: 1px solid #30363d; margin: 25px 0; }
-
-/* Content & Header */
-.container { padding: 30px; max-width: 1400px; margin: 0 auto; }
-.header-row { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
-h1 { margin: 0; font-size: 22px; font-weight: 600; color: #fff; letter-spacing: -0.5px; }
-.info-btn { background: rgba(41, 98, 255, 0.1); color: #2962ff; border: 1px solid rgba(41, 98, 255, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
-.info-btn:hover { background: #2962ff; color: #fff; }
 
 /* Filter Section */
-.filter-section { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; }
-select, input[type="date"] { background: #0d1117; color: #c9d1d9; padding: 8px 12px; border: 1px solid #30363d; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; cursor: pointer; }
-select:focus, input[type="date"]:focus { border-color: #2962ff; }
+.filter-section { display: flex; gap: 12px; padding: 10px; align-items: center; }
+select, input[type="date"] { background: #0d1117; color: #c9d1d9; padding: 8px 12px; border: 1px solid #30363d; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; cursor: pointer; }
+.info-btn { background: rgba(41, 98, 255, 0.1); color: #2962ff; border: 1px solid rgba(41, 98, 255, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
 
 /* Modern Table Container */
-.table-container { background: #0d1117; border-radius: 10px; border: 1px solid #30363d; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.table-container { overflow-y: auto; flex: 1; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
-th { background: #161b22; padding: 12px 20px; color: #8b949e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-bottom: 1px solid #30363d; cursor: pointer; transition: color 0.2s; user-select: none; }
-th:hover { color: #fff; }
-td { padding: 12px 20px; border-bottom: 1px solid #1c2230; color: #c9d1d9; vertical-align: middle; }
-tbody tr { transition: background-color 0.15s ease; }
+th { background: #161b22; padding: 12px 20px; color: #8b949e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-bottom: 1px solid #30363d; cursor: pointer; }
+td { padding: 12px 20px; border-bottom: 1px solid #1c2230; color: #c9d1d9; }
 tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 
-/* 5-Tier Advanced UI Color Settings */
-.bias-strong-up { color: #2ea043; font-weight: 600; }
-.bias-medium-up { color: #a6e22e; font-weight: 500; }
-.bias-neutral { color: #d29922; font-weight: 600; }
-.bias-medium-down { color: #f0883e; font-weight: 500; }
-.bias-strong-down { color: #f85149; font-weight: 600; }
-
-/* Pill Badges */
-.range-badge { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8b949e; }
-.state-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; }
-.trending { background: rgba(41, 98, 255, 0.1); color: #58a6ff; border: 1px solid rgba(41, 98, 255, 0.2); }
-.consolidated { background: rgba(139, 148, 158, 0.1); color: #8b949e; border: 1px solid rgba(139, 148, 158, 0.2); }
-
-/* Interactive Ticker Element */
-.clickable-ticker { cursor: pointer; }
-.clickable-ticker:hover .ticker-text { color: #58a6ff; }
-.clickable-ticker:hover svg { fill: #58a6ff; }
-.ticker-flex { display: flex; align-items: center; gap: 8px; }
-.ticker-text { font-weight: 600; color: #fff; transition: color 0.15s ease; font-family: 'Inter', sans-serif; }
-.chart-icon-svg { fill: #8b949e; transition: fill 0.15s ease; display: inline-block; vertical-align: middle; }
-
-/* Expandable Drawer Framework Layout */
-.expand-toggle-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
-.expand-toggle-btn:hover { border-color: #8b949e; color: #c9d1d9; }
+/* Drawer & Lollipop */
+.expand-toggle-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
 .drawer-row { display: none; background: #05070a !important; border-bottom: 1px solid #1c2230; }
-.drawer-row td { padding: 0; border-bottom: none; }
 .drawer-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 25px; padding: 25px; border-left: 3px solid #2962ff; }
 .analysis-panel { display: flex; flex-direction: column; overflow: hidden; }
-
-/* Color-Coded Lollipop Display System Components (Spacing Preserved) */
-.lollipop-system { display: flex; align-items: center; gap: 12px; margin-top: 5px; height: 38px; }
-.lollipop-indicator-dot { width: 12px; height: 12px; border-radius: 50%; position: relative; flex-shrink: 0; }
-.lollipop-indicator-dot::after { content: ''; position: absolute; top: 12px; left: 5px; width: 2px; height: 26px; background: #30363d; }
-.lollipop-badge { padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; white-space: nowrap; }
-
-.lolli-upper { color: #2ea043; }
-.lolli-upper .lollipop-indicator-dot { background: #2ea043; box-shadow: 0 0 10px rgba(46, 160, 67, 0.4); }
-.lolli-upper .lollipop-badge { background: rgba(46, 160, 67, 0.1); border: 1px solid rgba(46, 160, 67, 0.3); }
-
-.lolli-lower { color: #f85149; }
-.lolli-lower .lollipop-indicator-dot { background: #f85149; box-shadow: 0 0 10px rgba(248, 81, 73, 0.4); }
-.lolli-lower .lollipop-badge { background: rgba(248, 81, 73, 0.1); border: 1px solid rgba(248, 81, 73, 0.3); }
-
-.lolli-range { color: #d29922; }
-.lolli-range .lollipop-indicator-dot { background: #d29922; box-shadow: 0 0 8px rgba(210, 153, 34, 0.4); }
-.lolli-range .lollipop-badge { background: rgba(210, 153, 34, 0.1); border: 1px solid rgba(210, 153, 34, 0.3); }
-
-.embedded-chart-frame { height: 320px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; }
-
-/* Subheading tags inside drawer */
-.drawer-section-title { color: #8b949e; font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; display: block; margin-bottom: 8px; }
+.lollipop-badge { padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 11px; text-transform: uppercase; display: inline-block; }
+.embedded-chart-frame { height: 250px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; }
 </style>
 </head>
 <body>
@@ -120,48 +64,7 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 <div class="modal-content">
 <span class="close-btn" onclick="closeModal()">&times;</span>
 <h2>How to Use the Market Trade Radar</h2>
-<p style="color: #8b949e; margin-top: -10px; font-size: 14px;">A professional-grade terminal guide to decoding intraday market structures and identifying top-tier trade ideas.</p>
-<hr>
-<h3>1. Structural Component Matrix</h3>
-<p><strong>BIAS (5-Tier Framework):</strong> Highlights current market direction and institutional momentum relative to the central pivot area.</p>
-<ul style="line-height: 1.6;">
-    <li><span class="bias-strong-up">▲ Strong Bullish:</span> Heavy buying pressure. Look for momentum continuation.</li>
-    <li><span class="bias-medium-up">▲ Medium Bullish:</span> Moderate upward bias. Approaching pivot boundaries.</li>
-    <li><span class="bias-neutral">➔ Neutral:</span> Price is resting directly on or near the central pivot corridor. Equilibrium phase.</li>
-    <li><span class="bias-medium-down">▼ Medium Bearish:</span> Moderate downward bias. Testing pivot floors.</li>
-    <li><span class="bias-strong-down">▼ Strong Bearish:</span> Heavy distribution/selling pressure. Look for short continuations.</li>
-</ul>
-<p><strong>Bull/Bear Line:</strong> The primary institutional pivot point for the day. If the market is trading above this number, sentiment is fundamentally long; below this number, sentiment is fundamentally short.</p>
-<p><strong>Market State & Volatility Engine:</strong> Automatically measures the absolute distance between your primary intraday support ($S1$) and resistance ($R1$). 
-    <ul style="line-height: 1.6;">
-        <li><strong>Trending:</strong> Volatility has expanded past standard asset true ranges (e.g., &gt;75 pips on major FX, &gt;80 points on Indices, &gt;$15 on Gold). Expect continuous follow-through.</li>
-        <li><strong>Consolidated:</strong> Volatility is compressed inside standard ranges. Expect range-bound, choppy, or mean-reverting price action.</li>
-    </ul>
-</p>
-<hr>
-<h3>2. Playbook: How to Find Trade Ideas</h3>
-<p style="color: #fff; font-weight: 600; margin-bottom: 5px;">💡 Strategy A: The Breakout / Momentum Play</p>
-<ul style="line-height: 1.6;">
-    <li><strong>The Setup:</strong> Look for assets displaying a <span class="bias-strong-up">Strong Bullish</span> or <span class="bias-strong-down">Strong Bearish</span> Bias combined with a <span class="state-badge trending" style="font-size: 9px; padding: 2px 6px;">TRENDING</span> Market State.</li>
-    <li><strong>Execution:</strong> Avoid fading these moves. Instead, filter for these tickers, open your charts, and look for pullback entries (e.g., buying a minor dip toward the Bull/Bear Line in a Strong Bullish trend) to ride the expansion wave.</li>
-</ul>
-<p style="color: #fff; font-weight: 600; margin-bottom: 5px; margin-top: 20px;">💡 Strategy B: The Range Reversion Play</p>
-<ul style="line-height: 1.6;">
-    <li><strong>The Setup:</strong> Look for assets displaying a <span class="bias-neutral">Neutral</span>, Medium Bullish, or Medium Bearish Bias combined with a <span class="state-badge consolidated" style="font-size: 9px; padding: 2px 6px;">CONSOLIDATED</span> Market State.</li>
-    <li><strong>Execution:</strong> These markets are trapped in ranges. Look for short opportunities at $R1 / R2$ or long opportunities at $S1 / S2$, targeting a price return back to the central Bull/Bear Line.</li>
-</ul>
-<p style="color: #fff; font-weight: 600; margin-bottom: 5px; margin-top: 20px;">💡 Strategy C: The Dynamic Pivot Shift</p>
-<ul style="line-height: 1.6;">
-    <li><strong>The Setup:</strong> Monitor assets carrying a <span class="bias-neutral">Neutral</span> bias. This means the market is sitting dead on its institutional pivot line.</li>
-    <li><strong>Execution:</strong> This is a coiled spring. Watch for a directional breakout away from the Bull/Bear Line on your short-term execution charts to capture the early inception of a fresh trend.</li>
-</ul>
-<hr>
-<h3>3. Professional Trading Workflow</h3>
-<ol style="line-height: 1.6;">
-    <li><strong>Scan Categories:</strong> Use the dropdown menus to separate your focus (e.g., isolate FX from Equities depending on the session).</li>
-    <li><strong>Determine Playbook:</strong> Sort the table by the <strong>BIAS ↕</strong> column header to group all structural extremes together instantly.</li>
-    <li><strong>Risk Parameters:</strong> Use the <strong>Volatility</strong> badge to size your stops—higher volatility values dictate smaller position sizing to preserve trading capital.</li>
-</ol>
+<p>A professional-grade terminal guide to decoding intraday market structures.</p>
 </div>
 </div>
 
@@ -182,21 +85,18 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 <div class="dashboard-grid">
     <div class="grid-quadrant">
         <div class="quadrant-header">
-            <h1 style="font-size: 15px;">Market Trade Radar</h1>
+            <h1 style="font-size: 14px;">Market Trade Radar</h1>
             <button class="info-btn" onclick="openModal()">Info ℹ</button>
         </div>
         <div class="table-container">
-            <div class="filter-section" style="padding: 10px;">
+            <div class="filter-section">
                 <input type="date" id="date-filter" onchange="fetchData()">
                 <select id="cat-filter" onchange="render()"><option value="all">All Categories</option></select>
                 <select id="ticker-filter" onchange="render()"><option value="all">All Tickers</option></select>
             </div>
             <table id="levels-table">
                 <thead>
-                    <tr>
-                        <th>Date</th><th>Ticker</th><th onclick="toggleSortBias()">BIAS ↕</th><th>Bull/Bear Line</th>
-                        <th onclick="toggleSortState()">Market State ↕</th><th>Volatility</th><th>Action</th>
-                    </tr>
+                    <tr><th>Date</th><th>Ticker</th><th onclick="toggleSortBias()">BIAS ↕</th><th>Action</th></tr>
                 </thead>
                 <tbody id="levels-body"></tbody>
             </table>
@@ -230,7 +130,6 @@ const tvSymbolMap = {
 
 let cachedData = [];
 let biasSortOrder = 0;
-let stateSortOrder = 0;
 
 function openModal() { document.getElementById("infoModal").style.display = "block"; }
 function closeModal() { document.getElementById("infoModal").style.display = "none"; }
@@ -280,64 +179,32 @@ function toggleSortBias() {
     render();
 }
 
-function toggleSortState() {
-    stateSortOrder = (stateSortOrder + 1) % 3;
-    render();
-}
-
-function getAssetVolatilityMetrics(r) {
-    const assetClass = categoryMap[r.ticker] || 'Forex';
-    const rawDiff = Math.abs(parseFloat(r.r1) - parseFloat(r.s1));
-    let rangeFormatted, isTrending;
-    if (assetClass === 'Indices' || assetClass === 'Crypto') {
-        rangeFormatted = rawDiff.toFixed(2); isTrending = rawDiff > 80.00;
-    } else if (r.ticker === 'XAU/USD') {
-        rangeFormatted = rawDiff.toFixed(2); isTrending = rawDiff > 15.00;
-    } else {
-        rangeFormatted = rawDiff.toFixed(4); isTrending = (rawDiff * 10000) > 75.0;
-    }
-    return { rangeFormatted, isTrending };
-}
-
 function render() {
-    const cat = document.getElementById('cat-filter').value;
-    const tick = document.getElementById('ticker-filter').value;
     const tbody = document.getElementById('levels-body');
     const biasMap = { 'Strong Bullish': 2, 'Medium Bullish': 1, 'Neutral': 0, 'Medium Bearish': -1, 'Strong Bearish': -2 };
+    let filtered = cachedData.filter(r => (document.getElementById('cat-filter').value === 'all' || categoryMap[r.ticker] === document.getElementById('cat-filter').value) && (document.getElementById('ticker-filter').value === 'all' || r.ticker === document.getElementById('ticker-filter').value));
 
-    let filtered = cachedData.filter(r => (cat === 'all' || categoryMap[r.ticker] === cat) && (tick === 'all' || r.ticker === tick));
+    if (biasSortOrder !== 0) filtered.sort((a, b) => (biasMap[a.bias] - biasMap[b.bias]) * (biasSortOrder === 1 ? 1 : -1));
 
-    if (biasSortOrder !== 0) {
-        filtered.sort((a, b) => (biasMap[a.bias] - biasMap[b.bias]) * (biasSortOrder === 1 ? 1 : -1));
-    }
-
-    tbody.innerHTML = filtered.map((r, index) => {
-        const metrics = getAssetVolatilityMetrics(r);
-        const state = metrics.isTrending ? "Trending" : "Consolidated";
-        const stateClass = metrics.isTrending ? "trending" : "consolidated";
-        return `
-            <tr>
-                <td>${r.trade_date}</td>
-                <td class="clickable-ticker" onclick="openChart('${r.ticker}')"><span class="ticker-text">${r.ticker}</span></td>
-                <td>${r.bias}</td>
-                <td><button class="expand-toggle-btn" id="expand-btn-${index}" onclick="toggleDrawer(${index}, '${r.ticker}')">Expand ▼</button></td>
-            </tr>
-            <tr id="drawer-row-${index}" class="drawer-row">
-                <td colspan="4">
-                    <div class="drawer-container">
-                        <div class="analysis-panel">
-                            <span class="drawer-section-title">Lollipop Momentum</span>
-                            <div class="lollipop-badge">${r.lollipop}</div>
-                            <p style="font-size: 13px;">${r.analysis}</p>
-                        </div>
-                        <div id="chart-embed-${index}" class="embedded-chart-frame"></div>
+    tbody.innerHTML = filtered.map((r, index) => `
+        <tr>
+            <td>${r.trade_date}</td><td>${r.ticker}</td><td>${r.bias}</td>
+            <td><button class="expand-toggle-btn" id="expand-btn-${index}" onclick="toggleDrawer(${index}, '${r.ticker}')">Expand ▼</button></td>
+        </tr>
+        <tr id="drawer-row-${index}" class="drawer-row">
+            <td colspan="4">
+                <div class="drawer-container">
+                    <div class="analysis-panel">
+                        <span class="drawer-section-title">Lollipop Momentum</span>
+                        <div class="lollipop-badge">${r.lollipop}</div>
+                        <p style="font-size: 13px;">${r.analysis}</p>
                     </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
+                    <div id="chart-embed-${index}" class="embedded-chart-frame"></div>
+                </div>
+            </td>
+        </tr>
+    `).join('');
 }
-
 document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
 init();
 </script>
