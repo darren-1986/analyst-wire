@@ -133,6 +133,12 @@
                     const bbl = parseFloat(row[4]) || 0;
                     const livePrice = parseFloat(row[5]) || 0;
                     
+                    // Column L (Index 11): Lollipop Status
+                    const lollipopStatusText = row[11] ? row[11].trim() : 'Inside Range';
+                    
+                    // Column M (Index 12): Analysis Block text string
+                    const rawAnalysisText = row[12] ? row[12].trim() : '';
+                    
                     // --- Upgraded 5-Tier Calculation Logic Matrix ---
                     let calculatedBias = 'Neutral';
                     if (livePrice > 0 && bbl > 0) {
@@ -150,17 +156,18 @@
                     return {
                         ticker: row[0].trim(),
                         s1: s1,
-                        s2: findVal(row, 'S2'),
+                        s2: lollipopStatusText, // Stores Lollipop string directly inside existing column space safely
                         r1: r1,
                         r2: findVal(row, 'R2'),
-                        bias: calculatedBias, // Pushes clean evaluated tier string up to your standard text column
+                        bias: calculatedBias, 
                         bull_bear_line: bbl,
+                        analysis: rawAnalysisText, // Standard mapping property matching your table text entity
                         trade_date: date
                     };
                 });
 
                 const { error } = await client.from('key_levels').insert(cleanData);
-                document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Levels and calculated biases uploaded.";
+                document.getElementById('status').innerText = error ? "Error: " + error.message : "Success! Levels, biases, lollipop markers, and analysis blocks uploaded.";
             }
         });
     }
