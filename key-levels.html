@@ -6,85 +6,107 @@
 <title>Analyst Wire | Key Levels</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
 <style>
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000000; color: #d1d4dc; margin: 0; min-height: 100vh; }
+/* Modern typography and base styling */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #090b10; color: #d1d4dc; margin: 0; min-height: 100vh; font-size: 13px; }
+
 /* Navigation */
-.top-nav { background: #131722; padding: 0 20px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2e39; }
-.nav-links { display: flex; align-items: center; }
-.nav-links a { color: #787b86; text-decoration: none; margin-left: 20px; font-size: 14px; font-weight: 500; cursor: pointer; }
-.nav-links a.active { color: #2962ff; font-weight: bold; }
+.top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; }
+.nav-links { display: flex; align-items: center; gap: 5px; }
+.nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
+.nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
 
 /* Dropdown Styling */
-.dropdown { position: relative; margin-left: 20px; }
-.dropbtn { background: none; border: none; color: #787b86; cursor: pointer; font-size: 18px; padding: 5px; }
-.dropdown-content { display: none; position: absolute; right: 0; background-color: #1c2230; min-width: 150px; border: 1px solid #2a2e39; z-index: 1000; border-radius: 4px; }
-.dropdown-content a { color: #d1d4dc; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; }
-.dropdown-content a:hover { background-color: #2a2e39; }
+.dropdown { position: relative; margin-left: 10px; }
+.dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
+.dropbtn:hover { color: #fff; }
+.dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
+.dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; border-radius: 0; }
+.dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
 /* Modal Styles */
-.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); }
-.modal-content { background-color: #131722; margin: 5% auto; padding: 30px; border: 1px solid #2a2e39; width: 80%; max-width: 700px; color: #d1d4dc; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
-.close-btn { color: #787b86; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
+.modal-content { background-color: #0d1117; margin: 5% auto; padding: 35px; border: 1px solid #30363d; width: 80%; max-width: 750px; color: #c9d1d9; border-radius: 12px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+.close-btn { color: #8b949e; float: right; font-size: 24px; font-weight: normal; cursor: pointer; transition: color 0.2s; line-height: 1; }
 .close-btn:hover { color: #fff; }
+.modal-content h2 { margin-top: 0; font-weight: 600; color: #fff; }
+.modal-content h3 { font-weight: 600; color: #fff; margin-top: 25px; }
+.modal-content hr { border: 0; border-top: 1px solid #30363d; margin: 25px 0; }
 
-/* Content */
-.container { padding: 30px; }
-.filter-section { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; }
-select, input[type="date"] { background: #131722; color: white; padding: 8px; border: 1px solid #2a2e39; border-radius: 4px; }
-.info-btn { background: #2962ff; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-left: 10px; }
+/* Content & Header */
+.container { padding: 30px; max-width: 1400px; margin: 0 auto; }
+.header-row { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+h1 { margin: 0; font-size: 22px; font-weight: 600; color: #fff; letter-spacing: -0.5px; }
+.info-btn { background: rgba(41, 98, 255, 0.1); color: #2962ff; border: 1px solid rgba(41, 98, 255, 0.3); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+.info-btn:hover { background: #2962ff; color: #fff; }
 
-table { width: 100%; border-collapse: collapse; background: #131722; margin-top: 20px; border: 1px solid #2a2e39; }
-th { background: #1c2230; padding: 12px; text-align: left; border: 1px solid #2a2e39; color: #787b86; font-size: 11px; text-transform: uppercase; cursor: pointer; }
+/* Filter Section */
+.filter-section { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; }
+select, input[type="date"] { background: #0d1117; color: #c9d1d9; padding: 8px 12px; border: 1px solid #30363d; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; cursor: pointer; }
+select:focus, input[type="date"]:focus { border-color: #2962ff; }
+
+/* Modern Table Container */
+.table-container { background: #0d1117; border-radius: 10px; border: 1px solid #30363d; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th { background: #161b22; padding: 12px 20px; color: #8b949e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-bottom: 1px solid #30363d; cursor: pointer; transition: color 0.2s; user-select: none; }
 th:hover { color: #fff; }
-td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
+td { padding: 12px 20px; border-bottom: 1px solid #1c2230; color: #c9d1d9; vertical-align: middle; }
+tbody tr { transition: background-color 0.15s ease; }
+tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 
 /* 5-Tier Advanced UI Color Settings */
-.bias-strong-up { color: #00ffaa; font-weight: bold; }
-.bias-medium-up { color: #b1ff29; font-weight: 500; }
-.bias-neutral { color: #ffb700; font-weight: bold; }
-.bias-medium-down { color: #ffa6a6; font-weight: 500; }
-.bias-strong-down { color: #ff0055; font-weight: bold; }
+.bias-strong-up { color: #2ea043; font-weight: 600; }
+.bias-medium-up { color: #a6e22e; font-weight: 500; }
+.bias-neutral { color: #d29922; font-weight: 600; }
+.bias-medium-down { color: #f0883e; font-weight: 500; }
+.bias-strong-down { color: #f85149; font-weight: 600; }
 
-.range-badge { background: #2a2e39; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; }
-.state-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; }
-.trending { background: #2962ff; color: white; }
-.consolidated { background: #5d606b; color: white; }
+/* Pill Badges */
+.range-badge { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8b949e; }
+.state-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; }
+.trending { background: rgba(41, 98, 255, 0.1); color: #58a6ff; border: 1px solid rgba(41, 98, 255, 0.2); }
+.consolidated { background: rgba(139, 148, 158, 0.1); color: #8b949e; border: 1px solid rgba(139, 148, 158, 0.2); }
 
-/* Interactive Ticker Element & SVG Sync */
-.clickable-ticker { cursor: pointer; transition: background-color 0.15s ease; }
-.clickable-ticker:hover { background-color: #1c2230; }
-.clickable-ticker:hover .ticker-text { color: #2962ff; text-decoration: underline; }
-.clickable-ticker:hover svg { fill: #2962ff; }
+/* Interactive Ticker Element */
+.clickable-ticker { cursor: pointer; }
+.clickable-ticker:hover .ticker-text { color: #58a6ff; }
+.clickable-ticker:hover svg { fill: #58a6ff; }
 .ticker-flex { display: flex; align-items: center; gap: 8px; }
-.ticker-text { font-weight: bold; color: #fff; transition: color 0.15s ease; }
-.chart-icon-svg { fill: #787b86; transition: fill 0.15s ease; display: inline-block; vertical-align: middle; }
+.ticker-text { font-weight: 600; color: #fff; transition: color 0.15s ease; font-family: 'Inter', sans-serif; }
+.chart-icon-svg { fill: #8b949e; transition: fill 0.15s ease; display: inline-block; vertical-align: middle; }
 
-/* Expandable Drawer UI Grid Architecture */
-.expand-toggle-btn { background: #1c2230; border: 1px solid #2a2e39; color: #787b86; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-.expand-toggle-btn:hover { border-color: #2962ff; color: #fff; }
-.drawer-row { background: #0a0d14 !important; display: none; }
-.drawer-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; padding: 20px; border-left: 4px solid #2962ff; }
-/* REMOVED overflow: hidden; from analysis-panel to stop the lollipop stick from clipping */
-.analysis-panel { display: flex; flex-direction: column; gap: 15px; }
+/* Expandable Drawer Framework Layout */
+.expand-toggle-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; cursor: pointer; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
+.expand-toggle-btn:hover { border-color: #8b949e; color: #c9d1d9; }
+.drawer-row { display: none; background: #05070a !important; border-bottom: 1px solid #1c2230; }
+.drawer-row td { padding: 0; border-bottom: none; }
+.drawer-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 25px; padding: 25px; border-left: 3px solid #2962ff; }
+.analysis-panel { display: flex; flex-direction: column; overflow: hidden; }
 
-/* Color-Coded Lollipop Display System Components */
+/* Color-Coded Lollipop Display System Components (Spacing Preserved) */
 .lollipop-system { display: flex; align-items: center; gap: 12px; margin-top: 5px; height: 38px; }
-.lollipop-indicator-dot { width: 14px; height: 14px; border-radius: 50%; position: relative; flex-shrink: 0; }
-.lollipop-indicator-dot::after { content: ''; position: absolute; top: 14px; left: 6px; width: 2px; height: 22px; background: #2a2e39; }
-.lollipop-badge { padding: 5px 12px; border-radius: 4px; font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; white-space: nowrap; }
+.lollipop-indicator-dot { width: 12px; height: 12px; border-radius: 50%; position: relative; flex-shrink: 0; }
+.lollipop-indicator-dot::after { content: ''; position: absolute; top: 12px; left: 5px; width: 2px; height: 26px; background: #30363d; }
+.lollipop-badge { padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; white-space: nowrap; }
 
-.lolli-upper { color: #00ffaa; }
-.lolli-upper .lollipop-indicator-dot { background: #00ffaa; box-shadow: 0 0 10px #00ffaa; }
-.lolli-upper .lollipop-badge { background: rgba(0, 255, 170, 0.15); border: 1px solid #00ffaa; }
+.lolli-upper { color: #2ea043; }
+.lolli-upper .lollipop-indicator-dot { background: #2ea043; box-shadow: 0 0 10px rgba(46, 160, 67, 0.4); }
+.lolli-upper .lollipop-badge { background: rgba(46, 160, 67, 0.1); border: 1px solid rgba(46, 160, 67, 0.3); }
 
-.lolli-lower { color: #ff0055; }
-.lolli-lower .lollipop-indicator-dot { background: #ff0055; box-shadow: 0 0 10px #ff0055; }
-.lolli-lower .lollipop-badge { background: rgba(255, 0, 85, 0.15); border: 1px solid #ff0055; }
+.lolli-lower { color: #f85149; }
+.lolli-lower .lollipop-indicator-dot { background: #f85149; box-shadow: 0 0 10px rgba(248, 81, 73, 0.4); }
+.lolli-lower .lollipop-badge { background: rgba(248, 81, 73, 0.1); border: 1px solid rgba(248, 81, 73, 0.3); }
 
-.lolli-range { color: #ffb700; }
-.lolli-range .lollipop-indicator-dot { background: #ffb700; box-shadow: 0 0 8px #ffb700; }
-.lolli-range .lollipop-badge { background: rgba(255, 183, 0, 0.15); border: 1px solid #ffb700; }
+.lolli-range { color: #d29922; }
+.lolli-range .lollipop-indicator-dot { background: #d29922; box-shadow: 0 0 8px rgba(210, 153, 34, 0.4); }
+.lolli-range .lollipop-badge { background: rgba(210, 153, 34, 0.1); border: 1px solid rgba(210, 153, 34, 0.3); }
 
-.embedded-chart-frame { height: 320px; background: #131722; border: 1px solid #2a2e39; border-radius: 6px; overflow: hidden; }
+.embedded-chart-frame { height: 320px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; }
+
+/* Subheading tags inside drawer */
+.drawer-section-title { color: #8b949e; font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; display: block; margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -93,13 +115,13 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 <div class="modal-content">
 <span class="close-btn" onclick="closeModal()">&times;</span>
 <h2>How to Use the Market Trade Radar</h2>
-<p style="color: #787b86; margin-top: -10px; font-size: 14px;">A professional-grade terminal guide to decoding intraday market structures and identifying top-tier trade ideas.</p>
+<p style="color: #8b949e; margin-top: -10px; font-size: 14px;">A professional-grade terminal guide to decoding intraday market structures and identifying top-tier trade ideas.</p>
 
-<hr style="border: 0; border-top: 1px solid #2a2e39; margin: 20px 0;">
+<hr>
 
 <h3>1. Structural Component Matrix</h3>
 <p><strong>BIAS (5-Tier Framework):</strong> Highlights current market direction and institutional momentum relative to the central pivot area.</p>
-<ul>
+<ul style="line-height: 1.6;">
     <li><span class="bias-strong-up">▲ Strong Bullish:</span> Heavy buying pressure. Look for momentum continuation.</li>
     <li><span class="bias-medium-up">▲ Medium Bullish:</span> Moderate upward bias. Approaching pivot boundaries.</li>
     <li><span class="bias-neutral">➔ Neutral:</span> Price is resting directly on or near the central pivot corridor. Equilibrium phase.</li>
@@ -110,37 +132,37 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 <p><strong>Bull/Bear Line:</strong> The primary institutional pivot point for the day. If the market is trading above this number, sentiment is fundamentally long; below this number, sentiment is fundamentally short.</p>
 
 <p><strong>Market State & Volatility Engine:</strong> Automatically measures the absolute distance between your primary intraday support ($S1$) and resistance ($R1$). 
-    <ul>
+    <ul style="line-height: 1.6;">
         <li><strong>Trending:</strong> Volatility has expanded past standard asset true ranges (e.g., &gt;75 pips on major FX, &gt;80 points on Indices, &gt;$15 on Gold). Expect continuous follow-through.</li>
         <li><strong>Consolidated:</strong> Volatility is compressed inside standard ranges. Expect range-bound, choppy, or mean-reverting price action.</li>
     </ul>
 </p>
 
-<hr style="border: 0; border-top: 1px solid #2a2e39; margin: 20px 0;">
+<hr>
 
 <h3>2. Playbook: How to Find Trade Ideas</h3>
-<p style="color: #fff; font-weight: bold;">💡 Strategy A: The Breakout / Momentum Play</p>
-<ul>
-    <li><strong>The Setup:</strong> Look for assets displaying a <span style="color: #00ffaa;">Strong Bullish</span> or <span style="color: #ff0055;">Strong Bearish</span> Bias combined with a <span style="background: #2962ff; color: #fff; padding: 2px 5px; border-radius: 3px; font-size: 11px;">TRENDING</span> Market State.</li>
+<p style="color: #fff; font-weight: 600; margin-bottom: 5px;">💡 Strategy A: The Breakout / Momentum Play</p>
+<ul style="line-height: 1.6;">
+    <li><strong>The Setup:</strong> Look for assets displaying a <span class="bias-strong-up">Strong Bullish</span> or <span class="bias-strong-down">Strong Bearish</span> Bias combined with a <span class="state-badge trending" style="font-size: 9px; padding: 2px 6px;">TRENDING</span> Market State.</li>
     <li><strong>Execution:</strong> Avoid fading these moves. Instead, filter for these tickers, open your charts, and look for pullback entries (e.g., buying a minor dip toward the Bull/Bear Line in a Strong Bullish trend) to ride the expansion wave.</li>
 </ul>
 
-<p style="color: #fff; font-weight: bold;">💡 Strategy B: The Range Reversion Play</p>
-<ul>
-    <li><strong>The Setup:</strong> Look for assets displaying a <span style="color: #ffb700;">Neutral</span>, Medium Bullish, or Medium Bearish Bias combined with a <span style="background: #5d606b; color: #fff; padding: 2px 5px; border-radius: 3px; font-size: 11px;">CONSOLIDATED</span> Market State.</li>
+<p style="color: #fff; font-weight: 600; margin-bottom: 5px; margin-top: 20px;">💡 Strategy B: The Range Reversion Play</p>
+<ul style="line-height: 1.6;">
+    <li><strong>The Setup:</strong> Look for assets displaying a <span class="bias-neutral">Neutral</span>, Medium Bullish, or Medium Bearish Bias combined with a <span class="state-badge consolidated" style="font-size: 9px; padding: 2px 6px;">CONSOLIDATED</span> Market State.</li>
     <li><strong>Execution:</strong> These markets are trapped in ranges. Look for short opportunities at $R1 / R2$ or long opportunities at $S1 / S2$, targeting a price return back to the central Bull/Bear Line.</li>
 </ul>
 
-<p style="color: #fff; font-weight: bold;">💡 Strategy C: The Dynamic Pivot Shift</p>
-<ul>
-    <li><strong>The Setup:</strong> Monitor assets carrying a <span style="color: #ffb700;">Neutral</span> bias. This means the market is sitting dead on its institutional pivot line.</li>
+<p style="color: #fff; font-weight: 600; margin-bottom: 5px; margin-top: 20px;">💡 Strategy C: The Dynamic Pivot Shift</p>
+<ul style="line-height: 1.6;">
+    <li><strong>The Setup:</strong> Monitor assets carrying a <span class="bias-neutral">Neutral</span> bias. This means the market is sitting dead on its institutional pivot line.</li>
     <li><strong>Execution:</strong> This is a coiled spring. Watch for a directional breakout away from the Bull/Bear Line on your short-term execution charts to capture the early inception of a fresh trend.</li>
 </ul>
 
-<hr style="border: 0; border-top: 1px solid #2a2e39; margin: 20px 0;">
+<hr>
 
 <h3>3. Professional Trading Workflow</h3>
-<ol>
+<ol style="line-height: 1.6;">
     <li><strong>Scan Categories:</strong> Use the dropdown menus to separate your focus (e.g., isolate FX from Equities depending on the session).</li>
     <li><strong>Determine Playbook:</strong> Sort the table by the <strong>BIAS ↕</strong> column header to group all structural extremes together instantly.</li>
     <li><strong>Risk Parameters:</strong> Use the <strong>Volatility</strong> badge to size your stops—higher volatility values dictate smaller position sizing to preserve trading capital.</li>
@@ -150,7 +172,7 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 
 <div class="top-nav">
 <div style="height: 50px; display: flex; align-items: center;">
-<img src="assets/logo.png" alt="Analyst Wire" style="height: 40px;">
+<img src="assets/logo.png" alt="Analyst Wire" style="height: 35px;">
 </div>
 <div class="nav-links">
 <a href="terminal.html">Dashboard</a>
@@ -163,14 +185,14 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 <a href="account.html">Account</a>
 <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
 <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
-<a id="logoutBtn" style="color: #f23645; cursor: pointer;">Logout</a>
+<a id="logoutBtn" style="color: #f85149; cursor: pointer;">Logout</a>
 </div>
 </div>
 </div>
 </div>
 
 <div class="container">
-<div style="display: flex; align-items: center;">
+<div class="header-row">
 <h1>Market Trade Radar</h1>
 <button class="info-btn" onclick="openModal()">Info ℹ</button>
 </div>
@@ -188,6 +210,7 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 </select>
 </div>
 
+<div class="table-container">
 <table id="levels-table">
 <thead>
 <tr>
@@ -195,9 +218,10 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 </tr>
 </thead>
 <tbody id="levels-body">
-<tr><td colspan="7">Loading radar data...</td></tr>
+<tr><td colspan="7" style="text-align: center; color: #8b949e; padding: 30px;">Loading radar data...</td></tr>
 </tbody>
 </table>
+</div>
 </div>
 
 <script>
@@ -225,7 +249,7 @@ let cachedData = [];
 let biasSortOrder = 0;
 let stateSortOrder = 0;
 
-// RESTORED INFO MODAL FUNCTIONS
+// Info Modal Functions
 function openModal() { document.getElementById("infoModal").style.display = "block"; }
 function closeModal() { document.getElementById("infoModal").style.display = "none"; }
 window.onclick = function(event) { if (event.target == document.getElementById("infoModal")) closeModal(); }
@@ -424,8 +448,8 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
             <div class="drawer-container">
                 <div class="analysis-panel">
                     
-                    <div style="padding-bottom: 12px; position: relative; display: block;">
-                        <span style="color:#787b86; font-size:11px; text-transform:uppercase; font-weight:bold; display:block; margin-bottom:6px;">Lollipop Momentum Status</span>
+                    <div style="padding-bottom: 15px; position: relative; display: block;">
+                        <span class="drawer-section-title">Lollipop Momentum Status</span>
                         <div class="lollipop-system ${lollipopWrapperClass}">
                             <div class="lollipop-indicator-dot"></div>
                             <div class="lollipop-badge">${lollipopStatus}</div>
@@ -434,11 +458,11 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
                     
                     <div style="height: 10px; display: block;"></div>
                     
-                    <p style="margin:0; font-size:12.5px; color:#787b86; line-height:1.4; display:block;">${lollipopDesc}</p>
+                    <p style="margin:0; font-size:13px; color:#8b949e; line-height:1.5; display:block;">${lollipopDesc}</p>
                     
-                    <div style="margin-top:10px; border-top: 1px solid #1c2230; padding-top: 15px; display: block;">
-                        <span style="color:#787b86; font-size:11px; text-transform:uppercase; font-weight:bold; display:block; margin-bottom:4px;">Macro Commentary</span>
-                        <p style="margin:0; font-size:13.5px; color:#fff; line-height:1.5; font-weight: 500;">${textualAnalysis}</p>
+                    <div style="margin-top:15px; border-top: 1px solid #1c2230; padding-top: 18px; display: block;">
+                        <span class="drawer-section-title">Macro Commentary</span>
+                        <p style="margin:0; font-size:13.5px; color:#c9d1d9; line-height:1.6;">${textualAnalysis}</p>
                     </div>
                 </div>
                 <div id="chart-embed-${index}" class="embedded-chart-frame"></div>
@@ -446,7 +470,7 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
         </td>
     </tr>
     `;
-}).join('') : '<tr><td colspan="7">No data for selected date, please use the calendar to select a different date.</td></tr>';
+}).join('') : '<tr><td colspan="7" style="text-align: center; color: #8b949e; padding: 30px;">No data for selected date, please use the calendar to select a different date.</td></tr>';
 }
 
 function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
