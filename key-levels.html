@@ -11,7 +11,7 @@
 
 body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #090b10; color: #d1d4dc; margin: 0; min-height: 100vh; font-size: 13px; }
 
-/* Dashboard Grid Layout (New Addition) */
+/* Grid System Layout */
 .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 20px; padding: 20px; height: calc(100vh - 75px); box-sizing: border-box; }
 .grid-quadrant { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
 .quadrant-header { padding: 12px 16px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
@@ -121,9 +121,7 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 <span class="close-btn" onclick="closeModal()">&times;</span>
 <h2>How to Use the Market Trade Radar</h2>
 <p style="color: #8b949e; margin-top: -10px; font-size: 14px;">A professional-grade terminal guide to decoding intraday market structures and identifying top-tier trade ideas.</p>
-
 <hr>
-
 <h3>1. Structural Component Matrix</h3>
 <p><strong>BIAS (5-Tier Framework):</strong> Highlights current market direction and institutional momentum relative to the central pivot area.</p>
 <ul style="line-height: 1.6;">
@@ -133,39 +131,31 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     <li><span class="bias-medium-down">▼ Medium Bearish:</span> Moderate downward bias. Testing pivot floors.</li>
     <li><span class="bias-strong-down">▼ Strong Bearish:</span> Heavy distribution/selling pressure. Look for short continuations.</li>
 </ul>
-
 <p><strong>Bull/Bear Line:</strong> The primary institutional pivot point for the day. If the market is trading above this number, sentiment is fundamentally long; below this number, sentiment is fundamentally short.</p>
-
 <p><strong>Market State & Volatility Engine:</strong> Automatically measures the absolute distance between your primary intraday support ($S1$) and resistance ($R1$). 
     <ul style="line-height: 1.6;">
         <li><strong>Trending:</strong> Volatility has expanded past standard asset true ranges (e.g., &gt;75 pips on major FX, &gt;80 points on Indices, &gt;$15 on Gold). Expect continuous follow-through.</li>
         <li><strong>Consolidated:</strong> Volatility is compressed inside standard ranges. Expect range-bound, choppy, or mean-reverting price action.</li>
     </ul>
 </p>
-
 <hr>
-
 <h3>2. Playbook: How to Find Trade Ideas</h3>
 <p style="color: #fff; font-weight: 600; margin-bottom: 5px;">💡 Strategy A: The Breakout / Momentum Play</p>
 <ul style="line-height: 1.6;">
     <li><strong>The Setup:</strong> Look for assets displaying a <span class="bias-strong-up">Strong Bullish</span> or <span class="bias-strong-down">Strong Bearish</span> Bias combined with a <span class="state-badge trending" style="font-size: 9px; padding: 2px 6px;">TRENDING</span> Market State.</li>
     <li><strong>Execution:</strong> Avoid fading these moves. Instead, filter for these tickers, open your charts, and look for pullback entries (e.g., buying a minor dip toward the Bull/Bear Line in a Strong Bullish trend) to ride the expansion wave.</li>
 </ul>
-
 <p style="color: #fff; font-weight: 600; margin-bottom: 5px; margin-top: 20px;">💡 Strategy B: The Range Reversion Play</p>
 <ul style="line-height: 1.6;">
     <li><strong>The Setup:</strong> Look for assets displaying a <span class="bias-neutral">Neutral</span>, Medium Bullish, or Medium Bearish Bias combined with a <span class="state-badge consolidated" style="font-size: 9px; padding: 2px 6px;">CONSOLIDATED</span> Market State.</li>
     <li><strong>Execution:</strong> These markets are trapped in ranges. Look for short opportunities at $R1 / R2$ or long opportunities at $S1 / S2$, targeting a price return back to the central Bull/Bear Line.</li>
 </ul>
-
 <p style="color: #fff; font-weight: 600; margin-bottom: 5px; margin-top: 20px;">💡 Strategy C: The Dynamic Pivot Shift</p>
 <ul style="line-height: 1.6;">
     <li><strong>The Setup:</strong> Monitor assets carrying a <span class="bias-neutral">Neutral</span> bias. This means the market is sitting dead on its institutional pivot line.</li>
     <li><strong>Execution:</strong> This is a coiled spring. Watch for a directional breakout away from the Bull/Bear Line on your short-term execution charts to capture the early inception of a fresh trend.</li>
 </ul>
-
 <hr>
-
 <h3>3. Professional Trading Workflow</h3>
 <ol style="line-height: 1.6;">
     <li><strong>Scan Categories:</strong> Use the dropdown menus to separate your focus (e.g., isolate FX from Equities depending on the session).</li>
@@ -179,17 +169,12 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 <img src="assets/logo.png" style="height: 35px;">
 <div class="nav-links">
 <a href="terminal.html">Dashboard</a>
-<a href="/newsfeed">Newsfeed</a>
 <a href="key-levels.html" class="active">Key Levels</a>
-<a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
-<div class="dropdown">
 <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
 <div id="settingsDropdown" class="dropdown-content">
-<a href="account.html">Account</a>
 <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
 <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
 <a id="logoutBtn" style="color: #f85149; cursor: pointer;">Logout</a>
-</div>
 </div>
 </div>
 </div>
@@ -217,9 +202,9 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
             </table>
         </div>
     </div>
-    <div class="grid-quadrant"><div class="quadrant-header"><h1 style="font-size: 15px;">Indicator Q2</h1></div></div>
-    <div class="grid-quadrant"><div class="quadrant-header"><h1 style="font-size: 15px;">Indicator Q3</h1></div></div>
-    <div class="grid-quadrant"><div class="quadrant-header"><h1 style="font-size: 15px;">Indicator Q4</h1></div></div>
+    <div class="grid-quadrant"><div class="quadrant-header"><h1 style="font-size: 14px;">Indicator Q2</h1></div></div>
+    <div class="grid-quadrant"><div class="quadrant-header"><h1 style="font-size: 14px;">Indicator Q3</h1></div></div>
+    <div class="grid-quadrant"><div class="quadrant-header"><h1 style="font-size: 14px;">Indicator Q4</h1></div></div>
 </div>
 
 <script>
@@ -247,7 +232,6 @@ let cachedData = [];
 let biasSortOrder = 0;
 let stateSortOrder = 0;
 
-// All original functional logic restored
 function openModal() { document.getElementById("infoModal").style.display = "block"; }
 function closeModal() { document.getElementById("infoModal").style.display = "none"; }
 function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
@@ -266,43 +250,94 @@ async function init() {
 
 async function fetchData() {
     const date = document.getElementById('date-filter').value;
-    const { data } = await client.from('key_levels').select('*').eq('trade_date', date);
+    const { data, error } = await client.from('key_levels').select('*').eq('trade_date', date);
+    if (error) { console.error(error); return; }
     cachedData = data || [];
+    const tickerSelect = document.getElementById('ticker-filter');
+    tickerSelect.innerHTML = '<option value="all">All Tickers</option>';
+    [...new Set(cachedData.map(r => r.ticker))].sort().forEach(t => {
+        tickerSelect.innerHTML += `<option value="${t}">${t}</option>`;
+    });
     render();
 }
 
 function toggleDrawer(index, ticker) {
     const row = document.getElementById(`drawer-row-${index}`);
+    const btn = document.getElementById(`expand-btn-${index}`);
     const container = document.getElementById(`chart-embed-${index}`);
     if (row.style.display === "table-row") {
         row.style.display = "none";
+        btn.innerText = "Expand ▼";
     } else {
         row.style.display = "table-row";
-        container.innerHTML = `<iframe style="width:100%;height:100%" src="https://s.tradingview.com/widgetembed/?symbol=${ticker.replace('/', '')}&theme=dark&style=1"></iframe>`;
+        btn.innerText = "Close ▲";
+        container.innerHTML = `<iframe style="width:100%;height:100%" src="https://s.tradingview.com/widgetembed/?symbol=${tvSymbolMap[ticker] || ticker.replace('/', '')}&theme=dark&style=1"></iframe>`;
     }
 }
 
-function render() {
-    const tbody = document.getElementById('levels-body');
-    tbody.innerHTML = cachedData.map((r, index) => `
-        <tr>
-            <td>${r.trade_date}</td><td>${r.ticker}</td><td>${r.bias}</td>
-            <td><button class="expand-toggle-btn" onclick="toggleDrawer(${index}, '${r.ticker}')">Expand</button></td>
-        </tr>
-        <tr id="drawer-row-${index}" class="drawer-row">
-            <td colspan="4">
-                <div class="drawer-container">
-                    <div class="analysis-panel">
-                        <span class="drawer-section-title">Lollipop Momentum</span>
-                        <div class="lollipop-badge">${r.lollipop}</div>
-                        <p>${r.analysis}</p>
-                    </div>
-                    <div id="chart-embed-${index}" class="embedded-chart-frame"></div>
-                </div>
-            </td>
-        </tr>
-    `).join('');
+function toggleSortBias() {
+    biasSortOrder = (biasSortOrder + 1) % 3;
+    render();
 }
+
+function toggleSortState() {
+    stateSortOrder = (stateSortOrder + 1) % 3;
+    render();
+}
+
+function getAssetVolatilityMetrics(r) {
+    const assetClass = categoryMap[r.ticker] || 'Forex';
+    const rawDiff = Math.abs(parseFloat(r.r1) - parseFloat(r.s1));
+    let rangeFormatted, isTrending;
+    if (assetClass === 'Indices' || assetClass === 'Crypto') {
+        rangeFormatted = rawDiff.toFixed(2); isTrending = rawDiff > 80.00;
+    } else if (r.ticker === 'XAU/USD') {
+        rangeFormatted = rawDiff.toFixed(2); isTrending = rawDiff > 15.00;
+    } else {
+        rangeFormatted = rawDiff.toFixed(4); isTrending = (rawDiff * 10000) > 75.0;
+    }
+    return { rangeFormatted, isTrending };
+}
+
+function render() {
+    const cat = document.getElementById('cat-filter').value;
+    const tick = document.getElementById('ticker-filter').value;
+    const tbody = document.getElementById('levels-body');
+    const biasMap = { 'Strong Bullish': 2, 'Medium Bullish': 1, 'Neutral': 0, 'Medium Bearish': -1, 'Strong Bearish': -2 };
+
+    let filtered = cachedData.filter(r => (cat === 'all' || categoryMap[r.ticker] === cat) && (tick === 'all' || r.ticker === tick));
+
+    if (biasSortOrder !== 0) {
+        filtered.sort((a, b) => (biasMap[a.bias] - biasMap[b.bias]) * (biasSortOrder === 1 ? 1 : -1));
+    }
+
+    tbody.innerHTML = filtered.map((r, index) => {
+        const metrics = getAssetVolatilityMetrics(r);
+        const state = metrics.isTrending ? "Trending" : "Consolidated";
+        const stateClass = metrics.isTrending ? "trending" : "consolidated";
+        return `
+            <tr>
+                <td>${r.trade_date}</td>
+                <td class="clickable-ticker" onclick="openChart('${r.ticker}')"><span class="ticker-text">${r.ticker}</span></td>
+                <td>${r.bias}</td>
+                <td><button class="expand-toggle-btn" id="expand-btn-${index}" onclick="toggleDrawer(${index}, '${r.ticker}')">Expand ▼</button></td>
+            </tr>
+            <tr id="drawer-row-${index}" class="drawer-row">
+                <td colspan="4">
+                    <div class="drawer-container">
+                        <div class="analysis-panel">
+                            <span class="drawer-section-title">Lollipop Momentum</span>
+                            <div class="lollipop-badge">${r.lollipop}</div>
+                            <p style="font-size: 13px;">${r.analysis}</p>
+                        </div>
+                        <div id="chart-embed-${index}" class="embedded-chart-frame"></div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
 document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
 init();
 </script>
