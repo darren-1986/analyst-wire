@@ -85,6 +85,11 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 .drawer-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 25px; padding: 25px; border-left: 3px solid #2962ff; }
 .analysis-panel { display: flex; flex-direction: column; overflow: hidden; }
 
+/* Drawer Text Styling (Extracted from JS for Quadrant Scaling) */
+.drawer-desc-text { margin: 0; font-size: 13px; color: #8b949e; line-height: 1.5; display: block; }
+.macro-commentary-box { margin-top: 15px; border-top: 1px solid #1c2230; padding-top: 18px; display: block; }
+.drawer-analysis-text { margin: 0; font-size: 13.5px; color: #c9d1d9; line-height: 1.6; }
+
 /* Color-Coded Lollipop Display System Components (Spacing Preserved) */
 .lollipop-system { display: flex; align-items: center; gap: 12px; margin-top: 5px; height: 38px; }
 .lollipop-indicator-dot { width: 12px; height: 12px; border-radius: 50%; position: relative; flex-shrink: 0; }
@@ -214,14 +219,48 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 .quadrant .range-badge { font-size: 10px; }
 .quadrant .expand-toggle-btn { padding: 3px 6px; font-size: 9px; }
 
-/* Stack drawer components vertically to avoid horizontal crushing */
+/* DRAWER COMPACTING: Stack drawer components and heavily shrink elements to save vertical space */
 .quadrant .drawer-container {
     grid-template-columns: 1fr;
-    gap: 15px;
-    padding: 15px;
+    gap: 10px;
+    padding: 10px 12px;
+}
+.quadrant .drawer-section-title {
+    font-size: 9px;
+    margin-bottom: 4px;
+}
+.quadrant .lollipop-system {
+    height: 24px;
+    margin-top: 0px;
+    gap: 8px;
+}
+.quadrant .lollipop-indicator-dot {
+    width: 10px;
+    height: 10px;
+}
+.quadrant .lollipop-indicator-dot::after {
+    top: 10px;
+    left: 4px;
+    height: 16px; /* Shorter stem */
+}
+.quadrant .lollipop-badge {
+    padding: 2px 8px;
+    font-size: 9.5px;
+}
+.quadrant .drawer-desc-text {
+    font-size: 10.5px; /* Shrink description text */
+    line-height: 1.4;
+}
+.quadrant .macro-commentary-box {
+    margin-top: 10px;
+    padding-top: 10px;
+}
+.quadrant .drawer-analysis-text {
+    font-size: 11px; /* Shrink macro analysis text */
+    line-height: 1.4;
 }
 .quadrant .embedded-chart-frame {
-    height: 260px;
+    height: 180px; /* Heavily reduced chart height */
 }
 </style>
 </head>
@@ -583,7 +622,7 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
             <div class="drawer-container">
                 <div class="analysis-panel">
 
-                    <div style="padding-bottom: 15px; position: relative; display: block;">
+                    <div style="padding-bottom: 10px; position: relative; display: block;">
                         <span class="drawer-section-title">Lollipop Momentum Status</span>
                         <div class="lollipop-system ${lollipopWrapperClass}">
                             <div class="lollipop-indicator-dot"></div>
@@ -591,13 +630,11 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
                         </div>
                     </div>
 
-                    <div style="height: 10px; display: block;"></div>
+                    <p class="drawer-desc-text">${lollipopDesc}</p>
 
-                    <p style="margin:0; font-size:13px; color:#8b949e; line-height:1.5; display:block;">${lollipopDesc}</p>
-
-                    <div style="margin-top:15px; border-top: 1px solid #1c2230; padding-top: 18px; display: block;">
+                    <div class="macro-commentary-box">
                         <span class="drawer-section-title">Macro Commentary</span>
-                        <p style="margin:0; font-size:13.5px; color:#c9d1d9; line-height:1.6;">${textualAnalysis}</p>
+                        <p class="drawer-analysis-text">${textualAnalysis}</p>
                     </div>
                 </div>
                 <div id="chart-embed-${index}" class="embedded-chart-frame"></div>
