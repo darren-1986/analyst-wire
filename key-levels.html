@@ -63,11 +63,26 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 .expand-toggle-btn:hover { border-color: #2962ff; color: #fff; }
 .drawer-row { background: #0a0d14 !important; display: none; }
 .drawer-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; padding: 20px; border-left: 4px solid #2962ff; }
-.analysis-panel { display: flex; flex-direction: column; gap: 12px; }
-.lollipop-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }
-.lollipop-break-up { background: rgba(0,255,170,0.15); color: #00ffaa; border: 1px solid #00ffaa; }
-.lollipop-break-down { background: rgba(255,0,85,0.15); color: #ff0055; border: 1px solid #ff0055; }
-.lollipop-range { background: rgba(120,123,134,0.15); color: #787b86; border: 1px solid #2a2e39; }
+.analysis-panel { display: flex; flex-direction: column; gap: 15px; }
+
+/* Upgraded Lollipop Tracking Display Components */
+.lollipop-system { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
+.lollipop-indicator-dot { width: 12px; height: 12px; border-radius: 50%; position: relative; }
+.lollipop-indicator-dot::after { content: ''; position: absolute; top: 12px; left: 5px; width: 2px; height: 16px; background: #2a2e39; }
+.lollipop-badge { padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.lolli-upper { color: #00ffaa; }
+.lolli-upper .lollipop-indicator-dot { background: #00ffaa; box-shadow: 0 0 8px #00ffaa; }
+.lolli-upper .lollipop-badge { background: rgba(0, 255, 170, 0.12); border: 1px solid rgba(0, 255, 170, 0.3); }
+
+.lolli-lower { color: #ff0055; }
+.lolli-lower .lollipop-indicator-dot { background: #ff0055; box-shadow: 0 0 8px #ff0055; }
+.lolli-lower .lollipop-badge { background: rgba(255, 0, 85, 0.12); border: 1px solid rgba(255, 0, 85, 0.3); }
+
+.lolli-range { color: #787b86; }
+.lolli-range .lollipop-indicator-dot { background: #5d606b; }
+.lolli-range .lollipop-badge { background: rgba(93, 96, 107, 0.12); border: 1px solid rgba(93, 96, 107, 0.3); }
+
 .embedded-chart-frame { height: 320px; background: #131722; border: 1px solid #2a2e39; border-radius: 6px; overflow: hidden; }
 </style>
 </head>
@@ -213,7 +228,6 @@ function openModal() { document.getElementById("infoModal").style.display = "blo
 function closeModal() { document.getElementById("infoModal").style.display = "none"; }
 window.onclick = function(event) { if (event.target == document.getElementById("infoModal")) closeModal(); }
 
-// Dynamic multi-asset drawer controller
 function toggleDrawer(index, ticker) {
     const row = document.getElementById(`drawer-row-${index}`);
     const btn = document.getElementById(`expand-btn-${index}`);
@@ -222,12 +236,11 @@ function toggleDrawer(index, ticker) {
     if (row.style.display === "table-row") {
         row.style.display = "none";
         btn.innerText = "Expand ▼";
-        container.innerHTML = ""; // Unloads widget iframe memory
+        container.innerHTML = ""; 
     } else {
         row.style.display = "table-row";
         btn.innerText = "Close ▲";
         
-        // Formulates active TradingView technical chart layout scripts dynamically
         let cleanSymbol = tvSymbolMap[ticker] || ticker.replace('/', '');
         container.innerHTML = `
             <iframe style="width: 100%; height: 100%; border: none;" 
@@ -375,20 +388,21 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
         biasClass = 'bias-medium-down'; directionalArrow = '▼ Medium Bearish';
     }
 
-    // Dynamic Lollipop parsing fallback matrix descriptions
-    const lollipopStatus = r.lollipop ? r.lollipop.trim() : 'Inside Range';
-    let lollipopStyleClass = 'lollipop-range';
-    let lollipopDefinitionText = 'Price action is currently compressed and oscillating safely inside major structural pivots.';
+    // --- TRUE LOLLIPOP DESIGN MAP MATRIX ---
+    const lollipopStatus = r.lollipop ? r.lollipop.trim() : 'INSIDE RANGE';
+    let lollipopWrapperClass = 'lolli-range';
+    let lollipopDesc = 'Price action is currently compressed and oscillating safely inside major structural pivots.';
 
-    if (lollipopStatus.toUpperCase().includes('BREAK') && (rawBiasText.includes('Bullish') || lollipopStatus.toUpperCase().includes('UPPER'))) {
-        lollipopStyleClass = 'lollipop-break-up';
-        lollipopDefinitionText = 'Breakout alert. Price has expanded past primary overhead barriers, confirming strong buy sentiment.';
-    } else if (lollipopStatus.toUpperCase().includes('BREAK') || lollipopStatus.toUpperCase().includes('LOWER')) {
-        lollipopStyleClass = 'lollipop-break-down';
-        lollipopDefinitionText = 'Breakdown alert. Price has fallen below major historical floor support, confirming strong distribution.';
+    if (lollipopStatus.toUpperCase().includes('UPPER') || lollipopStatus.toUpperCase() === 'BREAK OUT') {
+        lollipopWrapperClass = 'lolli-upper';
+        lollipopDesc = 'Breakout alert. Price has expanded past primary overhead resistance barriers, signaling high upward continuation odds.';
+    } else if (lollipopStatus.toUpperCase().includes('LOWER') || lollipopStatus.toUpperCase() === 'BREAK DOWN') {
+        lollipopWrapperClass = 'lolli-lower';
+        lollipopDesc = 'Breakdown alert. Price has fallen cleanly below historical support floors, signaling high localized distribution pressure.';
     }
 
-    const textualAnalysis = r.analysis && r.analysis.trim() !== '' ? r.analysis : 'Intraday analysis summary pending calculation update for this specific level profile.';
+    // Fixed Variable Swap Error: Pulls text commentary from 'analysis' column natively
+    const textualAnalysis = r.analysis && r.analysis.trim() !== '' ? r.analysis : 'Intraday tactical breakdown details pending calculation refresh for this level index.';
 
     return `
     <tr>
@@ -411,14 +425,19 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
         <td colspan="7">
             <div class="drawer-container">
                 <div class="analysis-panel">
+                    
                     <div>
-                        <span style="color:#787b86; font-size:11px; text-transform:uppercase; font-weight:bold; display:block; margin-bottom:4px;">Market Tracker</span>
-                        <div class="lollipop-badge ${lollipopStyleClass}">${lollipopStatus}</div>
-                        <p style="margin:4px 0 0 0; font-size:12.5px; color:#787b86; line-height:1.4;">${lollipopDefinitionText}</p>
+                        <span style="color:#787b86; font-size:11px; text-transform:uppercase; font-weight:bold; display:block; margin-bottom:6px;">Lollipop Momentum Status</span>
+                        <div class="lollipop-system ${lollipopWrapperClass}">
+                            <div class="lollipop-indicator-dot"></div>
+                            <div class="lollipop-badge">${lollipopStatus}</div>
+                        </div>
+                        <p style="margin:16px 0 0 0; font-size:12.5px; color:#787b86; line-height:1.4;">${lollipopDesc}</p>
                     </div>
-                    <div style="margin-top:10px;">
+                    
+                    <div style="margin-top:10px; border-top: 1px solid #1c2230; padding-top: 15px;">
                         <span style="color:#787b86; font-size:11px; text-transform:uppercase; font-weight:bold; display:block; margin-bottom:4px;">Macro Commentary</span>
-                        <p style="margin:0; font-size:13.5px; color:#fff; line-height:1.5;">${textualAnalysis}</p>
+                        <p style="margin:0; font-size:13.5px; color:#fff; line-height:1.5; font-weight: 500;">${textualAnalysis}</p>
                     </div>
                 </div>
                 <div id="chart-embed-${index}" class="embedded-chart-frame"></div>
