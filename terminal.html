@@ -104,8 +104,7 @@
         </div>
     </div>
     
-    <div class="right-column">
-      <div class="panel" style="flex: 1;">
+    <div class="panel" style="flex: 1;">
     <div class="panel-header">Market Time Zones</div>
     <div class="panel-content">
         <div class="market-sessions-widget">
@@ -136,7 +135,6 @@
 
         <script>
         (function() {
-            // Using standard IANA time zone strings for precision
             const SESSIONS = [
                 { name: 'Tokyo', zone: 'Asia/Tokyo', open: 9, close: 15 },
                 { name: 'Sydney', zone: 'Australia/Sydney', open: 10, close: 16 },
@@ -144,55 +142,57 @@
                 { name: 'New York', zone: 'America/New_York', open: 9.5, close: 16 }
             ];
 
-            function tick() {
+            function update() {
                 const now = new Date();
                 document.getElementById('msw-user-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 
                 let openCount = 0;
+                
                 SESSIONS.forEach(s => {
-                    // Use Intl to get the exact local time in the target city
+                    // Use block-scoped constants so variables don't bleed between market iterations
                     const formatter = new Intl.DateTimeFormat('en-US', {
-                        timeZone: s.zone,
-                        hour: '2-digit', minute: '2-digit', hour12: false
+                        timeZone: s.zone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
                     });
                     const parts = formatter.formatToParts(now);
-                    const hours = parseInt(parts.find(p => p.type === 'hour').value);
-                    const minutes = parseInt(parts.find(p => p.type === 'minute').value);
-                    const day = new Intl.DateTimeFormat('en-US', { timeZone: s.zone, weekday: 'long' }).format(now);
+                    const h = parseInt(parts.find(p => p.type === 'hour').value);
+                    const m = parseInt(parts.find(p => p.type === 'minute').value);
+                    const timeDecimal = h + (m / 60);
+
+                    // Update DOM Elements
+                    document.getElementById('time-'+s.name).innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
                     
-                    document.getElementById('time-'+s.name).innerText = `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}`;
-                    
-                    const timeDecimal = hours + (minutes / 60);
-                    const isWeekday = !['Saturday', 'Sunday'].includes(day);
-                    const isOpen = isWeekday && (timeDecimal >= s.open && timeDecimal < s.close);
-                    
+                    const isOpen = (timeDecimal >= s.open && timeDecimal < s.close);
                     if(isOpen) openCount++;
                     
                     document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
                     document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
                     document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
                     
-                    // Simple countdown: if closed, hours until open
-                    let untilOpen = (s.open - timeDecimal);
-                    if (untilOpen < 0) untilOpen += 24;
+                    // Independent countdown calculation
+                    let timeUntil = s.open - timeDecimal;
+                    if (timeUntil < 0) timeUntil += 24; // If open time passed, count until tomorrow
+                    
                     document.getElementById('count-'+s.name).innerText = isOpen 
-                        ? `${Math.floor((s.close - timeDecimal)*60/60)}h ${Math.round(((s.close - timeDecimal)*60)%60)}m left`
-                        : `${Math.floor(untilOpen)}h ${Math.round((untilOpen%1)*60)}m`;
+                        ? `${Math.floor((s.close - timeDecimal))}h ${Math.round(((s.close - timeDecimal)%1)*60)}m left`
+                        : `${Math.floor(timeUntil)}h ${Math.round((timeUntil%1)*60)}m`;
                 });
+                
                 document.getElementById('msw-hot-alert').style.display = (openCount > 1) ? 'block' : 'none';
             }
 
+            // Init
             const container = document.getElementById('msw-sessions-container');
             container.innerHTML = '';
             SESSIONS.forEach(s => {
                 container.insertAdjacentHTML('beforeend', `<div class="msw-session-row"><div class="msw-session-name"><span class="msw-status-dot" id="dot-${s.name}"></span><span>${s.name}<small class="msw-zone-time" id="time-${s.name}"></small></span></div><span class="msw-session-status-text" id="stat-${s.name}"></span><div class="msw-countdown-text" id="count-${s.name}"></div></div>`);
             });
-            setInterval(tick, 1000);
-            tick();
+            setInterval(update, 1000);
+            update();
         })();
         </script>
     </div>
 </div>
+
 
 
 
