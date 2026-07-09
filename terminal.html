@@ -111,13 +111,13 @@
         <div class="market-sessions-widget">
             <div class="msw-header">
                 <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
-                <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple sessions are open.">HOT MARKET</div>
+                <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;">HOT MARKET</div>
             </div>
             <div id="msw-sessions-container"></div>
         </div>
 
         <style>
-            .market-sessions-widget { box-sizing: border-box; width: 100%; background-color: #0A0A0A; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #f8fafc; font-family: sans-serif; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
+            .market-sessions-widget { box-sizing: border-box; width: 100%; background-color: #0A0A0A; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #f8fafc; font-family: sans-serif; }
             .msw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
             .msw-hot-alert { font-size: 9px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3); animation: pulse 1.5s infinite; cursor: help; }
             @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
@@ -143,7 +143,7 @@
                 { name: 'New York', utc: -4, open: 9.5, close: 16, img: 'media/new-york.png' }
             ];
 
-            function update() {
+            function runWidget() {
                 const now = new Date();
                 document.getElementById('msw-user-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 
@@ -159,40 +159,42 @@
                 }
 
                 SESSIONS.forEach(s => {
+                    // Force specific market time based on absolute UTC offset
                     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
                     const marketTime = new Date(utc + (3600000 * s.utc));
+                    
                     document.getElementById('time-'+s.name).innerText = marketTime.getHours().toString().padStart(2,'0') + ':' + marketTime.getMinutes().toString().padStart(2,'0');
                     
                     const hours = marketTime.getHours() + (marketTime.getMinutes() / 60);
-                    const day = marketTime.getDay();
-                    const isOpen = (day > 0 && day < 6) && (hours >= s.open && hours < s.close);
+                    const isOpen = (marketTime.getDay() > 0 && marketTime.getDay() < 6) && (hours >= s.open && hours < s.close);
+                    
                     if(isOpen) openCount++;
-                    
                     document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
-                    const stat = document.getElementById('stat-'+s.name);
-                    stat.innerText = isOpen ? 'OPEN' : 'CLOSED';
-                    stat.className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
+                    document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
+                    document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
                     
-                    const countEl = document.getElementById('count-'+s.name);
-                    // Independent countdown calculation for each market
+                    // Logic to find next open
                     let target = new Date(marketTime);
                     target.setHours(Math.floor(s.open), (s.open % 1) * 60, 0, 0);
                     if (marketTime >= target) target.setDate(target.getDate() + 1);
                     while (target.getDay() === 0 || target.getDay() === 6) target.setDate(target.getDate() + 1);
                     
-                    const diff = target - marketTime;
-                    const h = Math.floor(diff / 3600000);
-                    const m = Math.floor((diff % 3600000) / 60000);
-                    countEl.innerText = isOpen ? `${Math.floor((s.close - hours) * 60 / 60)}h ${Math.round(((s.close - hours) * 60) % 60)}m left` : `${h}h ${m}m`;
+                    const msUntil = target.getTime() - marketTime.getTime();
+                    const h = Math.floor(msUntil / 3600000);
+                    const m = Math.floor((msUntil % 3600000) / 60000);
+                    
+                    const remUntilClose = (s.close - hours) * 3600000;
+                    document.getElementById('count-'+s.name).innerText = isOpen ? `${Math.floor(remUntilClose/3600000)}h ${Math.floor((remUntilClose%3600000)/60000)}m left` : `${h}h ${m}m`;
                 });
                 document.getElementById('msw-hot-alert').style.display = (openCount > 1) ? 'block' : 'none';
             }
-            update();
-            setInterval(update, 1000);
+            setInterval(runWidget, 1000);
+            runWidget();
         })();
         </script>
     </div>
 </div>
+
 
 
 
