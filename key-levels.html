@@ -129,8 +129,10 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     padding: 15px;
     display: flex;
     flex-direction: column;
-    overflow: auto; /* Adds a clean scrollbar if radar table is long */
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    height: 100%; /* Force quadrant to fill its grid space */
+    box-sizing: border-box;
+    overflow: hidden; /* Prevent quadrant itself from overflowing, let internal table scroll */
 }
 
 .placeholder-quadrant {
@@ -142,40 +144,75 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     background: rgba(13, 17, 23, 0.4);
 }
 
+/* Flex Row to push Title left and Filters right */
+.quadrant-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
 /* Compacting the Radar components for the quadrant space */
-.quadrant .header-row { margin-bottom: 12px; }
-.quadrant h1 { font-size: 18px; }
-.quadrant .info-btn { padding: 4px 8px; font-size: 11px; }
+.quadrant .header-row { margin-bottom: 0; }
+.quadrant h1 { font-size: 17px; }
+.quadrant .info-btn { padding: 4px 8px; font-size: 10.5px; }
 
 .quadrant .filter-section {
-    margin-bottom: 15px;
+    margin-bottom: 0;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
 }
 .quadrant select, .quadrant input[type="date"] {
-    padding: 6px 10px;
-    font-size: 12px;
+    padding: 4px 8px;
+    font-size: 11px;
 }
 
-/* Adjust the table container specifically when it sits inside a quadrant */
+/* Allow table container to scroll internally */
 .quadrant .table-container {
     border: none;
     box-shadow: none;
     background: transparent;
+    flex: 1; /* Take up all remaining vertical space inside the quadrant */
+    overflow-y: auto; /* Scroll table vertically */
+    min-height: 0; /* Ensures flex container allows child to shrink and scroll */
 }
+
+/* Dark mode scrollbar styling */
+.quadrant .table-container::-webkit-scrollbar {
+    width: 6px;
+}
+.quadrant .table-container::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.1);
+    border-radius: 3px;
+}
+.quadrant .table-container::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 3px;
+}
+.quadrant .table-container::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+}
+
+/* Sticky Headers and tighter text to maximize visible rows */
 .quadrant th {
-    padding: 8px 10px;
-    font-size: 10px;
+    padding: 6px 8px;
+    font-size: 9.5px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #161b22; /* Ensures solid background when scrolling */
 }
 .quadrant td {
-    padding: 8px 10px;
-    font-size: 11.5px;
+    padding: 6px 8px;
+    font-size: 10.5px;
 }
 
 /* Scale down badges and buttons to fit the narrow columns */
-.quadrant .state-badge { padding: 3px 8px; font-size: 9px; }
-.quadrant .range-badge { font-size: 11px; }
-.quadrant .expand-toggle-btn { padding: 4px 8px; font-size: 10px; }
+.quadrant .state-badge { padding: 2px 6px; font-size: 8.5px; }
+.quadrant .range-badge { font-size: 10px; }
+.quadrant .expand-toggle-btn { padding: 3px 6px; font-size: 9px; }
 
 /* Stack drawer components vertically to avoid horizontal crushing */
 .quadrant .drawer-container {
@@ -273,23 +310,25 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 <div class="grid-container">
 
     <div class="quadrant">
-        <div class="header-row">
-            <h1>Market Trade Radar</h1>
-            <button class="info-btn" onclick="openModal()">Info ℹ</button>
-        </div>
-        
-        <div class="filter-section">
-            <input type="date" id="date-filter" onchange="fetchData()">
-            <select id="cat-filter" onchange="render()">
-                <option value="all">All Categories</option>
-                <option value="Forex">Forex</option>
-                <option value="Commodities">Commodities</option>
-                <option value="Equities">Equities</option>
-                <option value="Indices">Indices</option>
-            </select>
-            <select id="ticker-filter" onchange="render()">
-                <option value="all">All Tickers</option>
-            </select>
+        <div class="quadrant-top-bar">
+            <div class="header-row">
+                <h1>Market Trade Radar</h1>
+                <button class="info-btn" onclick="openModal()">Info ℹ</button>
+            </div>
+            
+            <div class="filter-section">
+                <input type="date" id="date-filter" onchange="fetchData()">
+                <select id="cat-filter" onchange="render()">
+                    <option value="all">All Categories</option>
+                    <option value="Forex">Forex</option>
+                    <option value="Commodities">Commodities</option>
+                    <option value="Equities">Equities</option>
+                    <option value="Indices">Indices</option>
+                </select>
+                <select id="ticker-filter" onchange="render()">
+                    <option value="all">All Tickers</option>
+                </select>
+            </div>
         </div>
 
         <div class="table-container">
