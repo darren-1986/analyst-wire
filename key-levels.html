@@ -49,7 +49,7 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 .trending { background: #2962ff; color: white; }
 .consolidated { background: #5d606b; color: white; }
 
-/* Interactive Ticker Element & SVG Sync */
+/* Interactive Ticker Element */
 .clickable-ticker { cursor: pointer; transition: background-color 0.15s ease; }
 .clickable-ticker:hover { background-color: #1c2230; }
 .clickable-ticker:hover .ticker-text { color: #2962ff; text-decoration: underline; }
@@ -58,17 +58,17 @@ td { padding: 12px; border: 1px solid #2a2e39; color: #fff; font-size: 14px; }
 .ticker-text { font-weight: bold; color: #fff; transition: color 0.15s ease; }
 .chart-icon-svg { fill: #787b86; transition: fill 0.15s ease; display: inline-block; vertical-align: middle; }
 
-/* Expandable Drawer UI Grid Architecture */
+/* Expandable Drawer Framework Layout */
 .expand-toggle-btn { background: #1c2230; border: 1px solid #2a2e39; color: #787b86; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
 .expand-toggle-btn:hover { border-color: #2962ff; color: #fff; }
 .drawer-row { background: #0a0d14 !important; display: none; }
 .drawer-container { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; padding: 20px; border-left: 4px solid #2962ff; }
 .analysis-panel { display: flex; flex-direction: column; gap: 15px; overflow: hidden; }
 
-/* Color-Coded Lollipop Display System Components */
-.lollipop-system { display: flex; align-items: center; gap: 12px; margin-top: 5px; height: 30px; }
+/* --- TRUE LOLLIPOP DISPLAY SYSTEM FIXED CSS CONFIG --- */
+.lollipop-system { display: flex; align-items: center; gap: 12px; margin-top: 5px; height: 38px; }
 .lollipop-indicator-dot { width: 14px; height: 14px; border-radius: 50%; position: relative; flex-shrink: 0; }
-.lollipop-indicator-dot::after { content: ''; position: absolute; top: 14px; left: 6px; width: 2px; height: 18px; background: #2a2e39; }
+.lollipop-indicator-dot::after { content: ''; position: absolute; top: 14px; left: 6px; width: 2px; height: 22px; background: #2a2e39; }
 .lollipop-badge { padding: 5px 12px; border-radius: 4px; font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; white-space: nowrap; }
 
 .lolli-upper { color: #00ffaa; }
@@ -223,6 +223,10 @@ const tvSymbolMap = {
 let cachedData = [];
 let biasSortOrder = 0;
 let stateSortOrder = 0;
+
+function openModal() { document.getElementById("infoModal").style.display = "block"; }
+function closeModal() { document.getElementById("infoModal").style.display = "none"; }
+window.onclick = function(event) { if (event.target == document.getElementById("infoModal")) closeModal(); }
 
 function toggleDrawer(index, ticker) {
     const row = document.getElementById(`drawer-row-${index}`);
@@ -382,7 +386,7 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
         biasClass = 'bias-medium-down'; directionalArrow = '▼ Medium Bearish';
     }
 
-    // --- COLOR-CODED LOLLIPOP ENGINE CORRECTION ---
+    // --- COLOR-CODED LOLLIPOP MATRIX ---
     const lollipopStatus = r.lollipop ? r.lollipop.trim() : 'INSIDE RANGE';
     let lollipopWrapperClass = 'lolli-range';
     let lollipopDesc = 'Price action compressed inside key horizontal structure levels.';
@@ -425,7 +429,7 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
                             <div class="lollipop-indicator-dot"></div>
                             <div class="lollipop-badge">${lollipopStatus}</div>
                         </div>
-                        <p style="margin:16px 0 0 0; font-size:12.5px; color:#787b86; line-height:1.4;">${lollipopDesc}</p>
+                        <p style="margin:20px 0 0 0; font-size:12.5px; color:#787b86; line-height:1.4;">${lollipopDesc}</p>
                     </div>
                     
                     <div style="margin-top:10px; border-top: 1px solid #1c2230; padding-top: 15px;">
