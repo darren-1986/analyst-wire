@@ -177,100 +177,101 @@
                 </div>
 
                 <div class="panel" style="flex: 1;">
-                    <div class="panel-header">Forex Market Hours</div>
-                    <div class="panel-content">
-                        <div class="market-sessions-widget">
-                            <div class="msw-header">
-                                <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: First hour of Tokyo/Sydney overlap.">HOT MARKET</div>
-                                <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
-                            </div>
-                            <div id="msw-sessions-container"></div>
-                        </div>
-
-                        <style>
-                            .market-sessions-widget { box-sizing: border-box; width: 100%; height: 100%; background-color: transparent; border: none; padding: 20px; color: #c9d1d9; font-family: 'Inter', sans-serif; }
-                            .msw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #1c2230; padding-bottom: 12px; }
-                            .msw-hot-alert { font-size: 9px; font-weight: 800; color: #f85149; background: rgba(248, 81, 73, 0.15); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(248, 81, 73, 0.3); animation: pulse 1.5s infinite; cursor: help; letter-spacing: 0.5px; }
-                            @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-                            .msw-local-clock { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(46, 160, 67, 0.1); padding: 4px 8px; border-radius: 6px; color: #2ea043; border: 1px solid rgba(46, 160, 67, 0.2); }
-                            .msw-session-row { display: grid; grid-template-columns: 1fr 50px auto; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #1c2230; }
-                            .msw-session-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-                            .msw-session-name { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; color: #fff; }
-                            .msw-status-dot { height: 8px; width: 8px; border-radius: 50%; background: #30363d; }
-                            .msw-status-dot.open { background: #2ea043; box-shadow: 0 0 8px rgba(46, 160, 67, 0.4); }
-                            .msw-session-status-text { font-size: 10px; font-weight: bold; font-family: 'JetBrains Mono', monospace; text-align: left; }
-                            .msw-session-status-text.open { color: #2ea043; }
-                            .msw-session-status-text.closed { color: #8b949e; }
-                            .msw-zone-time { font-size: 10px; color: #8b949e; font-family: 'JetBrains Mono', monospace; display: block; margin-top: 2px; }
-                            .msw-countdown-text { font-size: 10px; color: #8b949e; font-family: 'JetBrains Mono', monospace; text-align: right; min-width: 65px; }
-                        </style>
-
-                        <script>
-                        (function() {
-                            const SESSIONS = [
-                                { name: 'Sydney', zone: 'Australia/Sydney', open: 8, close: 16 },
-                                { name: 'Tokyo', zone: 'Asia/Tokyo', open: 8, close: 16 },
-                                { name: 'London', zone: 'Europe/London', open: 8, close: 16 },
-                                { name: 'New York', zone: 'America/New_York', open: 8, close: 16 }
-                            ];
-
-                            function tick() {
-                                const now = new Date();
-                                document.getElementById('msw-user-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-                                
-                                let sydneyIsOpen = false;
-                                let tokyoIsOpen = false;
-                                
-                                SESSIONS.forEach(s => {
-                                    const formatter = new Intl.DateTimeFormat('en-US', {
-                                        timeZone: s.zone, hour: '2-digit', minute: '2-digit', hour12: false
-                                    });
-                                    const parts = formatter.formatToParts(now);
-                                    const h = parseInt(parts.find(p => p.type === 'hour').value);
-                                    const m = parseInt(parts.find(p => p.type === 'minute').value);
-                                    const timeDecimal = h + (m / 60);
-
-                                    document.getElementById('time-'+s.name).innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
-                                    
-                                    const isOpen = (timeDecimal >= s.open && timeDecimal < s.close);
-                                    
-                                    if (s.name === 'Sydney') sydneyIsOpen = isOpen;
-                                    if (s.name === 'Tokyo') tokyoIsOpen = isOpen;
-                                    
-                                    document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
-                                    document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
-                                    document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
-                                    
-                                    let output = "";
-                                    if (isOpen) {
-                                        let minsLeft = (s.close - timeDecimal) * 60;
-                                        output = `${Math.floor(minsLeft/60)}h ${Math.round(minsLeft%60)}m left`;
-                                    } else {
-                                        let hoursUntil = (s.open - timeDecimal);
-                                        if (hoursUntil < 0) hoursUntil += 24;
-                                        output = `${Math.floor(hoursUntil)}h ${Math.round((hoursUntil%1)*60)}m`;
-                                    }
-                                    document.getElementById('count-'+s.name).innerText = output;
-                                });
-
-                                const baliHour = now.getUTCHours() + 8;
-                                const isFirstHour = (baliHour >= 7 && baliHour < 8);
-                                
-                                document.getElementById('msw-hot-alert').style.display = (sydneyIsOpen && tokyoIsOpen && isFirstHour) ? 'block' : 'none';
-                            }
-
-                            const container = document.getElementById('msw-sessions-container');
-                            container.innerHTML = '';
-                            SESSIONS.forEach(s => {
-                                container.insertAdjacentHTML('beforeend', `<div class="msw-session-row"><div class="msw-session-name"><span class="msw-status-dot" id="dot-${s.name}"></span><span>${s.name}<small class="msw-zone-time" id="time-${s.name}"></small></span></div><span class="msw-session-status-text" id="stat-${s.name}"></span><div class="msw-countdown-text" id="count-${s.name}"></div></div>`);
-                            });
-                            setInterval(tick, 1000);
-                            tick();
-                        })();
-                        </script>
-                    </div>
-                </div>
+    <div class="panel-header">Forex Market Hours</div>
+    <div class="panel-content">
+        <div class="market-sessions-widget">
+            <div class="msw-header">
+                <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple sessions are open.">HOT MARKET</div>
+                <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
             </div>
+            <div id="msw-sessions-container"></div>
+        </div>
+
+        <style>
+            .market-sessions-widget { box-sizing: border-box; width: 100%; background-color: #0A0A0A; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #f8fafc; font-family: sans-serif; }
+            .msw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+            .msw-hot-alert { font-size: 9px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3); animation: pulse 1.5s infinite; cursor: help; }
+            @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+            .msw-local-clock { font-family: monospace; font-size: 11px; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #10b981; }
+            .msw-session-row { display: grid; grid-template-columns: 1fr 50px auto; align-items: center; gap: 8px; margin-bottom: 10px; }
+            .msw-session-name { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; }
+            .msw-icon-img { width: 16px; height: 16px; object-fit: contain; filter: brightness(0) saturate(100%) invert(80%) sepia(50%) saturate(1200%) hue-rotate(180deg); }
+            .msw-status-dot { height: 6px; width: 6px; border-radius: 50%; background: #475569; }
+            .msw-status-dot.open { background: #10b981; }
+            .msw-session-status-text { font-size: 9px; font-weight: bold; font-family: monospace; text-align: left; }
+            .msw-session-status-text.open { color: #10b981; }
+            .msw-session-status-text.closed { color: #f97316; }
+            .msw-zone-time { font-size: 9px; color: #64748b; font-family: monospace; display: block; margin-top: 1px; }
+            .msw-countdown-text { font-size: 9px; color: #94a3b8; font-family: monospace; text-align: right; min-width: 60px; }
+        </style>
+
+        <script>
+        (function() {
+            const SESSIONS = [
+                { name: 'Sydney', zone: 'Australia/Sydney', open: 8, close: 16 },
+                { name: 'Tokyo', zone: 'Asia/Tokyo', open: 8, close: 16 },
+                { name: 'London', zone: 'Europe/London', open: 8, close: 16 },
+                { name: 'New York', zone: 'America/New_York', open: 8, close: 16 }
+            ];
+
+            function tick() {
+                const now = new Date();
+                document.getElementById('msw-user-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                
+                let openCount = 0;
+                
+                SESSIONS.forEach(s => {
+                    const timeFormatter = new Intl.DateTimeFormat('en-US', {
+                        timeZone: s.zone, hour: '2-digit', minute: '2-digit', hour12: false
+                    });
+                    const dayFormatter = new Intl.DateTimeFormat('en-US', {
+                        timeZone: s.zone, weekday: 'long'
+                    });
+                    
+                    const timeParts = timeFormatter.formatToParts(now);
+                    const weekday = dayFormatter.format(now);
+                    
+                    const h = parseInt(timeParts.find(p => p.type === 'hour').value);
+                    const m = parseInt(timeParts.find(p => p.type === 'minute').value);
+                    const timeDecimal = h + (m / 60);
+
+                    // WEEKEND CHECK: Force CLOSED on Saturday and Sunday
+                    const isWeekend = (weekday === 'Saturday' || weekday === 'Sunday');
+                    const isOpen = !isWeekend && (timeDecimal >= s.open && timeDecimal < s.close);
+                    
+                    if(isOpen) openCount++;
+
+                    document.getElementById('time-'+s.name).innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+                    document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
+                    document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
+                    document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
+                    
+                    // Countdown Logic
+                    let output = "";
+                    if (isOpen) {
+                        let minsLeft = (s.close - timeDecimal) * 60;
+                        output = `${Math.floor(minsLeft/60)}h ${Math.round(minsLeft%60)}m left`;
+                    } else {
+                        output = isWeekend ? "Weekend" : "Closed";
+                    }
+                    document.getElementById('count-'+s.name).innerText = output;
+                });
+
+                document.getElementById('msw-hot-alert').style.display = (openCount > 1) ? 'block' : 'none';
+            }
+
+            const container = document.getElementById('msw-sessions-container');
+            container.innerHTML = '';
+            SESSIONS.forEach(s => {
+                container.insertAdjacentHTML('beforeend', `<div class="msw-session-row"><div class="msw-session-name"><span class="msw-status-dot" id="dot-${s.name}"></span><span>${s.name}<small class="msw-zone-time" id="time-${s.name}"></small></span></div><span class="msw-session-status-text" id="stat-${s.name}"></span><div class="msw-countdown-text" id="count-${s.name}"></div></div>`);
+            });
+            setInterval(tick, 1000);
+            tick();
+        })();
+        </script>
+    </div>
+</div>
+</div>
 
             <div class="panel" style="flex: 1;">
                 <div class="panel-header">Bloomberg TV</div>
