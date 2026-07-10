@@ -177,6 +177,7 @@
                 </div>
 
                 <div class="panel" style="flex: 1;">
+    <div class="panel" style="flex: 1;">
     <div class="panel-header">Forex Market Hours</div>
     <div class="panel-content">
         <div class="market-sessions-widget">
@@ -195,14 +196,13 @@
             .msw-local-clock { font-family: monospace; font-size: 11px; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #10b981; }
             .msw-session-row { display: grid; grid-template-columns: 1fr 50px auto; align-items: center; gap: 8px; margin-bottom: 10px; }
             .msw-session-name { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; }
-            .msw-icon-img { width: 16px; height: 16px; object-fit: contain; filter: brightness(0) saturate(100%) invert(80%) sepia(50%) saturate(1200%) hue-rotate(180deg); }
             .msw-status-dot { height: 6px; width: 6px; border-radius: 50%; background: #475569; }
             .msw-status-dot.open { background: #10b981; }
             .msw-session-status-text { font-size: 9px; font-weight: bold; font-family: monospace; text-align: left; }
             .msw-session-status-text.open { color: #10b981; }
             .msw-session-status-text.closed { color: #f97316; }
             .msw-zone-time { font-size: 9px; color: #64748b; font-family: monospace; display: block; margin-top: 1px; }
-            .msw-countdown-text { font-size: 9px; color: #94a3b8; font-family: monospace; text-align: right; min-width: 60px; }
+            .msw-countdown-text { font-size: 9px; color: #94a3b8; font-family: monospace; text-align: right; min-width: 80px; }
         </style>
 
         <script>
@@ -221,22 +221,19 @@
                 let openCount = 0;
                 
                 SESSIONS.forEach(s => {
-                    const timeFormatter = new Intl.DateTimeFormat('en-US', {
-                        timeZone: s.zone, hour: '2-digit', minute: '2-digit', hour12: false
-                    });
-                    const dayFormatter = new Intl.DateTimeFormat('en-US', {
-                        timeZone: s.zone, weekday: 'long'
-                    });
+                    const timeFormatter = new Intl.DateTimeFormat('en-US', { timeZone: s.zone, hour: '2-digit', minute: '2-digit', hour12: false });
+                    const dayFormatter = new Intl.DateTimeFormat('en-US', { timeZone: s.zone, weekday: 'long', day: 'numeric', hour: '2-digit', hour12: false });
                     
                     const timeParts = timeFormatter.formatToParts(now);
-                    const weekday = dayFormatter.format(now);
+                    const dayParts = dayFormatter.formatToParts(now);
                     
                     const h = parseInt(timeParts.find(p => p.type === 'hour').value);
                     const m = parseInt(timeParts.find(p => p.type === 'minute').value);
+                    const dayName = dayParts.find(p => p.type === 'weekday').value;
                     const timeDecimal = h + (m / 60);
 
-                    // WEEKEND CHECK: Force CLOSED on Saturday and Sunday
-                    const isWeekend = (weekday === 'Saturday' || weekday === 'Sunday');
+                    // Market Logic: Closed on Sat/Sun
+                    const isWeekend = (dayName === 'Saturday' || dayName === 'Sunday');
                     const isOpen = !isWeekend && (timeDecimal >= s.open && timeDecimal < s.close);
                     
                     if(isOpen) openCount++;
@@ -252,7 +249,15 @@
                         let minsLeft = (s.close - timeDecimal) * 60;
                         output = `${Math.floor(minsLeft/60)}h ${Math.round(minsLeft%60)}m left`;
                     } else {
-                        output = isWeekend ? "Weekend" : "Closed";
+                        // Calculate hours until 8am next opening
+                        let hoursUntil = (s.open - timeDecimal);
+                        if (hoursUntil < 0) hoursUntil += 24;
+                        
+                        // Handle weekend skip
+                        if (dayName === 'Friday' && timeDecimal >= s.close) hoursUntil += 48; // Skip to Monday
+                        else if (dayName === 'Saturday') hoursUntil += 24; // Skip to Monday
+                        
+                        output = isWeekend ? "Weekend" : `${Math.floor(hoursUntil)}h ${Math.round((hoursUntil%1)*60)}m`;
                     }
                     document.getElementById('count-'+s.name).innerText = output;
                 });
@@ -271,6 +276,7 @@
         </script>
     </div>
 </div>
+
 </div>
 
             <div class="panel" style="flex: 1;">
