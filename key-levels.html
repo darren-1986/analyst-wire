@@ -46,11 +46,11 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 
 /* Interactive Ticker Element */
 .clickable-ticker { cursor: pointer; }
-.clickable-ticker:hover .ticker-text { color: #58a6ff; }
-.clickable-ticker:hover svg { fill: #58a6ff; }
+.clickable-ticker:hover .ticker-text { color: #58a6ff !important; }
+.clickable-ticker:hover svg { fill: #58a6ff !important; }
 .ticker-flex { display: flex; align-items: center; gap: 8px; }
-.ticker-text { font-weight: 600; color: #fff; transition: color 0.15s ease; font-family: 'Inter', sans-serif; }
-.chart-icon-svg { fill: #8b949e; transition: fill 0.15s ease; display: inline-block; vertical-align: middle; }
+.ticker-text { font-weight: 600; color: #fff; transition: color 0.15s ease, text-shadow 0.15s ease; font-family: 'Inter', sans-serif; }
+.chart-icon-svg { transition: fill 0.15s ease; display: inline-block; vertical-align: middle; }
 
 /* Color-Coded Lollipop Display System Components */
 .lollipop-system { display: flex; align-items: center; gap: 12px; margin-top: 5px; height: 38px; }
@@ -286,7 +286,6 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
         </div>
     </div>
 
-    <!-- The 3 other quadrant sections ready for your next widgets -->
     <div class="quadrant placeholder-quadrant">
         <p>Top Right Module</p>
     </div>
@@ -379,6 +378,31 @@ document.getElementById('date-filter').value = new Date().toISOString().split('T
 fetchData();
 }
 
+function getAssetVolatilityMetrics(r) {
+    const assetClass = categoryMap[r.ticker] || 'Forex';
+    const s1Num = parseFloat(r.s1) || 0;
+    const r1Num = parseFloat(r.r1) || 0;
+    const rawDiff = Math.abs(r1Num - s1Num);
+
+    let rangeFormatted;
+    let isTrending = false;
+
+    if (assetClass === 'Indices' || assetClass === 'Crypto') {
+        rangeFormatted = rawDiff.toFixed(2); isTrending = rawDiff > 80.00;
+    } else if (r.ticker === 'XAU/USD') {
+        rangeFormatted = rawDiff.toFixed(2); isTrending = rawDiff > 15.00;
+    } else if (assetClass === 'Commodities') {
+        rangeFormatted = rawDiff.toFixed(2); isTrending = rawDiff > 3.00;
+    } else if (r.ticker.includes('JPY')) {
+        rangeFormatted = rawDiff.toFixed(3); isTrending = (rawDiff * 100) > 90.0;
+    } else if (r.ticker === 'USD/NOK' || r.ticker === 'USD/MXN') {
+        rangeFormatted = rawDiff.toFixed(4); isTrending = rawDiff > 0.1500;
+    } else {
+        rangeFormatted = rawDiff.toFixed(4); isTrending = (rawDiff * 10000) > 75.0;
+    }
+    return { rangeFormatted, isTrending };
+}
+
 async function fetchData() {
     const dateStr = document.getElementById('date-filter').value;
     
@@ -389,7 +413,7 @@ async function fetchData() {
     if (dateObj.getDay() === 6) dateObj.setDate(dateObj.getDate() - 1); // Saturday -> Friday
     const yesterdayStr = dateObj.toISOString().split('T')[0];
 
-    // Fetch both today and yesterday for Day-Over-Day tracking
+    // Fetch both today and yesterday
     const [todayRes, yesterdayRes] = await Promise.all([
         client.from('key_levels').select('id, trade_date, ticker, s1, s2, r1, r2, bias, bull_bear_line, lollipop, analysis').eq('trade_date', dateStr),
         client.from('key_levels').select('id, trade_date, ticker, s1, s2, r1, r2, bias, bull_bear_line, lollipop, analysis').eq('trade_date', yesterdayStr)
@@ -400,10 +424,31 @@ async function fetchData() {
     const todayData = todayRes.data || [];
     const yesterdayData = yesterdayRes.data || [];
 
-    // Map the metrics directly into cachedData
+    // Map metrics and calculate Conviction Score
     cachedData = todayData.map(todayRow => {
+        let score = 0;
+        
+        // 1. Bias Scoring
+        if (todayRow.bias === 'Strong Bullish') score += 3;
+        else if (todayRow.bias === 'Medium Bullish') score += 1;
+        else if (todayRow.bias === 'Strong Bearish') score -= 3;
+        else if (todayRow.bias === 'Medium Bearish') score -= 1;
+
+        // 2. Volatility State (Trending) Scoring
+        const metrics = getAssetVolatilityMetrics(todayRow);
+        if (metrics.isTrending) {
+            if (score > 0) score += 2;
+            else if (score < 0) score -= 2;
+        }
+
+        // 3. Lollipop Status Scoring
+        const lolli = (todayRow.lollipop || '').toUpperCase();
+        if (lolli.includes('UPPER') || lolli.includes('BREAK OUT')) score += 2;
+        else if (lolli.includes('LOWER') || lolli.includes('BREAK DOWN')) score -= 2;
+
         const yRow = yesterdayData.find(y => y.ticker === todayRow.ticker);
         if (yRow) {
+            // Day-Over-Day Math
             const bbDelta = parseFloat(todayRow.bull_bear_line) - parseFloat(yRow.bull_bear_line);
             todayRow.value_migration = bbDelta > 0 ? "Upward (Accumulation)" : (bbDelta < 0 ? "Downward (Distribution)" : "Flat");
 
@@ -418,13 +463,51 @@ async function fetchData() {
             } else {
                 todayRow.structural_shift = "Maintaining Range";
             }
+
+            // 4. DoD Shift Scoring
+            if (todayRow.value_migration === "Upward (Accumulation)") score += 1;
+            else if (todayRow.value_migration === "Downward (Distribution)") score -= 1;
+
+            if (todayRow.structural_shift === "Bullish Floor Flip") score += 2;
+            else if (todayRow.structural_shift === "Bearish Ceiling Flip") score -= 2;
+
+            if (todayRow.vol_velocity === "Expanding") {
+                if (score > 0) score += 1;
+                else if (score < 0) score -= 1;
+            }
         } else {
             todayRow.value_migration = "N/A (No prior data)";
             todayRow.vol_velocity = "N/A";
             todayRow.structural_shift = "N/A";
         }
+        
+        todayRow.convictionScore = score;
+        todayRow.isTopWinner = false;
+        todayRow.isTopLoser = false;
+
         return todayRow;
     });
+
+    // Isolate Top 2 Strong and Top 2 Weak (Only if conviction score meets the extreme threshold)
+    const sortedData = [...cachedData].sort((a, b) => b.convictionScore - a.convictionScore);
+    
+    let winnersCount = 0;
+    for (let i = 0; i < sortedData.length; i++) {
+        if (sortedData[i].convictionScore >= 7 && winnersCount < 2) {
+            const index = cachedData.findIndex(r => r.id === sortedData[i].id);
+            if(index !== -1) cachedData[index].isTopWinner = true;
+            winnersCount++;
+        }
+    }
+
+    let losersCount = 0;
+    for (let i = sortedData.length - 1; i >= 0; i--) {
+        if (sortedData[i].convictionScore <= -7 && losersCount < 2) {
+            const index = cachedData.findIndex(r => r.id === sortedData[i].id);
+            if(index !== -1) cachedData[index].isTopLoser = true;
+            losersCount++;
+        }
+    }
 
     const tickerSelect = document.getElementById('ticker-filter');
     tickerSelect.innerHTML = '<option value="all">All Tickers</option>';
@@ -456,31 +539,6 @@ function openChart(ticker) {
     const width = 1100; const height = 650;
     const left = (window.screen.width - width) / 2; const top = (window.screen.height - height) / 2;
     window.open(chartUrl, '_blank', `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`);
-}
-
-function getAssetVolatilityMetrics(r) {
-    const assetClass = categoryMap[r.ticker] || 'Forex';
-    const s1Num = parseFloat(r.s1) || 0;
-    const r1Num = parseFloat(r.r1) || 0;
-    const rawDiff = Math.abs(r1Num - s1Num);
-
-    let rangeFormatted;
-    let isTrending = false;
-
-    if (assetClass === 'Indices' || assetClass === 'Crypto') {
-        rangeFormatted = rawDiff.toFixed(2); isTrending = rawDiff > 80.00;
-    } else if (r.ticker === 'XAU/USD') {
-        rangeFormatted = rawDiff.toFixed(2); isTrending = rawDiff > 15.00;
-    } else if (assetClass === 'Commodities') {
-        rangeFormatted = rawDiff.toFixed(2); isTrending = rawDiff > 3.00;
-    } else if (r.ticker.includes('JPY')) {
-        rangeFormatted = rawDiff.toFixed(3); isTrending = (rawDiff * 100) > 90.0;
-    } else if (r.ticker === 'USD/NOK' || r.ticker === 'USD/MXN') {
-        rangeFormatted = rawDiff.toFixed(4); isTrending = rawDiff > 0.1500;
-    } else {
-        rangeFormatted = rawDiff.toFixed(4); isTrending = (rawDiff * 10000) > 75.0;
-    }
-    return { rangeFormatted, isTrending };
 }
 
 function render() {
@@ -545,13 +603,28 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
 
     const textualAnalysis = r.analysis && r.analysis.trim() !== '' ? r.analysis : 'Intraday tactical breakdown details pending calculation refresh for this level index.';
 
+    // Apply Glowing Text Highlight based on Top 2 High-Conviction filtering
+    let tickerColorStyle = '';
+    let svgFill = '#8b949e';
+    let convictionIcon = '';
+
+    if (r.isTopWinner) {
+        tickerColorStyle = 'color: #2ea043; text-shadow: 0 0 8px rgba(46,160,67,0.4);';
+        svgFill = '#2ea043';
+        convictionIcon = '<span title="Top Conviction Winner" style="margin-left: 5px; font-size: 10px;">🔥</span>';
+    } else if (r.isTopLoser) {
+        tickerColorStyle = 'color: #f85149; text-shadow: 0 0 8px rgba(248,81,73,0.4);';
+        svgFill = '#f85149';
+        convictionIcon = '<span title="Top Conviction Loser" style="margin-left: 5px; font-size: 10px;">🩸</span>';
+    }
+
     return `
     <tr>
     <td>${r.trade_date}</td>
     <td class="clickable-ticker" onclick="openChart('${r.ticker}')">
         <div class="ticker-flex">
-            <svg class="chart-icon-svg" width="14" height="14" viewBox="0 0 24 24"><path d="M3.5 18.5v-13h2v13h-2zm5 0v-7h2v7h-2zm5 0v-11h2v11h-2zm5 0v-5h2v5h-2z"/></svg>
-            <span class="ticker-text">${r.ticker}</span>
+            <svg class="chart-icon-svg" width="14" height="14" viewBox="0 0 24 24" style="fill: ${svgFill};"><path d="M3.5 18.5v-13h2v13h-2zm5 0v-7h2v7h-2zm5 0v-11h2v11h-2zm5 0v-5h2v5h-2z"/></svg>
+            <span class="ticker-text" style="${tickerColorStyle}">${r.ticker}</span>${convictionIcon}
         </div>
     </td>
     <td class="${biasClass}">${directionalArrow}</td>
