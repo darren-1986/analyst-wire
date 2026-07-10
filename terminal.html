@@ -112,7 +112,7 @@
     <div class="panel-content">
         <div class="market-sessions-widget">
             <div class="msw-header">
-                <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple sessions are open.">HOT MARKET</div>
+                <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: First hour of Tokyo/Sydney overlap.">HOT MARKET</div>
                 <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
             </div>
             <div id="msw-sessions-container"></div>
@@ -149,7 +149,8 @@
                 const now = new Date();
                 document.getElementById('msw-user-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 
-                let openCount = 0;
+                let sydneyIsOpen = false;
+                let tokyoIsOpen = false;
                 
                 SESSIONS.forEach(s => {
                     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -163,7 +164,9 @@
                     document.getElementById('time-'+s.name).innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
                     
                     const isOpen = (timeDecimal >= s.open && timeDecimal < s.close);
-                    if(isOpen) openCount++;
+                    
+                    if (s.name === 'Sydney') sydneyIsOpen = isOpen;
+                    if (s.name === 'Tokyo') tokyoIsOpen = isOpen;
                     
                     document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
                     document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
@@ -181,8 +184,11 @@
                     document.getElementById('count-'+s.name).innerText = output;
                 });
 
-                // Hot alert logic
-                document.getElementById('msw-hot-alert').style.display = (openCount > 1) ? 'block' : 'none';
+                // Logic: Display ONLY during the 07:00-08:00 Bali (WITA) hour when both are open
+                const baliHour = now.getUTCHours() + 8; // Bali is UTC+8
+                const isFirstHour = (baliHour >= 7 && baliHour < 8);
+                
+                document.getElementById('msw-hot-alert').style.display = (sydneyIsOpen && tokyoIsOpen && isFirstHour) ? 'block' : 'none';
             }
 
             const container = document.getElementById('msw-sessions-container');
