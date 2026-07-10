@@ -194,7 +194,7 @@
             .msw-hot-alert { font-size: 9px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3); animation: pulse 1.5s infinite; cursor: help; }
             @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
             .msw-local-clock { font-family: monospace; font-size: 11px; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #10b981; }
-            .msw-session-row { display: grid; grid-template-columns: 1fr 50px auto; align-items: center; gap: 8px; margin-bottom: 10px; }
+            .msw-session-row { display: grid; grid-template-columns: 1fr 60px auto; align-items: center; gap: 8px; margin-bottom: 10px; }
             .msw-session-name { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; }
             .msw-status-dot { height: 6px; width: 6px; border-radius: 50%; background: #475569; }
             .msw-status-dot.open { background: #10b981; }
@@ -221,47 +221,49 @@
                 let openCount = 0;
                 
                 SESSIONS.forEach(s => {
-                    const timeFormatter = new Intl.DateTimeFormat('en-US', { timeZone: s.zone, hour: '2-digit', minute: '2-digit', hour12: false });
-                    const dayFormatter = new Intl.DateTimeFormat('en-US', { timeZone: s.zone, weekday: 'long', day: 'numeric', hour: '2-digit', hour12: false });
-                    
-                    const timeParts = timeFormatter.formatToParts(now);
-                    const dayParts = dayFormatter.formatToParts(now);
-                    
-                    const h = parseInt(timeParts.find(p => p.type === 'hour').value);
-                    const m = parseInt(timeParts.find(p => p.type === 'minute').value);
-                    const dayName = dayParts.find(p => p.type === 'weekday').value;
+                    // Get local time in the market's timezone
+                    const formatter = new Intl.DateTimeFormat('en-US', {
+                        timeZone: s.zone, hour: '2-digit', minute: '2-digit', weekday: 'long', hour12: false
+                    });
+                    const parts = formatter.formatToParts(now);
+                    const h = parseInt(parts.find(p => p.type === 'hour').value);
+                    const m = parseInt(parts.find(p => p.type === 'minute').value);
+                    const day = parts.find(p => p.type === 'weekday').value;
                     const timeDecimal = h + (m / 60);
 
-                    // Market Logic: Closed on Sat/Sun
-                    const isWeekend = (dayName === 'Saturday' || dayName === 'Sunday');
+                    // Check status
+                    const isWeekend = (day === 'Saturday' || day === 'Sunday');
                     const isOpen = !isWeekend && (timeDecimal >= s.open && timeDecimal < s.close);
                     
                     if(isOpen) openCount++;
 
+                    // Update UI
                     document.getElementById('time-'+s.name).innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
                     document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
                     document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
                     document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
                     
-                    // Countdown Logic
+                    // Countdown Logic: Correctly calculate time until next 8am
                     let output = "";
                     if (isOpen) {
                         let minsLeft = (s.close - timeDecimal) * 60;
                         output = `${Math.floor(minsLeft/60)}h ${Math.round(minsLeft%60)}m left`;
                     } else {
-                        // Calculate hours until 8am next opening
+                        // Calculate time until 8:00 AM
                         let hoursUntil = (s.open - timeDecimal);
-                        if (hoursUntil < 0) hoursUntil += 24;
                         
-                        // Handle weekend skip
-                        if (dayName === 'Friday' && timeDecimal >= s.close) hoursUntil += 48; // Skip to Monday
-                        else if (dayName === 'Saturday') hoursUntil += 24; // Skip to Monday
+                        // If it's the weekend, calculate until Monday 8:00 AM
+                        if (isWeekend || hoursUntil < 0) {
+                            let daysToAdd = (day === 'Friday') ? 3 : (day === 'Saturday') ? 2 : 1;
+                            hoursUntil = (24 - timeDecimal) + ((daysToAdd - 1) * 24) + s.open;
+                        }
                         
-                        output = isWeekend ? "Weekend" : `${Math.floor(hoursUntil)}h ${Math.round((hoursUntil%1)*60)}m`;
+                        output = `${Math.floor(hoursUntil)}h ${Math.round((hoursUntil%1)*60)}m`;
                     }
                     document.getElementById('count-'+s.name).innerText = output;
                 });
 
+                // Hot alert logic (only show if markets are actually open)
                 document.getElementById('msw-hot-alert').style.display = (openCount > 1) ? 'block' : 'none';
             }
 
@@ -276,6 +278,7 @@
         </script>
     </div>
 </div>
+
 </div>
 </div>
 
