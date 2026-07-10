@@ -104,22 +104,20 @@
         </div>
     </div>
     
+<div class="right-column">
     <div class="panel" style="flex: 1;">
-    <div class="panel-header">Market Time Zones</div>
+    <div class="panel-header">Forex Market Hours</div>
     <div class="panel-content">
         <div class="market-sessions-widget">
             <div class="msw-header">
                 <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
-                <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple sessions are open.">HOT MARKET</div>
             </div>
             <div id="msw-sessions-container"></div>
         </div>
 
         <style>
             .market-sessions-widget { box-sizing: border-box; width: 100%; background-color: #0A0A0A; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #f8fafc; font-family: sans-serif; }
-            .msw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-            .msw-hot-alert { font-size: 9px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3); animation: pulse 1.5s infinite; cursor: help; }
-            @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+            .msw-header { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 12px; }
             .msw-local-clock { font-family: monospace; font-size: 11px; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #10b981; }
             .msw-session-row { display: grid; grid-template-columns: 1fr 50px auto; align-items: center; gap: 8px; margin-bottom: 10px; }
             .msw-session-name { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; }
@@ -135,59 +133,56 @@
 
         <script>
         (function() {
+            // Hours aligned with your Forex screenshot
             const SESSIONS = [
-                { name: 'Tokyo', zone: 'Asia/Tokyo', open: 9, close: 15 },
-                { name: 'Sydney', zone: 'Australia/Sydney', open: 10, close: 16 },
-                { name: 'London', zone: 'Europe/London', open: 8, close: 16.5 },
-                { name: 'New York', zone: 'America/New_York', open: 9.5, close: 16 }
+                { name: 'Sydney', zone: 'Australia/Sydney', open: 8, close: 16 },
+                { name: 'Tokyo', zone: 'Asia/Tokyo', open: 8, close: 16 },
+                { name: 'London', zone: 'Europe/London', open: 8, close: 16 },
+                { name: 'New York', zone: 'America/New_York', open: 8, close: 16 }
             ];
 
-            function update() {
+            function tick() {
                 const now = new Date();
                 document.getElementById('msw-user-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                 
-                let openCount = 0;
-                
                 SESSIONS.forEach(s => {
-                    // Use block-scoped constants so variables don't bleed between market iterations
                     const formatter = new Intl.DateTimeFormat('en-US', {
-                        timeZone: s.zone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+                        timeZone: s.zone, hour: '2-digit', minute: '2-digit', hour12: false
                     });
                     const parts = formatter.formatToParts(now);
                     const h = parseInt(parts.find(p => p.type === 'hour').value);
                     const m = parseInt(parts.find(p => p.type === 'minute').value);
                     const timeDecimal = h + (m / 60);
 
-                    // Update DOM Elements
                     document.getElementById('time-'+s.name).innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
                     
                     const isOpen = (timeDecimal >= s.open && timeDecimal < s.close);
-                    if(isOpen) openCount++;
                     
                     document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
                     document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
                     document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
                     
-                    // Independent countdown calculation
-                    let timeUntil = s.open - timeDecimal;
-                    if (timeUntil < 0) timeUntil += 24; // If open time passed, count until tomorrow
-                    
-                    document.getElementById('count-'+s.name).innerText = isOpen 
-                        ? `${Math.floor((s.close - timeDecimal))}h ${Math.round(((s.close - timeDecimal)%1)*60)}m left`
-                        : `${Math.floor(timeUntil)}h ${Math.round((timeUntil%1)*60)}m`;
+                    // Countdown relative to that market's local schedule
+                    let output = "";
+                    if (isOpen) {
+                        let minsLeft = (s.close - timeDecimal) * 60;
+                        output = `${Math.floor(minsLeft/60)}h ${Math.round(minsLeft%60)}m left`;
+                    } else {
+                        let hoursUntil = (s.open - timeDecimal);
+                        if (hoursUntil < 0) hoursUntil += 24;
+                        output = `${Math.floor(hoursUntil)}h ${Math.round((hoursUntil%1)*60)}m`;
+                    }
+                    document.getElementById('count-'+s.name).innerText = output;
                 });
-                
-                document.getElementById('msw-hot-alert').style.display = (openCount > 1) ? 'block' : 'none';
             }
 
-            // Init
             const container = document.getElementById('msw-sessions-container');
             container.innerHTML = '';
             SESSIONS.forEach(s => {
                 container.insertAdjacentHTML('beforeend', `<div class="msw-session-row"><div class="msw-session-name"><span class="msw-status-dot" id="dot-${s.name}"></span><span>${s.name}<small class="msw-zone-time" id="time-${s.name}"></small></span></div><span class="msw-session-status-text" id="stat-${s.name}"></span><div class="msw-countdown-text" id="count-${s.name}"></div></div>`);
             });
-            setInterval(update, 1000);
-            update();
+            setInterval(tick, 1000);
+            tick();
         })();
         </script>
     </div>
