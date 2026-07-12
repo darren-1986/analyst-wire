@@ -225,6 +225,36 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     <li><strong>Determine Playbook:</strong> Sort the table by the <strong>BIAS ↕</strong> column header to group all structural extremes together instantly.</li>
     <li><strong>Risk Parameters:</strong> Use the <strong>Volatility</strong> badge to size your stops—higher volatility values dictate smaller position sizing to preserve trading capital.</li>
 </ol>
+
+<hr>
+
+<h3>4. Lollipop Momentum Status</h3>
+<p>A visual representation of price action behavior relative to structural barriers.</p>
+<ul style="line-height: 1.6;">
+    <li><span style="color: #2ea043; font-weight: 600;">UPPER BREAK:</span> Bullish breakout confirmed above critical upper resistance matrix structures.</li>
+    <li><span style="color: #f85149; font-weight: 600;">LOWER BREAK:</span> Bearish distribution expansion confirmed beneath major historical support floors.</li>
+    <li><span style="color: #d29922; font-weight: 600;">INSIDE RANGE:</span> Price action is currently compressed inside key horizontal structure levels.</li>
+</ul>
+
+<hr>
+
+<h3>5. Day-Over-Day (DoD) Velocity</h3>
+<p>Measures market velocity by comparing today's data (T0) to the previous trading day's data (T-1).</p>
+<ul style="line-height: 1.6;">
+    <li><strong>Value Migration:</strong> Tracks the Bull/Bear line shift. "Upward (Accumulation)" indicates institutional buying elevating the value area, while "Downward (Distribution)" indicates selling pressure.</li>
+    <li><strong>Volatility State:</strong> Compares the S1-R1 spread. "Expanding" suggests trend acceleration; "Compressing" suggests winding up for a potential breakout.</li>
+    <li><strong>Structural Shift:</strong> Identifies critical floor/ceiling flips. "Bullish Floor Flip" occurs when today's support exceeds yesterday's resistance. "Bearish Ceiling Flip" occurs when today's resistance drops below yesterday's support.</li>
+</ul>
+
+<hr>
+
+<h3>6. Hot Assets (Conviction Scoring)</h3>
+<p>The system programmatically grades every asset on an 11-point momentum scale, combining Bias, Volatility State, Lollipop breakouts, and DoD Velocity metrics.</p>
+<ul style="line-height: 1.6;">
+    <li><span style="color: #2ea043; font-weight: 700;">[STRONG]:</span> Highlights the top 2 assets with a conviction score of +7 or higher. These exhibit extreme bullish confluence across multiple timeframes.</li>
+    <li><span style="color: #f85149; font-weight: 700;">[WEAK]:</span> Highlights the top 2 assets with a conviction score of -7 or lower. These exhibit extreme bearish confluence.</li>
+    <li><em>Note: Assets failing to meet this extreme threshold remain unhighlighted to filter out choppy or mixed signals.</em></li>
+</ul>
 </div>
 </div>
 
@@ -611,11 +641,11 @@ tbody.innerHTML = filtered.length ? filtered.map((r, index) => {
     if (r.isTopWinner) {
         tickerColorStyle = 'color: #2ea043; text-shadow: 0 0 8px rgba(46,160,67,0.4);';
         svgFill = '#2ea043';
-        convictionIcon = '<span title="Top Conviction Winner" style="margin-left: 5px; font-size: 10px;">🔥</span>';
+        convictionIcon = '<span title="Top Conviction Winner" style="margin-left: 6px; font-size: 9px; font-weight: 700; color: #2ea043; letter-spacing: 0.5px;">[STRONG]</span>';
     } else if (r.isTopLoser) {
         tickerColorStyle = 'color: #f85149; text-shadow: 0 0 8px rgba(248,81,73,0.4);';
         svgFill = '#f85149';
-        convictionIcon = '<span title="Top Conviction Loser" style="margin-left: 5px; font-size: 10px;">🩸</span>';
+        convictionIcon = '<span title="Top Conviction Loser" style="margin-left: 6px; font-size: 9px; font-weight: 700; color: #f85149; letter-spacing: 0.5px;">[WEAK]</span>';
     }
 
     return `
