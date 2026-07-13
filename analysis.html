@@ -28,40 +28,47 @@
         .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; border-radius: 0; font-family: 'Inter', sans-serif; }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
-        /* Grid Layout for Analysis Page */
-        #analysis-view { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; padding: 20px; height: calc(100vh - 55px); width: 100%; }
+        /* Tabs Container */
+        .tabs-container { display: flex; flex-direction: column; height: calc(100vh - 55px); padding: 20px; width: 100%; max-width: 1200px; margin: 0 auto; }
+        
+        .tab-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background: #0d1117; border: 1px solid #30363d; color: #8b949e; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; font-family: 'Inter', sans-serif; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .tab-btn:hover { color: #fff; background: #161b22; }
+        .tab-btn.active { background: rgba(41, 98, 255, 0.1); color: #2962ff; border-color: rgba(41, 98, 255, 0.4); }
 
-        /* Panel Standard Styling */
-        .panel { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; min-height: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .panel-header { background: #161b22; padding: 12px 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; color: #8b949e; user-select: none; display: flex; justify-content: space-between; align-items: center; }
-        .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; padding: 20px; }
-
+        /* Tab Content Area */
+        .tab-content { display: none; flex-grow: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; overflow-y: auto; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .tab-content.active { display: block; }
+        
         /* Custom Scrollbars */
-        .panel-content::-webkit-scrollbar { width: 6px; }
-        .panel-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
-        .panel-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
-        .panel-content::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+        .tab-content::-webkit-scrollbar { width: 6px; }
+        .tab-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
+        .tab-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+        .tab-content::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 
-        /* Typography inside panels */
+        /* Media Layouts (Week Ahead Tab) */
+        .media-section { max-width: 900px; margin: 0 auto 40px auto; }
+        .section-title { font-size: 18px; font-weight: 600; color: #fff; margin: 0 0 15px 0; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+        .video-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .report-wrapper { border-radius: 8px; overflow: hidden; border: 1px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.3); background: #000; }
+
+        /* Content Styling (Text Tabs) */
         .report-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #2962ff; margin-bottom: 10px; display: block; }
-        .report-title { font-size: 16px; font-weight: 600; color: #fff; margin: 0 0 15px 0; }
-        .report-text { font-size: 13px; line-height: 1.6; color: #c9d1d9; margin-bottom: 15px; }
-        .report-list { padding-left: 20px; margin-bottom: 15px; }
-        .report-list li { margin-bottom: 8px; line-height: 1.5; color: #c9d1d9; }
+        .report-text { font-size: 14px; line-height: 1.6; color: #c9d1d9; margin-bottom: 15px; }
+        .report-list { padding-left: 20px; margin-bottom: 15px; font-size: 14px; }
+        .report-list li { margin-bottom: 8px; line-height: 1.6; color: #c9d1d9; }
 
         /* Trade Ideas Styling */
-        .trade-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-        .trade-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 10px; margin-bottom: 10px; }
-        .trade-ticker { font-size: 16px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
-        .trade-direction { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .trade-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 15px; }
+        .trade-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 15px; margin-bottom: 15px; }
+        .trade-ticker { font-size: 18px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
+        .trade-direction { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .dir-long { background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.4); }
         .dir-short { background: rgba(248, 81, 73, 0.15); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); }
-        .trade-levels { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; }
-        .level-box { display: flex; flex-direction: column; }
-        .level-label { font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 4px; }
-        .level-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #c9d1d9; font-weight: 500; }
-        
-        .update-tag { background: #2962ff; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; }
+        .trade-levels { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center; }
+        .level-box { display: flex; flex-direction: column; background: #090b10; padding: 10px; border-radius: 6px; border: 1px solid #21262d; }
+        .level-label { font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 6px; }
+        .level-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #c9d1d9; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -89,42 +96,41 @@
     </div>
 </div>
 
-<div id="analysis-view">
+<div class="tabs-container">
     
-    <div class="panel">
-        <div class="panel-header">
-            <span>The Week Ahead (Video)</span>
-            <span class="update-tag">NEW</span>
-        </div>
-        <div class="panel-content" style="padding: 0; background: #000;">
-            <iframe style="width: 100%; height: 100%; border: none;" src="https://www.youtube.com/embed/QB5BNdBFujE?si=8-fZ9o8d4el45vm_" title="Week Ahead Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
+    <!-- Tab Controls -->
+    <div class="tab-buttons">
+        <button class="tab-btn active" onclick="switchTab('tab-week-ahead')">The Week Ahead</button>
+        <button class="tab-btn" onclick="switchTab('tab-daily')">Daily Analysis</button>
+        <button class="tab-btn" onclick="switchTab('tab-trades')">Trade Ideas</button>
     </div>
 
-    <div class="panel">
-        <div class="panel-header">The Week Ahead (Report)</div>
-        <div class="panel-content">
-            <span class="report-date">WEEK OF OCT 23, 2026</span>
-            <h2 class="report-title">Macro Themes & Central Bank Watch</h2>
-            <p class="report-text">
-                This week markets are heavily focused on upcoming inflation data and potential policy pivots. The USD has maintained its strength, but key resistance levels are being tested across major pairs. 
-            </p>
-            <ul class="report-list">
-                <li><strong>USD Focus:</strong> Watch for PCE data on Thursday. A hotter-than-expected print could push DXY above the 106.50 handle.</li>
-                <li><strong>Gold (XAU/USD):</strong> Consolidating near support. Geopolitical risk premiums remain embedded, but rising real yields present a headwind.</li>
-                <li><strong>Equities:</strong> Earnings season kicks into high gear with mega-cap tech reporting Tuesday and Wednesday.</li>
-            </ul>
-            <p class="report-text">
-                <em>Analyst Note:</em> Liquidity may be thin going into the latter half of the week as participants wait for Friday's Non-Farm Payrolls. Exercise caution with breakout trades.
-            </p>
+    <!-- Tab 1: Week Ahead -->
+    <div id="tab-week-ahead" class="tab-content active">
+        
+        <div class="media-section">
+            <h2 class="section-title">Video Outlook</h2>
+            <div class="video-wrapper">
+                <iframe src="https://www.youtube.com/embed/4kxRXPOU2Vo" title="Week Ahead Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
         </div>
+
+        <div class="media-section">
+            <h2 class="section-title">Written Report</h2>
+            <div class="report-wrapper">
+                <div style="position:relative;padding-top:max(60%,324px);width:100%;height:0;">
+                    <iframe style="position:absolute;border:none;width:100%;height:100%;left:0;top:0;" src="https://online.fliphtml5.com/analyst-wire/rsow/" title="Global Monetary Policy and the Fragmented Economic Landscape" seamless="seamless" scrolling="no" frameborder="0" allowtransparency="true" allowfullscreen="true"></iframe>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <div class="panel">
-        <div class="panel-header">Daily Briefing</div>
-        <div class="panel-content">
+    <!-- Tab 2: Daily Analysis -->
+    <div id="tab-daily" class="tab-content">
+        <div class="media-section">
             <span class="report-date">TUESDAY UPDATE</span>
-            <h2 class="report-title">Overnight Session Highlights</h2>
+            <h2 class="section-title" style="border:none; padding:0;">Overnight Session Highlights</h2>
             <p class="report-text">
                 Asian equities traded mixed overnight as Chinese stimulus hopes faded slightly. The RBA kept rates on hold as widely expected, but the statement leaned slightly hawkish, offering temporary support to the AUD.
             </p>
@@ -137,10 +143,11 @@
         </div>
     </div>
 
-    <div class="panel">
-        <div class="panel-header">Active Trade Ideas</div>
-        <div class="panel-content">
+    <!-- Tab 3: Trade Ideas -->
+    <div id="tab-trades" class="tab-content">
+        <div class="media-section">
             
+            <!-- Trade Card 1 -->
             <div class="trade-card">
                 <div class="trade-header">
                     <span class="trade-ticker">EUR/USD</span>
@@ -151,11 +158,12 @@
                     <div class="level-box"><span class="level-label">Target</span><span class="level-val">1.0820</span></div>
                     <div class="level-box"><span class="level-label">Stop Loss</span><span class="level-val">1.1015</span></div>
                 </div>
-                <p style="font-size: 12px; color: #8b949e; margin: 10px 0 0 0; line-height: 1.4;">
+                <p style="font-size: 13px; color: #8b949e; margin: 15px 0 0 0; line-height: 1.5;">
                     Technical rejection at the 200-day moving average. Fundamental divergence widening between ECB and Fed rate paths.
                 </p>
             </div>
 
+            <!-- Trade Card 2 -->
             <div class="trade-card">
                 <div class="trade-header">
                     <span class="trade-ticker">XAU/USD (Gold)</span>
@@ -166,7 +174,7 @@
                     <div class="level-box"><span class="level-label">Target</span><span class="level-val">2360.00</span></div>
                     <div class="level-box"><span class="level-label">Stop Loss</span><span class="level-val">2290.00</span></div>
                 </div>
-                <p style="font-size: 12px; color: #8b949e; margin: 10px 0 0 0; line-height: 1.4;">
+                <p style="font-size: 13px; color: #8b949e; margin: 15px 0 0 0; line-height: 1.5;">
                     Buying the dip into major structural support. Safe-haven bids expected to return if equity volatility spikes.
                 </p>
             </div>
@@ -177,6 +185,25 @@
 </div>
 
 <script>
+    // --- Tab Switching Logic ---
+    function switchTab(tabId) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        // Remove active class from all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show target tab content
+        document.getElementById(tabId).classList.add('active');
+        
+        // Add active class to clicked button
+        event.currentTarget.classList.add('active');
+    }
+
     // --- Navigation Dropdown ---
     function toggleDropdown() {
         document.getElementById("settingsDropdown").style.display = 
@@ -197,7 +224,7 @@
         
         const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
         
-        // Ensure user has access (prevent free users from viewing if this is premium)
+        // Ensure user has access (prevent free users from viewing)
         if (!profile || profile.subscription_tag === 'free') {
             alert("Your subscription is inactive. Redirecting to login.");
             await client.auth.signOut();
