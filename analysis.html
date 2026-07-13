@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="media/favicon.png">
+    <title>Analyst Wire | Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <style>
+        /* Modern typography import */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+        /* Unified Dark Theme */
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #090b10; color: #d1d4dc; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; }
+        *, *:before, *:after { box-sizing: border-box; }
+        
+        /* Navigation */
+        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1001; position: relative; width: 100%; }
+        .nav-links { display: flex; align-items: center; gap: 5px; }
+        .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
+        .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
+
+        /* Dropdown Styling */
+        .dropdown { position: relative; margin-left: 10px; }
+        .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
+        .dropbtn:hover { color: #fff; }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
+        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; border-radius: 0; font-family: 'Inter', sans-serif; }
+        .dropdown-content a:hover { background-color: #21262d; color: #fff; }
+
+        /* Grid Layout for Analysis Page */
+        #analysis-view { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; padding: 20px; height: calc(100vh - 55px); width: 100%; }
+
+        /* Panel Standard Styling */
+        .panel { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; min-height: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .panel-header { background: #161b22; padding: 12px 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; color: #8b949e; user-select: none; display: flex; justify-content: space-between; align-items: center; }
+        .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; padding: 20px; }
+
+        /* Custom Scrollbars */
+        .panel-content::-webkit-scrollbar { width: 6px; }
+        .panel-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
+        .panel-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+        .panel-content::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+        /* Typography inside panels */
+        .report-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #2962ff; margin-bottom: 10px; display: block; }
+        .report-title { font-size: 16px; font-weight: 600; color: #fff; margin: 0 0 15px 0; }
+        .report-text { font-size: 13px; line-height: 1.6; color: #c9d1d9; margin-bottom: 15px; }
+        .report-list { padding-left: 20px; margin-bottom: 15px; }
+        .report-list li { margin-bottom: 8px; line-height: 1.5; color: #c9d1d9; }
+
+        /* Trade Ideas Styling */
+        .trade-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .trade-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 10px; margin-bottom: 10px; }
+        .trade-ticker { font-size: 16px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
+        .trade-direction { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .dir-long { background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.4); }
+        .dir-short { background: rgba(248, 81, 73, 0.15); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); }
+        .trade-levels { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; }
+        .level-box { display: flex; flex-direction: column; }
+        .level-label { font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 4px; }
+        .level-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #c9d1d9; font-weight: 500; }
+        
+        .update-tag { background: #2962ff; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="top-nav">
+    <div style="height: 50px; display: flex; align-items: center;">
+        <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px; width: auto; object-fit: contain;">
+    </div>
+    <div class="nav-links">
+        <a href="terminal.html">Dashboard</a>
+        <a href="/newsfeed">Newsfeed</a>
+        <a href="analysis.html" class="active">Analysis</a>
+        <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
+        <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
+        
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+            <div id="settingsDropdown" class="dropdown-content">
+                <a href="account.html">Account</a>
+                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
+                <a id="logoutBtn" style="color: #f85149; cursor: pointer;">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="analysis-view">
+    
+    <div class="panel">
+        <div class="panel-header">
+            <span>The Week Ahead (Video)</span>
+            <span class="update-tag">NEW</span>
+        </div>
+        <div class="panel-content" style="padding: 0; background: #000;">
+            <iframe style="width: 100%; height: 100%; border: none;" src="https://www.youtube.com/embed/QB5BNdBFujE?si=8-fZ9o8d4el45vm_" title="Week Ahead Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">The Week Ahead (Report)</div>
+        <div class="panel-content">
+            <span class="report-date">WEEK OF OCT 23, 2026</span>
+            <h2 class="report-title">Macro Themes & Central Bank Watch</h2>
+            <p class="report-text">
+                This week markets are heavily focused on upcoming inflation data and potential policy pivots. The USD has maintained its strength, but key resistance levels are being tested across major pairs. 
+            </p>
+            <ul class="report-list">
+                <li><strong>USD Focus:</strong> Watch for PCE data on Thursday. A hotter-than-expected print could push DXY above the 106.50 handle.</li>
+                <li><strong>Gold (XAU/USD):</strong> Consolidating near support. Geopolitical risk premiums remain embedded, but rising real yields present a headwind.</li>
+                <li><strong>Equities:</strong> Earnings season kicks into high gear with mega-cap tech reporting Tuesday and Wednesday.</li>
+            </ul>
+            <p class="report-text">
+                <em>Analyst Note:</em> Liquidity may be thin going into the latter half of the week as participants wait for Friday's Non-Farm Payrolls. Exercise caution with breakout trades.
+            </p>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">Daily Briefing</div>
+        <div class="panel-content">
+            <span class="report-date">TUESDAY UPDATE</span>
+            <h2 class="report-title">Overnight Session Highlights</h2>
+            <p class="report-text">
+                Asian equities traded mixed overnight as Chinese stimulus hopes faded slightly. The RBA kept rates on hold as widely expected, but the statement leaned slightly hawkish, offering temporary support to the AUD.
+            </p>
+            <p class="report-text"><strong>Key catalysts for today's session:</strong></p>
+            <ul class="report-list">
+                <li>08:30 EST - US Core Retail Sales (MoM)</li>
+                <li>10:00 EST - Fed Chair Speaking Engagement</li>
+                <li>14:00 EST - FOMC Meeting Minutes</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">Active Trade Ideas</div>
+        <div class="panel-content">
+            
+            <div class="trade-card">
+                <div class="trade-header">
+                    <span class="trade-ticker">EUR/USD</span>
+                    <span class="trade-direction dir-short">SHORT</span>
+                </div>
+                <div class="trade-levels">
+                    <div class="level-box"><span class="level-label">Entry</span><span class="level-val">1.0950</span></div>
+                    <div class="level-box"><span class="level-label">Target</span><span class="level-val">1.0820</span></div>
+                    <div class="level-box"><span class="level-label">Stop Loss</span><span class="level-val">1.1015</span></div>
+                </div>
+                <p style="font-size: 12px; color: #8b949e; margin: 10px 0 0 0; line-height: 1.4;">
+                    Technical rejection at the 200-day moving average. Fundamental divergence widening between ECB and Fed rate paths.
+                </p>
+            </div>
+
+            <div class="trade-card">
+                <div class="trade-header">
+                    <span class="trade-ticker">XAU/USD (Gold)</span>
+                    <span class="trade-direction dir-long">LONG</span>
+                </div>
+                <div class="trade-levels">
+                    <div class="level-box"><span class="level-label">Entry</span><span class="level-val">2315.00</span></div>
+                    <div class="level-box"><span class="level-label">Target</span><span class="level-val">2360.00</span></div>
+                    <div class="level-box"><span class="level-label">Stop Loss</span><span class="level-val">2290.00</span></div>
+                </div>
+                <p style="font-size: 12px; color: #8b949e; margin: 10px 0 0 0; line-height: 1.4;">
+                    Buying the dip into major structural support. Safe-haven bids expected to return if equity volatility spikes.
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- Navigation Dropdown ---
+    function toggleDropdown() {
+        document.getElementById("settingsDropdown").style.display = 
+            document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block";
+    }
+
+    // --- Supabase Security & Auth ---
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    
+    async function init() {
+        const { data: { session } } = await client.auth.getSession();
+        
+        // If not logged in, redirect to index
+        if (!session) { 
+            window.location.href = 'index.html'; 
+            return; 
+        }
+        
+        const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
+        
+        // Ensure user has access (prevent free users from viewing if this is premium)
+        if (!profile || profile.subscription_tag === 'free') {
+            alert("Your subscription is inactive. Redirecting to login.");
+            await client.auth.signOut();
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        if (profile) {
+            // Un-hide admin options if user is admin
+            if (profile.is_admin === true) {
+                document.getElementById('nav-admin').style.display = 'block';
+                document.getElementById('nav-upload').style.display = 'block';
+            }
+            
+            // Show Courses and Key Levels for Pro/Admin users
+            if (profile.is_admin === true || profile.subscription_tag === 'pro') {
+                document.getElementById('nav-courses').style.display = 'block';
+                document.getElementById('nav-key-levels').style.display = 'block';
+            }
+        }
+    }
+
+    // Logout Event
+    document.getElementById('logoutBtn').addEventListener('click', async () => { 
+        await client.auth.signOut(); 
+        window.location.href = 'index.html'; 
+    });
+
+    // Run auth check on load
+    init();
+</script>
+</body>
+</html>
