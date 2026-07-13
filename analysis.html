@@ -28,54 +28,46 @@
         .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; border-radius: 0; font-family: 'Inter', sans-serif; }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
-        /* Stretched Tabs Container */
-        .tabs-container { display: flex; flex-direction: column; height: calc(100vh - 55px); margin-top: 55px; padding: 20px 40px; width: 100%; max-width: 1800px; margin-left: auto; margin-right: auto; }
+        /* Full Screen Width Tabs Container */
+        .tabs-container { display: flex; flex-direction: column; height: calc(100vh - 55px); margin-top: 55px; padding: 20px 30px; width: 100%; max-width: 100%; }
         
         /* Tab Buttons */
-        .tab-buttons { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; white-space: nowrap; }
-        .tab-buttons::-webkit-scrollbar { height: 4px; }
-        .tab-buttons::-webkit-scrollbar-track { background: transparent; }
-        .tab-buttons::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
-        .tab-btn { background: #0d1117; border: 1px solid #30363d; color: #8b949e; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; font-family: 'Inter', sans-serif; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-shrink: 0; }
+        .tab-buttons { display: flex; gap: 10px; margin-bottom: 20px; flex-shrink: 0; }
+        .tab-btn { background: #0d1117; border: 1px solid #30363d; color: #8b949e; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; font-family: 'Inter', sans-serif; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .tab-btn:hover { color: #fff; background: #161b22; }
         .tab-btn.active { background: rgba(41, 98, 255, 0.1); color: #2962ff; border-color: rgba(41, 98, 255, 0.4); }
 
         /* Tab Content Area */
-        .tab-content { display: none; flex-grow: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; overflow-y: auto; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .tab-content.active { display: block; }
+        .tab-content { display: none; flex-grow: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; overflow: hidden; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .tab-content.active { display: flex; flex-direction: column; }
         
-        /* Custom Scrollbars */
-        .tab-content::-webkit-scrollbar { width: 6px; }
-        .tab-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
-        .tab-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
-        .tab-content::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+        /* SIDE-BY-SIDE LAYOUT - Maximized height stretching */
+        .split-layout { display: flex; gap: 25px; flex-grow: 1; height: 100%; width: 100%; min-height: 0; }
+        .split-column { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
 
-        /* Shared Section Title */
-        .section-title { font-size: 18px; font-weight: 600; color: #fff; margin: 0 0 15px 0; border-bottom: 1px solid #30363d; padding-bottom: 10px; flex-shrink: 0; }
+        .section-title { font-size: 16px; font-weight: 600; color: #fff; margin: 0 0 12px 0; border-bottom: 1px solid #30363d; padding-bottom: 8px; flex-shrink: 0; }
         
-        /* SIDE-BY-SIDE DESKTOP LAYOUT */
-        /* Changed to flex-start so columns don't force each other to match heights */
-        .split-layout { display: flex; gap: 30px; align-items: flex-start; }
-        .split-column { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-
-        /* Video Wrapper - Keeps its native 16:9 cinematic aspect ratio */
-        .video-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.3); position: relative; }
-        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: block; }
+        /* Video Container - Natural Aspect Ratio Box */
+        .video-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.3); position: relative; flex-shrink: 0; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
         
-        /* Report Wrapper - Force it to be tall to accommodate a portrait PDF */
-        .report-wrapper { width: 100%; height: 85vh; min-height: 750px; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.3); position: relative; }
-        .report-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: block; }
+        /* Report Container - Stretches fully to the bottom of the page window */
+        .report-wrapper { width: 100%; flex-grow: 1; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.3); position: relative; min-height: 0; }
+        .report-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
-        /* Standard Single Column (For Daily Analysis & Trade Ideas) */
-        .media-section { max-width: 1200px; margin: 0 auto 40px auto; }
+        /* Internal scrolling wrapper for text-heavy content tabs */
+        .scrollable-content { overflow-y: auto; flex-grow: 1; max-width: 1200px; }
+        .scrollable-content::-webkit-scrollbar { width: 6px; }
+        .scrollable-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        .scrollable-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 
-        /* Content Styling (Text Tabs) */
+        /* Typography inside standard text containers */
         .report-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #2962ff; margin-bottom: 10px; display: block; }
         .report-text { font-size: 14px; line-height: 1.6; color: #c9d1d9; margin-bottom: 15px; }
         .report-list { padding-left: 20px; margin-bottom: 15px; font-size: 14px; }
         .report-list li { margin-bottom: 8px; line-height: 1.6; color: #c9d1d9; }
 
-        /* Trade Ideas Styling */
+        /* Trade Cards styling */
         .trade-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 15px; }
         .trade-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 15px; margin-bottom: 15px; }
         .trade-ticker { font-size: 18px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
@@ -86,15 +78,6 @@
         .level-box { display: flex; flex-direction: column; background: #090b10; padding: 10px; border-radius: 6px; border: 1px solid #21262d; }
         .level-label { font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 6px; }
         .level-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #c9d1d9; font-weight: 500; }
-        
-        /* Mobile fallback for split layout */
-        @media (max-width: 900px) {
-            .split-layout { flex-direction: column; }
-            .video-wrapper { aspect-ratio: 16/9; height: auto; }
-            .report-wrapper { height: 80vh; }
-            .tabs-container { padding: 10px; }
-            .tab-content { padding: 15px; }
-        }
     </style>
 </head>
 <body>
@@ -116,7 +99,7 @@
                 <a href="account.html">Account</a>
                 <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
                 <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
-                <a id="logoutBtn" style="color: #f85149; cursor: pointer;">Logout</a>
+                <a id="logoutBtn" style="color: #f85149; pointer: cursor;">Logout</a>
             </div>
         </div>
     </div>
@@ -143,7 +126,7 @@
             <div class="split-column">
                 <h2 class="section-title">Written Report</h2>
                 <div class="report-wrapper">
-                    <iframe src="https://online.fliphtml5.com/analyst-wire/rsow/" title="Global Monetary Policy and the Fragmented Economic Landscape" seamless="seamless" scrolling="no" frameborder="0" allowtransparency="true" allowfullscreen="true"></iframe>
+                    <iframe src="https://online.fliphtml5.com/analyst-wire/rsow/?config=single" title="Global Monetary Policy and the Fragmented Economic Landscape" allowfullscreen="true"></iframe>
                 </div>
             </div>
 
@@ -151,7 +134,7 @@
     </div>
 
     <div id="tab-daily" class="tab-content">
-        <div class="media-section">
+        <div class="scrollable-content">
             <span class="report-date">TUESDAY UPDATE</span>
             <h2 class="section-title" style="border:none; padding:0;">Overnight Session Highlights</h2>
             <p class="report-text">
@@ -167,7 +150,7 @@
     </div>
 
     <div id="tab-trades" class="tab-content">
-        <div class="media-section">
+        <div class="scrollable-content">
             
             <div class="trade-card">
                 <div class="trade-header">
