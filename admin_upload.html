@@ -81,7 +81,7 @@
         window.location.href = 'index.html'; 
     });
 
-    // Helper to read files universally as 2D Arrays (CSV or Excel)
+    // Helper to read files universally as 2D Arrays (Supports both CSV and Excel)
     function parseFileToRows(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -93,7 +93,6 @@
                         const text = new TextDecoder('utf-8').decode(e.target.result);
                         const lines = text.split(/\r?\n/);
                         const rows = lines.map(line => {
-                            // Simple CSV splitting (handles quotes basic implementation)
                             return line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, '').trim());
                         }).filter(r => r.length > 0 && r.some(cell => cell !== ""));
                         resolve(rows);
@@ -111,14 +110,16 @@
         });
     }
 
-    // --- FUNCTION 1: KEY LEVELS UPLOAD ---
+    // ==========================================
+    // MODULE 1: KEY LEVELS UPLOAD
+    // ==========================================
     async function processKeyLevels() {
         const fileInput = document.getElementById('excelFile-kl');
         const date = document.getElementById('upload-date-kl').value;
         const statusDiv = document.getElementById('status-kl');
         
         if (!fileInput.files.length || !date) return alert("Select a file AND choose a target date.");
-        statusDiv.innerText = "Processing matrix document stream...";
+        statusDiv.innerText = "Processing Key Levels document...";
 
         try {
             const rows = await parseFileToRows(fileInput.files[0]);
@@ -126,59 +127,70 @@
 
             const rawHeaders = rows[0];
             const formattedData = [];
+            const uploadTimestamp = new Date().toISOString();
 
-            // Read starting at row 1 to handle header-to-value matching
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row || row.length === 0 || !row[0]) continue; 
 
-                let payloadObj = { trade_date: date };
+                // Inject Trade Date and Timestamp requested by user
+                let payloadObj = { 
+                    trade_date: date,
+                    last_updated: uploadTimestamp 
+                };
                 
                 rawHeaders.forEach((header, idx) => {
-                    let key = String(header || '').toLowerCase().trim();
-                    // Database Schema Target Fix: Map "bull/bear line" or "bull bear" cleanly to database "bull_bear" column
-                    if (key.includes('bull') && key.includes('bear')) {
-                        key = 'bull_bear';
+                    if (!header) return;
+                    let headerStr = String(header).toLowerCase().trim();
+                    let dbKey = "";
+
+                    // EXPLICIT MAPPING: Map "Bull/Bear" straight to your database format
+                    if (headerStr.includes('bull') && headerStr.includes('bear')) {
+                        dbKey = 'bull/bear';
                     } else {
-                        key = key.replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                        dbKey = headerStr.replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
                     }
                     
-                    if (key && row[idx] !== undefined && row[idx] !== null && row[idx] !== '') {
-                        payloadObj[key] = row[idx];
+                    if (dbKey && row[idx] !== undefined && row[idx] !== null && row[idx] !== '') {
+                        payloadObj[dbKey] = row[idx];
                     }
                 });
                 
-                if (Object.keys(payloadObj).length > 1) {
+                if (Object.keys(payloadObj).length > 2) {
                     formattedData.push(payloadObj);
                 }
             }
 
-            statusDiv.innerText = `Pushing rows to key_levels table matrix...`;
+            statusDiv.innerText = `Pushing ${formattedData.length} rows to key_levels table...`;
+            console.log("Key Levels Payload:", formattedData); // For debugging in console
+            
             await client.from('key_levels').delete().eq('trade_date', date);
             const { error } = await client.from('key_levels').insert(formattedData);
             
-            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${formattedData.length} structural Key Levels data parameters.`;
+            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${formattedData.length} Key Levels.`;
 
         } catch (err) {
             statusDiv.innerText = "Parsing Exception: " + err.message;
         }
     }
 
-    // --- FUNCTION 2: ORDER EXPIRIES UPLOAD (Independent Layout Parsing) ---
+    // ==========================================
+    // MODULE 2: ORDER EXPIRIES UPLOAD
+    // ==========================================
     async function processExpiries() {
         const fileInput = document.getElementById('excelFile-exp');
         const date = document.getElementById('upload-date-exp').value;
         const statusDiv = document.getElementById('status-exp');
         
         if (!fileInput.files.length || !date) return alert("Select an data file AND date entry.");
-        statusDiv.innerText = "Parsing asset array streams...";
+        statusDiv.innerText = "Parsing Order Expiries...";
 
         try {
             const rows = await parseFileToRows(fileInput.files[0]);
             if (rows.length < 3) { statusDiv.innerText = "Error: Missing data matrix bounds."; return; }
 
             const headers = rows[0]; 
-            const spotRow = rows[1]; // Explicit horizontal scanning of row 2
+            const spotRow = rows[1]; // Explicitly grabs Row 2 for Spot Prices
             
             const tickerMap = {}; 
             const spotPriceMap = {}; 
@@ -189,6 +201,7 @@
                 if (corePortfolio.includes(tickerStr)) {
                     tickerMap[index] = tickerStr;
                     
+                    // Extract Spot Price from Row 2
                     const rawSpot = spotRow ? spotRow[index] : null;
                     if (rawSpot !== undefined && rawSpot !== null && rawSpot !== '') {
                         spotPriceMap[tickerStr] = parseFloat(String(rawSpot).replace(/[^\d.-]/g, ''));
@@ -200,8 +213,8 @@
 
             const flatData = [];
             const regex = /([\d\.]+)\s*\([^\d]*([\d\.]+)([bm]+)\)/gi;
+            const uploadTimestamp = new Date().toISOString();
 
-            // Scanning text structures starting at row 3 (Index 2)
             for (let i = 2; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row) continue;
@@ -213,7 +226,6 @@
                     if (!cellString || String(cellString).trim() === '') return;
 
                     let match;
-                    // Reset regex tracking bound index
                     regex.lastIndex = 0;
                     
                     while ((match = regex.exec(String(cellString))) !== null) {
@@ -225,13 +237,14 @@
                             vol = vol / 1000;
                         }
 
-                        // Database Schema Target Fix: Mapping values to fields present in your system definitions
+                        // EXPLICIT MAPPING: Includes 'spot_price' and 'last_updated'
                         flatData.push({
                             trade_date: date,
                             ticker: ticker,
                             strike: strike,
                             volume: parseFloat(vol.toFixed(3)),
-                            spot: spotPriceMap[ticker] // Fallback check if your column is named 'spot' instead of 'spot_price'
+                            spot_price: spotPriceMap[ticker],
+                            last_updated: uploadTimestamp
                         });
                     }
                 });
@@ -242,11 +255,13 @@
                 return;
             }
 
-            statusDiv.innerText = `Synchronizing tables via safe upsert payloads...`;
+            statusDiv.innerText = `Pushing ${flatData.length} order levels to Supabase...`;
+            console.log("Order Flow Payload:", flatData); // For debugging in console
+            
             await client.from('order_levels').delete().eq('trade_date', date);
             const { error } = await client.from('order_levels').insert(flatData);
             
-            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${flatData.length} extracted positions with synchronized spot rates.`;
+            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${flatData.length} order levels.`;
 
         } catch (err) {
             statusDiv.innerText = "Execution Failure: " + err.message;
