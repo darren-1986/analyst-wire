@@ -68,7 +68,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 .lolli-range .lollipop-badge { background: rgba(210, 153, 34, 0.1); border: 1px solid rgba(210, 153, 34, 0.3); }
 
 /* ---------------------------------------------------
-   4-QUADRANT GRID SYSTEM & COMPACTING STYLES 
+   4-QUADRANT GRID SYSTEM
    --------------------------------------------------- */
 .grid-container {
     display: grid;
@@ -216,45 +216,6 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     <li><strong>The Setup:</strong> Monitor assets carrying a <span class="bias-neutral">Neutral</span> bias. This means the market is sitting dead on its institutional pivot line.</li>
     <li><strong>Execution:</strong> This is a coiled spring. Watch for a directional breakout away from the Bull/Bear Line on your short-term execution charts to capture the early inception of a fresh trend.</li>
 </ul>
-
-<hr>
-
-<h3>3. Professional Trading Workflow</h3>
-<ol style="line-height: 1.6;">
-    <li><strong>Scan Categories:</strong> Use the dropdown menus to separate your focus (e.g., isolate FX from Equities depending on the session).</li>
-    <li><strong>Determine Playbook:</strong> Sort the table by the <strong>BIAS ↕</strong> column header to group all structural extremes together instantly.</li>
-    <li><strong>Risk Parameters:</strong> Use the <strong>Volatility</strong> badge to size your stops—higher volatility values dictate smaller position sizing to preserve trading capital.</li>
-</ol>
-
-<hr>
-
-<h3>4. Lollipop Momentum Status</h3>
-<p>A visual representation of price action behavior relative to structural barriers.</p>
-<ul style="line-height: 1.6;">
-    <li><span style="color: #2ea043; font-weight: 600;">UPPER BREAK:</span> Bullish breakout confirmed above critical upper resistance matrix structures.</li>
-    <li><span style="color: #f85149; font-weight: 600;">LOWER BREAK:</span> Bearish distribution expansion confirmed beneath major historical support floors.</li>
-    <li><span style="color: #d29922; font-weight: 600;">INSIDE RANGE:</span> Price action is currently compressed inside key horizontal structure levels.</li>
-</ul>
-
-<hr>
-
-<h3>5. Day-Over-Day (DoD) Velocity</h3>
-<p>Measures market velocity by comparing today's data (T0) to the previous trading day's data (T-1).</p>
-<ul style="line-height: 1.6;">
-    <li><strong>Value Migration:</strong> Tracks the Bull/Bear line shift. "Upward (Accumulation)" indicates institutional buying elevating the value area, while "Downward (Distribution)" indicates selling pressure.</li>
-    <li><strong>Volatility State:</strong> Compares the S1-R1 spread. "Expanding" suggests trend acceleration; "Compressing" suggests winding up for a potential breakout.</li>
-    <li><strong>Structural Shift:</strong> Identifies critical floor/ceiling flips. "Bullish Floor Flip" occurs when today's support exceeds yesterday's resistance. "Bearish Ceiling Flip" occurs when today's resistance drops below yesterday's support.</li>
-</ul>
-
-<hr>
-
-<h3>6. Hot Assets (Conviction Scoring)</h3>
-<p>The system programmatically grades every asset on an 11-point momentum scale, combining Bias, Volatility State, Lollipop breakouts, and DoD Velocity metrics.</p>
-<ul style="line-height: 1.6;">
-    <li><span style="color: #2ea043; font-weight: 700;">[STRONG]:</span> Highlights the top 2 assets with a conviction score of +7 or higher. These exhibit extreme bullish confluence across multiple timeframes.</li>
-    <li><span style="color: #f85149; font-weight: 700;">[WEAK]:</span> Highlights the top 2 assets with a conviction score of -7 or lower. These exhibit extreme bearish confluence.</li>
-    <li><em>Note: Assets failing to meet this extreme threshold remain unhighlighted to filter out choppy or mixed signals.</em></li>
-</ul>
 </div>
 </div>
 
@@ -266,24 +227,27 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 
 <hr>
 
-<h3>Understanding Expiry Levels</h3>
-<p>This module tracks massive institutional option expiries. These strikes act as magnetic "gravity wells" for price action. Depending on the sheer volume resting at a strike, the market will behave differently when it reaches that level.</p>
-<p><em>Note: A static strike level becomes Support if price approaches from above, and Resistance if price approaches from below. The engine calculates the strength of the reaction, but you must identify the direction based on current spot price.</em></p>
+<h3>Understanding Dynamic Expiry Levels</h3>
+<p>This module tracks massive institutional option expiries. These strikes act as magnetic "gravity wells" for price action. The engine dynamically calculates the volume against the specific asset class (e.g., a 600m order is massive for AUD/USD, but standard for EUR/USD) to dictate how the market will behave at that level.</p>
 
 <ul style="line-height: 1.6;">
-    <li><span style="color:#f85149; font-weight:bold;">WALL (FADE REVERSAL) | Vol &ge; 2.0B:</span><br>
-    Extreme institutional defense is anticipated. When volume exceeds 2 Billion, institutions are heavily incentivized to defend the strike. Expect a sharp rejection. <br>
+    <li><span style="color:#f85149; font-weight:bold;">INSTITUTIONAL WALL (FADE REVERSAL):</span><br>
+    Extreme, top-tier institutional defense is anticipated for this specific currency pair. Institutions are heavily incentivized to defend this strike. Expect a sharp rejection. <br>
     <em>Strategy:</em> Fade the approach. Use a defensive 20-pip Stop Loss behind the wall, targeting a 50-pip mean reversion.</li>
     
-    <li style="margin-top: 15px;"><span style="color:#d29922; font-weight:bold;">CLUSTER (SCALP REACTION) | Vol &lt; 2.0B:</span><br>
-    Standard market liquidity cluster. The level will cause a reaction, but may not hold as a permanent wall. <br>
-    <em>Strategy:</em> Scalp the rotation. Use a tight 15-pip Stop Loss, targeting a quick 30-pip bounce.</li>
+    <li style="margin-top: 15px;"><span style="color:#d29922; font-weight:bold;">MAJOR CLUSTER (SCALP REACTION):</span><br>
+    Heavy market liquidity. The level will cause a significant reaction and chop, but may not hold as a permanent wall. <br>
+    <em>Strategy:</em> Scalp the rotation. Use a 15-pip Stop Loss, targeting a 30-pip bounce.</li>
+
+    <li style="margin-top: 15px;"><span style="color:#58a6ff; font-weight:bold;">MINOR CLUSTER (SPEED BUMP):</span><br>
+    Standard liquidity. Expect minor stalling before trend continuation. <br>
+    <em>Strategy:</em> Tight 10-pip stop, targeting 20 pips.</li>
 </ul>
 
 <hr>
 
-<h3>Pip Offset Engine</h3>
-<p>The system automatically calculates fractional pip differentials depending on the asset class. Stop Loss (SL) and Take Profit (TP) ranges are pre-calculated to standardize risk whether you are trading standard USD majors or JPY pairs.</p>
+<h3>Buy vs Sell Directionality</h3>
+<p>An option strike is a static price line on a chart. It becomes <strong>Support (Buy)</strong> if the price drops down into it, and <strong>Resistance (Sell)</strong> if the price rallies up into it. The indicator highlights the <em>behavior</em> of the level; you must look at your charts to execute the fade based on whether price is approaching from below or above.</p>
 
 </div>
 </div>
@@ -485,12 +449,41 @@ function getAssetVolatilityMetrics(r) {
     return { rangeFormatted, isTrending };
 }
 
+// ------------------------------------------------------------------
+// NEW DYNAMIC LIQUIDITY CALCULATOR
+// ------------------------------------------------------------------
+function getDynamicLiquidityStatus(ticker, volNum) {
+    let wallThreshold = 2.0; 
+    let majorThreshold = 1.0; 
+
+    // Adjust tiers based on asset liquidity profile
+    if (ticker.includes('EUR/USD') || ticker.includes('USD/JPY')) {
+        wallThreshold = 1.5;
+        majorThreshold = 0.8;
+    } else if (ticker.includes('GBP/USD')) {
+        wallThreshold = 0.8;
+        majorThreshold = 0.4;
+    } else if (ticker.includes('AUD/USD') || ticker.includes('NZD/USD') || ticker.includes('USD/CAD') || ticker.includes('USD/CHF')) {
+        wallThreshold = 0.5;
+        majorThreshold = 0.25;
+    }
+
+    if (volNum >= wallThreshold) {
+        return { action: "INSTITUTIONAL WALL", color: "#f85149", sl: 20, tp: 50 }; // Red
+    } else if (volNum >= majorThreshold) {
+        return { action: "MAJOR CLUSTER", color: "#d29922", sl: 15, tp: 30 }; // Orange
+    } else {
+        return { action: "MINOR CLUSTER", color: "#58a6ff", sl: 10, tp: 20 }; // Blue
+    }
+}
+
 // FETCH 1: Independent Order Flow Fetch
 async function fetchOrderData() {
     const dateStr = document.getElementById('order-date-filter').value;
     if (!dateStr) return;
     
     const engineContainer = document.getElementById('liquidity-engine');
+    engineContainer.innerHTML = '<div style="text-align: center; color: #8b949e; padding: 20px; font-size: 11px;">Fetching dynamic orders...</div>';
     
     try {
         const { data, error } = await client.from('order_levels').select('*').eq('trade_date', dateStr);
@@ -504,33 +497,29 @@ async function fetchOrderData() {
             return;
         }
 
+        // Sort data by volume descending so biggest levels show up top
+        data.sort((a, b) => parseFloat(b.volume) - parseFloat(a.volume));
+
         engineContainer.innerHTML = data.map(item => {
             const isJPY = item.ticker.includes("JPY");
             const basePip = isJPY ? 0.01 : 0.0001; 
             const volNum = parseFloat(item.volume);
             const strikeNum = parseFloat(item.strike);
             
-            const isWall = volNum >= 2.0;
+            // Execute the dynamic calculation
+            const engineResult = getDynamicLiquidityStatus(item.ticker, volNum);
 
-            // Updated Logic: Neutral reaction terminology based on volume
-            const action = isWall ? "WALL (FADE REVERSAL)" : "CLUSTER (SCALP REACTION)";
-            const biasClass = isWall ? "border-left: 3px solid #f85149;" : "border-left: 3px solid #d29922;"; 
-            const actionColor = isWall ? "#f85149" : "#d29922";
-            
-            const slDistance = isWall ? 20 : 15;
-            const tpDistance = isWall ? 50 : 30;
-            
-            const slBand = (slDistance * basePip).toFixed(isJPY ? 2 : 4);
-            const tpBand = (tpDistance * basePip).toFixed(isJPY ? 2 : 4);
+            const slBand = (engineResult.sl * basePip).toFixed(isJPY ? 2 : 4);
+            const tpBand = (engineResult.tp * basePip).toFixed(isJPY ? 2 : 4);
 
             return `
-                <div style="background: #161b22; border: 1px solid #30363d; ${biasClass} border-radius: 6px; padding: 10px; font-size: 10px; transition: background 0.2s;" onmouseover="this.style.background='#1c2230'" onmouseout="this.style.background='#161b22'">
+                <div style="background: #161b22; border: 1px solid #30363d; border-left: 3px solid ${engineResult.color}; border-radius: 6px; padding: 10px; font-size: 10px; transition: background 0.2s;" onmouseover="this.style.background='#1c2230'" onmouseout="this.style.background='#161b22'">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
                         <span style="color: #fff; font-weight: 600; font-size: 11.5px; font-family: 'Inter', sans-serif;">${item.ticker} @ ${strikeNum}</span>
                         <span style="color: #c9d1d9;">Liq: <strong>${volNum}B</strong></span>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 700; font-size: 9.5px; color: ${actionColor}; letter-spacing: 0.5px;">${action}</span>
+                        <span style="font-weight: 700; font-size: 9.5px; color: ${engineResult.color}; letter-spacing: 0.5px;">${engineResult.action}</span>
                         <div style="color: #8b949e; font-family: 'JetBrains Mono', monospace; font-size: 9.5px;">SL Band: <span style="color:#c9d1d9">${slBand}</span> | TP Band: <span style="color:#c9d1d9">${tpBand}</span></div>
                     </div>
                 </div>
