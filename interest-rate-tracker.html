@@ -7,15 +7,20 @@
     
     <style>
         body { font-family: 'Inter', sans-serif; background: #090b10; color: #d1d4dc; margin: 0; }
-        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; }
+        /* Navigation */
+        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1001; position: relative; width: 100%; }
         .nav-links { display: flex; align-items: center; gap: 5px; }
-        .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; padding: 6px 12px; border-radius: 6px; }
+        .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
         .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
+
+        /* Dropdown Styling */
         .dropdown { position: relative; margin-left: 10px; }
-        .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; }
-        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; border-radius: 8px; z-index: 1000; }
-        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; display: block; text-decoration: none; cursor: pointer; }
-        .dropdown-content a:hover { background-color: #21262d; }
+        .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
+        .dropbtn:hover { color: #fff; }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
+        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; border-radius: 0; }
+        .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
         /* --- MAIN CONTENT AREA STYLING --- */
         .main-content-wrapper {
