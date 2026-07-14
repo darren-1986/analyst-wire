@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Analyst Wire | Content Area</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #090b10; color: #d1d4dc; margin: 0; }
+        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; }
+        .nav-links { display: flex; align-items: center; gap: 5px; }
+        .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; padding: 6px 12px; border-radius: 6px; }
+        .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .dropdown { position: relative; margin-left: 10px; }
+        .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; border-radius: 8px; z-index: 1000; }
+        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; display: block; text-decoration: none; cursor: pointer; }
+        .dropdown-content a:hover { background-color: #21262d; }
+
+        /* --- MAIN CONTENT AREA STYLING --- */
+        .main-content-wrapper {
+            padding: 80px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 500px;
+            border: 2px dashed #30363d;
+            margin-top: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-nav">
+    <div style="height: 50px; display: flex; align-items: center;">
+        <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px; width: auto;">
+    </div>
+    <div class="nav-links">
+        <a href="terminal.html">Dashboard</a>
+        <a href="/newsfeed">Newsfeed</a>
+        <a href="analysis.html">Analysis</a>
+        <a href="courses.html">Courses</a>
+        <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
+        
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+            <div id="settingsDropdown" class="dropdown-content">
+                <a href="account.html">Account</a>
+                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
+                <a id="logoutBtn" style="color: #f85149;">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<main class="main-content-wrapper">
+    <h2 style="color: #fff;">Main Content Area</h2>
+    <p>Insert your module content, tables, or other UI components here.</p>
+</main>
+<script>
+    function toggleDropdown() { 
+        const drop = document.getElementById("settingsDropdown");
+        drop.style.display = (drop.style.display === "block" ? "none" : "block"); 
+    }
+
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'YOUR_SUPABASE_ANON_KEY');
+
+    async function init() {
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) { window.location.href = 'index.html'; return; }
+        
+        const { data: profile } = await client
+            .from('profiles')
+            .select('is_admin, subscription_tag')
+            .eq('id', session.user.id)
+            .single();
+
+        if (!profile || (profile.is_admin !== true && profile.subscription_tag !== 'pro')) {
+            alert("Access Denied.");
+            await client.auth.signOut();
+            window.location.href = 'index.html';
+            return;
+        }
+
+        if (profile.is_admin === true) {
+            document.getElementById('nav-admin').style.display = 'block';
+            document.getElementById('nav-upload').style.display = 'block';
+        }
+        if (profile.is_admin === true || profile.subscription_tag === 'pro') {
+            document.getElementById('nav-key-levels').style.display = 'block';
+        }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => { 
+        await client.auth.signOut(); 
+        window.location.href = 'index.html'; 
+    });
+
+    init();
+</script>
+</body>
+</html>
