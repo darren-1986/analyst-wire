@@ -86,13 +86,64 @@
         window.location.href = 'index.html'; 
     });
 
-    // --- KEY LEVELS LOGIC (Updated to use SheetJS) ---
+    // --- RESTORED: KEY LEVELS LOGIC ---
     async function processKeyLevels() {
-        // Leaving this open for your standard Key Levels spreadsheet mapping,
-        // it functions the exact same way as the Expiries parser below using XLSX.
+        const fileInput = document.getElementById('excelFile-kl');
+        const date = document.getElementById('upload-date-kl').value;
+        const statusDiv = document.getElementById('status-kl');
+        
+        if (!fileInput.files.length || !date) return alert("Select an Excel file AND date.");
+        
+        const file = fileInput.files[0];
+        statusDiv.innerText = "Parsing Key Levels data...";
+
+        const reader = new FileReader();
+        
+        reader.onload = async function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Convert to JSON array of objects based on Excel headers
+                const rows = XLSX.utils.sheet_to_json(worksheet, {defval: null});
+
+                if (rows.length === 0) {
+                    statusDiv.innerText = "Error: File is empty.";
+                    return;
+                }
+
+                // Format objects to match Supabase database column expectations
+                const formattedData = rows.map(row => {
+                    let newObj = { trade_date: date };
+                    for (let key in row) {
+                        // Standardize header names (e.g., "Bull Bear Line" -> "bull_bear_line")
+                        let cleanKey = key.toLowerCase().trim().replace(/\s+/g, '_');
+                        if(row[key] !== null && row[key] !== undefined) {
+                            newObj[cleanKey] = row[key];
+                        }
+                    }
+                    return newObj;
+                });
+
+                statusDiv.innerText = `Pushing ${formattedData.length} key levels to Supabase...`;
+                
+                // Clear existing data for that day to prevent duplicates
+                await client.from('key_levels').delete().eq('trade_date', date);
+                const { error } = await client.from('key_levels').insert(formattedData);
+                
+                statusDiv.innerText = error ? "Error: " + error.message : `Success! Uploaded ${formattedData.length} key levels.`;
+                
+            } catch (err) {
+                statusDiv.innerText = "Error parsing file: " + err.message;
+            }
+        };
+        
+        reader.readAsArrayBuffer(file);
     }
 
-    // --- ORDER EXPIRIES LOGIC (Direct Excel Reading) ---
+    // --- FIXED: ORDER EXPIRIES LOGIC (WITH SPOT PRICE EXTRACTION) ---
     async function processExpiries() {
         const fileInput = document.getElementById('excelFile-exp');
         const date = document.getElementById('upload-date-exp').value;
@@ -108,14 +159,10 @@
         reader.onload = async function(e) {
             try {
                 const data = new Uint8Array(e.target.result);
-                // Read the workbook preserving all characters and symbols
                 const workbook = XLSX.read(data, {type: 'array'});
-                
-                // Grab the first sheet
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 
-                // Convert it to a 2D array (exactly like PapaParse did)
                 const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
 
                 if (rows.length < 3) {
@@ -123,20 +170,31 @@
                     return;
                 }
 
-                // 1. Identify columns from Row 0
-                const headers = rows[0];
+                // 1. Identify columns from Row 0 (Tickers) and Row 1 (Spot Prices)
+                const headers = rows[0]; 
+                const spotRow = rows[1]; 
+                
                 const tickerMap = {}; 
+                const spotPriceMap = {}; 
                 const corePortfolio = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CAD', 'EUR/GBP'];
 
                 headers.forEach((header, index) => {
                     const h = String(header || '').trim();
                     if (corePortfolio.includes(h)) {
                         tickerMap[index] = h;
+                        
+                        // Extract corresponding spot price directly beneath it
+                        const rawSpot = spotRow ? spotRow[index] : null;
+                        if (rawSpot) {
+                            // Strip out any accidental text/spaces and keep the number
+                            spotPriceMap[h] = parseFloat(String(rawSpot).replace(/[^\d.-]/g, ''));
+                        } else {
+                            spotPriceMap[h] = null;
+                        }
                     }
                 });
 
                 const flatData = [];
-                // Regex remains the same. It will now safely read the intact € and £ symbols
                 const regex = /([\d\.]+)\s*\([^\d]*([\d\.]+)([bm]+)\)/gi;
 
                 // 2. Loop through the rows containing the daily expiry data (Starting at Row 2)
@@ -160,11 +218,13 @@
                                 vol = vol / 1000;
                             }
 
+                            // 4. Push exact data format including the SPOT PRICE
                             flatData.push({
                                 trade_date: date,
                                 ticker: ticker,
                                 strike: strike,
-                                volume: parseFloat(vol.toFixed(3)) 
+                                volume: parseFloat(vol.toFixed(3)),
+                                spot_price: spotPriceMap[ticker] // <--- SPOT PRICE INTEGRATED HERE
                             });
                         }
                     });
@@ -175,20 +235,18 @@
                     return;
                 }
 
-                // 4. Send to Supabase
                 statusDiv.innerText = `Pushing ${flatData.length} extracted levels to Supabase...`;
                 
                 await client.from('order_levels').delete().eq('trade_date', date);
                 const { error } = await client.from('order_levels').insert(flatData);
                 
-                statusDiv.innerText = error ? "Error: " + error.message : `Success! Extracted and uploaded ${flatData.length} order levels directly from Excel.`;
+                statusDiv.innerText = error ? "Error: " + error.message : `Success! Uploaded ${flatData.length} order levels (including Spot Prices).`;
                 
             } catch (err) {
                 statusDiv.innerText = "Error parsing Excel file: " + err.message;
             }
         };
         
-        // Read the file as an ArrayBuffer to pass into SheetJS
         reader.readAsArrayBuffer(file);
     }
 </script>
