@@ -55,3 +55,42 @@
         line-height: 1.6;
     }
 </style>
+
+<script>
+    // 1. Initialize Supabase
+    // Replace 'YOUR_SUPABASE_ANON_KEY' with your actual public key
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'YOUR_SUPABASE_ANON_KEY');
+
+    async function checkAccess() {
+        // 2. Get current session
+        const { data: { session } } = await client.auth.getSession();
+        
+        // Redirect to login if no session exists
+        if (!session) { 
+            window.location.href = 'index.html'; 
+            return; 
+        }
+        
+        // 3. Fetch user profile and subscription status
+        const { data: profile } = await client
+            .from('profiles')
+            .select('is_admin, subscription_tag')
+            .eq('id', session.user.id)
+            .single();
+
+        // 4. Verify access (Must be Admin or 'pro')
+        if (!profile || (profile.is_admin !== true && profile.subscription_tag !== 'pro')) {
+            alert("Access Denied: Pro membership required.");
+            await client.auth.signOut();
+            window.location.href = 'index.html';
+            return;
+        }
+
+        // Access granted - page continues to load
+        console.log("Access verified for user:", session.user.id);
+    }
+
+    // Run check on page load
+    checkAccess();
+</script>
+
