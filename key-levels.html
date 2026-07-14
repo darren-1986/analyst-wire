@@ -121,6 +121,17 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 select, input[type="date"] { background: #0d1117; color: #c9d1d9; padding: 3px 6px; border: 1px solid #30363d; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 10px; outline: none; transition: border-color 0.2s; cursor: pointer; }
 select:focus, input[type="date"]:focus { border-color: #2962ff; }
 
+/* Last Updated Badge */
+.last-updated {
+    font-size: 9.5px;
+    color: #8b949e;
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(139, 148, 158, 0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(139, 148, 158, 0.2);
+}
+
 .table-container {
     background: transparent;
     border: none;
@@ -231,23 +242,28 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 <p>This module tracks massive institutional option expiries. These strikes act as magnetic "gravity wells" for price action. The engine dynamically calculates the volume against the specific asset class (e.g., a 600m order is massive for AUD/USD, but standard for EUR/USD) to dictate how the market will behave at that level.</p>
 
 <ul style="line-height: 1.6;">
-    <li><span style="color:#f85149; font-weight:bold;">INSTITUTIONAL WALL (FADE REVERSAL):</span><br>
+    <li><span style="color:#f85149; font-weight:bold;">INSTITUTIONAL WALL:</span><br>
     Extreme, top-tier institutional defense is anticipated for this specific currency pair. Institutions are heavily incentivized to defend this strike. Expect a sharp rejection. <br>
-    <em>Strategy:</em> Fade the approach. Use a defensive 20-pip Stop Loss behind the wall, targeting a 50-pip mean reversion.</li>
+    <em>Strategy:</em> Fade the approach. The engine calculates a defensive 20-pip Stop Loss behind the wall, targeting a 50-pip mean reversion.</li>
     
-    <li style="margin-top: 15px;"><span style="color:#d29922; font-weight:bold;">MAJOR CLUSTER (SCALP REACTION):</span><br>
+    <li style="margin-top: 15px;"><span style="color:#d29922; font-weight:bold;">MAJOR CLUSTER:</span><br>
     Heavy market liquidity. The level will cause a significant reaction and chop, but may not hold as a permanent wall. <br>
-    <em>Strategy:</em> Scalp the rotation. Use a 15-pip Stop Loss, targeting a 30-pip bounce.</li>
+    <em>Strategy:</em> Scalp the rotation. The engine calculates a 15-pip Stop Loss, targeting a 30-pip bounce.</li>
 
-    <li style="margin-top: 15px;"><span style="color:#58a6ff; font-weight:bold;">MINOR CLUSTER (SPEED BUMP):</span><br>
+    <li style="margin-top: 15px;"><span style="color:#58a6ff; font-weight:bold;">MINOR CLUSTER:</span><br>
     Standard liquidity. Expect minor stalling before trend continuation. <br>
-    <em>Strategy:</em> Tight 10-pip stop, targeting 20 pips.</li>
+    <em>Strategy:</em> The engine calculates a tight 10-pip stop, targeting 20 pips.</li>
 </ul>
 
 <hr>
 
-<h3>Buy vs Sell Directionality</h3>
-<p>An option strike is a static price line on a chart. It becomes <strong>Support (Buy)</strong> if the price drops down into it, and <strong>Resistance (Sell)</strong> if the price rallies up into it. The indicator highlights the <em>behavior</em> of the level; you must look at your charts to execute the fade based on whether price is approaching from below or above.</p>
+<h3>Automated Buy vs Sell Execution</h3>
+<p>Because the engine is fed live Spot Prices alongside the Strike Expiries, it knows exactly which direction the market is approaching the level from.</p>
+<ul style="line-height: 1.6;">
+    <li>If <strong>Strike &gt; Spot Price</strong>: Price is rallying up. The level is designated as <strong>RESISTANCE (SELL)</strong>.</li>
+    <li>If <strong>Strike &lt; Spot Price</strong>: Price is dropping down. The level is designated as <strong>SUPPORT (BUY)</strong>.</li>
+</ul>
+<p>The system will instantly output the exact Stop Loss and Take Profit prices so you can place limits directly into your brokerage without manual math.</p>
 
 </div>
 </div>
@@ -279,6 +295,7 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
         <div class="quadrant-top-bar">
             <div class="header-row">
                 <h1>Market Trade Radar</h1>
+                <span id="radar-updated-badge" class="last-updated">Updating...</span>
                 <button class="info-btn" onclick="openModal('radarModal')">Info ℹ</button>
             </div>
             
@@ -315,6 +332,7 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
         <div class="quadrant-top-bar">
             <div class="header-row">
                 <h1>Order Flow Strategy</h1>
+                <span id="order-updated-badge" class="last-updated">Updating...</span>
                 <button class="info-btn" onclick="openModal('orderModal')">Info ℹ</button>
             </div>
             <div class="filter-section">
@@ -363,7 +381,13 @@ let cachedData = [];
 let biasSortOrder = 0;
 let stateSortOrder = 0;
 
-// Dual Modal Handling
+function formatTimestamp(isoString) {
+    if (!isoString) return 'Unknown';
+    const d = new Date(isoString);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + 
+           d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
 function openModal(modalId) { document.getElementById(modalId).style.display = "block"; }
 function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
 window.onclick = function(event) { 
@@ -419,7 +443,6 @@ async function init() {
     document.getElementById('date-filter').value = todayStr;
     document.getElementById('order-date-filter').value = todayStr;
     
-    // Call independently
     fetchRadarData();
     fetchOrderData();
 }
@@ -449,14 +472,10 @@ function getAssetVolatilityMetrics(r) {
     return { rangeFormatted, isTrending };
 }
 
-// ------------------------------------------------------------------
-// NEW DYNAMIC LIQUIDITY CALCULATOR
-// ------------------------------------------------------------------
 function getDynamicLiquidityStatus(ticker, volNum) {
     let wallThreshold = 2.0; 
     let majorThreshold = 1.0; 
 
-    // Adjust tiers based on asset liquidity profile
     if (ticker.includes('EUR/USD') || ticker.includes('USD/JPY')) {
         wallThreshold = 1.5;
         majorThreshold = 0.8;
@@ -469,20 +488,24 @@ function getDynamicLiquidityStatus(ticker, volNum) {
     }
 
     if (volNum >= wallThreshold) {
-        return { action: "INSTITUTIONAL WALL", color: "#f85149", sl: 20, tp: 50 }; // Red
+        return { label: "WALL", color: "#f85149", sl: 20, tp: 50 };
     } else if (volNum >= majorThreshold) {
-        return { action: "MAJOR CLUSTER", color: "#d29922", sl: 15, tp: 30 }; // Orange
+        return { label: "CLUSTER", color: "#d29922", sl: 15, tp: 30 };
     } else {
-        return { action: "MINOR CLUSTER", color: "#58a6ff", sl: 10, tp: 20 }; // Blue
+        return { label: "MINOR", color: "#58a6ff", sl: 10, tp: 20 };
     }
 }
 
-// FETCH 1: Independent Order Flow Fetch
+// ----------------------------------------------------------------
+// TRUE BUY/SELL ORDER FLOW ENGINE (Using Spot Price)
+// ----------------------------------------------------------------
 async function fetchOrderData() {
     const dateStr = document.getElementById('order-date-filter').value;
     if (!dateStr) return;
     
     const engineContainer = document.getElementById('liquidity-engine');
+    const badge = document.getElementById('order-updated-badge');
+    badge.innerText = "Updating...";
     engineContainer.innerHTML = '<div style="text-align: center; color: #8b949e; padding: 20px; font-size: 11px;">Fetching dynamic orders...</div>';
     
     try {
@@ -494,10 +517,14 @@ async function fetchOrderData() {
 
         if (!data || data.length === 0) {
             engineContainer.innerHTML = '<div style="text-align: center; color: #8b949e; padding: 20px; font-size: 11px;">No expiry data found for this date.</div>';
+            badge.innerText = "No Data";
             return;
         }
 
-        // Sort data by volume descending so biggest levels show up top
+        // Set Last Updated Badge
+        badge.innerText = `Updated: ${formatTimestamp(data[0].created_at)}`;
+
+        // Sort by volume descending
         data.sort((a, b) => parseFloat(b.volume) - parseFloat(a.volume));
 
         engineContainer.innerHTML = data.map(item => {
@@ -506,21 +533,41 @@ async function fetchOrderData() {
             const volNum = parseFloat(item.volume);
             const strikeNum = parseFloat(item.strike);
             
-            // Execute the dynamic calculation
+            // Get Dynamic Tier (Wall, Cluster, Minor) and exact pip offsets
             const engineResult = getDynamicLiquidityStatus(item.ticker, volNum);
-
-            const slBand = (engineResult.sl * basePip).toFixed(isJPY ? 2 : 4);
-            const tpBand = (engineResult.tp * basePip).toFixed(isJPY ? 2 : 4);
+            
+            let actionText = engineResult.label;
+            let exactSL = "N/A";
+            let exactTP = "N/A";
+            
+            // Check Spot Price for Directionality
+            const spot = item.spot_price ? parseFloat(item.spot_price) : null;
+            
+            if (spot !== null) {
+                if (strikeNum > spot) {
+                    // Price is below strike. It must rally up to it. (Resistance)
+                    actionText = `${engineResult.label} (SELL)`;
+                    exactSL = (strikeNum + (engineResult.sl * basePip)).toFixed(isJPY ? 2 : 4);
+                    exactTP = (strikeNum - (engineResult.tp * basePip)).toFixed(isJPY ? 2 : 4);
+                } else {
+                    // Price is above strike. It must drop down to it. (Support)
+                    actionText = `${engineResult.label} (BUY)`;
+                    exactSL = (strikeNum - (engineResult.sl * basePip)).toFixed(isJPY ? 2 : 4);
+                    exactTP = (strikeNum + (engineResult.tp * basePip)).toFixed(isJPY ? 2 : 4);
+                }
+            } else {
+                actionText = `${engineResult.label} (NO SPOT DATA)`;
+            }
 
             return `
                 <div style="background: #161b22; border: 1px solid #30363d; border-left: 3px solid ${engineResult.color}; border-radius: 6px; padding: 10px; font-size: 10px; transition: background 0.2s;" onmouseover="this.style.background='#1c2230'" onmouseout="this.style.background='#161b22'">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
                         <span style="color: #fff; font-weight: 600; font-size: 11.5px; font-family: 'Inter', sans-serif;">${item.ticker} @ ${strikeNum}</span>
-                        <span style="color: #c9d1d9;">Liq: <strong>${volNum}B</strong></span>
+                        <span style="color: #c9d1d9;">Liq: <strong style="color: #fff;">${volNum}B</strong></span>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 700; font-size: 9.5px; color: ${engineResult.color}; letter-spacing: 0.5px;">${engineResult.action}</span>
-                        <div style="color: #8b949e; font-family: 'JetBrains Mono', monospace; font-size: 9.5px;">SL Band: <span style="color:#c9d1d9">${slBand}</span> | TP Band: <span style="color:#c9d1d9">${tpBand}</span></div>
+                        <span style="font-weight: 700; font-size: 9.5px; color: ${engineResult.color}; letter-spacing: 0.5px;">${actionText}</span>
+                        <div style="color: #8b949e; font-family: 'JetBrains Mono', monospace; font-size: 9.5px;">SL: <span style="color:#c9d1d9">${exactSL}</span> | TP: <span style="color:#c9d1d9">${exactTP}</span></div>
                     </div>
                 </div>
             `;
@@ -531,12 +578,13 @@ async function fetchOrderData() {
     }
 }
 
-// FETCH 2: Independent Market Radar Fetch
 async function fetchRadarData() {
     const dateStr = document.getElementById('date-filter').value;
     if (!dateStr) return;
     
-    // Calculate yesterday for radar velocity maths
+    const badge = document.getElementById('radar-updated-badge');
+    badge.innerText = "Updating...";
+
     const dateObj = new Date(dateStr);
     dateObj.setDate(dateObj.getDate() - 1);
     if (dateObj.getDay() === 0) dateObj.setDate(dateObj.getDate() - 2); 
@@ -552,7 +600,12 @@ async function fetchRadarData() {
         const todayData = todayRes.data || [];
         const yesterdayData = yesterdayRes.data || [];
 
-        // Map metrics and calculate Conviction Score
+        if (todayData.length > 0) {
+            badge.innerText = `Updated: ${formatTimestamp(todayData[0].created_at)}`;
+        } else {
+            badge.innerText = "No Data";
+        }
+
         cachedData = todayData.map(todayRow => {
             let score = 0;
             
@@ -801,7 +854,6 @@ function render() {
 function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
 document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
 
-// Wait for DOM to load, then initialize
 window.onload = init;
 </script>
 </body>
