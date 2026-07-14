@@ -169,9 +169,9 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 </head>
 <body>
 
-<div id="infoModal" class="modal">
+<div id="radarModal" class="modal">
 <div class="modal-content">
-<span class="close-btn" onclick="closeModal()">&times;</span>
+<span class="close-btn" onclick="closeModal('radarModal')">&times;</span>
 <h2>How to Use the Market Trade Radar</h2>
 <p style="color: #8b949e; margin-top: -10px; font-size: 14px;">A professional-grade terminal guide to decoding intraday market structures and identifying top-tier trade ideas.</p>
 
@@ -255,16 +255,36 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     <li><span style="color: #f85149; font-weight: 700;">[WEAK]:</span> Highlights the top 2 assets with a conviction score of -7 or lower. These exhibit extreme bearish confluence.</li>
     <li><em>Note: Assets failing to meet this extreme threshold remain unhighlighted to filter out choppy or mixed signals.</em></li>
 </ul>
+</div>
+</div>
+
+<div id="orderModal" class="modal">
+<div class="modal-content">
+<span class="close-btn" onclick="closeModal('orderModal')">&times;</span>
+<h2>How to Use the Order Flow Strategy Engine</h2>
+<p style="color: #8b949e; margin-top: -10px; font-size: 14px;">A tactical guide to trading large institutional option expiry levels.</p>
 
 <hr>
 
-<h3>7. Order Flow Strategy Engine (Top Right Module)</h3>
-<p>This module tracks massive institutional option expiries. It calculates exact liquidity depth to dictate whether a market level will hold as a wall or rotate as a minor range cluster.</p>
+<h3>Understanding Expiry Levels</h3>
+<p>This module tracks massive institutional option expiries. These strikes act as magnetic "gravity wells" for price action. Depending on the sheer volume resting at a strike, the market will behave differently when it reaches that level.</p>
+<p><em>Note: A static strike level becomes Support if price approaches from above, and Resistance if price approaches from below. The engine calculates the strength of the reaction, but you must identify the direction based on current spot price.</em></p>
+
 <ul style="line-height: 1.6;">
-    <li><strong>Volume &ge; 2.0B (Fade Wall):</strong> Extreme institutional defense anticipated. The strategy generates a <span style="color:#f85149; font-weight:bold;">SELL/FADE</span> signal, placing a defensive 20-pip Stop Loss behind the wall, targeting a 50-pip mean reversion.</li>
-    <li><strong>Volume &lt; 2.0B (Scalp Support):</strong> Standard market cluster. The strategy generates a <span style="color:#2ea043; font-weight:bold;">BUY/SCALP</span> signal anticipating local rotation, placing a tight 15-pip Stop Loss, targeting a 30-pip bounce.</li>
-    <li><em>Note: The math engine automatically calculates fractional pip differentials depending on the asset class (e.g., standardizing JPY pairs vs standard USD majors).</em></li>
+    <li><span style="color:#f85149; font-weight:bold;">WALL (FADE REVERSAL) | Vol &ge; 2.0B:</span><br>
+    Extreme institutional defense is anticipated. When volume exceeds 2 Billion, institutions are heavily incentivized to defend the strike. Expect a sharp rejection. <br>
+    <em>Strategy:</em> Fade the approach. Use a defensive 20-pip Stop Loss behind the wall, targeting a 50-pip mean reversion.</li>
+    
+    <li style="margin-top: 15px;"><span style="color:#d29922; font-weight:bold;">CLUSTER (SCALP REACTION) | Vol &lt; 2.0B:</span><br>
+    Standard market liquidity cluster. The level will cause a reaction, but may not hold as a permanent wall. <br>
+    <em>Strategy:</em> Scalp the rotation. Use a tight 15-pip Stop Loss, targeting a quick 30-pip bounce.</li>
 </ul>
+
+<hr>
+
+<h3>Pip Offset Engine</h3>
+<p>The system automatically calculates fractional pip differentials depending on the asset class. Stop Loss (SL) and Take Profit (TP) ranges are pre-calculated to standardize risk whether you are trading standard USD majors or JPY pairs.</p>
+
 </div>
 </div>
 
@@ -295,11 +315,11 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
         <div class="quadrant-top-bar">
             <div class="header-row">
                 <h1>Market Trade Radar</h1>
-                <button class="info-btn" onclick="openModal()">Info ℹ</button>
+                <button class="info-btn" onclick="openModal('radarModal')">Info ℹ</button>
             </div>
             
             <div class="filter-section">
-                <input type="date" id="date-filter" onchange="fetchData()">
+                <input type="date" id="date-filter" onchange="fetchRadarData()">
                 <select id="cat-filter" onchange="render()">
                     <option value="all">All Categories</option>
                     <option value="Forex">Forex</option>
@@ -331,13 +351,16 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
         <div class="quadrant-top-bar">
             <div class="header-row">
                 <h1>Order Flow Strategy</h1>
-                <button class="info-btn" onclick="openModal()">Info ℹ</button>
+                <button class="info-btn" onclick="openModal('orderModal')">Info ℹ</button>
+            </div>
+            <div class="filter-section">
+                <input type="date" id="order-date-filter" onchange="fetchOrderData()">
             </div>
         </div>
         
         <div class="table-container">
             <div id="liquidity-engine" style="display: flex; flex-direction: column; gap: 8px;">
-                <div style="text-align: center; color: #8b949e; padding: 20px; font-size: 11px;">Awaiting liquidity data fetch...</div>
+                <div style="text-align: center; color: #8b949e; padding: 20px; font-size: 11px;">Loading expiry data...</div>
             </div>
         </div>
     </div>
@@ -376,10 +399,12 @@ let cachedData = [];
 let biasSortOrder = 0;
 let stateSortOrder = 0;
 
-// Info Modal Functions
-function openModal() { document.getElementById("infoModal").style.display = "block"; }
-function closeModal() { document.getElementById("infoModal").style.display = "none"; }
-window.onclick = function(event) { if (event.target == document.getElementById("infoModal")) closeModal(); }
+// Dual Modal Handling
+function openModal(modalId) { document.getElementById(modalId).style.display = "block"; }
+function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
+window.onclick = function(event) { 
+    if (event.target.classList.contains('modal')) event.target.style.display = "none"; 
+}
 
 function toggleDrawer(index, ticker) {
     const row = document.getElementById(`drawer-row-${index}`);
@@ -426,8 +451,13 @@ async function init() {
         document.getElementById('nav-courses').style.display = 'block';
     }
 
-    document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
-    fetchData();
+    const todayStr = new Date().toISOString().split('T')[0];
+    document.getElementById('date-filter').value = todayStr;
+    document.getElementById('order-date-filter').value = todayStr;
+    
+    // Call independently
+    fetchRadarData();
+    fetchOrderData();
 }
 
 function getAssetVolatilityMetrics(r) {
@@ -455,48 +485,43 @@ function getAssetVolatilityMetrics(r) {
     return { rangeFormatted, isTrending };
 }
 
-async function fetchData() {
-    const dateStr = document.getElementById('date-filter').value;
+// FETCH 1: Independent Order Flow Fetch
+async function fetchOrderData() {
+    const dateStr = document.getElementById('order-date-filter').value;
     if (!dateStr) return;
     
-    // Calculate yesterday purely for the Radar DoD velocity
-    const dateObj = new Date(dateStr);
-    dateObj.setDate(dateObj.getDate() - 1);
-    if (dateObj.getDay() === 0) dateObj.setDate(dateObj.getDate() - 2); 
-    if (dateObj.getDay() === 6) dateObj.setDate(dateObj.getDate() - 1); 
-    const yesterdayStr = dateObj.toISOString().split('T')[0];
-
-    // FETCH DATA
-    const [todayRes, yesterdayRes, liqTodayRes] = await Promise.all([
-        client.from('key_levels').select('id, trade_date, ticker, s1, s2, r1, r2, bias, bull_bear_line, lollipop, analysis').eq('trade_date', dateStr),
-        client.from('key_levels').select('id, trade_date, ticker, s1, s2, r1, r2, bias, bull_bear_line, lollipop, analysis').eq('trade_date', yesterdayStr),
-        client.from('order_levels').select('ticker, strike, volume').eq('trade_date', dateStr) 
-        // Notice we are NO LONGER querying yesterday for the option expiries.
-    ]);
-
-    if (todayRes.error) console.error("Key Levels Error:", todayRes.error);
-    if (liqTodayRes.error) console.error("Liquidity Error:", liqTodayRes.error);
-    
-    // ---------------------------------------------------------
-    // 1. RENDER STRATEGY ENGINE
-    // ---------------------------------------------------------
-    const liqToday = liqTodayRes.data || [];
     const engineContainer = document.getElementById('liquidity-engine');
+    
+    try {
+        const { data, error } = await client.from('order_levels').select('*').eq('trade_date', dateStr);
+        if (error) {
+            engineContainer.innerHTML = '<div style="color:red; text-align:center;">Error: ' + error.message + '</div>';
+            return;
+        }
 
-    if (liqToday.length === 0) {
-        engineContainer.innerHTML = '<div style="text-align: center; color: #8b949e; padding: 20px; font-size: 11px;">No expiry data found for this date.</div>';
-    } else {
-        engineContainer.innerHTML = liqToday.map(item => {
+        if (!data || data.length === 0) {
+            engineContainer.innerHTML = '<div style="text-align: center; color: #8b949e; padding: 20px; font-size: 11px;">No expiry data found for this date.</div>';
+            return;
+        }
+
+        engineContainer.innerHTML = data.map(item => {
             const isJPY = item.ticker.includes("JPY");
             const basePip = isJPY ? 0.01 : 0.0001; 
             const volNum = parseFloat(item.volume);
             const strikeNum = parseFloat(item.strike);
+            
             const isWall = volNum >= 2.0;
 
-            const action = isWall ? "FADE WALL (SELL)" : "SCALP SUPPORT (BUY)";
-            const biasClass = isWall ? "border-left: 3px solid #f85149;" : "border-left: 3px solid #2ea043;";
-            const sl = isWall ? (strikeNum + (20 * basePip)).toFixed(isJPY ? 2 : 4) : (strikeNum - (15 * basePip)).toFixed(isJPY ? 2 : 4);
-            const tp = isWall ? (strikeNum - (50 * basePip)).toFixed(isJPY ? 2 : 4) : (strikeNum + (30 * basePip)).toFixed(isJPY ? 2 : 4);
+            // Updated Logic: Neutral reaction terminology based on volume
+            const action = isWall ? "WALL (FADE REVERSAL)" : "CLUSTER (SCALP REACTION)";
+            const biasClass = isWall ? "border-left: 3px solid #f85149;" : "border-left: 3px solid #d29922;"; 
+            const actionColor = isWall ? "#f85149" : "#d29922";
+            
+            const slDistance = isWall ? 20 : 15;
+            const tpDistance = isWall ? 50 : 30;
+            
+            const slBand = (slDistance * basePip).toFixed(isJPY ? 2 : 4);
+            const tpBand = (tpDistance * basePip).toFixed(isJPY ? 2 : 4);
 
             return `
                 <div style="background: #161b22; border: 1px solid #30363d; ${biasClass} border-radius: 6px; padding: 10px; font-size: 10px; transition: background 0.2s;" onmouseover="this.style.background='#1c2230'" onmouseout="this.style.background='#161b22'">
@@ -505,106 +530,129 @@ async function fetchData() {
                         <span style="color: #c9d1d9;">Liq: <strong>${volNum}B</strong></span>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 700; font-size: 9.5px; color: ${isWall ? '#f85149' : '#2ea043'}; letter-spacing: 0.5px;">${action}</span>
-                        <div style="color: #8b949e; font-family: 'JetBrains Mono', monospace; font-size: 9.5px;">SL: <span style="color:#c9d1d9">${sl}</span> | TP: <span style="color:#c9d1d9">${tp}</span></div>
+                        <span style="font-weight: 700; font-size: 9.5px; color: ${actionColor}; letter-spacing: 0.5px;">${action}</span>
+                        <div style="color: #8b949e; font-family: 'JetBrains Mono', monospace; font-size: 9.5px;">SL Band: <span style="color:#c9d1d9">${slBand}</span> | TP Band: <span style="color:#c9d1d9">${tpBand}</span></div>
                     </div>
                 </div>
             `;
         }).join('');
+
+    } catch (e) {
+        console.error("Order Fetch Exception:", e);
     }
+}
 
-    // ---------------------------------------------------------
-    // 2. CONTINUE EXISTING RADAR LOGIC
-    // ---------------------------------------------------------
-    const todayData = todayRes.data || [];
-    const yesterdayData = yesterdayRes.data || [];
+// FETCH 2: Independent Market Radar Fetch
+async function fetchRadarData() {
+    const dateStr = document.getElementById('date-filter').value;
+    if (!dateStr) return;
+    
+    // Calculate yesterday for radar velocity maths
+    const dateObj = new Date(dateStr);
+    dateObj.setDate(dateObj.getDate() - 1);
+    if (dateObj.getDay() === 0) dateObj.setDate(dateObj.getDate() - 2); 
+    if (dateObj.getDay() === 6) dateObj.setDate(dateObj.getDate() - 1); 
+    const yesterdayStr = dateObj.toISOString().split('T')[0];
 
-    // Map metrics and calculate Conviction Score
-    cachedData = todayData.map(todayRow => {
-        let score = 0;
-        
-        if (todayRow.bias === 'Strong Bullish') score += 3;
-        else if (todayRow.bias === 'Medium Bullish') score += 1;
-        else if (todayRow.bias === 'Strong Bearish') score -= 3;
-        else if (todayRow.bias === 'Medium Bearish') score -= 1;
+    try {
+        const [todayRes, yesterdayRes] = await Promise.all([
+            client.from('key_levels').select('*').eq('trade_date', dateStr),
+            client.from('key_levels').select('*').eq('trade_date', yesterdayStr)
+        ]);
 
-        const metrics = getAssetVolatilityMetrics(todayRow);
-        if (metrics.isTrending) {
-            if (score > 0) score += 2;
-            else if (score < 0) score -= 2;
-        }
+        const todayData = todayRes.data || [];
+        const yesterdayData = yesterdayRes.data || [];
 
-        const lolli = (todayRow.lollipop || '').toUpperCase();
-        if (lolli.includes('UPPER') || lolli.includes('BREAK OUT')) score += 2;
-        else if (lolli.includes('LOWER') || lolli.includes('BREAK DOWN')) score -= 2;
+        // Map metrics and calculate Conviction Score
+        cachedData = todayData.map(todayRow => {
+            let score = 0;
+            
+            if (todayRow.bias === 'Strong Bullish') score += 3;
+            else if (todayRow.bias === 'Medium Bullish') score += 1;
+            else if (todayRow.bias === 'Strong Bearish') score -= 3;
+            else if (todayRow.bias === 'Medium Bearish') score -= 1;
 
-        const yRow = yesterdayData.find(y => y.ticker === todayRow.ticker);
-        if (yRow) {
-            const bbDelta = parseFloat(todayRow.bull_bear_line) - parseFloat(yRow.bull_bear_line);
-            todayRow.value_migration = bbDelta > 0 ? "Upward (Accumulation)" : (bbDelta < 0 ? "Downward (Distribution)" : "Flat");
+            const metrics = getAssetVolatilityMetrics(todayRow);
+            if (metrics.isTrending) {
+                if (score > 0) score += 2;
+                else if (score < 0) score -= 2;
+            }
 
-            const todayRange = Math.abs(parseFloat(todayRow.r1) - parseFloat(todayRow.s1));
-            const yRange = Math.abs(parseFloat(yRow.r1) - parseFloat(yRow.s1));
-            todayRow.vol_velocity = todayRange > yRange ? "Expanding" : "Compressing";
+            const lolli = (todayRow.lollipop || '').toUpperCase();
+            if (lolli.includes('UPPER') || lolli.includes('BREAK OUT')) score += 2;
+            else if (lolli.includes('LOWER') || lolli.includes('BREAK DOWN')) score -= 2;
 
-            if (parseFloat(todayRow.s1) >= parseFloat(yRow.r1)) {
-                todayRow.structural_shift = "Bullish Floor Flip";
-            } else if (parseFloat(todayRow.r1) <= parseFloat(yRow.s1)) {
-                todayRow.structural_shift = "Bearish Ceiling Flip";
+            const yRow = yesterdayData.find(y => y.ticker === todayRow.ticker);
+            if (yRow) {
+                const bbDelta = parseFloat(todayRow.bull_bear_line) - parseFloat(yRow.bull_bear_line);
+                todayRow.value_migration = bbDelta > 0 ? "Upward (Accumulation)" : (bbDelta < 0 ? "Downward (Distribution)" : "Flat");
+
+                const todayRange = Math.abs(parseFloat(todayRow.r1) - parseFloat(todayRow.s1));
+                const yRange = Math.abs(parseFloat(yRow.r1) - parseFloat(yRow.s1));
+                todayRow.vol_velocity = todayRange > yRange ? "Expanding" : "Compressing";
+
+                if (parseFloat(todayRow.s1) >= parseFloat(yRow.r1)) {
+                    todayRow.structural_shift = "Bullish Floor Flip";
+                } else if (parseFloat(todayRow.r1) <= parseFloat(yRow.s1)) {
+                    todayRow.structural_shift = "Bearish Ceiling Flip";
+                } else {
+                    todayRow.structural_shift = "Maintaining Range";
+                }
+
+                if (todayRow.value_migration === "Upward (Accumulation)") score += 1;
+                else if (todayRow.value_migration === "Downward (Distribution)") score -= 1;
+
+                if (todayRow.structural_shift === "Bullish Floor Flip") score += 2;
+                else if (todayRow.structural_shift === "Bearish Ceiling Flip") score -= 2;
+
+                if (todayRow.vol_velocity === "Expanding") {
+                    if (score > 0) score += 1;
+                    else if (score < 0) score -= 1;
+                }
             } else {
-                todayRow.structural_shift = "Maintaining Range";
+                todayRow.value_migration = "N/A (No prior data)";
+                todayRow.vol_velocity = "N/A";
+                todayRow.structural_shift = "N/A";
             }
+            
+            todayRow.convictionScore = score;
+            todayRow.isTopWinner = false;
+            todayRow.isTopLoser = false;
 
-            if (todayRow.value_migration === "Upward (Accumulation)") score += 1;
-            else if (todayRow.value_migration === "Downward (Distribution)") score -= 1;
+            return todayRow;
+        });
 
-            if (todayRow.structural_shift === "Bullish Floor Flip") score += 2;
-            else if (todayRow.structural_shift === "Bearish Ceiling Flip") score -= 2;
-
-            if (todayRow.vol_velocity === "Expanding") {
-                if (score > 0) score += 1;
-                else if (score < 0) score -= 1;
-            }
-        } else {
-            todayRow.value_migration = "N/A (No prior data)";
-            todayRow.vol_velocity = "N/A";
-            todayRow.structural_shift = "N/A";
-        }
+        const sortedData = [...cachedData].sort((a, b) => b.convictionScore - a.convictionScore);
         
-        todayRow.convictionScore = score;
-        todayRow.isTopWinner = false;
-        todayRow.isTopLoser = false;
-
-        return todayRow;
-    });
-
-    const sortedData = [...cachedData].sort((a, b) => b.convictionScore - a.convictionScore);
-    
-    let winnersCount = 0;
-    for (let i = 0; i < sortedData.length; i++) {
-        if (sortedData[i].convictionScore >= 7 && winnersCount < 2) {
-            const index = cachedData.findIndex(r => r.id === sortedData[i].id);
-            if(index !== -1) cachedData[index].isTopWinner = true;
-            winnersCount++;
+        let winnersCount = 0;
+        for (let i = 0; i < sortedData.length; i++) {
+            if (sortedData[i].convictionScore >= 7 && winnersCount < 2) {
+                const index = cachedData.findIndex(r => r.id === sortedData[i].id);
+                if(index !== -1) cachedData[index].isTopWinner = true;
+                winnersCount++;
+            }
         }
-    }
 
-    let losersCount = 0;
-    for (let i = sortedData.length - 1; i >= 0; i--) {
-        if (sortedData[i].convictionScore <= -7 && losersCount < 2) {
-            const index = cachedData.findIndex(r => r.id === sortedData[i].id);
-            if(index !== -1) cachedData[index].isTopLoser = true;
-            losersCount++;
+        let losersCount = 0;
+        for (let i = sortedData.length - 1; i >= 0; i--) {
+            if (sortedData[i].convictionScore <= -7 && losersCount < 2) {
+                const index = cachedData.findIndex(r => r.id === sortedData[i].id);
+                if(index !== -1) cachedData[index].isTopLoser = true;
+                losersCount++;
+            }
         }
-    }
 
-    const tickerSelect = document.getElementById('ticker-filter');
-    tickerSelect.innerHTML = '<option value="all">All Tickers</option>';
-    [...new Set(cachedData.map(r => r.ticker))].sort().forEach(t => {
-        tickerSelect.innerHTML += `<option value="${t}">${t}</option>`;
-    });
-    
-    render();
+        const tickerSelect = document.getElementById('ticker-filter');
+        tickerSelect.innerHTML = '<option value="all">All Tickers</option>';
+        [...new Set(cachedData.map(r => r.ticker))].sort().forEach(t => {
+            tickerSelect.innerHTML += `<option value="${t}">${t}</option>`;
+        });
+        
+        render();
+
+    } catch (e) {
+        console.error("Radar Fetch Exception:", e);
+    }
 }
 
 function toggleSortBias() {
@@ -763,6 +811,9 @@ function render() {
 
 function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
 document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+
+// Wait for DOM to load, then initialize
+window.onload = init;
 </script>
 </body>
 </html>
