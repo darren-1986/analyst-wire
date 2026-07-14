@@ -500,7 +500,7 @@ function getDynamicLiquidityStatus(ticker, volNum) {
 }
 
 // ----------------------------------------------------------------
-// TRUE BUY/SELL ORDER FLOW ENGINE
+// ORDER FLOW ENGINE (WITH NEW SUPER-SEARCH & FALLBACK)
 // ----------------------------------------------------------------
 async function fetchOrderData() {
     const dateStr = document.getElementById('order-date-filter').value;
@@ -524,11 +524,16 @@ async function fetchOrderData() {
             return;
         }
 
-        // Catch the timestamp safely
+        // Fetch Radar Data to use as a fallback if Spot Price is entirely missing
+        const { data: radarFallback } = await client.from('key_levels').select('ticker, bull_bear_line').eq('trade_date', dateStr);
+        let fallbackMap = {};
+        if (radarFallback) {
+            radarFallback.forEach(r => { fallbackMap[r.ticker] = parseFloat(r.bull_bear_line); });
+        }
+
         const timestampRaw = data[0].created_at || data[0].inserted_at;
         badge.innerText = `Updated: ${formatTimestamp(timestampRaw)}`;
 
-        // Sort by volume descending
         data.sort((a, b) => parseFloat(b.volume) - parseFloat(a.volume));
 
         engineContainer.innerHTML = data.map(item => {
@@ -539,22 +544,39 @@ async function fetchOrderData() {
             
             const engineResult = getDynamicLiquidityStatus(item.ticker, volNum);
             
-            // SUPER FAILSAFE: Look for spot price no matter what it's named in Supabase
-            let rawSpotValue = item.spot_price;
-            if (rawSpotValue === undefined) rawSpotValue = item.Spot_Price;
-            if (rawSpotValue === undefined) rawSpotValue = item.spot;
-            if (rawSpotValue === undefined) rawSpotValue = item['Spot Price'];
-            
-            // DEBUG: Log out the object to console so we can see what Supabase is sending
-            console.log("Raw DB Row:", item);
+            // SUPER SEARCH: Scan every column for anything resembling "Spot Price"
+            let spotRaw = null;
+            let spotSource = "";
+            for (let key in item) {
+                let k = key.toLowerCase().replace(/[^a-z0-9]/g, ''); 
+                if (k === 'spot' || k === 'spotprice' || k === 'currentprice' || k === 'price') {
+                    if (k !== 'strikeprice') {
+                        spotRaw = item[key];
+                        spotSource = "DB";
+                        break;
+                    }
+                }
+            }
 
-            const spot = (rawSpotValue !== undefined && rawSpotValue !== null && rawSpotValue !== '') ? parseFloat(rawSpotValue) : null;
+            let spot = (spotRaw !== null && spotRaw !== '') ? parseFloat(spotRaw) : null;
+            
+            // PIVOT FALLBACK: If we absolutely cannot find the Spot Price, use the Radar's Bull/Bear Line
+            if (spot === null || isNaN(spot)) {
+                if (fallbackMap[item.ticker]) {
+                    spot = fallbackMap[item.ticker];
+                    spotSource = "Pivot"; 
+                }
+            }
             
             let actionText = engineResult.label;
             let exactSL = "N/A";
             let exactTP = "N/A";
+            let spotDisplay = "N/A";
             
             if (spot !== null && !isNaN(spot)) {
+                spotDisplay = spot.toString();
+                if (spotSource === "Pivot") spotDisplay += " (Pivot)";
+                
                 if (strikeNum > spot) {
                     actionText = `${engineResult.label} (SELL)`;
                     exactSL = (strikeNum + (engineResult.sl * basePip)).toFixed(isJPY ? 2 : 4);
@@ -565,14 +587,14 @@ async function fetchOrderData() {
                     exactTP = (strikeNum + (engineResult.tp * basePip)).toFixed(isJPY ? 2 : 4);
                 }
             } else {
-                actionText = `${engineResult.label} (NO SPOT DATA)`;
+                actionText = `${engineResult.label} (NO REF PRICE)`;
             }
 
             return `
                 <div style="background: #161b22; border: 1px solid #30363d; border-left: 3px solid ${engineResult.color}; border-radius: 6px; padding: 10px; font-size: 10px; margin-bottom: 6px; transition: background 0.2s;" onmouseover="this.style.background='#1c2230'" onmouseout="this.style.background='#161b22'">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
                         <span style="color: #fff; font-weight: 600; font-size: 11.5px; font-family: 'Inter', sans-serif;">${item.ticker} @ ${strikeNum}</span>
-                        <span style="color: #c9d1d9;">Spot: <strong style="color: #fff;">${spot !== null ? spot : 'Missing DB Col'}</strong> | Liq: <strong style="color: #fff;">${volNum}B</strong></span>
+                        <span style="color: #c9d1d9;">Spot: <strong style="color: #fff;">${spotDisplay}</strong> | Liq: <strong style="color: #fff;">${volNum}B</strong></span>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-weight: 700; font-size: 9.5px; color: ${engineResult.color}; letter-spacing: 0.5px;">${actionText}</span>
