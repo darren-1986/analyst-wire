@@ -81,7 +81,7 @@
         window.location.href = 'index.html'; 
     });
 
-    // Uses SheetJS to safely read both CSV and Excel so commas inside text aren't broken
+    // Universally reads CSV & XLSX safely preventing internal comma breakages
     function parseFileToRowsSafe(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -131,10 +131,10 @@
                     let headerStr = String(header).toLowerCase().trim();
                     let dbKey = "";
 
-                    // STRICT MAPPING: Force your exact CSV headers to match the Supabase table names
-                    if (headerStr.includes('ticker')) dbKey = 'ticker';
-                    else if (headerStr.includes('s.t. bias') || headerStr === 'bias') dbKey = 'bias';
-                    else if (headerStr.includes('bull/bear')) dbKey = 'bull/bear';
+                    // STRICT MAPPING: Exact matches stop the "Previous" column from overwriting new data
+                    if (headerStr === 'ticker') dbKey = 'ticker';
+                    else if (headerStr === 's.t. bias' || headerStr === 'bias') dbKey = 'bias';
+                    else if (headerStr === 'bull/bear') dbKey = 'bull/bear';
                     else if (headerStr === 's1') dbKey = 's1';
                     else if (headerStr === 'r1') dbKey = 'r1';
                     else if (headerStr === 's2') dbKey = 's2';
@@ -147,24 +147,22 @@
                     }
                 });
                 
-                // Only push valid ticker rows
                 if (payloadObj.ticker) {
                     formattedData.push(payloadObj);
                 }
             }
 
             if (formattedData.length === 0) {
-                statusDiv.innerText = "Error: Could not extract any valid rows. Check your headers.";
+                statusDiv.innerText = "Error: Could not extract valid rows. Check header format.";
                 return;
             }
 
             statusDiv.innerText = `Pushing ${formattedData.length} extracted rows to Supabase...`;
-            console.log("EXACT DATA GOING TO SUPABASE:", formattedData); // You can check this in F12 console
             
             await client.from('key_levels').delete().eq('trade_date', date);
             const { error } = await client.from('key_levels').insert(formattedData);
             
-            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${formattedData.length} Key Levels perfectly.`;
+            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${formattedData.length} Key Levels.`;
 
         } catch (err) {
             statusDiv.innerText = "Parsing Error: " + err.message;
