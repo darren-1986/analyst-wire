@@ -128,9 +128,9 @@
                     let dbKey = "";
 
                     if (headerStr === 'ticker') dbKey = 'ticker';
-                    else if (headerStr.includes('previous') && headerStr.includes('bull')) dbKey = 'previous_bull_bear';
+                    else if (headerStr.includes('previous') && headerStr.includes('bull')) dbKey = 'prev_bull_bear';
+                    else if (headerStr === 'bull/bear') dbKey = 'bull_bear_line';
                     else if (headerStr === 's.t. bias' || headerStr === 'bias') dbKey = 'bias';
-                    else if (headerStr === 'bull/bear') dbKey = 'bull/bear';
                     else if (headerStr === 's1') dbKey = 's1';
                     else if (headerStr === 'r1') dbKey = 'r1';
                     else if (headerStr === 's2') dbKey = 's2';
