@@ -81,25 +81,17 @@
         window.location.href = 'index.html'; 
     });
 
-    function parseFileToRows(file) {
+    // Uses SheetJS to safely read both CSV and Excel so commas inside text aren't broken
+    function parseFileToRowsSafe(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            const isCsv = file.name.toLowerCase().endsWith('.csv');
-            
             reader.onload = function(e) {
                 try {
-                    if (isCsv) {
-                        const text = new TextDecoder('utf-8').decode(e.target.result);
-                        const lines = text.split(/\r?\n/);
-                        const rows = lines.map(line => line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, '').trim())).filter(r => r.length > 0 && r.some(cell => cell !== ""));
-                        resolve(rows);
-                    } else {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, {type: 'array'});
-                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                        const rows = XLSX.utils.sheet_to_json(sheet, {header: 1, defval: null});
-                        resolve(rows);
-                    }
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet, {header: 1, defval: null});
+                    resolve(rows);
                 } catch(err) { reject(err); }
             };
             reader.readAsArrayBuffer(file);
@@ -107,7 +99,7 @@
     }
 
     // ==========================================
-    // FIXED MODULE 1: KEY LEVELS UPLOAD
+    // MODULE 1: KEY LEVELS UPLOAD
     // ==========================================
     async function processKeyLevels() {
         const fileInput = document.getElementById('excelFile-kl');
@@ -115,56 +107,64 @@
         const statusDiv = document.getElementById('status-kl');
         
         if (!fileInput.files.length || !date) return alert("Select a file AND choose a target date.");
-        statusDiv.innerText = "Processing Key Levels...";
+        statusDiv.innerText = "Processing Key Levels Data...";
 
         try {
-            const rows = await parseFileToRows(fileInput.files[0]);
-            if (rows.length < 2) return statusDiv.innerText = "Error: Invalid table layout.";
+            const rows = await parseFileToRowsSafe(fileInput.files[0]);
+            if (rows.length < 2) return statusDiv.innerText = "Error: File is empty or invalid.";
 
             const rawHeaders = rows[0];
             const formattedData = [];
+            const uploadTimestamp = new Date().toISOString();
 
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row || !row[0]) continue; 
 
-                let payloadObj = { trade_date: date };
+                let payloadObj = { 
+                    trade_date: date,
+                    last_updated: uploadTimestamp
+                };
                 
                 rawHeaders.forEach((header, idx) => {
                     if (!header) return;
                     let headerStr = String(header).toLowerCase().trim();
-                    
-                    if (headerStr === 'date' || headerStr === 'trade date' || headerStr === 'trade_date') return;
-
                     let dbKey = "";
-                    // MATCH EXACT COLUMN NAMES IN YOUR SUPABASE TABLE SCHEMA
-                    if (headerStr.includes('bull') && headerStr.includes('bear')) {
-                        dbKey = 'bull/bear';
-                    } else if (headerStr === 'ticker') { dbKey = 'ticker'; }
-                    else if (headerStr === 'bias') { dbKey = 'bias'; }
-                    else if (headerStr === 's1') { dbKey = 's1'; }
-                    else if (headerStr === 'r1') { dbKey = 'r1'; }
-                    else if (headerStr === 's2') { dbKey = 's2'; }
-                    else if (headerStr === 'r2') { dbKey = 'r2'; }
-                    else if (headerStr === 'analysis') { dbKey = 'analysis'; }
-                    else if (headerStr === 'lollipop') { dbKey = 'lollipop'; }
-                    else {
-                        dbKey = headerStr.replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-                    }
+
+                    // STRICT MAPPING: Force your exact CSV headers to match the Supabase table names
+                    if (headerStr.includes('ticker')) dbKey = 'ticker';
+                    else if (headerStr.includes('s.t. bias') || headerStr === 'bias') dbKey = 'bias';
+                    else if (headerStr.includes('bull/bear')) dbKey = 'bull/bear';
+                    else if (headerStr === 's1') dbKey = 's1';
+                    else if (headerStr === 'r1') dbKey = 'r1';
+                    else if (headerStr === 's2') dbKey = 's2';
+                    else if (headerStr === 'r2') dbKey = 'r2';
+                    else if (headerStr.includes('analysis')) dbKey = 'analysis';
+                    else if (headerStr.includes('lollopop') || headerStr.includes('lollipop')) dbKey = 'lollipop';
                     
-                    if (dbKey && row[idx] !== undefined && row[idx] !== null && row[idx] !== '') {
+                    if (dbKey && row[idx] !== undefined && row[idx] !== null && String(row[idx]).trim() !== '') {
                         payloadObj[dbKey] = String(row[idx]).trim();
                     }
                 });
                 
-                if (Object.keys(payloadObj).length > 1) formattedData.push(payloadObj);
+                // Only push valid ticker rows
+                if (payloadObj.ticker) {
+                    formattedData.push(payloadObj);
+                }
             }
 
-            statusDiv.innerText = `Uploading ${formattedData.length} structural rows...`;
+            if (formattedData.length === 0) {
+                statusDiv.innerText = "Error: Could not extract any valid rows. Check your headers.";
+                return;
+            }
+
+            statusDiv.innerText = `Pushing ${formattedData.length} extracted rows to Supabase...`;
+            console.log("EXACT DATA GOING TO SUPABASE:", formattedData); // You can check this in F12 console
+            
             await client.from('key_levels').delete().eq('trade_date', date);
             const { error } = await client.from('key_levels').insert(formattedData);
             
-            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${formattedData.length} Key Levels.`;
+            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${formattedData.length} Key Levels perfectly.`;
 
         } catch (err) {
             statusDiv.innerText = "Parsing Error: " + err.message;
@@ -183,7 +183,7 @@
         statusDiv.innerText = "Parsing Order Expiries...";
 
         try {
-            const rows = await parseFileToRows(fileInput.files[0]);
+            const rows = await parseFileToRowsSafe(fileInput.files[0]);
             
             const headers = rows[0]; 
             const spotRow = rows[1]; 
@@ -198,7 +198,7 @@
                     tickerMap[index] = tickerStr;
                     
                     const rawSpot = spotRow ? spotRow[index] : null;
-                    if (rawSpot !== undefined && rawSpot !== null && rawSpot !== '') {
+                    if (rawSpot !== undefined && rawSpot !== null && String(rawSpot).trim() !== '') {
                         spotPriceMap[tickerStr] = parseFloat(String(rawSpot).replace(/[^\d.-]/g, ''));
                     }
                 }
@@ -206,6 +206,7 @@
 
             const flatData = [];
             const regex = /([\d\.]+)\s*\([^\d]*([\d\.]+)([bm]+)\)/gi;
+            const uploadTimestamp = new Date().toISOString();
 
             for (let i = 3; i < rows.length; i++) {
                 const row = rows[i];
@@ -231,13 +232,14 @@
                             ticker: ticker,
                             strike: strike,
                             volume: parseFloat(vol.toFixed(3)),
-                            spot_price: spotPriceMap[ticker]
+                            spot_price: spotPriceMap[ticker],
+                            last_updated: uploadTimestamp
                         });
                     }
                 });
             }
 
-            statusDiv.innerText = `Uploading ${flatData.length} order levels...`;
+            statusDiv.innerText = `Pushing ${flatData.length} order levels to Supabase...`;
             await client.from('order_levels').delete().eq('trade_date', date);
             const { error } = await client.from('order_levels').insert(flatData);
             
