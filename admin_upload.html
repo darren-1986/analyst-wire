@@ -124,22 +124,27 @@
                 
                 rawHeaders.forEach((header, idx) => {
                     if (!header) return;
-                    let headerStr = String(header).toLowerCase().replace(/\n|\r/g, ' ').trim();
+                    
+                    // AGGRESSIVE STRIP: Removes all spaces, newlines, and tabs so "bull/bear" is identical no matter what
+                    let headerStr = String(header).toLowerCase().replace(/\s+/g, '').replace(/\n|\r/g, '');
+                    
                     let dbKey = "";
 
                     if (headerStr === 'ticker') dbKey = 'ticker';
                     else if (headerStr.includes('previous') && headerStr.includes('bull')) dbKey = 'prev_bull_bear';
-                    else if (headerStr === 'bull/bear') dbKey = 'bull_bear_line';
-                    else if (headerStr === 's.t. bias' || headerStr === 'bias') dbKey = 'bias';
+                    else if (headerStr === 'bull/bear' || (headerStr.includes('bull') && !headerStr.includes('previous'))) dbKey = 'bull_bear_line';
+                    else if (headerStr.includes('bias')) dbKey = 'bias';
                     else if (headerStr === 's1') dbKey = 's1';
                     else if (headerStr === 'r1') dbKey = 'r1';
                     else if (headerStr === 's2') dbKey = 's2';
                     else if (headerStr === 'r2') dbKey = 'r2';
                     else if (headerStr.includes('analysis')) dbKey = 'analysis';
-                    else if (headerStr.includes('lollopop') || headerStr.includes('lollipop')) dbKey = 'lollipop';
+                    else if (headerStr.includes('lollipop')) dbKey = 'lollipop';
                     
-                    if (dbKey && row[idx] !== undefined && row[idx] !== null && String(row[idx]).trim() !== '') {
-                        payloadObj[dbKey] = String(row[idx]).trim();
+                    // Prevent empty strings from breaking Supabase numeric columns
+                    if (dbKey && row[idx] !== undefined && row[idx] !== null) {
+                        let val = String(row[idx]).trim();
+                        payloadObj[dbKey] = val === '' ? null : val;
                     }
                 });
                 
@@ -150,15 +155,24 @@
 
             if (formattedData.length === 0) return statusDiv.innerText = "Error: No valid rows extracted. Please verify header mapping.";
 
+            // LOG DATA FOR DEBUGGING
+            console.log("FINAL DATA BEING SENT TO SUPABASE:", formattedData);
+
             statusDiv.innerText = `Pushing ${formattedData.length} extracted rows to Supabase...`;
             
             await client.from('key_levels').delete().eq('trade_date', date);
             const { error } = await client.from('key_levels').insert(formattedData);
             
-            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${formattedData.length} Key Levels.`;
+            if (error) {
+                statusDiv.innerText = "Supabase Error: " + error.message;
+                console.error("SUPABASE ERROR DETAILS:", error);
+            } else {
+                statusDiv.innerText = `Success! Uploaded ${formattedData.length} Key Levels.`;
+            }
 
         } catch (err) {
             statusDiv.innerText = "Parsing Error: " + err.message;
+            console.error("PARSING ERROR:", err);
         }
     }
 
