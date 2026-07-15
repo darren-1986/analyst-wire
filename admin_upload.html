@@ -81,20 +81,38 @@
         window.location.href = 'index.html'; 
     });
 
-    // Universally reads CSV & XLSX safely preventing internal comma breakages
-    function parseFileToRowsSafe(file) {
+    // TRUE HYBRID PARSER: Decodes CSV properly as text, handles XLSX as binary array
+    function parseFileToRows(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
+            const isCsv = file.name.toLowerCase().endsWith('.csv');
+            
             reader.onload = function(e) {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const rows = XLSX.utils.sheet_to_json(sheet, {header: 1, defval: null});
-                    resolve(rows);
+                    if (isCsv) {
+                        const text = e.target.result;
+                        const lines = text.split(/\r?\n/);
+                        const rows = lines.map(line => {
+                            // Regex splits by comma, but ignores commas inside double quotes
+                            const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+                            return matches.map(m => m.replace(/^"|"$/g, '').trim());
+                        }).filter(r => r.length > 0 && r.some(cell => cell !== ""));
+                        resolve(rows);
+                    } else {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(sheet, {header: 1, defval: null});
+                        resolve(rows);
+                    }
                 } catch(err) { reject(err); }
             };
-            reader.readAsArrayBuffer(file);
+
+            if (isCsv) {
+                reader.readAsText(file); // Critical fix for CSV encoding
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
         });
     }
 
@@ -110,7 +128,7 @@
         statusDiv.innerText = "Processing Key Levels Data...";
 
         try {
-            const rows = await parseFileToRowsSafe(fileInput.files[0]);
+            const rows = await parseFileToRows(fileInput.files[0]);
             if (rows.length < 2) return statusDiv.innerText = "Error: File is empty or invalid.";
 
             const rawHeaders = rows[0];
@@ -131,8 +149,9 @@
                     let headerStr = String(header).toLowerCase().trim();
                     let dbKey = "";
 
-                    // STRICT MAPPING: Exact matches stop the "Previous" column from overwriting new data
+                    // STRICT MAPPING INCLUDES PREVIOUS BB
                     if (headerStr === 'ticker') dbKey = 'ticker';
+                    else if (headerStr.includes('previous') && headerStr.includes('bull')) dbKey = 'previous_bull_bear';
                     else if (headerStr === 's.t. bias' || headerStr === 'bias') dbKey = 'bias';
                     else if (headerStr === 'bull/bear') dbKey = 'bull/bear';
                     else if (headerStr === 's1') dbKey = 's1';
@@ -152,10 +171,7 @@
                 }
             }
 
-            if (formattedData.length === 0) {
-                statusDiv.innerText = "Error: Could not extract valid rows. Check header format.";
-                return;
-            }
+            if (formattedData.length === 0) return statusDiv.innerText = "Error: No valid rows extracted.";
 
             statusDiv.innerText = `Pushing ${formattedData.length} extracted rows to Supabase...`;
             
@@ -181,7 +197,7 @@
         statusDiv.innerText = "Parsing Order Expiries...";
 
         try {
-            const rows = await parseFileToRowsSafe(fileInput.files[0]);
+            const rows = await parseFileToRows(fileInput.files[0]);
             
             const headers = rows[0]; 
             const spotRow = rows[1]; 
@@ -194,7 +210,6 @@
                 const tickerStr = String(header || '').trim();
                 if (corePortfolio.includes(tickerStr)) {
                     tickerMap[index] = tickerStr;
-                    
                     const rawSpot = spotRow ? spotRow[index] : null;
                     if (rawSpot !== undefined && rawSpot !== null && String(rawSpot).trim() !== '') {
                         spotPriceMap[tickerStr] = parseFloat(String(rawSpot).replace(/[^\d.-]/g, ''));
