@@ -23,6 +23,8 @@
         button.action-btn { background: #2962ff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; }
         button.action-btn:hover { background: #1e4bd8; }
         .status-msg { margin-top: 20px; font-size: 14px; }
+        /* Debug Panel Styling */
+        #debug-panel { background: #2a2e39; padding: 15px; margin-top: 20px; border-radius: 4px; font-family: monospace; font-size: 11px; white-space: pre-wrap; display: none; color: #ffeb3b; }
     </style>
 </head>
 <body>
@@ -49,6 +51,7 @@
         <input type="file" id="excelFile-kl" accept=".csv, text/csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, */*" />
         <button class="action-btn" onclick="processKeyLevels()">Upload Key Levels</button>
         <div id="status-kl" class="status-msg"></div>
+        <div id="debug-panel"></div>
     </div>
 
     <div id="tab-expiries" class="tab-pane">
@@ -101,6 +104,9 @@
         const fileInput = document.getElementById('excelFile-kl');
         const date = document.getElementById('upload-date-kl').value;
         const statusDiv = document.getElementById('status-kl');
+        const debugDiv = document.getElementById('debug-panel');
+        
+        debugDiv.style.display = 'none';
         
         if (!fileInput.files.length || !date) return alert("Select a file AND choose a target date.");
         statusDiv.innerText = "Processing Key Levels Data...";
@@ -125,22 +131,30 @@
                 rawHeaders.forEach((header, idx) => {
                     if (header === undefined || header === null) return;
                     
-                    let headerStr = String(header).toLowerCase().trim();
+                    // BRUTE FORCE CLEANUP: Strips EVERYTHING except letters and numbers
+                    let cleanHeader = String(header).toLowerCase().replace(/[^a-z0-9]/g, '');
                     let dbKey = "";
 
-                    if (headerStr === 'ticker') dbKey = 'ticker';
-                    else if (headerStr.includes('previous')) dbKey = 'prev_bull_bear';
-                    else if (headerStr.includes('bull') && headerStr.includes('bear')) dbKey = 'bull_bear_line';
-                    else if (headerStr.includes('bias')) dbKey = 'bias';
-                    else if (headerStr === 's1') dbKey = 's1';
-                    else if (headerStr === 'r1') dbKey = 'r1';
-                    else if (headerStr === 's2') dbKey = 's2';
-                    else if (headerStr === 'r2') dbKey = 'r2';
-                    else if (headerStr.includes('analysis')) dbKey = 'analysis';
-                    else if (headerStr.includes('lollipop') || headerStr.includes('lollopop')) dbKey = 'lollipop';
+                    // STRICT ROUTING
+                    if (cleanHeader.includes('ticker')) dbKey = 'ticker';
+                    else if (cleanHeader.includes('previous')) dbKey = 'prev_bull_bear'; // Catches 'Previous BULL/BEAR'
+                    else if (cleanHeader.includes('bullbear') && !cleanHeader.includes('previous')) dbKey = 'bull_bear_line'; // Catches standard 'BULL/BEAR'
+                    else if (cleanHeader.includes('bias')) dbKey = 'bias';
+                    else if (cleanHeader === 's1') dbKey = 's1';
+                    else if (cleanHeader === 'r1') dbKey = 'r1';
+                    else if (cleanHeader === 's2') dbKey = 's2';
+                    else if (cleanHeader === 'r2') dbKey = 'r2';
+                    else if (cleanHeader.includes('analysis')) dbKey = 'analysis';
+                    else if (cleanHeader.includes('lollipop') || cleanHeader.includes('lollopop')) dbKey = 'lollipop';
                     
                     if (dbKey && row[idx] !== undefined && row[idx] !== null) {
                         let val = String(row[idx]).trim();
+                        
+                        // FIX GOOGLE SHEETS COMMA DECIMALS (e.g. "1,0850" -> "1.0850")
+                        if (/^-?\d+,\d+$/.test(val)) {
+                            val = val.replace(',', '.');
+                        }
+                        
                         payloadObj[dbKey] = val === '' ? null : val;
                     }
                 });
@@ -151,6 +165,13 @@
             }
 
             if (formattedData.length === 0) return statusDiv.innerText = "Error: No valid rows extracted.";
+
+            // FIRE THE DIAGNOSTICS TO THE SCREEN
+            debugDiv.style.display = 'block';
+            debugDiv.innerText = "DIAGNOSTICS - WHAT SCRIPT FOUND:\n\nHeaders Found in Google Sheet:\n" + 
+                                 JSON.stringify(rawHeaders) + 
+                                 "\n\nFirst Row Extracted (Check if bull_bear_line & prev_bull_bear exist here):\n" + 
+                                 JSON.stringify(formattedData[0], null, 2);
 
             statusDiv.innerText = `Pushing ${formattedData.length} rows to Supabase...`;
             
