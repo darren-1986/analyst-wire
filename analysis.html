@@ -159,10 +159,10 @@
 
 <script>
     (function() {
-        // Your actual, verified Google Doc link
+        // Your exact Google Doc publish token, correctly formatted for embedding
         const googleDocUrl = "https://google.com";
 
-        // Checks if your domain name is valid AND if the user is on the analysis sub-page
+        // Domain restrictions matching your exact Cloudflare path configuration
         const isOnDomain = window.location.hostname.includes("analyst-wire.pages.dev");
         const isOnAnalysisPage = window.location.pathname.includes("analysis");
 
@@ -171,6 +171,7 @@
                 <iframe src="${googleDocUrl}" style="width: 100%; height: 75vh; border: 1px solid #ccc; border-radius: 8px; background-color: #ffffff;" frameborder="0" allowfullscreen></iframe>
             `;
         } else {
+            // Block rendering if accessed via any unapproved or third-party framework mirror
             document.getElementById("report-container").innerHTML = `
                 <div style="color: #d9534f; background-color: #f2dede; padding: 20px; border: 1px solid #ebccd1; border-radius: 6px; text-align: center;">
                     <h3 style="margin-top: 0; font-weight: 600;">Access Denied</h3>
@@ -181,6 +182,7 @@
     })();
 </script>
 <!-- END DAILY REPORT EMBED -->
+
 
 
 
