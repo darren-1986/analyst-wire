@@ -157,20 +157,23 @@
 
 <script>
     (function() {
-        // CONFIGURATION: Replace with your exact, live GitHub Pages URL for this page
-        const allowedUrl = "https://analyst-wire.pages.dev/analysis";
+        // 1. FIXED: Set this to your exact live page URL where the report lives
+        // Include the folder or page name if it isn't the homepage (e.g., https://pages.dev)
+        const allowedUrl = "https://pages.dev";
         
         // Your specific Google Doc embed URL
         const googleDocUrl = "https://google.com";
 
+        // Check if current URL matches the authorized URL
         if (window.location.href === allowedUrl) {
             document.getElementById("report-container").innerHTML = `
                 <iframe src="${googleDocUrl}" style="width: 100%; height: 70vh; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);" frameborder="0" allowfullscreen></iframe>
             `;
         } else {
+            // FIXED: If unauthorized, safely render a localized text message instead of an external page frame
             document.getElementById("report-container").innerHTML = `
                 <div style="color: #d9534f; background-color: #f2dede; padding: 20px; border: 1px solid #ebccd1; border-radius: 6px; text-align: center;">
-                    <h3 style="margin-top: 0;">Access Denied</h3>
+                    <h3 style="margin-top: 0; font-weight: 600;">Access Denied</h3>
                     <p style="margin-bottom: 0;">This report cannot be viewed directly or embedded on unauthorized sites.</p>
                 </div>
             `;
