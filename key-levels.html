@@ -499,7 +499,7 @@ function getDynamicLiquidityStatus(ticker, volNum) {
 }
 
 // ----------------------------------------------------------------
-// TRUE BUY/SELL ORDER FLOW ENGINE (ISOLATED DYNAMIC TIMESTAMPS)
+// ORDER FLOW ENGINE
 // ----------------------------------------------------------------
 async function fetchOrderData() {
     const dateStr = document.getElementById('order-date-filter').value;
@@ -523,7 +523,6 @@ async function fetchOrderData() {
             return;
         }
 
-        // ISOLATED ORDER FLOW TIMESTAMPS
         const timestampRaw = data[0].last_updated || data[0].created_at || data[0].inserted_at;
         badge.innerText = `Updated: ${formatTimestamp(timestampRaw)}`;
 
@@ -536,8 +535,6 @@ async function fetchOrderData() {
             const strikeNum = parseFloat(item.strike);
             
             const engineResult = getDynamicLiquidityStatus(item.ticker, volNum);
-            
-            // MAPS TO NEW PHYSICAL DATABASE COLUMN DATA
             const spot = item.spot_price !== undefined && item.spot_price !== null ? parseFloat(item.spot_price) : null;
             
             let actionText = engineResult.label;
@@ -578,7 +575,7 @@ async function fetchOrderData() {
 }
 
 // ----------------------------------------------------------------
-// FULLY RESTORED RADAR ENGINE (ISOLATED KEY LEVELS TIMESTAMPS)
+// RADAR ENGINE WITH MANUAL DAY-OVER-DAY PRIORITY
 // ----------------------------------------------------------------
 async function fetchRadarData() {
     const dateStr = document.getElementById('date-filter').value;
@@ -603,7 +600,6 @@ async function fetchRadarData() {
         const yesterdayData = yesterdayRes.data || [];
 
         if (todayData.length > 0) {
-            // ISOLATED RADAR TIMESTAMPS 
             const timestampRaw = todayData[0].last_updated || todayData[0].created_at || todayData[0].inserted_at;
             badge.innerText = `Updated: ${formatTimestamp(timestampRaw)}`;
         } else {
@@ -613,30 +609,51 @@ async function fetchRadarData() {
         cachedData = todayData.map(todayRow => {
             let score = 0;
             
+            // 1. BIAS SCORING
             if (todayRow.bias === 'Strong Bullish') score += 3;
             else if (todayRow.bias === 'Medium Bullish') score += 1;
             else if (todayRow.bias === 'Strong Bearish') score -= 3;
             else if (todayRow.bias === 'Medium Bearish') score -= 1;
 
+            // 2. VOLATILITY SCORING
             const metrics = getAssetVolatilityMetrics(todayRow);
             if (metrics.isTrending) {
                 if (score > 0) score += 2;
                 else if (score < 0) score -= 2;
             }
 
+            // 3. LOLLIPOP SCORING
             const lolli = (todayRow.lollipop || '').toUpperCase();
             if (lolli.includes('UPPER') || lolli.includes('BREAK OUT')) score += 2;
             else if (lolli.includes('LOWER') || lolli.includes('BREAK DOWN')) score -= 2;
 
+            // 4. DAY-OVER-DAY VELOCITY (MANUAL CSV DATA PRIORITIZED)
+            const todayBB = parseFloat(todayRow['bull/bear'] || todayRow.bull_bear_line || todayRow.bull_bear || 0);
+            
+            // Grab previous BB directly from the uploaded file first
+            let yesterdayBB = parseFloat(todayRow.previous_bull_bear || todayRow.prev_bull_bear || 0);
+            
             const yRow = yesterdayData.find(y => y.ticker === todayRow.ticker);
-            if (yRow) {
-                // FIXED SCHEMA ACCESS MAPPING LAYER
-                const todayBB = parseFloat(todayRow['bull/bear'] || todayRow.bull_bear_line || todayRow.bull_bear || 0);
-                const yesterdayBB = parseFloat(yRow['bull/bear'] || yRow.bull_bear_line || yRow.bull_bear || 0);
-                
+            
+            // If the manual column wasn't uploaded, fall back to Supabase historical fetch
+            if ((!yesterdayBB || isNaN(yesterdayBB)) && yRow) {
+                yesterdayBB = parseFloat(yRow['bull/bear'] || yRow.bull_bear_line || yRow.bull_bear || 0);
+            }
+
+            // Calculate Value Migration if we have valid previous data
+            if (yesterdayBB && !isNaN(yesterdayBB) && yesterdayBB !== 0) {
                 const bbDelta = todayBB - yesterdayBB;
                 todayRow.value_migration = bbDelta > 0 ? "Upward (Accumulation)" : (bbDelta < 0 ? "Downward (Distribution)" : "Flat");
+                
+                // Add points for Value Migration
+                if (todayRow.value_migration === "Upward (Accumulation)") score += 1;
+                else if (todayRow.value_migration === "Downward (Distribution)") score -= 1;
+            } else {
+                todayRow.value_migration = "N/A (No prior data)";
+            }
 
+            // Calculate Volatility & Structural Shift based on Supabase History
+            if (yRow) {
                 const todayRange = Math.abs(parseFloat(todayRow.r1) - parseFloat(todayRow.s1));
                 const yRange = Math.abs(parseFloat(yRow.r1) - parseFloat(yRow.s1));
                 todayRow.vol_velocity = todayRange > yRange ? "Expanding" : "Compressing";
@@ -649,9 +666,6 @@ async function fetchRadarData() {
                     todayRow.structural_shift = "Maintaining Range";
                 }
 
-                if (todayRow.value_migration === "Upward (Accumulation)") score += 1;
-                else if (todayRow.value_migration === "Downward (Distribution)") score -= 1;
-
                 if (todayRow.structural_shift === "Bullish Floor Flip") score += 2;
                 else if (todayRow.structural_shift === "Bearish Ceiling Flip") score -= 2;
 
@@ -660,7 +674,6 @@ async function fetchRadarData() {
                     else if (score < 0) score -= 1;
                 }
             } else {
-                todayRow.value_migration = "N/A (No prior data)";
                 todayRow.vol_velocity = "N/A";
                 todayRow.structural_shift = "N/A";
             }
@@ -672,6 +685,7 @@ async function fetchRadarData() {
             return todayRow;
         });
 
+        // 5. TOP CONVICTION ASSETS LOGIC
         const sortedData = [...cachedData].sort((a, b) => b.convictionScore - a.convictionScore);
         
         let winnersCount = 0;
