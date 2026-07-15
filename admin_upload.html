@@ -130,8 +130,8 @@
                 rawHeaders.forEach((header, idx) => {
                     if (header === undefined || header === null) return;
                     
-                    // Reduce header to just lowercase letters to make matching completely bulletproof
-                    let h = String(header).toLowerCase().replace(/[^a-z]/g, '');
+                    // PRESERVES NUMBERS: Strips punctuation/spaces but leaves numbers intact so 's1' works
+                    let h = String(header).toLowerCase().replace(/[^a-z0-9]/g, '');
                     let dbKey = "";
 
                     if (h.includes('ticker')) dbKey = 'ticker';
@@ -151,11 +151,9 @@
                         if (val === '' || val === '-' || val.toLowerCase() === 'n/a') {
                             payloadObj[dbKey] = null;
                         } else {
-                            // If this is a numeric column, strict format it so Supabase doesn't reject it
                             const numericColumns = ['prev_bull_bear', 'bull_bear_line', 's1', 'r1', 's2', 'r2'];
                             
                             if (numericColumns.includes(dbKey)) {
-                                // Swap commas for dots, strip all letters/spaces, convert to Float
                                 val = val.replace(/,/g, '.').replace(/[^\d.-]/g, '');
                                 payloadObj[dbKey] = val === '' ? null : parseFloat(val);
                             } else {
@@ -172,11 +170,10 @@
 
             if (formattedData.length === 0) return statusDiv.innerText = "Error: No valid rows extracted.";
 
-            // Show exactly what is being sent to Supabase on the screen for proof
             debugDiv.style.display = 'block';
             debugDiv.innerText = "--- DATA PREPARED FOR SUPABASE ---\n" + 
                                  "Rows ready to upload: " + formattedData.length + "\n\n" +
-                                 "Sample of first row (Check if prev_bull_bear is a valid number):\n" + 
+                                 "Sample of first row (Verifying all key levels are populated):\n" + 
                                  JSON.stringify(formattedData[0], null, 2);
 
             statusDiv.innerText = `Pushing ${formattedData.length} rows to database...`;
