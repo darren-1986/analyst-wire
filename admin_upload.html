@@ -81,6 +81,7 @@
         window.location.href = 'index.html'; 
     });
 
+    // Helper to read CSV and Excel files uniformly
     function parseFileToRows(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -91,7 +92,9 @@
                     if (isCsv) {
                         const text = new TextDecoder('utf-8').decode(e.target.result);
                         const lines = text.split(/\r?\n/);
-                        const rows = lines.map(line => line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, '').trim())).filter(r => r.length > 0 && r.some(cell => cell !== ""));
+                        const rows = lines.map(line => {
+                            return line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, '').trim());
+                        }).filter(r => r.length > 0 && r.some(cell => cell !== ""));
                         resolve(rows);
                     } else {
                         const data = new Uint8Array(e.target.result);
@@ -102,6 +105,7 @@
                     }
                 } catch(err) { reject(err); }
             };
+            reader.onerror = (err) => reject(err);
             reader.readAsArrayBuffer(file);
         });
     }
@@ -119,28 +123,30 @@
 
         try {
             const rows = await parseFileToRows(fileInput.files[0]);
-            if (rows.length < 2) return statusDiv.innerText = "Error: Invalid table layout.";
+            if (rows.length < 2) { statusDiv.innerText = "Error: Invalid table layout detected."; return; }
 
             const rawHeaders = rows[0];
             const formattedData = [];
+            const uploadTimestamp = new Date().toISOString();
 
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-                if (!row || !row[0]) continue; 
+                if (!row || row.length === 0 || !row[0]) continue; 
 
-                let payloadObj = { trade_date: date };
+                // Inject Date and the explicit timestamp
+                let payloadObj = { 
+                    trade_date: date,
+                    last_updated: uploadTimestamp 
+                };
                 
                 rawHeaders.forEach((header, idx) => {
                     if (!header) return;
                     let headerStr = String(header).toLowerCase().trim();
-                    
-                    // Skip the Date column from Excel since we use the UI date picker
-                    if (headerStr === 'date' || headerStr === 'trade date' || headerStr === 'trade_date') return;
-
                     let dbKey = "";
-                    // EXACT MAPPING: Maps "Bull/Bear Line" directly to Supabase's "bull_bear" column
+
+                    // EXPLICIT MAPPING: Map to "bull/bear" exactly to fix schema error
                     if (headerStr.includes('bull') && headerStr.includes('bear')) {
-                        dbKey = 'bull_bear';
+                        dbKey = 'bull/bear';
                     } else {
                         dbKey = headerStr.replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
                     }
@@ -150,17 +156,21 @@
                     }
                 });
                 
-                if (Object.keys(payloadObj).length > 1) formattedData.push(payloadObj);
+                // Only push if we actually extracted data beyond the timestamps
+                if (Object.keys(payloadObj).length > 2) {
+                    formattedData.push(payloadObj);
+                }
             }
 
-            statusDiv.innerText = `Uploading ${formattedData.length} rows...`;
+            statusDiv.innerText = `Pushing ${formattedData.length} rows to key_levels table...`;
+            
             await client.from('key_levels').delete().eq('trade_date', date);
             const { error } = await client.from('key_levels').insert(formattedData);
             
             statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${formattedData.length} Key Levels.`;
 
         } catch (err) {
-            statusDiv.innerText = "Parsing Error: " + err.message;
+            statusDiv.innerText = "Parsing Exception: " + err.message;
         }
     }
 
@@ -177,9 +187,10 @@
 
         try {
             const rows = await parseFileToRows(fileInput.files[0]);
-            
+            if (rows.length < 3) { statusDiv.innerText = "Error: Missing data matrix bounds."; return; }
+
             const headers = rows[0]; 
-            const spotRow = rows[1]; // Row 2 holds spot prices
+            const spotRow = rows[1]; // Explicitly grabs Row 2 for Spot Prices
             
             const tickerMap = {}; 
             const spotPriceMap = {}; 
@@ -190,18 +201,22 @@
                 if (corePortfolio.includes(tickerStr)) {
                     tickerMap[index] = tickerStr;
                     
+                    // Extract Spot Price from Row 2
                     const rawSpot = spotRow ? spotRow[index] : null;
                     if (rawSpot !== undefined && rawSpot !== null && rawSpot !== '') {
                         spotPriceMap[tickerStr] = parseFloat(String(rawSpot).replace(/[^\d.-]/g, ''));
+                    } else {
+                        spotPriceMap[tickerStr] = null;
                     }
                 }
             });
 
             const flatData = [];
             const regex = /([\d\.]+)\s*\([^\d]*([\d\.]+)([bm]+)\)/gi;
+            const uploadTimestamp = new Date().toISOString();
 
-            // Start loop at 3 (Row 4) to skip the date row ("11-Jul")
-            for (let i = 3; i < rows.length; i++) {
+            // Loop starts at row index 2 (row 3 in Excel)
+            for (let i = 2; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row) continue;
 
@@ -209,7 +224,7 @@
                     const ticker = tickerMap[colIdx];
                     const cellString = row[colIdx];
                     
-                    if (!cellString) return;
+                    if (!cellString || String(cellString).trim() === '') return;
 
                     let match;
                     regex.lastIndex = 0;
@@ -219,20 +234,30 @@
                         let vol = parseFloat(match[2]);
                         const denomination = match[3].toLowerCase();
 
-                        if (denomination.includes('m')) vol = vol / 1000;
+                        if (denomination.includes('m')) {
+                            vol = vol / 1000;
+                        }
 
+                        // EXPLICIT MAPPING: Includes 'spot_price' and 'last_updated'
                         flatData.push({
                             trade_date: date,
                             ticker: ticker,
                             strike: strike,
                             volume: parseFloat(vol.toFixed(3)),
-                            spot_price: spotPriceMap[ticker] // Exact column name required by Supabase
+                            spot_price: spotPriceMap[ticker],
+                            last_updated: uploadTimestamp
                         });
                     }
                 });
             }
 
-            statusDiv.innerText = `Uploading ${flatData.length} order levels...`;
+            if (flatData.length === 0) {
+                statusDiv.innerText = "Error: Found zero core portfolio matching items.";
+                return;
+            }
+
+            statusDiv.innerText = `Pushing ${flatData.length} order levels to Supabase...`;
+            
             await client.from('order_levels').delete().eq('trade_date', date);
             const { error } = await client.from('order_levels').insert(flatData);
             
