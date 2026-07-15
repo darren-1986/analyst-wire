@@ -81,44 +81,23 @@
         window.location.href = 'index.html'; 
     });
 
-    // TRUE HYBRID PARSER: Decodes CSV properly as text, handles XLSX as binary array
+    // TRUE UNIVERSAL PARSER: Forces SheetJS to handle both CSV and XLSX, preserving multiline cells.
     function parseFileToRows(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            const isCsv = file.name.toLowerCase().endsWith('.csv');
-            
             reader.onload = function(e) {
                 try {
-                    if (isCsv) {
-                        const text = e.target.result;
-                        const lines = text.split(/\r?\n/);
-                        const rows = lines.map(line => {
-                            // Regex splits by comma, but ignores commas inside double quotes
-                            const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
-                            return matches.map(m => m.replace(/^"|"$/g, '').trim());
-                        }).filter(r => r.length > 0 && r.some(cell => cell !== ""));
-                        resolve(rows);
-                    } else {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, {type: 'array'});
-                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                        const rows = XLSX.utils.sheet_to_json(sheet, {header: 1, defval: null});
-                        resolve(rows);
-                    }
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet, {header: 1, defval: null});
+                    resolve(rows);
                 } catch(err) { reject(err); }
             };
-
-            if (isCsv) {
-                reader.readAsText(file); // Critical fix for CSV encoding
-            } else {
-                reader.readAsArrayBuffer(file);
-            }
+            reader.readAsArrayBuffer(file);
         });
     }
 
-    // ==========================================
-    // MODULE 1: KEY LEVELS UPLOAD
-    // ==========================================
     async function processKeyLevels() {
         const fileInput = document.getElementById('excelFile-kl');
         const date = document.getElementById('upload-date-kl').value;
@@ -146,10 +125,10 @@
                 
                 rawHeaders.forEach((header, idx) => {
                     if (!header) return;
-                    let headerStr = String(header).toLowerCase().trim();
+                    // Flatten any hidden line breaks inside the header cells just in case
+                    let headerStr = String(header).toLowerCase().replace(/\n|\r/g, ' ').trim();
                     let dbKey = "";
 
-                    // STRICT MAPPING INCLUDES PREVIOUS BB
                     if (headerStr === 'ticker') dbKey = 'ticker';
                     else if (headerStr.includes('previous') && headerStr.includes('bull')) dbKey = 'previous_bull_bear';
                     else if (headerStr === 's.t. bias' || headerStr === 'bias') dbKey = 'bias';
@@ -166,28 +145,20 @@
                     }
                 });
                 
-                if (payloadObj.ticker) {
-                    formattedData.push(payloadObj);
-                }
+                if (payloadObj.ticker) formattedData.push(payloadObj);
             }
 
-            if (formattedData.length === 0) return statusDiv.innerText = "Error: No valid rows extracted.";
-
-            statusDiv.innerText = `Pushing ${formattedData.length} extracted rows to Supabase...`;
+            if (formattedData.length === 0) return statusDiv.innerText = "Error: No valid rows extracted. Please verify header mapping.";
             
+            statusDiv.innerText = `Pushing ${formattedData.length} extracted rows to Supabase...`;
+
             await client.from('key_levels').delete().eq('trade_date', date);
             const { error } = await client.from('key_levels').insert(formattedData);
             
             statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${formattedData.length} Key Levels.`;
-
-        } catch (err) {
-            statusDiv.innerText = "Parsing Error: " + err.message;
-        }
+        } catch (err) { statusDiv.innerText = "Parsing Error: " + err.message; }
     }
 
-    // ==========================================
-    // MODULE 2: ORDER EXPIRIES UPLOAD
-    // ==========================================
     async function processExpiries() {
         const fileInput = document.getElementById('excelFile-exp');
         const date = document.getElementById('upload-date-exp').value;
@@ -198,12 +169,8 @@
 
         try {
             const rows = await parseFileToRows(fileInput.files[0]);
-            
-            const headers = rows[0]; 
-            const spotRow = rows[1]; 
-            
-            const tickerMap = {}; 
-            const spotPriceMap = {}; 
+            const headers = rows[0]; const spotRow = rows[1]; 
+            const tickerMap = {}; const spotPriceMap = {}; 
             const corePortfolio = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CAD', 'EUR/GBP'];
 
             headers.forEach((header, index) => {
@@ -224,26 +191,18 @@
             for (let i = 3; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row) continue;
-
                 Object.keys(tickerMap).forEach(colIdx => {
                     const ticker = tickerMap[colIdx];
                     const cellString = row[colIdx];
                     if (!cellString) return;
-
-                    let match;
-                    regex.lastIndex = 0;
-                    
+                    let match; regex.lastIndex = 0;
                     while ((match = regex.exec(String(cellString))) !== null) {
                         const strike = parseFloat(match[1]);
                         let vol = parseFloat(match[2]);
                         const denomination = match[3].toLowerCase();
-
                         if (denomination.includes('m')) vol = vol / 1000;
-
                         flatData.push({
-                            trade_date: date,
-                            ticker: ticker,
-                            strike: strike,
+                            trade_date: date, ticker: ticker, strike: strike,
                             volume: parseFloat(vol.toFixed(3)),
                             spot_price: spotPriceMap[ticker],
                             last_updated: uploadTimestamp
@@ -255,12 +214,8 @@
             statusDiv.innerText = `Pushing ${flatData.length} order levels to Supabase...`;
             await client.from('order_levels').delete().eq('trade_date', date);
             const { error } = await client.from('order_levels').insert(flatData);
-            
             statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${flatData.length} order levels.`;
-
-        } catch (err) {
-            statusDiv.innerText = "Execution Failure: " + err.message;
-        }
+        } catch (err) { statusDiv.innerText = "Failure: " + err.message; }
     }
 </script>
 </body>
