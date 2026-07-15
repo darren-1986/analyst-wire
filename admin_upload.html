@@ -23,8 +23,7 @@
         button.action-btn { background: #2962ff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; }
         button.action-btn:hover { background: #1e4bd8; }
         .status-msg { margin-top: 20px; font-size: 14px; }
-        /* Debug Panel Styling */
-        #debug-panel { background: #2a2e39; padding: 15px; margin-top: 20px; border-radius: 4px; font-family: monospace; font-size: 11px; white-space: pre-wrap; display: none; color: #ffeb3b; }
+        #debug-panel { background: #2a2e39; padding: 15px; margin-top: 20px; border-radius: 4px; font-family: monospace; font-size: 11px; white-space: pre-wrap; display: none; color: #4CAF50; overflow-x: auto; }
     </style>
 </head>
 <body>
@@ -131,31 +130,38 @@
                 rawHeaders.forEach((header, idx) => {
                     if (header === undefined || header === null) return;
                     
-                    // BRUTE FORCE CLEANUP: Strips EVERYTHING except letters and numbers
-                    let cleanHeader = String(header).toLowerCase().replace(/[^a-z0-9]/g, '');
+                    // Reduce header to just lowercase letters to make matching completely bulletproof
+                    let h = String(header).toLowerCase().replace(/[^a-z]/g, '');
                     let dbKey = "";
 
-                    // STRICT ROUTING
-                    if (cleanHeader.includes('ticker')) dbKey = 'ticker';
-                    else if (cleanHeader.includes('previous')) dbKey = 'prev_bull_bear'; // Catches 'Previous BULL/BEAR'
-                    else if (cleanHeader.includes('bullbear') && !cleanHeader.includes('previous')) dbKey = 'bull_bear_line'; // Catches standard 'BULL/BEAR'
-                    else if (cleanHeader.includes('bias')) dbKey = 'bias';
-                    else if (cleanHeader === 's1') dbKey = 's1';
-                    else if (cleanHeader === 'r1') dbKey = 'r1';
-                    else if (cleanHeader === 's2') dbKey = 's2';
-                    else if (cleanHeader === 'r2') dbKey = 'r2';
-                    else if (cleanHeader.includes('analysis')) dbKey = 'analysis';
-                    else if (cleanHeader.includes('lollipop') || cleanHeader.includes('lollopop')) dbKey = 'lollipop';
+                    if (h.includes('ticker')) dbKey = 'ticker';
+                    else if (h.includes('prev')) dbKey = 'prev_bull_bear'; 
+                    else if (h.includes('bull') || h.includes('bear')) dbKey = 'bull_bear_line'; 
+                    else if (h.includes('bias')) dbKey = 'bias';
+                    else if (h === 's1') dbKey = 's1';
+                    else if (h === 'r1') dbKey = 'r1';
+                    else if (h === 's2') dbKey = 's2';
+                    else if (h === 'r2') dbKey = 'r2';
+                    else if (h.includes('analysis')) dbKey = 'analysis';
+                    else if (h.includes('lollipop') || h.includes('lollopop')) dbKey = 'lollipop';
                     
                     if (dbKey && row[idx] !== undefined && row[idx] !== null) {
                         let val = String(row[idx]).trim();
                         
-                        // FIX GOOGLE SHEETS COMMA DECIMALS (e.g. "1,0850" -> "1.0850")
-                        if (/^-?\d+,\d+$/.test(val)) {
-                            val = val.replace(',', '.');
+                        if (val === '' || val === '-' || val.toLowerCase() === 'n/a') {
+                            payloadObj[dbKey] = null;
+                        } else {
+                            // If this is a numeric column, strict format it so Supabase doesn't reject it
+                            const numericColumns = ['prev_bull_bear', 'bull_bear_line', 's1', 'r1', 's2', 'r2'];
+                            
+                            if (numericColumns.includes(dbKey)) {
+                                // Swap commas for dots, strip all letters/spaces, convert to Float
+                                val = val.replace(/,/g, '.').replace(/[^\d.-]/g, '');
+                                payloadObj[dbKey] = val === '' ? null : parseFloat(val);
+                            } else {
+                                payloadObj[dbKey] = val;
+                            }
                         }
-                        
-                        payloadObj[dbKey] = val === '' ? null : val;
                     }
                 });
                 
@@ -166,14 +172,14 @@
 
             if (formattedData.length === 0) return statusDiv.innerText = "Error: No valid rows extracted.";
 
-            // FIRE THE DIAGNOSTICS TO THE SCREEN
+            // Show exactly what is being sent to Supabase on the screen for proof
             debugDiv.style.display = 'block';
-            debugDiv.innerText = "DIAGNOSTICS - WHAT SCRIPT FOUND:\n\nHeaders Found in Google Sheet:\n" + 
-                                 JSON.stringify(rawHeaders) + 
-                                 "\n\nFirst Row Extracted (Check if bull_bear_line & prev_bull_bear exist here):\n" + 
+            debugDiv.innerText = "--- DATA PREPARED FOR SUPABASE ---\n" + 
+                                 "Rows ready to upload: " + formattedData.length + "\n\n" +
+                                 "Sample of first row (Check if prev_bull_bear is a valid number):\n" + 
                                  JSON.stringify(formattedData[0], null, 2);
 
-            statusDiv.innerText = `Pushing ${formattedData.length} rows to Supabase...`;
+            statusDiv.innerText = `Pushing ${formattedData.length} rows to database...`;
             
             await client.from('key_levels').delete().eq('trade_date', date);
             const { error } = await client.from('key_levels').insert(formattedData);
