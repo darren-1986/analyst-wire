@@ -6,16 +6,19 @@
 <title>Analyst Wire | Key Levels</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
 <style>
+/* Modern typography and base styling */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #090b10; color: #d1d4dc; margin: 0; min-height: 100vh; font-size: 13px; }
 
+/* Navigation */
 .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; }
 .nav-links { display: flex; align-items: center; gap: 5px; }
 .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
 .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
 .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
 
+/* Dropdown Styling */
 .dropdown { position: relative; margin-left: 10px; }
 .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
 .dropbtn:hover { color: #fff; }
@@ -23,6 +26,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; border-radius: 0; }
 .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
+/* Modal Styles */
 .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
 .modal-content { background-color: #0d1117; margin: 5% auto; padding: 35px; border: 1px solid #30363d; width: 80%; max-width: 750px; color: #c9d1d9; border-radius: 12px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
 .close-btn { color: #8b949e; float: right; font-size: 24px; font-weight: normal; cursor: pointer; transition: color 0.2s; line-height: 1; }
@@ -31,6 +35,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 .modal-content h3 { font-weight: 600; color: #fff; margin-top: 25px; }
 .modal-content hr { border: 0; border-top: 1px solid #30363d; margin: 25px 0; }
 
+/* 5-Tier Advanced UI Color Settings */
 .bias-strong-up { color: #2ea043; font-weight: 600; }
 .bias-medium-up { color: #a6e22e; font-weight: 500; }
 .bias-neutral { color: #d29922; font-weight: 600; }
@@ -39,6 +44,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 .trending { background: rgba(41, 98, 255, 0.1); color: #58a6ff; border: 1px solid rgba(41, 98, 255, 0.2); }
 .consolidated { background: rgba(139, 148, 158, 0.1); color: #8b949e; border: 1px solid rgba(139, 148, 158, 0.2); }
 
+/* Interactive Ticker Element */
 .clickable-ticker { cursor: pointer; }
 .clickable-ticker:hover .ticker-text { color: #58a6ff !important; }
 .clickable-ticker:hover svg { fill: #58a6ff !important; }
@@ -46,6 +52,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 .ticker-text { font-weight: 600; color: #fff; transition: color 0.15s ease, text-shadow 0.15s ease; font-family: 'Inter', sans-serif; }
 .chart-icon-svg { transition: fill 0.15s ease; display: inline-block; vertical-align: middle; }
 
+/* Color-Coded Lollipop Display System Components */
 .lollipop-system { display: flex; align-items: center; gap: 12px; margin-top: 5px; height: 38px; }
 .lollipop-indicator-dot { width: 12px; height: 12px; border-radius: 50%; position: relative; flex-shrink: 0; }
 .lollipop-indicator-dot::after { content: ''; position: absolute; top: 12px; left: 5px; width: 2px; height: 26px; background: #30363d; }
@@ -60,10 +67,50 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 .lolli-range .lollipop-indicator-dot { background: #d29922; box-shadow: 0 0 8px rgba(210, 153, 34, 0.4); }
 .lolli-range .lollipop-badge { background: rgba(210, 153, 34, 0.1); border: 1px solid rgba(210, 153, 34, 0.3); }
 
-.grid-container { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; padding: 20px; height: calc(100vh - 55px); max-width: 100%; box-sizing: border-box; }
-.quadrant { background: #0d1117; border-radius: 10px; border: 1px solid #30363d; padding: 12px; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.2); height: 100%; box-sizing: border-box; overflow: hidden; }
-.placeholder-quadrant { align-items: center; justify-content: center; color: #8b949e; font-weight: 500; border: 1px dashed #30363d; background: rgba(13, 17, 23, 0.4); }
-.quadrant-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+/* ---------------------------------------------------
+   4-QUADRANT GRID SYSTEM
+   --------------------------------------------------- */
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+    height: calc(100vh - 55px);
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.quadrant {
+    background: #0d1117;
+    border-radius: 10px;
+    border: 1px solid #30363d;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.placeholder-quadrant {
+    align-items: center;
+    justify-content: center;
+    color: #8b949e;
+    font-weight: 500;
+    border: 1px dashed #30363d;
+    background: rgba(13, 17, 23, 0.4);
+}
+
+.quadrant-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
 
 .header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0; }
 .quadrant h1 { font-size: 15px; margin: 0; font-weight: 600; color: #fff; letter-spacing: -0.5px; }
@@ -74,9 +121,25 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
 select, input[type="date"] { background: #0d1117; color: #c9d1d9; padding: 3px 6px; border: 1px solid #30363d; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 10px; outline: none; transition: border-color 0.2s; cursor: pointer; }
 select:focus, input[type="date"]:focus { border-color: #2962ff; }
 
-.last-updated { font-size: 9.5px; color: #8b949e; font-family: 'JetBrains Mono', monospace; background: rgba(139, 148, 158, 0.1); padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(139, 148, 158, 0.2); }
+.last-updated {
+    font-size: 9.5px;
+    color: #8b949e;
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(139, 148, 158, 0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(139, 148, 158, 0.2);
+}
 
-.table-container { background: transparent; border: none; box-shadow: none; flex: 1; overflow-y: auto; min-height: 0; }
+.table-container {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
 .table-container::-webkit-scrollbar { width: 6px; }
 .table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
 .table-container::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
@@ -94,6 +157,7 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 .expand-toggle-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; cursor: pointer; padding: 2px 5px; border-radius: 4px; font-size: 8.5px; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
 .expand-toggle-btn:hover { border-color: #8b949e; color: #c9d1d9; }
 
+/* DRAWER COMPACTING */
 .drawer-row { display: none; background: #05070a !important; border-bottom: 1px solid #1c2230; }
 .drawer-row td { padding: 0; border-bottom: none; }
 .drawer-container { display: grid; grid-template-columns: 1.3fr 1fr; gap: 10px; padding: 10px 12px; border-left: 3px solid #2962ff; align-items: stretch; }
@@ -108,6 +172,7 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 .macro-commentary-box { margin-top: 8px; border-top: 1px solid #1c2230; padding-top: 8px; display: block; }
 .drawer-analysis-text { margin: 0; font-size: 10px; color: #c9d1d9; line-height: 1.3; }
 
+/* Dynamic Frame Scaling for Quadrant */
 .embedded-chart-frame { position: relative; height: 100%; min-height: 140px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; }
 .embedded-chart-frame iframe { position: absolute; top: 0; left: 0; width: 166.66%; height: 166.66%; transform: scale(0.6); transform-origin: top left; border: none; }
 </style>
@@ -119,7 +184,9 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 <span class="close-btn" onclick="closeModal('radarModal')">&times;</span>
 <h2>How to Use the Market Trade Radar</h2>
 <p style="color: #8b949e; margin-top: -10px; font-size: 14px;">A professional-grade terminal guide to decoding intraday market structures and identifying top-tier trade ideas.</p>
+
 <hr>
+
 <h3>1. Structural Component Matrix</h3>
 <p><strong>BIAS (5-Tier Framework):</strong> Highlights current market direction and institutional momentum relative to the central pivot area.</p>
 <ul style="line-height: 1.6;">
@@ -129,25 +196,31 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     <li><span class="bias-medium-down">▼ Medium Bearish:</span> Moderate downward bias. Testing pivot floors.</li>
     <li><span class="bias-strong-down">▼ Strong Bearish:</span> Heavy distribution/selling pressure. Look for short continuations.</li>
 </ul>
+
 <p><strong>Bull/Bear Line:</strong> The primary institutional pivot point for the day. If the market is trading above this number, sentiment is fundamentally long; below this number, sentiment is fundamentally short.</p>
+
 <p><strong>Market State & Volatility Engine:</strong> Automatically measures the absolute distance between your primary intraday support (S1) and resistance (R1).
     <ul style="line-height: 1.6;">
         <li><strong>Trending:</strong> Volatility has expanded past standard asset true ranges (e.g., &gt;75 pips on major FX, &gt;80 points on Indices, &gt;$15 on Gold). Expect continuous follow-through.</li>
         <li><strong>Consolidated:</strong> Volatility is compressed inside standard ranges. Expect range-bound, choppy, or mean-reverting price action.</li>
     </ul>
 </p>
+
 <hr>
+
 <h3>2. Playbook: How to Find Trade Ideas</h3>
 <p style="color: #fff; font-weight: 600; margin-bottom: 5px;">💡 Strategy A: The Breakout / Momentum Play</p>
 <ul style="line-height: 1.6;">
     <li><strong>The Setup:</strong> Look for assets displaying a <span class="bias-strong-up">Strong Bullish</span> or <span class="bias-strong-down">Strong Bearish</span> Bias combined with a <span class="state-badge trending" style="font-size: 9px; padding: 2px 6px;">TRENDING</span> Market State.</li>
     <li><strong>Execution:</strong> Avoid fading these moves. Instead, filter for these tickers, open your charts, and look for pullback entries (e.g., buying a minor dip toward the Bull/Bear Line in a Strong Bullish trend) to ride the expansion wave.</li>
 </ul>
+
 <p style="color: #fff; font-weight: 600; margin-bottom: 5px; margin-top: 20px;">💡 Strategy B: The Range Reversion Play</p>
 <ul style="line-height: 1.6;">
     <li><strong>The Setup:</strong> Look for assets displaying a <span class="bias-neutral">Neutral</span>, Medium Bullish, or Medium Bearish Bias combined with a <span class="state-badge consolidated" style="font-size: 9px; padding: 2px 6px;">CONSOLIDATED</span> Market State.</li>
     <li><strong>Execution:</strong> These markets are trapped in ranges. Look for short opportunities at R1 / R2 or long opportunities at S1 / S2, targeting a price return back to the central Bull/Bear Line.</li>
 </ul>
+
 <p style="color: #fff; font-weight: 600; margin-bottom: 5px; margin-top: 20px;">💡 Strategy C: The Dynamic Pivot Shift</p>
 <ul style="line-height: 1.6;">
     <li><strong>The Setup:</strong> Monitor assets carrying a <span class="bias-neutral">Neutral</span> bias. This means the market is sitting dead on its institutional pivot line.</li>
@@ -161,21 +234,28 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 <span class="close-btn" onclick="closeModal('orderModal')">&times;</span>
 <h2>How to Use the Order Flow Strategy Engine</h2>
 <p style="color: #8b949e; margin-top: -10px; font-size: 14px;">A tactical guide to trading large institutional option expiry levels.</p>
+
 <hr>
+
 <h3>Understanding Dynamic Expiry Levels</h3>
 <p>This module tracks massive institutional option expiries. These strikes act as magnetic "gravity wells" for price action. The engine dynamically calculates the volume against the specific asset class (e.g., a 600m order is massive for AUD/USD, but standard for EUR/USD) to dictate how the market will behave at that level.</p>
+
 <ul style="line-height: 1.6;">
     <li><span style="color:#f85149; font-weight:bold;">INSTITUTIONAL WALL:</span><br>
     Extreme, top-tier institutional defense is anticipated for this specific currency pair. Institutions are heavily incentivized to defend this strike. Expect a sharp rejection. <br>
     <em>Strategy:</em> Fade the approach. The engine calculates a defensive 20-pip Stop Loss behind the wall, targeting a 50-pip mean reversion.</li>
+    
     <li style="margin-top: 15px;"><span style="color:#d29922; font-weight:bold;">MAJOR CLUSTER:</span><br>
     Heavy market liquidity. The level will cause a significant reaction and chop, but may not hold as a permanent wall. <br>
     <em>Strategy:</em> Scalp the rotation. The engine calculates a 15-pip Stop Loss, targeting a 30-pip bounce.</li>
+
     <li style="margin-top: 15px;"><span style="color:#58a6ff; font-weight:bold;">MINOR CLUSTER:</span><br>
     Standard liquidity. Expect minor stalling before trend continuation. <br>
     <em>Strategy:</em> The engine calculates a tight 10-pip stop, targeting 20 pips.</li>
 </ul>
+
 <hr>
+
 <h3>Automated Buy vs Sell Execution</h3>
 <p>Because the engine is fed live Spot Prices alongside the Strike Expiries, it knows exactly which direction the market is approaching the level from.</p>
 <ul style="line-height: 1.6;">
@@ -183,6 +263,7 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     <li>If <strong>Strike &lt; Spot Price</strong>: Price is dropping down. The level is designated as <strong>SUPPORT (BUY)</strong>.</li>
 </ul>
 <p>The system will instantly output the exact Stop Loss and Take Profit prices so you can place limits directly into your brokerage without manual math.</p>
+
 </div>
 </div>
 
@@ -303,7 +384,6 @@ function formatTimestamp(isoString) {
     if (!isoString) return 'Unknown';
     try {
         const d = new Date(isoString);
-        if(isNaN(d)) return 'Unknown';
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     } catch(e) {
         return 'Unknown';
@@ -419,7 +499,7 @@ function getDynamicLiquidityStatus(ticker, volNum) {
 }
 
 // ----------------------------------------------------------------
-// TRUE BUY/SELL ORDER FLOW ENGINE
+// TRUE BUY/SELL ORDER FLOW ENGINE (ISOLATED DYNAMIC TIMESTAMPS)
 // ----------------------------------------------------------------
 async function fetchOrderData() {
     const dateStr = document.getElementById('order-date-filter').value;
@@ -443,7 +523,8 @@ async function fetchOrderData() {
             return;
         }
 
-        const timestampRaw = data[0].last_updated || data[0].created_at || data[0].inserted_at;
+        // ISOLATED ORDER FLOW TIMESTAMPS FROM SUPABASE NATIVE METADATA
+        const timestampRaw = data[0].created_at || data[0].inserted_at;
         badge.innerText = `Updated: ${formatTimestamp(timestampRaw)}`;
 
         data.sort((a, b) => parseFloat(b.volume) - parseFloat(a.volume));
@@ -455,7 +536,9 @@ async function fetchOrderData() {
             const strikeNum = parseFloat(item.strike);
             
             const engineResult = getDynamicLiquidityStatus(item.ticker, volNum);
-            const spot = item.spot_price !== undefined ? parseFloat(item.spot_price) : null;
+            
+            // MAPS TO NEW PHYSICAL DATABASE COLUMN DATA
+            const spot = item.spot_price !== undefined && item.spot_price !== null ? parseFloat(item.spot_price) : null;
             
             let actionText = engineResult.label;
             let exactSL = "N/A";
@@ -495,7 +578,7 @@ async function fetchOrderData() {
 }
 
 // ----------------------------------------------------------------
-// RADAR ENGINE
+// FULLY RESTORED RADAR ENGINE (ISOLATED KEY LEVELS TIMESTAMPS)
 // ----------------------------------------------------------------
 async function fetchRadarData() {
     const dateStr = document.getElementById('date-filter').value;
@@ -520,7 +603,8 @@ async function fetchRadarData() {
         const yesterdayData = yesterdayRes.data || [];
 
         if (todayData.length > 0) {
-            const timestampRaw = todayData[0].last_updated || todayData[0].created_at || todayData[0].inserted_at;
+            // ISOLATED RADAR TIMESTAMPS FROM SUPABASE NATIVE METADATA
+            const timestampRaw = todayData[0].created_at || todayData[0].inserted_at;
             badge.innerText = `Updated: ${formatTimestamp(timestampRaw)}`;
         } else {
             badge.innerText = "No Data";
@@ -546,11 +630,11 @@ async function fetchRadarData() {
 
             const yRow = yesterdayData.find(y => y.ticker === todayRow.ticker);
             if (yRow) {
-                // Safely grab bull/bear line whichever name it saved as
+                // FIXED SCHEMA ACCESS MAPPING LAYER
                 const todayBB = parseFloat(todayRow['bull/bear'] || todayRow.bull_bear_line || todayRow.bull_bear || 0);
-                const yBB = parseFloat(yRow['bull/bear'] || yRow.bull_bear_line || yRow.bull_bear || 0);
+                const yesterdayBB = parseFloat(yRow['bull/bear'] || yRow.bull_bear_line || yRow.bull_bear || 0);
                 
-                const bbDelta = todayBB - yBB;
+                const bbDelta = todayBB - yesterdayBB;
                 todayRow.value_migration = bbDelta > 0 ? "Upward (Accumulation)" : (bbDelta < 0 ? "Downward (Distribution)" : "Flat");
 
                 const todayRange = Math.abs(parseFloat(todayRow.r1) - parseFloat(todayRow.s1));
@@ -721,8 +805,8 @@ function render() {
             convictionIcon = '<span title="Top Conviction Loser" style="margin-left: 6px; font-size: 9px; font-weight: 700; color: #f85149; letter-spacing: 0.5px;">[WEAK]</span>';
         }
 
-        // Safely pull Bull/Bear value
-        const displayBB = r['bull/bear'] || r.bull_bear_line || r.bull_bear || 'N/A';
+        // TARGETS CORRECT MAPPED KEY IN DOCK MATRIX
+        const bullBearValue = r['bull/bear'] || r.bull_bear_line || r.bull_bear || 'N/A';
 
         return `
         <tr>
@@ -734,7 +818,7 @@ function render() {
             </div>
         </td>
         <td class="${biasClass}">${directionalArrow}</td>
-        <td>${displayBB}</td>
+        <td>${bullBearValue}</td>
         <td><span class="state-badge ${stateClass}">${state}</span></td>
         <td><span class="range-badge">${metrics.rangeFormatted}</span></td>
         <td>
