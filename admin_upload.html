@@ -78,9 +78,9 @@
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-        await client.auth.signOut();
-        window.location.href = 'index.html';
+    document.getElementById('logoutBtn').addEventListener('click', async () => { 
+        await client.auth.signOut(); 
+        window.location.href = 'index.html'; 
     });
 
     function parseFileToRows(file) {
@@ -100,7 +100,7 @@
     }
 
     // ==========================================================
-    // PROCESS KEY LEVELS ENGINE (YOUR EXACT WORKING CODE)
+    // PROCESS KEY LEVELS ENGINE 
     // ==========================================================
     async function processKeyLevels() {
         const fileInput = document.getElementById('excelFile-kl');
@@ -133,12 +133,13 @@
                 rawHeaders.forEach((header, idx) => {
                     if (header === undefined || header === null) return;
 
-                    // PRESERVES NUMBERS: Strips punctuation/spaces but leaves numbers intact so 's1' works
+                    // Bulletproof parsing: Strips out hidden newlines and spaces completely
                     let h = String(header).toLowerCase().replace(/[^a-z0-9]/g, '');
                     let dbKey = "";
 
-                    if (h.includes('ticker')) dbKey = 'ticker';
-                    else if (h.includes('prev')) dbKey = 'prev_bull_bear';
+                    // Hyper-aggressive mapping to guarantee it catches the column
+                    if (h.includes('ticker') || h.includes('symbol')) dbKey = 'ticker';
+                    else if (h.includes('prev') || h.includes('prior') || h.includes('previous')) dbKey = 'prev_bull_bear';
                     else if (h.includes('bull') || h.includes('bear')) dbKey = 'bull_bear_line';
                     else if (h.includes('bias')) dbKey = 'bias';
                     else if (h === 's1') dbKey = 's1';
@@ -158,7 +159,9 @@
 
                             if (numericColumns.includes(dbKey)) {
                                 val = val.replace(/,/g, '.').replace(/[^\d.-]/g, '');
-                                payloadObj[dbKey] = val === '' ? null : parseFloat(val);
+                                let parsedVal = parseFloat(val);
+                                // The Failsafe: Prevents NaN corruption from silent-dropping in Supabase
+                                payloadObj[dbKey] = isNaN(parsedVal) ? null : parsedVal;
                             } else {
                                 payloadObj[dbKey] = val;
                             }
@@ -174,7 +177,9 @@
             if (formattedData.length === 0) return statusDiv.innerText = "Error: No valid rows extracted.";
 
             debugDiv.style.display = 'block';
-            debugDiv.innerText = "--- DATA PREPARED FOR SUPABASE ---\n" +
+            debugDiv.innerText = "--- DIAGNOSTICS ---\n" +
+                                 "RAW HEADERS DETECTED: " + JSON.stringify(rawHeaders) + "\n\n" +
+                                 "--- DATA PREPARED FOR SUPABASE ---\n" +
                                  "Rows ready to upload: " + formattedData.length + "\n\n" +
                                  "Sample of first row (Verifying all key levels are populated):\n" +
                                  JSON.stringify(formattedData[0], null, 2);
@@ -196,7 +201,7 @@
     }
 
     // ==========================================================
-    // FX OPTION EXPIRIES UPLOAD ENGINE 
+    // FX OPTION EXPIRIES UPLOAD ENGINE (FIXED LAYOUT & ROW SYNC)
     // ==========================================================
     async function processExpiries() {
         const fileInput = document.getElementById('excelFile-exp');
@@ -229,6 +234,7 @@
             });
 
             const flatData = [];
+            // Regex handles mixed content entries like 1.0850 (600m) or 1,0850 (600m) safely
             const regex = /([\d\.,]+)\s*\([^\d]*([\d\.,]+)([bm]+)\)/gi;
             const uploadTimestamp = new Date().toISOString();
 
