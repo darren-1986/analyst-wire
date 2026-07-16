@@ -39,7 +39,7 @@
 <div class="upload-container">
     <div class="tabs-header">
         <button class="tab-button active" onclick="switchTab(event, 'tab-key-levels')">Key Levels</button>
-        <button class="tab-button" onclick="switchTab(event, 'tab-expiries')">Order Expiries</button>
+        <button class="tab-button" onclick="switchTab(event, 'tab-expiries')">FX Option Expiries</button>
         <button class="tab-button" onclick="switchTab(event, 'tab-project-3')">Section 3</button>
     </div>
 
@@ -54,7 +54,7 @@
     </div>
 
     <div id="tab-expiries" class="tab-pane">
-        <h2>Upload Order Expiries</h2>
+        <h2>Upload FX Option Expiries</h2>
         <label>Select Trade Date:</label>
         <input type="date" id="upload-date-exp">
         <input type="file" id="excelFile-exp" accept=".csv, text/csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, */*" />
@@ -99,6 +99,9 @@
         });
     }
 
+    // ==========================================================
+    // PROCESS KEY LEVELS ENGINE (COMPLETELY UNTOUCHED)
+    // ==========================================================
     async function processKeyLevels() {
         const fileInput = document.getElementById('excelFile-kl');
         const date = document.getElementById('upload-date-kl').value;
@@ -130,7 +133,6 @@
                 rawHeaders.forEach((header, idx) => {
                     if (header === undefined || header === null) return;
                     
-                    // PRESERVES NUMBERS: Strips punctuation/spaces but leaves numbers intact so 's1' works
                     let h = String(header).toLowerCase().replace(/[^a-z0-9]/g, '');
                     let dbKey = "";
 
@@ -192,19 +194,23 @@
         }
     }
 
+    // ==========================================================
+    // FX OPTION EXPIRIES UPLOAD ENGINE 
+    // ==========================================================
     async function processExpiries() {
         const fileInput = document.getElementById('excelFile-exp');
         const date = document.getElementById('upload-date-exp').value;
         const statusDiv = document.getElementById('status-exp');
         
         if (!fileInput.files.length || !date) return alert("Select a data file AND date entry.");
-        statusDiv.innerText = "Parsing Order Expiries...";
+        statusDiv.innerText = "Parsing FX Option Expiries...";
 
         try {
             const rows = await parseFileToRows(fileInput.files[0]);
+            if (rows.length < 3) return statusDiv.innerText = "Error: Spreadsheet needs at least 3 rows of data.";
             
-            const headers = rows[0]; 
-            const spotRow = rows[1]; 
+            const headers = rows[0]; // Row 1: Tickers
+            const spotRow = rows[1]; // Row 2: Spot Prices
             
             const tickerMap = {}; 
             const spotPriceMap = {}; 
@@ -216,16 +222,18 @@
                     tickerMap[index] = tickerStr;
                     const rawSpot = spotRow ? spotRow[index] : null;
                     if (rawSpot !== undefined && rawSpot !== null && String(rawSpot).trim() !== '') {
-                        spotPriceMap[tickerStr] = parseFloat(String(rawSpot).replace(/[^\d.-]/g, ''));
+                        spotPriceMap[tickerStr] = parseFloat(String(rawSpot).replace(/,/g, '.').replace(/[^\d.-]/g, ''));
                     }
                 }
             });
 
             const flatData = [];
-            const regex = /([\d\.]+)\s*\([^\d]*([\d\.]+)([bm]+)\)/gi;
+            // Regex handles standard "1.0850 (600m)" and allows commas just in case "1,0850 (600m)"
+            const regex = /([\d\.,]+)\s*\([^\d]*([\d\.,]+)([bm]+)\)/gi;
             const uploadTimestamp = new Date().toISOString();
 
-            for (let i = 3; i < rows.length; i++) {
+            // Loop starts at index 2 (Row 3 in Excel), which contains the Day + Orders
+            for (let i = 2; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row) continue;
 
@@ -238,8 +246,8 @@
                     regex.lastIndex = 0;
                     
                     while ((match = regex.exec(String(cellString))) !== null) {
-                        const strike = parseFloat(match[1]);
-                        let vol = parseFloat(match[2]);
+                        const strike = parseFloat(match[1].replace(/,/g, '.'));
+                        let vol = parseFloat(match[2].replace(/,/g, '.'));
                         const denomination = match[3].toLowerCase();
 
                         if (denomination.includes('m')) vol = vol / 1000;
@@ -249,18 +257,20 @@
                             ticker: ticker,
                             strike: strike,
                             volume: parseFloat(vol.toFixed(3)),
-                            spot_price: spotPriceMap[ticker],
+                            spot_price: spotPriceMap[ticker] || null,
                             last_updated: uploadTimestamp
                         });
                     }
                 });
             }
 
-            statusDiv.innerText = `Pushing ${flatData.length} order levels to Supabase...`;
+            if (flatData.length === 0) return statusDiv.innerText = "Error: No matching orders found. Ensure format is like '1.0850 (600m)'.";
+
+            statusDiv.innerText = `Pushing ${flatData.length} FX option orders to Supabase...`;
             await client.from('order_levels').delete().eq('trade_date', date);
             const { error } = await client.from('order_levels').insert(flatData);
             
-            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${flatData.length} order levels.`;
+            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${flatData.length} FX Option Expiries.`;
 
         } catch (err) {
             statusDiv.innerText = "Execution Failure: " + err.message;
