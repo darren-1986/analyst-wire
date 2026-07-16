@@ -78,9 +78,9 @@
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    document.getElementById('logoutBtn').addEventListener('click', async () => { 
-        await client.auth.signOut(); 
-        window.location.href = 'index.html'; 
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await client.auth.signOut();
+        window.location.href = 'index.html';
     });
 
     function parseFileToRows(file) {
@@ -100,7 +100,7 @@
     }
 
     // ==========================================================
-    // PROCESS KEY LEVELS ENGINE (YOUR WORKING CODE - UNTOUCHED)
+    // PROCESS KEY LEVELS ENGINE (YOUR WORKING CODE + HYPER-STRICT MATCHER)
     // ==========================================================
     async function processKeyLevels() {
         const fileInput = document.getElementById('excelFile-kl');
@@ -133,13 +133,14 @@
                 rawHeaders.forEach((header, idx) => {
                     if (header === undefined || header === null) return;
 
-                    // PRESERVES NUMBERS: Strips punctuation/spaces but leaves numbers intact so 's1' works
+                    // PRESERVES NUMBERS: Strips punctuation/spaces but leaves numbers intact
                     let h = String(header).toLowerCase().replace(/[^a-z0-9]/g, '');
                     let dbKey = "";
 
+                    // HYPER-SPECIFIC MATCHER FIX
                     if (h.includes('ticker')) dbKey = 'ticker';
-                    else if (h.includes('prev')) dbKey = 'prev_bull_bear';
-                    else if (h.includes('bull') || h.includes('bear')) dbKey = 'bull_bear_line';
+                    else if (h.includes('previousbull') || (h.includes('prev') && (h.includes('bull') || h.includes('bear')))) dbKey = 'prev_bull_bear';
+                    else if ((h.includes('bull') || h.includes('bear')) && !h.includes('prev')) dbKey = 'bull_bear_line';
                     else if (h.includes('bias')) dbKey = 'bias';
                     else if (h === 's1') dbKey = 's1';
                     else if (h === 'r1') dbKey = 'r1';
@@ -196,7 +197,7 @@
     }
 
     // ==========================================================
-    // FX OPTION EXPIRIES UPLOAD ENGINE 
+    // FX OPTION EXPIRIES UPLOAD ENGINE (FIXED LAYOUT & ROW SYNC)
     // ==========================================================
     async function processExpiries() {
         const fileInput = document.getElementById('excelFile-exp');
@@ -229,6 +230,7 @@
             });
 
             const flatData = [];
+            // Regex handles mixed content entries like 1.0850 (600m) or 1,0850 (600m) safely
             const regex = /([\d\.,]+)\s*\([^\d]*([\d\.,]+)([bm]+)\)/gi;
             const uploadTimestamp = new Date().toISOString();
 
