@@ -100,7 +100,7 @@
     }
 
     // ==========================================================
-    // PROCESS KEY LEVELS ENGINE (YOUR WORKING CODE + HYPER-STRICT MATCHER)
+    // PROCESS KEY LEVELS ENGINE (YOUR EXACT WORKING CODE)
     // ==========================================================
     async function processKeyLevels() {
         const fileInput = document.getElementById('excelFile-kl');
@@ -133,14 +133,13 @@
                 rawHeaders.forEach((header, idx) => {
                     if (header === undefined || header === null) return;
 
-                    // PRESERVES NUMBERS: Strips punctuation/spaces but leaves numbers intact
+                    // PRESERVES NUMBERS: Strips punctuation/spaces but leaves numbers intact so 's1' works
                     let h = String(header).toLowerCase().replace(/[^a-z0-9]/g, '');
                     let dbKey = "";
 
-                    // HYPER-SPECIFIC MATCHER FIX
                     if (h.includes('ticker')) dbKey = 'ticker';
-                    else if (h.includes('previousbull') || (h.includes('prev') && (h.includes('bull') || h.includes('bear')))) dbKey = 'prev_bull_bear';
-                    else if ((h.includes('bull') || h.includes('bear')) && !h.includes('prev')) dbKey = 'bull_bear_line';
+                    else if (h.includes('prev')) dbKey = 'prev_bull_bear';
+                    else if (h.includes('bull') || h.includes('bear')) dbKey = 'bull_bear_line';
                     else if (h.includes('bias')) dbKey = 'bias';
                     else if (h === 's1') dbKey = 's1';
                     else if (h === 'r1') dbKey = 'r1';
@@ -197,7 +196,7 @@
     }
 
     // ==========================================================
-    // FX OPTION EXPIRIES UPLOAD ENGINE (FIXED LAYOUT & ROW SYNC)
+    // FX OPTION EXPIRIES UPLOAD ENGINE 
     // ==========================================================
     async function processExpiries() {
         const fileInput = document.getElementById('excelFile-exp');
@@ -230,7 +229,6 @@
             });
 
             const flatData = [];
-            // Regex handles mixed content entries like 1.0850 (600m) or 1,0850 (600m) safely
             const regex = /([\d\.,]+)\s*\([^\d]*([\d\.,]+)([bm]+)\)/gi;
             const uploadTimestamp = new Date().toISOString();
 
