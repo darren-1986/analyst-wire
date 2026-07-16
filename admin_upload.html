@@ -100,16 +100,16 @@
     }
 
     // ==========================================================
-    // PROCESS KEY LEVELS ENGINE (COMPLETELY UNTOUCHED)
+    // PROCESS KEY LEVELS ENGINE (YOUR WORKING CODE - UNTOUCHED)
     // ==========================================================
     async function processKeyLevels() {
         const fileInput = document.getElementById('excelFile-kl');
         const date = document.getElementById('upload-date-kl').value;
         const statusDiv = document.getElementById('status-kl');
         const debugDiv = document.getElementById('debug-panel');
-        
+
         debugDiv.style.display = 'none';
-        
+
         if (!fileInput.files.length || !date) return alert("Select a file AND choose a target date.");
         statusDiv.innerText = "Processing Key Levels Data...";
 
@@ -123,22 +123,23 @@
 
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-                if (!row || !row[0]) continue; 
+                if (!row || !row[0]) continue;
 
-                let payloadObj = { 
+                let payloadObj = {
                     trade_date: date,
                     last_updated: uploadTimestamp
                 };
-                
+
                 rawHeaders.forEach((header, idx) => {
                     if (header === undefined || header === null) return;
-                    
+
+                    // PRESERVES NUMBERS: Strips punctuation/spaces but leaves numbers intact so 's1' works
                     let h = String(header).toLowerCase().replace(/[^a-z0-9]/g, '');
                     let dbKey = "";
 
                     if (h.includes('ticker')) dbKey = 'ticker';
-                    else if (h.includes('prev')) dbKey = 'prev_bull_bear'; 
-                    else if (h.includes('bull') || h.includes('bear')) dbKey = 'bull_bear_line'; 
+                    else if (h.includes('prev')) dbKey = 'prev_bull_bear';
+                    else if (h.includes('bull') || h.includes('bear')) dbKey = 'bull_bear_line';
                     else if (h.includes('bias')) dbKey = 'bias';
                     else if (h === 's1') dbKey = 's1';
                     else if (h === 'r1') dbKey = 'r1';
@@ -146,15 +147,15 @@
                     else if (h === 'r2') dbKey = 'r2';
                     else if (h.includes('analysis')) dbKey = 'analysis';
                     else if (h.includes('lollipop') || h.includes('lollopop')) dbKey = 'lollipop';
-                    
+
                     if (dbKey && row[idx] !== undefined && row[idx] !== null) {
                         let val = String(row[idx]).trim();
-                        
+
                         if (val === '' || val === '-' || val.toLowerCase() === 'n/a') {
                             payloadObj[dbKey] = null;
                         } else {
                             const numericColumns = ['prev_bull_bear', 'bull_bear_line', 's1', 'r1', 's2', 'r2'];
-                            
+
                             if (numericColumns.includes(dbKey)) {
                                 val = val.replace(/,/g, '.').replace(/[^\d.-]/g, '');
                                 payloadObj[dbKey] = val === '' ? null : parseFloat(val);
@@ -164,7 +165,7 @@
                         }
                     }
                 });
-                
+
                 if (payloadObj.ticker) {
                     formattedData.push(payloadObj);
                 }
@@ -173,16 +174,16 @@
             if (formattedData.length === 0) return statusDiv.innerText = "Error: No valid rows extracted.";
 
             debugDiv.style.display = 'block';
-            debugDiv.innerText = "--- DATA PREPARED FOR SUPABASE ---\n" + 
+            debugDiv.innerText = "--- DATA PREPARED FOR SUPABASE ---\n" +
                                  "Rows ready to upload: " + formattedData.length + "\n\n" +
-                                 "Sample of first row (Verifying all key levels are populated):\n" + 
+                                 "Sample of first row (Verifying all key levels are populated):\n" +
                                  JSON.stringify(formattedData[0], null, 2);
 
             statusDiv.innerText = `Pushing ${formattedData.length} rows to database...`;
-            
+
             await client.from('key_levels').delete().eq('trade_date', date);
             const { error } = await client.from('key_levels').insert(formattedData);
-            
+
             if (error) {
                 statusDiv.innerText = "Supabase Error: " + error.message;
             } else {
@@ -201,19 +202,19 @@
         const fileInput = document.getElementById('excelFile-exp');
         const date = document.getElementById('upload-date-exp').value;
         const statusDiv = document.getElementById('status-exp');
-        
+
         if (!fileInput.files.length || !date) return alert("Select a data file AND date entry.");
         statusDiv.innerText = "Parsing FX Option Expiries...";
 
         try {
             const rows = await parseFileToRows(fileInput.files[0]);
-            if (rows.length < 3) return statusDiv.innerText = "Error: Spreadsheet needs at least 3 rows of data.";
-            
-            const headers = rows[0]; // Row 1: Tickers
+            if (rows.length < 3) return statusDiv.innerText = "Error: Dataset lacks required structural row depth.";
+
+            const headers = rows[0]; // Row 1: Tickers/Currencies
             const spotRow = rows[1]; // Row 2: Spot Prices
-            
-            const tickerMap = {}; 
-            const spotPriceMap = {}; 
+
+            const tickerMap = {};
+            const spotPriceMap = {};
             const corePortfolio = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CAD', 'EUR/GBP'];
 
             headers.forEach((header, index) => {
@@ -228,11 +229,10 @@
             });
 
             const flatData = [];
-            // Regex handles standard "1.0850 (600m)" and allows commas just in case "1,0850 (600m)"
             const regex = /([\d\.,]+)\s*\([^\d]*([\d\.,]+)([bm]+)\)/gi;
             const uploadTimestamp = new Date().toISOString();
 
-            // Loop starts at index 2 (Row 3 in Excel), which contains the Day + Orders
+            // Row 3 is index 2 in programmatic arrays
             for (let i = 2; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row) continue;
@@ -244,7 +244,7 @@
 
                     let match;
                     regex.lastIndex = 0;
-                    
+
                     while ((match = regex.exec(String(cellString))) !== null) {
                         const strike = parseFloat(match[1].replace(/,/g, '.'));
                         let vol = parseFloat(match[2].replace(/,/g, '.'));
@@ -264,13 +264,13 @@
                 });
             }
 
-            if (flatData.length === 0) return statusDiv.innerText = "Error: No matching orders found. Ensure format is like '1.0850 (600m)'.";
+            if (flatData.length === 0) return statusDiv.innerText = "Error: Zero options columns successfully targeted.";
 
-            statusDiv.innerText = `Pushing ${flatData.length} FX option orders to Supabase...`;
+            statusDiv.innerText = `Pushing ${flatData.length} FX Option entries to Supabase...`;
             await client.from('order_levels').delete().eq('trade_date', date);
             const { error } = await client.from('order_levels').insert(flatData);
-            
-            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${flatData.length} FX Option Expiries.`;
+
+            statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${flatData.length} FX Option Expiries seamlessly.`;
 
         } catch (err) {
             statusDiv.innerText = "Execution Failure: " + err.message;
