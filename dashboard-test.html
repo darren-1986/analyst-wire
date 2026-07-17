@@ -1,1 +1,583 @@
-gg
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="media/favicon.png">
+    <title>Analyst Wire | Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <style>
+        /* Modern typography import from Key Levels */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        /* Force hide TradingView branding by cropping the container */
+        .ticker-wrapper { height: 40px; overflow: hidden; position: relative; width: 100%; }
+
+        /* Unified Dark Theme */
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #090b10; color: #d1d4dc; margin: 0; height: 100vh; width: 100vw; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; position: relative; }
+        *, *:before, *:after { box-sizing: border-box; }
+        
+        /* Navigation */
+        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 100; position: relative; width: 100%; }
+        .nav-links { display: flex; align-items: center; gap: 5px; }
+        .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
+        .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
+
+        /* Dropdown Styling */
+        .dropdown { position: relative; margin-left: 10px; }
+        .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
+        .dropbtn:hover { color: #fff; }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
+        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; border-radius: 0; }
+        .dropdown-content a:hover { background-color: #21262d; color: #fff; }
+
+        /* ---------------------------------------------------
+           THE MASTER DASHBOARD ZOOM SCALER (75% Zoom Level)
+           Fix: Absolute positioning forces the exact calculated dimensions
+           --------------------------------------------------- */
+        #dashboard-scaler {
+            position: absolute;
+            top: 55px; /* Sits exactly below the navigation bar */
+            left: 0;
+            width: 133.333%; /* Compensates for the 75% scale horizontally */
+            height: calc((100vh - 55px) * 1.33333);  /* Compensates for the 75% scale vertically */
+            transform: scale(0.75);
+            transform-origin: top left;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* View Containers */
+        #terminal-view { display: grid; grid-template-columns: 8fr 5fr; grid-template-rows: auto 1fr; gap: 20px; padding: 20px; width: 100%; height: 100%; }
+        
+        .ticker-panel { grid-column: 1 / -1; background: #0d1117; border: 1px solid #30363d; padding: 5px 10px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: flex; gap: 10px; font-family: 'Inter', sans-serif; }
+        
+        .panel { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; min-height: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .panel-header { background: #161b22; padding: 12px 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; color: #8b949e; user-select: none; }
+        .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
+
+        /* Custom Scrollbars */
+        .panel-content::-webkit-scrollbar { width: 6px; }
+        .panel-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
+        .panel-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+        .panel-content::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+        /* Column wrappers */
+        .left-column { display: flex; flex-direction: column; gap: 20px; height: 100%; min-height: 0; }
+        .right-column { display: flex; flex-direction: column; gap: 20px; height: 100%; min-height: 0; }
+        
+        /* Two-column nested flex row layout for the right column's top section */
+        .right-column-split-row { display: flex; gap: 20px; flex: 1; min-height: 0; width: 100%; }
+
+        /* ---------------------------------------------------
+           HOT ASSET RADAR - COMPACT TABLE STYLES
+           --------------------------------------------------- */
+        #hot-asset-table td { padding: 8px 10px; border-bottom: 1px solid #1c2230; font-size: 10px; vertical-align: middle; }
+        #hot-asset-table tbody tr:hover { background-color: rgba(255,255,255,0.03); }
+        .bias-strong-up { color: #2ea043; font-weight: 600; }
+        .bias-medium-up { color: #a6e22e; font-weight: 500; }
+        .bias-neutral { color: #d29922; font-weight: 600; }
+        .bias-medium-down { color: #f0883e; font-weight: 500; }
+        .bias-strong-down { color: #f85149; font-weight: 600; }
+        .state-badge { padding: 2px 5px; border-radius: 10px; font-size: 8px; font-weight: 600; text-transform: uppercase; display: inline-block; }
+        .trending { background: rgba(41, 98, 255, 0.1); color: #58a6ff; border: 1px solid rgba(41, 98, 255, 0.2); }
+        .consolidated { background: rgba(139, 148, 158, 0.1); color: #8b949e; border: 1px solid rgba(139, 148, 158, 0.2); }
+        .expand-toggle-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; cursor: pointer; padding: 2px 5px; border-radius: 4px; font-size: 8.5px; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; text-transform: uppercase; }
+        .expand-toggle-btn:hover { border-color: #8b949e; color: #c9d1d9; }
+        
+        .ticker-flex { display: flex; align-items: center; gap: 6px; }
+        .ticker-text { font-weight: 600; color: #fff; transition: color 0.15s ease, text-shadow 0.15s ease; }
+        
+        /* Drawer Styling */
+        .drawer-row { display: none; background: #05070a !important; border-bottom: 1px solid #1c2230; }
+        .drawer-row td { padding: 0; border-bottom: none; }
+        .drawer-container { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-left: 3px solid #2962ff; }
+        .drawer-section-title { color: #8b949e; font-size: 8.5px; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; display: block; }
+        .drawer-desc-text, .drawer-analysis-text { margin: 0; font-size: 9.5px; color: #c9d1d9; line-height: 1.4; }
+        
+        /* Lollipop Compact */
+        .lollipop-system { display: flex; align-items: center; gap: 6px; }
+        .lollipop-indicator-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .lollipop-badge { padding: 2px 4px; border-radius: 4px; font-weight: 600; font-size: 8px; text-transform: uppercase; display: inline-block; }
+        .lolli-upper { color: #2ea043; }
+        .lolli-upper .lollipop-indicator-dot { background: #2ea043; box-shadow: 0 0 6px rgba(46, 160, 67, 0.4); }
+        .lolli-upper .lollipop-badge { background: rgba(46, 160, 67, 0.1); border: 1px solid rgba(46, 160, 67, 0.3); }
+        .lolli-lower { color: #f85149; }
+        .lolli-lower .lollipop-indicator-dot { background: #f85149; box-shadow: 0 0 6px rgba(248, 81, 73, 0.4); }
+        .lolli-lower .lollipop-badge { background: rgba(248, 81, 73, 0.1); border: 1px solid rgba(248, 81, 73, 0.3); }
+        .lolli-range { color: #d29922; }
+        .lolli-range .lollipop-indicator-dot { background: #d29922; box-shadow: 0 0 6px rgba(210, 153, 34, 0.4); }
+        .lolli-range .lollipop-badge { background: rgba(210, 153, 34, 0.1); border: 1px solid rgba(210, 153, 34, 0.3); }
+        
+        .embedded-chart-frame { position: relative; height: 160px; background: #0d1117; border: 1px solid #30363d; border-radius: 4px; overflow: hidden; }
+        .embedded-chart-frame iframe { position: absolute; top: 0; left: 0; width: 166.66%; height: 166.66%; transform: scale(0.6); transform-origin: top left; border: none; }
+    </style>
+</head>
+<body>
+
+<div class="top-nav">
+    <div style="height: 50px; display: flex; align-items: center;">
+        <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px;">
+    </div>
+    <div class="nav-links">
+        <a href="terminal.html" class="active">Dashboard</a>
+        <a href="/newsfeed">Newsfeed</a>
+        <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
+        <a href="analysis.html">Analysis</a>
+        <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
+        
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+            <div id="settingsDropdown" class="dropdown-content">
+                <a href="account.html">Account</a>
+                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
+                <a id="logoutBtn" style="color: #f85149; cursor: pointer;">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="dashboard-scaler">
+    <div id="terminal-view">
+        <div class="ticker-panel">
+           <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-ticker-tape.js"></script>
+           <div class="ticker-wrapper">
+               <tv-ticker-tape symbols="FOREXCOM:SPXUSD,FOREXCOM:NSXUSD,FOREXCOM:DJI,FX:EURUSD,BITSTAMP:BTCUSD,BITSTAMP:ETHUSD,CMCMARKETS:GOLD,TVC:SILVER,OANDA:GBPUSD,OANDA:USDJPY,OANDA:AUDUSD,OANDA:GBPJPY,OANDA:USDCAD,OANDA:USDCHF,OANDA:NZDUSD,OANDA:EURJPY,OANDA:EURAUD" line-chart-type="Line" item-size="compact"></tv-ticker-tape>
+           </div>
+        </div>
+
+        <div class="left-column">
+            <div class="panel" style="flex: 1.2;">
+                <div class="panel-header">Newsfeed Latest</div>
+                <div class="panel-content">
+                    <iframe src="https://analyst-wire.pages.dev/dashboard-newsfeed" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+            </div>
+            
+            <div class="panel" style="flex: 1.2;">
+                <div class="panel-header">Latest Briefing</div>
+                <div class="panel-content">
+                    <iframe src="https://analyst-wire.pages.dev/dashboard-newsfeed-reports" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+            </div>
+
+            <div class="panel" style="flex: 1;">
+                <div class="panel-header">Economic Calendar</div>
+                <div class="panel-content" style="padding: 15px;">
+                    <div class="tradingview-widget-container">
+                        <div class="tradingview-widget-container__widget"></div>
+                        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
+                        {
+                          "colorTheme": "dark",
+                          "isTransparent": false,
+                          "locale": "en",
+                          "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
+                          "importanceFilter": "-1,0,1",
+                          "width": "100%",
+                          "height": "100%"
+                        }
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="right-column">
+            <div class="right-column-split-row">
+                
+                <div class="panel" style="flex: 1.4;">
+                    <div class="panel-header">Hot Asset Radar</div>
+                    <div class="panel-content" style="padding: 0;">
+                        
+                        <table id="hot-asset-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr>
+                                    <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Ticker</th>
+                                    <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Bias</th>
+                                    <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">State</th>
+                                    <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hot-radar-body">
+                                <tr><td colspan="4" style="text-align: center; color: #8b949e; padding: 30px; font-size: 11px;">Scanning radar arrays for conviction signals...</td></tr>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+
+                <div class="panel" style="flex: 1;">
+                    <div class="panel-header">Forex Market Hours</div>
+                    <div class="panel-content">
+                        <div class="market-sessions-widget">
+                            <div class="msw-header">
+                                <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple sessions are open.">HOT MARKET</div>
+                                <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
+                            </div>
+                            <div id="msw-sessions-container"></div>
+                        </div>
+
+                        <style>
+                            .market-sessions-widget { box-sizing: border-box; width: 100%; background-color: #0A0A0A; border: 1px solid #334155; border-radius: 8px; padding: 12px; color: #f8fafc; font-family: sans-serif; }
+                            .msw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+                            .msw-hot-alert { font-size: 9px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3); animation: pulse 1.5s infinite; cursor: help; }
+                            @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+                            .msw-local-clock { font-family: monospace; font-size: 11px; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #10b981; }
+                            .msw-session-row { display: grid; grid-template-columns: 1fr 60px auto; align-items: center; gap: 8px; margin-bottom: 10px; }
+                            .msw-session-name { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; }
+                            .msw-status-dot { height: 6px; width: 6px; border-radius: 50%; background: #475569; }
+                            .msw-status-dot.open { background: #10b981; }
+                            .msw-session-status-text { font-size: 9px; font-weight: bold; font-family: monospace; text-align: left; }
+                            .msw-session-status-text.open { color: #10b981; }
+                            .msw-session-status-text.closed { color: #f97316; }
+                            .msw-zone-time { font-size: 9px; color: #64748b; font-family: monospace; display: block; margin-top: 1px; }
+                            .msw-countdown-text { font-size: 9px; color: #94a3b8; font-family: monospace; text-align: right; min-width: 80px; }
+                        </style>
+
+                        <script>
+                        (function() {
+                            const SESSIONS = [
+                                { name: 'Sydney', zone: 'Australia/Sydney', open: 8, close: 16 },
+                                { name: 'Tokyo', zone: 'Asia/Tokyo', open: 8, close: 16 },
+                                { name: 'London', zone: 'Europe/London', open: 8, close: 16 },
+                                { name: 'New York', zone: 'America/New_York', open: 8, close: 16 }
+                            ];
+
+                            function tick() {
+                                const now = new Date();
+                                document.getElementById('msw-user-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                                
+                                let openCount = 0;
+                                
+                                SESSIONS.forEach(s => {
+                                    const formatter = new Intl.DateTimeFormat('en-US', {
+                                        timeZone: s.zone, hour: '2-digit', minute: '2-digit', weekday: 'long', hour12: false
+                                    });
+                                    const parts = formatter.formatToParts(now);
+                                    const h = parseInt(parts.find(p => p.type === 'hour').value);
+                                    const m = parseInt(parts.find(p => p.type === 'minute').value);
+                                    const day = parts.find(p => p.type === 'weekday').value;
+                                    const timeDecimal = h + (m / 60);
+
+                                    const isWeekend = (day === 'Saturday' || day === 'Sunday');
+                                    const isOpen = !isWeekend && (timeDecimal >= s.open && timeDecimal < s.close);
+                                    
+                                    if(isOpen) openCount++;
+
+                                    document.getElementById('time-'+s.name).innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+                                    document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
+                                    document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
+                                    document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
+                                    
+                                    let output = "";
+                                    if (isOpen) {
+                                        let minsLeft = (s.close - timeDecimal) * 60;
+                                        output = `${Math.floor(minsLeft/60)}h ${Math.round(minsLeft%60)}m left`;
+                                    } else {
+                                        let hoursUntil = (s.open - timeDecimal);
+                                        if (isWeekend || hoursUntil < 0) {
+                                            let daysToAdd = (day === 'Friday') ? 3 : (day === 'Saturday') ? 2 : 1;
+                                            hoursUntil = (24 - timeDecimal) + ((daysToAdd - 1) * 24) + s.open;
+                                        }
+                                        output = `${Math.floor(hoursUntil)}h ${Math.round((hoursUntil%1)*60)}m`;
+                                    }
+                                    document.getElementById('count-'+s.name).innerText = output;
+                                });
+
+                                document.getElementById('msw-hot-alert').style.display = (openCount > 1) ? 'block' : 'none';
+                            }
+
+                            const container = document.getElementById('msw-sessions-container');
+                            container.innerHTML = '';
+                            SESSIONS.forEach(s => {
+                                container.insertAdjacentHTML('beforeend', `<div class="msw-session-row"><div class="msw-session-name"><span class="msw-status-dot" id="dot-${s.name}"></span><span>${s.name}<small class="msw-zone-time" id="time-${s.name}"></small></span></div><span class="msw-session-status-text" id="stat-${s.name}"></span><div class="msw-countdown-text" id="count-${s.name}"></div></div>`);
+                            });
+                            setInterval(tick, 1000);
+                            tick();
+                        })();
+                        </script>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="panel" style="flex: 1;">
+                <div class="panel-header">Bloomberg TV</div>
+                <div class="panel-content">
+                   <iframe style="width: 100%; height: 100%; border: none;" src="https://www.youtube.com/embed/QB5BNdBFujE?si=8-fZ9o8d4el45vm_" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
+    
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+
+    const tvSymbolMap = {
+        'S&P500': 'SPY', 'NASDAQ': 'QQQ', 'DOW': 'DIA', 'WTI': 'USOIL', 'COPPER': 'HG1!',
+        'COCOA': 'CC1!', 'COFFEE': 'KC1!', 'CORN': 'ZC1!', 'WHEAT': 'ZW1!', 'SOYBEANS': 'ZS1!', 'COTTONSUGAR': 'CT1!'
+    };
+
+    const categoryMap = {
+        'EUR/USD': 'Forex', 'GBP/USD': 'Forex', 'AUD/USD': 'Forex', 'NZD/USD': 'Forex', 'AUD/NZD': 'Forex', 'EUR/CHF': 'Forex',
+        'USD/CHF': 'Forex', 'USD/CAD': 'Forex', 'USD/NOK': 'Forex', 'USD/MXN': 'Forex', 'USD/JPY': 'Forex', 'EUR/JPY': 'Forex',
+        'GBP/JPY': 'Forex', 'AUD/JPY': 'Forex', 'NZD/JPY': 'Forex', 'CAD/JPY': 'Forex', 'EUR/GBP': 'Forex', 'EUR/AUD': 'Forex',
+        'EUR/NZD': 'Forex', 'GBP/AUD': 'Forex', 'GBP/NZD': 'Forex', 'DXY': 'Forex',
+        'XAU/USD': 'Commodities', 'XAG/USD': 'Commodities', 'WTI': 'Commodities', 'COPPER': 'Commodities', 'COCOA': 'Commodities',
+        'COFFEE': 'Commodities', 'COTTONSUGAR': 'Commodities', 'CORN': 'Commodities', 'SOYBEANS': 'Commodities', 'WHEAT': 'Commodities',
+        'AAPL': 'Equities', 'AMZN': 'Equities', 'GOOG': 'Equities', 'MSFT': 'Equities', 'TSLA': 'Equities', 'META': 'Equities', 'V': 'Equities',
+        'JPM': 'Equities', 'KO': 'Equities', 'MCD': 'Equities', 'AMD': 'Equities', 'BABA': 'Equities', 'JNJ': 'Equities', 'NVDA': 'Equities',
+        'S&P500': 'Indices', 'NASDAQ': 'Indices', 'DOW': 'Indices', 'RUSSEL': 'Indices', 'FTSE': 'Indices', 'NIKKEI': 'Indices', 'HANG': 'Indices',
+        'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto'
+    };
+
+    function toggleRadarDrawer(index, ticker) {
+        const row = document.getElementById(`radar-drawer-${index}`);
+        const btn = document.getElementById(`radar-btn-${index}`);
+        const container = document.getElementById(`radar-chart-${index}`);
+        if (row.style.display === "table-row") {
+            row.style.display = "none";
+            btn.innerText = "Expand ▼";
+            container.innerHTML = "";
+        } else {
+            row.style.display = "table-row";
+            btn.innerText = "Close ▲";
+            let cleanSymbol = tvSymbolMap[ticker] || ticker.replace('/', '');
+            container.innerHTML = `<iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=${encodeURIComponent(cleanSymbol)}&interval=D&theme=dark&style=1&timezone=Etc%2FUTC&studies=%5B%5D&hide_side_toolbar=true&hide_top_toolbar=true&hide_legend=true&allow_symbol_change=false&save_image=false"></iframe>`;
+        }
+    }
+
+    function getAssetVolatilityMetrics(r) {
+        const assetClass = categoryMap[r.ticker] || 'Forex';
+        const s1Num = parseFloat(r.s1) || 0;
+        const r1Num = parseFloat(r.r1) || 0;
+        const rawDiff = Math.abs(r1Num - s1Num);
+        let isTrending = false;
+
+        if (assetClass === 'Indices' || assetClass === 'Crypto') isTrending = rawDiff > 80.00;
+        else if (r.ticker === 'XAU/USD') isTrending = rawDiff > 15.00;
+        else if (assetClass === 'Commodities') isTrending = rawDiff > 3.00;
+        else if (r.ticker.includes('JPY')) isTrending = (rawDiff * 100) > 90.0;
+        else if (r.ticker === 'USD/NOK' || r.ticker === 'USD/MXN') isTrending = rawDiff > 0.1500;
+        else isTrending = (rawDiff * 10000) > 75.0;
+
+        return { isTrending };
+    }
+
+    async function loadHotAssets() {
+        const d = new Date();
+        if (d.getDay() === 0) d.setDate(d.getDate() - 2);
+        else if (d.getDay() === 6) d.setDate(d.getDate() - 1);
+        const dateStr = d.toISOString().split('T')[0];
+
+        const y = new Date(d);
+        y.setDate(y.getDate() - 1);
+        if (y.getDay() === 0) y.setDate(y.getDate() - 2);
+        else if (y.getDay() === 6) y.setDate(y.getDate() - 1);
+        const yesterdayStr = y.toISOString().split('T')[0];
+
+        const [todayRes, yesterdayRes] = await Promise.all([
+            client.from('key_levels').select('id, trade_date, ticker, s1, s2, r1, r2, bias, bull_bear_line, lollipop, analysis').eq('trade_date', dateStr),
+            client.from('key_levels').select('id, trade_date, ticker, s1, s2, r1, r2, bias, bull_bear_line, lollipop, analysis').eq('trade_date', yesterdayStr)
+        ]);
+
+        if (todayRes.error) return;
+        const todayData = todayRes.data || [];
+        const yesterdayData = yesterdayRes.data || [];
+
+        let radarData = todayData.map(todayRow => {
+            let score = 0;
+            
+            if (todayRow.bias === 'Strong Bullish') score += 3;
+            else if (todayRow.bias === 'Medium Bullish') score += 1;
+            else if (todayRow.bias === 'Strong Bearish') score -= 3;
+            else if (todayRow.bias === 'Medium Bearish') score -= 1;
+
+            const metrics = getAssetVolatilityMetrics(todayRow);
+            if (metrics.isTrending) {
+                if (score > 0) score += 2; else if (score < 0) score -= 2;
+            }
+
+            const lolli = (todayRow.lollipop || '').toUpperCase();
+            if (lolli.includes('UPPER') || lolli.includes('BREAK OUT')) score += 2;
+            else if (lolli.includes('LOWER') || lolli.includes('BREAK DOWN')) score -= 2;
+
+            const yRow = yesterdayData.find(y => y.ticker === todayRow.ticker);
+            if (yRow) {
+                const bbDelta = parseFloat(todayRow.bull_bear_line) - parseFloat(yRow.bull_bear_line);
+                todayRow.value_migration = bbDelta > 0 ? "Upward" : (bbDelta < 0 ? "Downward" : "Flat");
+
+                const todayRange = Math.abs(parseFloat(todayRow.r1) - parseFloat(todayRow.s1));
+                const yRange = Math.abs(parseFloat(yRow.r1) - parseFloat(yRow.s1));
+                todayRow.vol_velocity = todayRange > yRange ? "Expanding" : "Compressing";
+
+                if (parseFloat(todayRow.s1) >= parseFloat(yRow.r1)) todayRow.structural_shift = "Bullish Floor Flip";
+                else if (parseFloat(todayRow.r1) <= parseFloat(yRow.s1)) todayRow.structural_shift = "Bearish Ceiling Flip";
+                else todayRow.structural_shift = "Maintaining Range";
+
+                if (todayRow.value_migration === "Upward") score += 1;
+                else if (todayRow.value_migration === "Downward") score -= 1;
+
+                if (todayRow.structural_shift === "Bullish Floor Flip") score += 2;
+                else if (todayRow.structural_shift === "Bearish Ceiling Flip") score -= 2;
+
+                if (todayRow.vol_velocity === "Expanding") {
+                    if (score > 0) score += 1; else if (score < 0) score -= 1;
+                }
+            } else {
+                todayRow.value_migration = "N/A";
+                todayRow.vol_velocity = "N/A";
+                todayRow.structural_shift = "N/A";
+            }
+
+            todayRow.convictionScore = score;
+            todayRow.isTopWinner = false;
+            todayRow.isTopLoser = false;
+            return todayRow;
+        });
+
+        const sorted = [...radarData].sort((a,b) => b.convictionScore - a.convictionScore);
+        const hotAssets = [];
+        
+        let w = 0;
+        for (let i = 0; i < sorted.length; i++) {
+            if (sorted[i].convictionScore >= 7 && w < 2) { 
+                sorted[i].isTopWinner = true; 
+                hotAssets.push(sorted[i]); 
+                w++; 
+            }
+        }
+        
+        let l = 0;
+        for (let i = sorted.length - 1; i >= 0; i--) {
+            if (sorted[i].convictionScore <= -7 && l < 2) { 
+                sorted[i].isTopLoser = true; 
+                hotAssets.push(sorted[i]); 
+                l++; 
+            }
+        }
+
+        renderHotRadar(hotAssets);
+    }
+
+    function renderHotRadar(assets) {
+        const tbody = document.getElementById('hot-radar-body');
+        
+        if (assets.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #8b949e; padding: 30px 10px; font-size: 11px;">No extreme conviction setups currently detected.<br>Market in equilibrium.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = assets.map((r, index) => {
+            const metrics = getAssetVolatilityMetrics(r);
+            const state = metrics.isTrending ? "Trending" : "Consolidated";
+            const stateClass = metrics.isTrending ? "trending" : "consolidated";
+
+            let biasClass = 'bias-neutral';
+            let directionalArrow = '➔';
+            if (r.bias === 'Strong Bullish') { biasClass = 'bias-strong-up'; directionalArrow = '▲'; }
+            else if (r.bias === 'Medium Bullish') { biasClass = 'bias-medium-up'; directionalArrow = '▲'; }
+            else if (r.bias === 'Strong Bearish') { biasClass = 'bias-strong-down'; directionalArrow = '▼'; }
+            else if (r.bias === 'Medium Bearish') { biasClass = 'bias-medium-down'; directionalArrow = '▼'; }
+
+            let tickerColorStyle = '';
+            let svgFill = '#8b949e';
+            let convictionLabel = '';
+            if (r.isTopWinner) {
+                tickerColorStyle = 'color: #2ea043; text-shadow: 0 0 8px rgba(46,160,67,0.4);';
+                svgFill = '#2ea043';
+                convictionLabel = '<span style="font-size: 8px; font-weight:700; color:#2ea043; margin-left: 4px; letter-spacing: 0.5px;">[STRONG]</span>';
+            } else if (r.isTopLoser) {
+                tickerColorStyle = 'color: #f85149; text-shadow: 0 0 8px rgba(248,81,73,0.4);';
+                svgFill = '#f85149';
+                convictionLabel = '<span style="font-size: 8px; font-weight:700; color:#f85149; margin-left: 4px; letter-spacing: 0.5px;">[WEAK]</span>';
+            }
+
+            const lolli = r.lollipop ? r.lollipop.toUpperCase() : '';
+            let lolliClass = 'lolli-range';
+            if (lolli.includes('UPPER') || lolli.includes('BREAK OUT')) lolliClass = 'lolli-upper';
+            else if (lolli.includes('LOWER') || lolli.includes('BREAK DOWN')) lolliClass = 'lolli-lower';
+            
+            return `
+                <tr>
+                    <td>
+                        <div class="ticker-flex">
+                            <svg width="10" height="10" viewBox="0 0 24 24" style="fill: ${svgFill};"><path d="M3.5 18.5v-13h2v13h-2zm5 0v-7h2v7h-2zm5 0v-11h2v11h-2zm5 0v-5h2v5h-2z"/></svg>
+                            <span class="ticker-text" style="${tickerColorStyle}">${r.ticker}</span>
+                            ${convictionLabel}
+                        </div>
+                    </td>
+                    <td class="${biasClass}" style="font-size: 10.5px;">${directionalArrow} ${r.bias}</td>
+                    <td><span class="state-badge ${stateClass}">${state}</span></td>
+                    <td><button id="radar-btn-${index}" class="expand-toggle-btn" onclick="toggleRadarDrawer(${index}, '${r.ticker}')">Expand ▼</button></td>
+                </tr>
+                <tr id="radar-drawer-${index}" class="drawer-row">
+                    <td colspan="4">
+                        <div class="drawer-container">
+                            <div style="display: flex; justify-content: space-between; gap: 10px;">
+                                <div style="flex: 1;">
+                                    <span class="drawer-section-title">Lollipop</span>
+                                    <div class="lollipop-system ${lolliClass}">
+                                        <div class="lollipop-indicator-dot"></div>
+                                        <div class="lollipop-badge">${r.lollipop || 'INSIDE RANGE'}</div>
+                                    </div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <span class="drawer-section-title">Velocity (DoD)</span>
+                                    <ul style="margin: 0; padding-left: 12px; font-size: 9px; color: #c9d1d9;">
+                                        <li><span style="color:#8b949e">Val:</span> ${r.value_migration}</li>
+                                        <li><span style="color:#8b949e">Vol:</span> ${r.vol_velocity}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div style="margin-top: 4px; padding-top: 8px; border-top: 1px solid #1c2230;">
+                                <span class="drawer-section-title">Analysis</span>
+                                <p class="drawer-analysis-text">${r.analysis || 'Pending calculated analysis.'}</p>
+                            </div>
+                            <div id="radar-chart-${index}" class="embedded-chart-frame" style="margin-top: 4px;"></div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    async function init() {
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) { window.location.href = 'index.html'; return; }
+
+        const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
+
+        if (!profile || profile.subscription_tag === 'free') {
+            alert("Your subscription is inactive. Redirecting to login.");
+            await client.auth.signOut();
+            window.location.href = 'index.html';
+            return;
+        }
+
+        if (profile) {
+            if (profile.is_admin === true) {
+                document.getElementById('nav-admin').style.display = 'block';
+                document.getElementById('nav-upload').style.display = 'block';
+            }
+            if (profile.is_admin === true || profile.subscription_tag === 'pro') {
+                document.getElementById('nav-courses').style.display = 'block';
+                document.getElementById('nav-key-levels').style.display = 'block';
+            }
+        }
+        
+        // Initialize Hot Asset Radar
+        loadHotAssets();
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+    
+    init();
+</script>
+</body>
+</html>
