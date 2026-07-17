@@ -34,6 +34,8 @@
         .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
         .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; border-radius: 0; }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
+        .dropdown-content .reset-btn { color: #d29922; }
+        .dropdown-content .reset-btn:hover { background-color: rgba(210, 153, 34, 0.1); color: #e3b341; }
 
         /* WIDGET DOCK STYLING */
         #dock-wrapper { background: #05070a; border-bottom: 1px solid #1c2230; padding: 15px 20px; flex-shrink: 0; z-index: 50; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: all 0.2s ease; }
@@ -43,7 +45,7 @@
         #dock-toggle-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; border-radius: 4px; padding: 4px 8px; font-size: 9px; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif; }
         #dock-toggle-btn:hover { border-color: #c9d1d9; color: #fff; }
         
-        /* ULTRA-COMPACT Collapsed State - Frees up maximum dashboard space */
+        /* ULTRA-COMPACT Collapsed State */
         .dock-collapsed { padding: 6px 20px !important; border-bottom: none !important; box-shadow: none !important; }
         .dock-collapsed .dock-title { margin-bottom: 0 !important; }
         .dock-collapsed #dock-grid { display: none !important; }
@@ -62,10 +64,8 @@
         #dock-grid .ui-resizable-handle { display: none !important; }
 
         /* DASHBOARD AREA */
-        /* Padding top reduced to 5px to eliminate the drag-and-drop "deadzone" */
         .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 5px 15px 15px 15px; position: relative; }
         
-        /* Padding removed inside grid to make edges flush for drop detection */
         #main-grid { 
             min-height: calc(100vh - 100px) !important; 
             background: rgba(41, 98, 255, 0.02); 
@@ -170,6 +170,7 @@
                 <a href="account.html">Account</a>
                 <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
                 <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
+                <a onclick="resetLayout()" class="reset-btn">Reset Layout</a>
                 <a id="logoutBtn" style="color: #f85149; cursor: pointer;">Logout</a>
             </div>
         </div>
@@ -222,7 +223,6 @@
         </div>
         -->
         <!-- =================================================================================== -->
-
 
         <!-- Core Widgets Below -->
         <div class="grid-stack-item" gs-id="newsfeed" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
@@ -473,6 +473,17 @@
 </div>
 
 <script>
+    // System Reset Function
+    function resetLayout() {
+        // Clears out all historic dashboard memories just in case
+        Object.keys(localStorage).forEach(key => {
+            if(key.startsWith('analystWireLayout')) {
+                localStorage.removeItem(key);
+            }
+        });
+        window.location.reload();
+    }
+
     // Bulletproof iframe shield
     document.addEventListener('mousedown', function(e) {
         if (e.target.closest('.panel-header') || e.target.closest('.ui-resizable-handle')) {
@@ -536,7 +547,6 @@
     function returnToDock(btn) {
         const el = btn.closest('.grid-stack-item');
         
-        // Remove from main dashboard memory, but preserve DOM node
         mainGrid.removeWidget(el, false); 
         
         // Reset state
