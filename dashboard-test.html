@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+l<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -61,11 +61,25 @@
         /* Gridstack & Panel adjustments */
         .grid-stack-item-content { display: flex; flex-direction: column; }
         .panel { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .panel-header { background: #161b22; padding: 12px 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; color: #8b949e; user-select: none; cursor: grab; }
+        
+        /* The header needs to be the designated handle */
+        .panel-header { 
+            background: #161b22; 
+            padding: 12px 20px; 
+            font-size: 11px; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            border-bottom: 1px solid #30363d; 
+            color: #8b949e; 
+            user-select: none; 
+            cursor: grab; 
+            touch-action: none;
+        }
         .panel-header:active { cursor: grabbing; }
         
         /* Panel Content Area */
-        .panel-content { flex-grow: 1; overflow: hidden; position: relative; } /* Switched to hidden so the adaptive-wrapper manages scroll if needed */
+        .panel-content { flex-grow: 1; overflow: hidden; position: relative; }
 
         /* ADAPTIVE WRAPPER: Handles the auto-zoom */
         .adaptive-wrapper {
@@ -86,13 +100,7 @@
             background: radial-gradient(circle at 100% 100%, rgba(255,255,255,0.2) 20%, transparent 40%);
         }
 
-        /* Prevent iframes from intercepting clicks DURING a drag or resize event */
-        .grid-stack-item.ui-draggable-dragging iframe,
-        .grid-stack-item.ui-resizable-resizing iframe {
-            pointer-events: none;
-        }
-
-        /* Custom Scrollbars applied to the adaptive wrapper now */
+        /* Custom Scrollbars applied to the adaptive wrapper */
         .adaptive-wrapper::-webkit-scrollbar { width: 6px; }
         .adaptive-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
         .adaptive-wrapper::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
@@ -391,30 +399,38 @@
 </div>
 
 <script>
-    // 1. Initialize Gridstack
+    // 1. Initialize Gridstack (FIX: handleClass instead of handle)
     let grid = GridStack.init({
         cellHeight: '80px', 
         margin: 20,         
-        handle: '.panel-header',
+        handleClass: 'panel-header', 
         animate: true,
         alwaysShowResizeHandle: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
     });
 
-    // 2. Local Storage - Load Saved Layout
+    // 2. Disable iframes when dragging/resizing so they don't steal the mouse!
+    grid.on('dragstart resizestart', function(event, el) {
+        document.querySelectorAll('iframe').forEach(iframe => iframe.style.pointerEvents = 'none');
+    });
+    grid.on('dragstop resizestop', function(event, el) {
+        document.querySelectorAll('iframe').forEach(iframe => iframe.style.pointerEvents = 'auto');
+    });
+
+    // 3. Local Storage - Load Saved Layout
     const savedLayout = localStorage.getItem('analystWireDashboardLayout');
     if (savedLayout) {
         grid.load(JSON.parse(savedLayout));
     }
 
-    // 3. Local Storage - Save Layout on any drag or resize
+    // 4. Local Storage - Save Layout on any drag or resize
     grid.on('change', function(event, items) {
         const currentLayout = grid.save();
         localStorage.setItem('analystWireDashboardLayout', JSON.stringify(currentLayout));
     });
 
-    // 4. Adaptive Scale Down Logic for small panels
-    const BASE_MIN_WIDTH = 480; // Threshold width (px) below which it starts zooming out
-    const MIN_SCALE = 0.4;      // Max zoom out (40% of original size)
+    // 5. Adaptive Scale Down Logic for small panels
+    const BASE_MIN_WIDTH = 480; 
+    const MIN_SCALE = 0.4;      
 
     const panelObserver = new ResizeObserver(entries => {
         for (let entry of entries) {
@@ -424,9 +440,8 @@
             if (wrapper && width > 0) {
                 if (width < BASE_MIN_WIDTH) {
                     let scale = width / BASE_MIN_WIDTH;
-                    scale = Math.max(scale, MIN_SCALE); // Prevent it from getting microscopic
+                    scale = Math.max(scale, MIN_SCALE); 
                     
-                    // Apply scale but artificially increase width/height so widgets think they have full space
                     wrapper.style.transform = `scale(${scale})`;
                     wrapper.style.width = `${100 / scale}%`;
                     wrapper.style.height = `${100 / scale}%`;
@@ -439,7 +454,6 @@
         }
     });
 
-    // Attach observer to all panel-content divs
     document.querySelectorAll('.panel-content').forEach(panel => {
         panelObserver.observe(panel);
     });
