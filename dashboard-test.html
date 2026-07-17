@@ -408,9 +408,7 @@
         document.body.classList.remove('is-dragging');
     });
 
-    // FIX: Pre-load the layout attributes BEFORE GridStack initializes!
-    // This entirely prevents the buggy behavior where GridStack destroys and recreates 
-    // the DOM nodes, which is what was stripping your drag listeners.
+    // Pre-load the layout attributes BEFORE GridStack initializes
     const savedLayout = localStorage.getItem('analystWireDashboardLayout');
     if (savedLayout) {
         try {
@@ -431,17 +429,17 @@
         }
     }
 
-    // Initialize Gridstack with a smaller margin (8px) to reduce wasted space
+    // Initialize Gridstack
     let grid = GridStack.init({
         cellHeight: '60px', 
         margin: 8,         
         handle: '.panel-header', 
         animate: true,
-        alwaysShowResizeHandle: true
+        alwaysShowResizeHandle: true,
+        float: true // FIX: Setting float to true disables the "magnet/gravity" effect
     });
 
-    // FIX: Save ONLY the necessary layout coordinates. 
-    // This prevents GridStack from saving corrupted states (like "noMove").
+    // Save ONLY the necessary layout coordinates
     grid.on('change', function(event, items) {
         const currentLayout = grid.engine.nodes.map(n => ({
             id: n.id,
