@@ -49,11 +49,11 @@
             transform-origin: top left;
             display: flex;
             flex-direction: column;
-            overflow-y: auto; /* Allow scrolling if grid expands */
+            overflow-y: auto;
             overflow-x: hidden;
         }
 
-        /* Updated View Containers */
+        /* View Containers */
         #terminal-view { display: flex; flex-direction: column; gap: 20px; padding: 20px; width: 100%; min-height: 100%; }
         
         .ticker-panel { background: #0d1117; border: 1px solid #30363d; padding: 5px 10px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: flex; gap: 10px; font-family: 'Inter', sans-serif; flex-shrink: 0; }
@@ -64,6 +64,23 @@
         .panel-header { background: #161b22; padding: 12px 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; color: #8b949e; user-select: none; cursor: grab; }
         .panel-header:active { cursor: grabbing; }
         .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
+
+        /* FIX: Ensure resize handles sit completely above the iframes */
+        .ui-resizable-handle { 
+            z-index: 9999 !important; 
+            width: 15px !important; 
+            height: 15px !important; 
+            bottom: 2px !important; 
+            right: 2px !important;
+            /* Optional: give it a slight color so users know where to drag */
+            background: radial-gradient(circle at 100% 100%, rgba(255,255,255,0.2) 20%, transparent 40%);
+        }
+
+        /* Prevent iframes from intercepting clicks DURING a drag or resize event */
+        .grid-stack-item.ui-draggable-dragging iframe,
+        .grid-stack-item.ui-resizable-resizing iframe {
+            pointer-events: none;
+        }
 
         /* Custom Scrollbars */
         .panel-content::-webkit-scrollbar { width: 6px; }
@@ -152,8 +169,10 @@
         <!-- Customizable Gridstack Layout -->
         <div class="grid-stack">
             
+            <!-- Added gs-id attributes to all panels so localStorage knows which is which -->
+
             <!-- Newsfeed Latest -->
-            <div class="grid-stack-item" gs-x="0" gs-y="0" gs-w="7" gs-h="4">
+            <div class="grid-stack-item" gs-id="newsfeed" gs-x="0" gs-y="0" gs-w="7" gs-h="4">
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">Newsfeed Latest</div>
@@ -165,7 +184,7 @@
             </div>
             
             <!-- Latest Briefing -->
-            <div class="grid-stack-item" gs-x="0" gs-y="4" gs-w="7" gs-h="4">
+            <div class="grid-stack-item" gs-id="briefing" gs-x="0" gs-y="4" gs-w="7" gs-h="4">
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">Latest Briefing</div>
@@ -177,7 +196,7 @@
             </div>
 
             <!-- Economic Calendar -->
-            <div class="grid-stack-item" gs-x="0" gs-y="8" gs-w="7" gs-h="4">
+            <div class="grid-stack-item" gs-id="calendar" gs-x="0" gs-y="8" gs-w="7" gs-h="4">
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">Economic Calendar</div>
@@ -202,7 +221,7 @@
             </div>
             
             <!-- Hot Asset Radar -->
-            <div class="grid-stack-item" gs-x="7" gs-y="0" gs-w="3" gs-h="7">
+            <div class="grid-stack-item" gs-id="radar" gs-x="7" gs-y="0" gs-w="3" gs-h="7">
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">Hot Asset Radar</div>
@@ -226,7 +245,7 @@
             </div>
 
             <!-- Forex Market Hours -->
-            <div class="grid-stack-item" gs-x="10" gs-y="0" gs-w="2" gs-h="7">
+            <div class="grid-stack-item" gs-id="forex-hours" gs-x="10" gs-y="0" gs-w="2" gs-h="7">
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">Forex Market Hours</div>
@@ -330,7 +349,7 @@
             </div>
 
             <!-- Bloomberg TV -->
-            <div class="grid-stack-item" gs-x="7" gs-y="7" gs-w="5" gs-h="5">
+            <div class="grid-stack-item" gs-id="bloomberg" gs-x="7" gs-y="7" gs-w="5" gs-h="5">
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">Bloomberg TV</div>
@@ -346,13 +365,26 @@
 </div>
 
 <script>
-    // Initialize Gridstack
+    // 1. Initialize Gridstack
     let grid = GridStack.init({
-        cellHeight: '80px', // Base height to calculate rows
-        margin: 20,         // Spacing between panels
-        handle: '.panel-header', // Users must click and drag the header, otherwise they would interact with the iframes inside!
+        cellHeight: '80px', 
+        margin: 20,         
+        handle: '.panel-header',
         animate: true,
         alwaysShowResizeHandle: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    });
+
+    // 2. Local Storage - Load Saved Layout
+    const savedLayout = localStorage.getItem('analystWireDashboardLayout');
+    if (savedLayout) {
+        // Loads the coordinates and applies them based on the gs-id we assigned
+        grid.load(JSON.parse(savedLayout));
+    }
+
+    // 3. Local Storage - Save Layout on any drag or resize
+    grid.on('change', function(event, items) {
+        const currentLayout = grid.save();
+        localStorage.setItem('analystWireDashboardLayout', JSON.stringify(currentLayout));
     });
 
     // Original Security and Logic Scripts
@@ -613,7 +645,6 @@
             }
         }
         
-        // Initialize Hot Asset Radar
         loadHotAssets();
     }
 
