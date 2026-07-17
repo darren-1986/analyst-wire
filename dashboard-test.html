@@ -36,16 +36,17 @@
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
         /* WIDGET DOCK STYLING */
-        #dock-wrapper { background: #05070a; border-bottom: 1px solid #1c2230; padding: 15px 20px; flex-shrink: 0; z-index: 50; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: padding 0.3s; }
-        .dock-title { font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 10px; font-weight: 700; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
+        #dock-wrapper { background: #05070a; border-bottom: 1px solid #1c2230; padding: 15px 20px; flex-shrink: 0; z-index: 50; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: all 0.2s ease; }
+        .dock-title { font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 10px; font-weight: 700; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; transition: margin 0.2s; }
         
         /* Dock Toggle Button */
         #dock-toggle-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; border-radius: 4px; padding: 4px 8px; font-size: 9px; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif; }
         #dock-toggle-btn:hover { border-color: #c9d1d9; color: #fff; }
         
-        /* Collapsed State */
+        /* ULTRA-COMPACT Collapsed State - Frees up maximum dashboard space */
+        .dock-collapsed { padding: 6px 20px !important; border-bottom: none !important; box-shadow: none !important; }
+        .dock-collapsed .dock-title { margin-bottom: 0 !important; }
         .dock-collapsed #dock-grid { display: none !important; }
-        .dock-collapsed { padding-bottom: 10px !important; }
 
         #dock-grid { min-height: 55px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 5px; border: 1px dashed #30363d; }
         
@@ -61,14 +62,22 @@
         #dock-grid .ui-resizable-handle { display: none !important; }
 
         /* DASHBOARD AREA */
-        .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; position: relative; }
-        #main-grid { min-height: calc(100vh - 160px) !important; background: rgba(41, 98, 255, 0.02); border: 2px dashed rgba(41, 98, 255, 0.1); border-radius: 10px; padding: 10px; }
+        /* Padding top reduced to 5px to eliminate the drag-and-drop "deadzone" */
+        .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 5px 15px 15px 15px; position: relative; }
+        
+        /* Padding removed inside grid to make edges flush for drop detection */
+        #main-grid { 
+            min-height: calc(100vh - 100px) !important; 
+            background: rgba(41, 98, 255, 0.02); 
+            border: 2px dashed rgba(41, 98, 255, 0.1); 
+            border-radius: 10px; 
+            padding: 0; 
+        }
         
         /* Standard Panel adjustments */
         .grid-stack-item-content { display: flex; flex-direction: column; }
         .panel { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         
-        /* New Header Structure */
         .panel-header { 
             background: #161b22; padding: 8px 15px; font-size: 11px; font-weight: 600; 
             text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; 
@@ -178,7 +187,44 @@
     </div>
     
     <div id="dock-grid" class="grid-stack">
-        
+
+        <!-- =================================================================================== -->
+        <!-- WIDGET TEMPLATE: COPY THIS BLOCK TO ADD A NEW TOOL TO THE LIBRARY                   -->
+        <!--                                                                                     -->
+        <!-- Requirements:                                                                       -->
+        <!-- 1. gs-id="..." MUST BE UNIQUE for every new widget so the layout saves properly.    -->
+        <!-- 2. data-default-w="X" data-default-h="Y" sets the size when dropped on dashboard.   -->
+        <!-- 3. Replace "Widget Title Here" in the span.                                         -->
+        <!-- 4. Put your iframe or HTML inside the <div class="adaptive-wrapper">.               -->
+        <!-- =================================================================================== -->
+        <!-- 
+        <div class="grid-stack-item" gs-id="YOUR_UNIQUE_ID" gs-w="2" gs-h="1" data-default-w="4" data-default-h="4" data-in-dock="true" data-zoom="1.0">
+            <div class="grid-stack-item-content">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Widget Title Here</span>
+                        <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                            <span class="zoom-label">100%</span>
+                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                            <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+                        </div>
+                    </div>
+                    <div class="panel-content">
+                        <div class="adaptive-wrapper">
+                            
+                            **YOUR IFRAME OR CUSTOM HTML GOES HERE**
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        -->
+        <!-- =================================================================================== -->
+
+
+        <!-- Core Widgets Below -->
         <div class="grid-stack-item" gs-id="newsfeed" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
             <div class="grid-stack-item-content">
                 <div class="panel">
@@ -507,7 +553,7 @@
         saveLayoutState();
     }
 
-    // 1. PRE-LOAD LAYOUT V4 (Updated to capture zoom levels)
+    // 1. PRE-LOAD LAYOUT V4 
     const savedLayout = localStorage.getItem('analystWireLayoutV4');
     if (savedLayout) {
         try {
