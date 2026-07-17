@@ -39,7 +39,6 @@
         #dock-wrapper { background: #05070a; border-bottom: 1px solid #1c2230; padding: 15px 20px; flex-shrink: 0; z-index: 50; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         .dock-title { font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 10px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
         
-        /* The drop zone for the dock */
         #dock-grid { min-height: 55px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 5px; border: 1px dashed #30363d; }
         
         /* Compress items when they are inside the dock */
@@ -52,6 +51,15 @@
 
         /* DASHBOARD AREA */
         .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; position: relative; }
+        
+        /* THIS IS THE CRITICAL FIX: Force the main grid to have a physical height so it can receive drops */
+        #main-grid { 
+            min-height: calc(100vh - 160px) !important; 
+            background: rgba(41, 98, 255, 0.02); 
+            border: 2px dashed rgba(41, 98, 255, 0.1); 
+            border-radius: 10px; 
+            padding: 10px;
+        }
         
         /* Standard Panel adjustments */
         .grid-stack-item-content { display: flex; flex-direction: column; }
@@ -368,9 +376,9 @@
         document.body.classList.remove('is-dragging');
     });
 
-    // 1. PRE-LOAD LAYOUT V2 (Moves DOM nodes to correct grid BEFORE init)
-    // Using a new storage key to wipe out bad coordinates from the old single-grid system
-    const savedLayout = localStorage.getItem('analystWireLayoutV2');
+    // 1. PRE-LOAD LAYOUT V3
+    // Switched to V3 to completely nuke the broken 0-height save state.
+    const savedLayout = localStorage.getItem('analystWireLayoutV3');
     if (savedLayout) {
         try {
             const parsed = JSON.parse(savedLayout);
@@ -417,7 +425,7 @@
         animate: true,
         alwaysShowResizeHandle: true,
         acceptWidgets: true,
-        float: true           // Stay exactly where you drop them
+        float: true
     }, '#main-grid');
 
     // 4. HANDLE DRAG & DROP SIZING AUTOMATION
@@ -456,7 +464,7 @@
         }));
         
         const combined = [...dockItems, ...mainItems];
-        localStorage.setItem('analystWireLayoutV2', JSON.stringify(combined));
+        localStorage.setItem('analystWireLayoutV3', JSON.stringify(combined));
     }
 
     // Bind save events
