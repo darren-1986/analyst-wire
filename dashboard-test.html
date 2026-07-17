@@ -24,7 +24,7 @@
         *, *:before, *:after { box-sizing: border-box; }
         
         /* Navigation */
-        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 100; position: relative; width: 100%; flex-shrink: 0; }
+        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 100; position: relative; width: 100%; }
         .nav-links { display: flex; align-items: center; gap: 5px; }
         .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
         .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
@@ -38,14 +38,17 @@
         .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; border-radius: 0; }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
-        /* Dashboard Scaler - REMOVED CSS TRANSFORM SCALE */
+        /* Dashboard Scaler - SCALE REMOVED SO DRAG WORKS NATIVELY */
         #dashboard-scaler {
-            flex-grow: 1;
+            position: absolute;
+            top: 55px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 55px);
             display: flex;
             flex-direction: column;
             overflow-y: auto;
             overflow-x: hidden;
-            width: 100%;
         }
 
         /* View Containers */
@@ -69,7 +72,7 @@
             color: #8b949e; 
             user-select: none; 
             cursor: grab; 
-            touch-action: none; 
+            touch-action: none; /* Prevents mobile scrolling from fighting drag */
         }
         .panel-header:active { cursor: grabbing; }
         
@@ -86,8 +89,8 @@
         }
 
         /* CSS SHIELD: Prevents iframes from eating mouse events during drag/resize */
-        .ui-draggable-dragging iframe, 
-        .ui-resizable-resizing iframe {
+        .grid-stack-item.ui-draggable-dragging iframe, 
+        .grid-stack-item.ui-resizable-resizing iframe {
             pointer-events: none !important;
         }
 
@@ -402,26 +405,34 @@
 <script>
     // 1. Initialize Gridstack. cellHeight handles the "zoom" so dragging works natively.
     let grid = GridStack.init({
-        cellHeight: '60px', // Adjusted to maintain layout density without breaking drag
+        cellHeight: '60px', 
         margin: 15,         
-        handle: '.panel-header',
+        handle: '.panel-header', 
         animate: true,
         alwaysShowResizeHandle: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
     });
 
-    // 2. Local Storage - Load Saved Layout
+    // 2. Disable iframes when dragging/resizing so they don't steal the mouse!
+    grid.on('dragstart resizestart', function(event, el) {
+        document.querySelectorAll('iframe').forEach(iframe => iframe.style.pointerEvents = 'none');
+    });
+    grid.on('dragstop resizestop', function(event, el) {
+        document.querySelectorAll('iframe').forEach(iframe => iframe.style.pointerEvents = 'auto');
+    });
+
+    // 3. Local Storage - Load Saved Layout
     const savedLayout = localStorage.getItem('analystWireDashboardLayout');
     if (savedLayout) {
         grid.load(JSON.parse(savedLayout));
     }
 
-    // 3. Local Storage - Save Layout on any drag or resize
+    // 4. Local Storage - Save Layout on any drag or resize
     grid.on('change', function(event, items) {
         const currentLayout = grid.save();
         localStorage.setItem('analystWireDashboardLayout', JSON.stringify(currentLayout));
     });
 
-    // 4. Adaptive Scale Down Logic for small panels
+    // 5. Adaptive Scale Down Logic for small panels
     const BASE_MIN_WIDTH = 480; 
     const MIN_SCALE = 0.4;      
 
