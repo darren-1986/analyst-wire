@@ -1,4 +1,4 @@
-l<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -74,7 +74,7 @@ l<!DOCTYPE html>
             color: #8b949e; 
             user-select: none; 
             cursor: grab; 
-            touch-action: none;
+            touch-action: none; /* Prevents mobile scrolling from fighting drag */
         }
         .panel-header:active { cursor: grabbing; }
         
@@ -399,11 +399,11 @@ l<!DOCTYPE html>
 </div>
 
 <script>
-    // 1. Initialize Gridstack (FIX: handleClass instead of handle)
+    // 1. Initialize Gridstack (RESTORED correct handle property)
     let grid = GridStack.init({
         cellHeight: '80px', 
         margin: 20,         
-        handleClass: 'panel-header', 
+        handle: '.panel-header', // <--- This was the bug I introduced. It's handle, not handleClass!
         animate: true,
         alwaysShowResizeHandle: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
     });
