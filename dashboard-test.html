@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/gridstack@10.0.1/dist/gridstack-all.js"></script>
 
     <style>
-        /* Modern typography import from Key Levels */
+        /* Modern typography import */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
         /* Force hide TradingView branding by cropping the container */
@@ -58,21 +58,31 @@
         
         .ticker-panel { background: #0d1117; border: 1px solid #30363d; padding: 5px 10px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: flex; gap: 10px; font-family: 'Inter', sans-serif; flex-shrink: 0; }
         
-        /* Gridstack adjustments for Panel */
+        /* Gridstack & Panel adjustments */
         .grid-stack-item-content { display: flex; flex-direction: column; }
         .panel { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .panel-header { background: #161b22; padding: 12px 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; color: #8b949e; user-select: none; cursor: grab; }
         .panel-header:active { cursor: grabbing; }
-        .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
+        
+        /* Panel Content Area */
+        .panel-content { flex-grow: 1; overflow: hidden; position: relative; } /* Switched to hidden so the adaptive-wrapper manages scroll if needed */
 
-        /* FIX: Ensure resize handles sit completely above the iframes */
+        /* ADAPTIVE WRAPPER: Handles the auto-zoom */
+        .adaptive-wrapper {
+            transform-origin: top left;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Ensure resize handles sit completely above the iframes */
         .ui-resizable-handle { 
             z-index: 9999 !important; 
             width: 15px !important; 
             height: 15px !important; 
             bottom: 2px !important; 
             right: 2px !important;
-            /* Optional: give it a slight color so users know where to drag */
             background: radial-gradient(circle at 100% 100%, rgba(255,255,255,0.2) 20%, transparent 40%);
         }
 
@@ -82,11 +92,11 @@
             pointer-events: none;
         }
 
-        /* Custom Scrollbars */
-        .panel-content::-webkit-scrollbar { width: 6px; }
-        .panel-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
-        .panel-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
-        .panel-content::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+        /* Custom Scrollbars applied to the adaptive wrapper now */
+        .adaptive-wrapper::-webkit-scrollbar { width: 6px; }
+        .adaptive-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
+        .adaptive-wrapper::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+        .adaptive-wrapper::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 
         /* Hot Asset Radar Styles */
         #hot-asset-table td { padding: 8px 10px; border-bottom: 1px solid #1c2230; font-size: 10px; vertical-align: middle; }
@@ -168,8 +178,6 @@
 
         <!-- Customizable Gridstack Layout -->
         <div class="grid-stack">
-            
-            <!-- Added gs-id attributes to all panels so localStorage knows which is which -->
 
             <!-- Newsfeed Latest -->
             <div class="grid-stack-item" gs-id="newsfeed" gs-x="0" gs-y="0" gs-w="7" gs-h="4">
@@ -177,7 +185,10 @@
                     <div class="panel">
                         <div class="panel-header">Newsfeed Latest</div>
                         <div class="panel-content">
-                            <iframe src="https://analyst-wire.pages.dev/dashboard-newsfeed" style="width: 100%; height: 100%; border: none;"></iframe>
+                            <!-- ADAPTIVE WRAPPER -->
+                            <div class="adaptive-wrapper">
+                                <iframe src="https://analyst-wire.pages.dev/dashboard-newsfeed" style="width: 100%; height: 100%; border: none;"></iframe>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -189,7 +200,10 @@
                     <div class="panel">
                         <div class="panel-header">Latest Briefing</div>
                         <div class="panel-content">
-                            <iframe src="https://analyst-wire.pages.dev/dashboard-newsfeed-reports" style="width: 100%; height: 100%; border: none;"></iframe>
+                            <!-- ADAPTIVE WRAPPER -->
+                            <div class="adaptive-wrapper">
+                                <iframe src="https://analyst-wire.pages.dev/dashboard-newsfeed-reports" style="width: 100%; height: 100%; border: none;"></iframe>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -200,20 +214,23 @@
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">Economic Calendar</div>
-                        <div class="panel-content" style="padding: 15px;">
-                            <div class="tradingview-widget-container" style="height: 100%; width: 100%;">
-                                <div class="tradingview-widget-container__widget" style="height: 100%; width: 100%;"></div>
-                                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
-                                {
-                                  "colorTheme": "dark",
-                                  "isTransparent": false,
-                                  "locale": "en",
-                                  "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
-                                  "importanceFilter": "-1,0,1",
-                                  "width": "100%",
-                                  "height": "100%"
-                                }
-                                </script>
+                        <div class="panel-content">
+                            <!-- ADAPTIVE WRAPPER -->
+                            <div class="adaptive-wrapper" style="padding: 15px;">
+                                <div class="tradingview-widget-container" style="height: 100%; width: 100%;">
+                                    <div class="tradingview-widget-container__widget" style="height: 100%; width: 100%;"></div>
+                                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
+                                    {
+                                      "colorTheme": "dark",
+                                      "isTransparent": false,
+                                      "locale": "en",
+                                      "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
+                                      "importanceFilter": "-1,0,1",
+                                      "width": "100%",
+                                      "height": "100%"
+                                    }
+                                    </script>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -225,20 +242,23 @@
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">Hot Asset Radar</div>
-                        <div class="panel-content" style="padding: 0;">
-                            <table id="hot-asset-table" style="width: 100%; border-collapse: collapse; text-align: left;">
-                                <thead>
-                                    <tr>
-                                        <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Ticker</th>
-                                        <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Bias</th>
-                                        <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">State</th>
-                                        <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="hot-radar-body">
-                                    <tr><td colspan="4" style="text-align: center; color: #8b949e; padding: 30px; font-size: 11px;">Scanning radar arrays for conviction signals...</td></tr>
-                                </tbody>
-                            </table>
+                        <div class="panel-content">
+                            <!-- ADAPTIVE WRAPPER -->
+                            <div class="adaptive-wrapper" style="padding: 0;">
+                                <table id="hot-asset-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                                    <thead>
+                                        <tr>
+                                            <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Ticker</th>
+                                            <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Bias</th>
+                                            <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">State</th>
+                                            <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="hot-radar-body">
+                                        <tr><td colspan="4" style="text-align: center; color: #8b949e; padding: 30px; font-size: 11px;">Scanning radar arrays for conviction signals...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -250,99 +270,102 @@
                     <div class="panel">
                         <div class="panel-header">Forex Market Hours</div>
                         <div class="panel-content">
-                            <div class="market-sessions-widget">
-                                <div class="msw-header">
-                                    <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple sessions are open.">HOT MARKET</div>
-                                    <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
+                            <!-- ADAPTIVE WRAPPER -->
+                            <div class="adaptive-wrapper">
+                                <div class="market-sessions-widget">
+                                    <div class="msw-header">
+                                        <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple sessions are open.">HOT MARKET</div>
+                                        <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
+                                    </div>
+                                    <div id="msw-sessions-container"></div>
                                 </div>
-                                <div id="msw-sessions-container"></div>
-                            </div>
-    
-                            <style>
-                                .market-sessions-widget { box-sizing: border-box; width: 100%; height: 100%; background-color: #0A0A0A; padding: 12px; color: #f8fafc; font-family: sans-serif; }
-                                .msw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-                                .msw-hot-alert { font-size: 9px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3); animation: pulse 1.5s infinite; cursor: help; }
-                                @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-                                .msw-local-clock { font-family: monospace; font-size: 11px; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #10b981; }
-                                .msw-session-row { display: grid; grid-template-columns: 1fr 60px auto; align-items: center; gap: 8px; margin-bottom: 10px; }
-                                .msw-session-name { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; }
-                                .msw-status-dot { height: 6px; width: 6px; border-radius: 50%; background: #475569; }
-                                .msw-status-dot.open { background: #10b981; }
-                                .msw-session-status-text { font-size: 9px; font-weight: bold; font-family: monospace; text-align: left; }
-                                .msw-session-status-text.open { color: #10b981; }
-                                .msw-session-status-text.closed { color: #f97316; }
-                                .msw-zone-time { font-size: 9px; color: #64748b; font-family: monospace; display: block; margin-top: 1px; }
-                                .msw-countdown-text { font-size: 9px; color: #94a3b8; font-family: monospace; text-align: right; min-width: 80px; }
-                            </style>
-    
-                            <script>
-                            (function() {
-                                const SESSIONS = [
-                                    { name: 'Sydney', zone: 'Australia/Sydney', open: 8, close: 16 },
-                                    { name: 'Tokyo', zone: 'Asia/Tokyo', open: 8, close: 16 },
-                                    { name: 'London', zone: 'Europe/London', open: 8, close: 16 },
-                                    { name: 'New York', zone: 'America/New_York', open: 8, close: 16 }
-                                ];
-    
-                                function tick() {
-                                    const now = new Date();
-                                    const timeEl = document.getElementById('msw-user-time');
-                                    if(timeEl) timeEl.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-                                    
-                                    let openCount = 0;
-                                    
-                                    SESSIONS.forEach(s => {
-                                        const formatter = new Intl.DateTimeFormat('en-US', {
-                                            timeZone: s.zone, hour: '2-digit', minute: '2-digit', weekday: 'long', hour12: false
-                                        });
-                                        const parts = formatter.formatToParts(now);
-                                        const h = parseInt(parts.find(p => p.type === 'hour').value);
-                                        const m = parseInt(parts.find(p => p.type === 'minute').value);
-                                        const day = parts.find(p => p.type === 'weekday').value;
-                                        const timeDecimal = h + (m / 60);
-    
-                                        const isWeekend = (day === 'Saturday' || day === 'Sunday');
-                                        const isOpen = !isWeekend && (timeDecimal >= s.open && timeDecimal < s.close);
+        
+                                <style>
+                                    .market-sessions-widget { box-sizing: border-box; width: 100%; min-height: 100%; background-color: #0A0A0A; padding: 12px; color: #f8fafc; font-family: sans-serif; }
+                                    .msw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+                                    .msw-hot-alert { font-size: 9px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3); animation: pulse 1.5s infinite; cursor: help; }
+                                    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+                                    .msw-local-clock { font-family: monospace; font-size: 11px; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #10b981; }
+                                    .msw-session-row { display: grid; grid-template-columns: 1fr 60px auto; align-items: center; gap: 8px; margin-bottom: 10px; }
+                                    .msw-session-name { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; }
+                                    .msw-status-dot { height: 6px; width: 6px; border-radius: 50%; background: #475569; }
+                                    .msw-status-dot.open { background: #10b981; }
+                                    .msw-session-status-text { font-size: 9px; font-weight: bold; font-family: monospace; text-align: left; }
+                                    .msw-session-status-text.open { color: #10b981; }
+                                    .msw-session-status-text.closed { color: #f97316; }
+                                    .msw-zone-time { font-size: 9px; color: #64748b; font-family: monospace; display: block; margin-top: 1px; }
+                                    .msw-countdown-text { font-size: 9px; color: #94a3b8; font-family: monospace; text-align: right; min-width: 80px; }
+                                </style>
+        
+                                <script>
+                                (function() {
+                                    const SESSIONS = [
+                                        { name: 'Sydney', zone: 'Australia/Sydney', open: 8, close: 16 },
+                                        { name: 'Tokyo', zone: 'Asia/Tokyo', open: 8, close: 16 },
+                                        { name: 'London', zone: 'Europe/London', open: 8, close: 16 },
+                                        { name: 'New York', zone: 'America/New_York', open: 8, close: 16 }
+                                    ];
+        
+                                    function tick() {
+                                        const now = new Date();
+                                        const timeEl = document.getElementById('msw-user-time');
+                                        if(timeEl) timeEl.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                                         
-                                        if(isOpen) openCount++;
+                                        let openCount = 0;
                                         
-                                        const timeRow = document.getElementById('time-'+s.name);
-                                        if(timeRow){
-                                            timeRow.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
-                                            document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
-                                            document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
-                                            document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
+                                        SESSIONS.forEach(s => {
+                                            const formatter = new Intl.DateTimeFormat('en-US', {
+                                                timeZone: s.zone, hour: '2-digit', minute: '2-digit', weekday: 'long', hour12: false
+                                            });
+                                            const parts = formatter.formatToParts(now);
+                                            const h = parseInt(parts.find(p => p.type === 'hour').value);
+                                            const m = parseInt(parts.find(p => p.type === 'minute').value);
+                                            const day = parts.find(p => p.type === 'weekday').value;
+                                            const timeDecimal = h + (m / 60);
+        
+                                            const isWeekend = (day === 'Saturday' || day === 'Sunday');
+                                            const isOpen = !isWeekend && (timeDecimal >= s.open && timeDecimal < s.close);
                                             
-                                            let output = "";
-                                            if (isOpen) {
-                                                let minsLeft = (s.close - timeDecimal) * 60;
-                                                output = `${Math.floor(minsLeft/60)}h ${Math.round(minsLeft%60)}m left`;
-                                            } else {
-                                                let hoursUntil = (s.open - timeDecimal);
-                                                if (isWeekend || hoursUntil < 0) {
-                                                    let daysToAdd = (day === 'Friday') ? 3 : (day === 'Saturday') ? 2 : 1;
-                                                    hoursUntil = (24 - timeDecimal) + ((daysToAdd - 1) * 24) + s.open;
+                                            if(isOpen) openCount++;
+                                            
+                                            const timeRow = document.getElementById('time-'+s.name);
+                                            if(timeRow){
+                                                timeRow.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+                                                document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
+                                                document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
+                                                document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
+                                                
+                                                let output = "";
+                                                if (isOpen) {
+                                                    let minsLeft = (s.close - timeDecimal) * 60;
+                                                    output = `${Math.floor(minsLeft/60)}h ${Math.round(minsLeft%60)}m left`;
+                                                } else {
+                                                    let hoursUntil = (s.open - timeDecimal);
+                                                    if (isWeekend || hoursUntil < 0) {
+                                                        let daysToAdd = (day === 'Friday') ? 3 : (day === 'Saturday') ? 2 : 1;
+                                                        hoursUntil = (24 - timeDecimal) + ((daysToAdd - 1) * 24) + s.open;
+                                                    }
+                                                    output = `${Math.floor(hoursUntil)}h ${Math.round((hoursUntil%1)*60)}m`;
                                                 }
-                                                output = `${Math.floor(hoursUntil)}h ${Math.round((hoursUntil%1)*60)}m`;
+                                                document.getElementById('count-'+s.name).innerText = output;
                                             }
-                                            document.getElementById('count-'+s.name).innerText = output;
-                                        }
-                                    });
-                                    const hotAlert = document.getElementById('msw-hot-alert');
-                                    if(hotAlert) hotAlert.style.display = (openCount > 1) ? 'block' : 'none';
-                                }
-    
-                                const container = document.getElementById('msw-sessions-container');
-                                if(container){
-                                    container.innerHTML = '';
-                                    SESSIONS.forEach(s => {
-                                        container.insertAdjacentHTML('beforeend', `<div class="msw-session-row"><div class="msw-session-name"><span class="msw-status-dot" id="dot-${s.name}"></span><span>${s.name}<small class="msw-zone-time" id="time-${s.name}"></small></span></div><span class="msw-session-status-text" id="stat-${s.name}"></span><div class="msw-countdown-text" id="count-${s.name}"></div></div>`);
-                                    });
-                                    setInterval(tick, 1000);
-                                    tick();
-                                }
-                            })();
-                            </script>
+                                        });
+                                        const hotAlert = document.getElementById('msw-hot-alert');
+                                        if(hotAlert) hotAlert.style.display = (openCount > 1) ? 'block' : 'none';
+                                    }
+        
+                                    const container = document.getElementById('msw-sessions-container');
+                                    if(container){
+                                        container.innerHTML = '';
+                                        SESSIONS.forEach(s => {
+                                            container.insertAdjacentHTML('beforeend', `<div class="msw-session-row"><div class="msw-session-name"><span class="msw-status-dot" id="dot-${s.name}"></span><span>${s.name}<small class="msw-zone-time" id="time-${s.name}"></small></span></div><span class="msw-session-status-text" id="stat-${s.name}"></span><div class="msw-countdown-text" id="count-${s.name}"></div></div>`);
+                                        });
+                                        setInterval(tick, 1000);
+                                        tick();
+                                    }
+                                })();
+                                </script>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -354,7 +377,10 @@
                     <div class="panel">
                         <div class="panel-header">Bloomberg TV</div>
                         <div class="panel-content">
-                           <iframe style="width: 100%; height: 100%; border: none;" src="https://www.youtube.com/embed/QB5BNdBFujE?si=8-fZ9o8d4el45vm_" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                           <!-- ADAPTIVE WRAPPER -->
+                           <div class="adaptive-wrapper">
+                               <iframe style="width: 100%; height: 100%; border: none;" src="https://www.youtube.com/embed/QB5BNdBFujE?si=8-fZ9o8d4el45vm_" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                           </div>
                         </div>
                     </div>
                 </div>
@@ -377,7 +403,6 @@
     // 2. Local Storage - Load Saved Layout
     const savedLayout = localStorage.getItem('analystWireDashboardLayout');
     if (savedLayout) {
-        // Loads the coordinates and applies them based on the gs-id we assigned
         grid.load(JSON.parse(savedLayout));
     }
 
@@ -385,6 +410,38 @@
     grid.on('change', function(event, items) {
         const currentLayout = grid.save();
         localStorage.setItem('analystWireDashboardLayout', JSON.stringify(currentLayout));
+    });
+
+    // 4. Adaptive Scale Down Logic for small panels
+    const BASE_MIN_WIDTH = 480; // Threshold width (px) below which it starts zooming out
+    const MIN_SCALE = 0.4;      // Max zoom out (40% of original size)
+
+    const panelObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const width = entry.contentRect.width;
+            const wrapper = entry.target.querySelector('.adaptive-wrapper');
+            
+            if (wrapper && width > 0) {
+                if (width < BASE_MIN_WIDTH) {
+                    let scale = width / BASE_MIN_WIDTH;
+                    scale = Math.max(scale, MIN_SCALE); // Prevent it from getting microscopic
+                    
+                    // Apply scale but artificially increase width/height so widgets think they have full space
+                    wrapper.style.transform = `scale(${scale})`;
+                    wrapper.style.width = `${100 / scale}%`;
+                    wrapper.style.height = `${100 / scale}%`;
+                } else {
+                    wrapper.style.transform = `scale(1)`;
+                    wrapper.style.width = `100%`;
+                    wrapper.style.height = `100%`;
+                }
+            }
+        }
+    });
+
+    // Attach observer to all panel-content divs
+    document.querySelectorAll('.panel-content').forEach(panel => {
+        panelObserver.observe(panel);
     });
 
     // Original Security and Logic Scripts
