@@ -551,8 +551,8 @@
 
     // INITIALIZATION INSIDE WINDOW ONLOAD TO ENSURE PROPER DIMENSIONS
     window.onload = function() {
-        // 1. PRE-LOAD LAYOUT STRICTLY USING V7
-        const savedLayout = localStorage.getItem('analystWireLayoutV7');
+        // 1. PRE-LOAD LAYOUT STRICTLY USING V4
+        const savedLayout = localStorage.getItem('analystWireLayoutV4');
         if (savedLayout) {
             try {
                 const parsed = JSON.parse(savedLayout);
