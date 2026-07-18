@@ -558,8 +558,8 @@
         saveLayoutState();
     }
 
-    // 1. PRE-LOAD LAYOUT STRICTLY USING V4
-    const savedLayout = localStorage.getItem('analystWireLayoutV4');
+    // 1. PRE-LOAD LAYOUT STRICTLY USING V6
+    const savedLayout = localStorage.getItem('analystWireLayoutV6');
     if (savedLayout) {
         try {
             const parsed = JSON.parse(savedLayout);
