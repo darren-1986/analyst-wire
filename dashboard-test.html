@@ -88,12 +88,13 @@
         #dock-grid .panel-content { display: none !important; }
         #dock-grid .ui-resizable-handle { display: none !important; }
 
-        /* DASHBOARD AREA - DEADZONE COMPLETELY REMOVED */
-        .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; display: flex; flex-direction: column; }
+        /* DASHBOARD AREA - DEADZONE & HEIGHT FIXES */
+        /* display: block instead of flex ensures the child min-height resolves properly */
+        .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; display: block; }
         
+        /* Enforces a massive physical drop boundary for Gridstack */
         #main-grid { 
-            flex-grow: 1; 
-            min-height: 100%; 
+            min-height: calc(100vh - 30px) !important; 
             background: rgba(41, 98, 255, 0.02); 
             border-radius: 10px; 
             margin: 0; 
@@ -601,6 +602,7 @@
     }, '#dock-grid');
 
     // 3. INITIALIZE MAIN DASHBOARD GRID
+    // CRITICAL FIX: minRow is set to 15 to map out an undeniable physical drop zone
     let mainGrid = GridStack.init({
         cellHeight: '60px', 
         margin: 8,         
@@ -609,7 +611,7 @@
         alwaysShowResizeHandle: true,
         acceptWidgets: true,
         float: true,
-        minRow: 1 // Ensures empty dashboard keeps its structural drop zone height
+        minRow: 15 
     }, '#main-grid');
 
     // 4. HANDLE DRAG & DROP SIZING AUTOMATION
