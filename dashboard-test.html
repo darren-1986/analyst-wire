@@ -14,44 +14,31 @@
     <script src="https://cdn.jsdelivr.net/npm/gridstack@10.0.1/dist/gridstack-all.js"></script>
 
     <style>
-        /* Modern typography import */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-        /* Unified Dark Theme - Row Flex for Sidebar */
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #090b10; color: #d1d4dc; margin: 0; height: 100vh; width: 100vw; display: flex; flex-direction: row; overflow: hidden; font-size: 13px; position: relative; }
         *, *:before, *:after { box-sizing: border-box; }
         
-        /* ========================================================================= */
-        /* SIDEBAR NAVIGATION                                                        */
-        /* ========================================================================= */
+        /* SIDEBAR */
         .sidebar { background: #0d1117; width: 220px; border-right: 1px solid #1c2230; display: flex; flex-direction: column; transition: width 0.3s ease; z-index: 1000; flex-shrink: 0; position: relative; }
         .sidebar.collapsed { width: 65px; }
-        
-        /* Logo Area */
         .sidebar-header { height: 60px; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid #1c2230; position: relative; overflow: hidden; }
         .logo-img { height: 35px; transition: 0.3s ease; object-fit: cover; object-position: left; width: 150px; }
         .sidebar.collapsed .logo-img { width: 35px; } 
-        
-        /* Collapse Toggle Button */
         .collapse-btn { position: absolute; right: -12px; top: 18px; background: #2962ff; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1001; box-shadow: 0 2px 5px rgba(0,0,0,0.5); font-size: 10px; font-weight: bold; }
         
-        /* Links */
         .nav-links { display: flex; flex-direction: column; padding: 15px 0; flex-grow: 1; overflow-y: auto; overflow-x: hidden; }
         .nav-links::-webkit-scrollbar { width: 4px; }
         .nav-links::-webkit-scrollbar-thumb { background: #30363d; }
         .nav-link { display: flex; align-items: center; padding: 12px 20px; color: #8b949e; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s, background 0.2s; white-space: nowrap; cursor: pointer; border-left: 3px solid transparent; }
         .nav-link:hover { color: #fff; background: rgba(255,255,255,0.03); }
         .nav-link.active { color: #2962ff; background: rgba(41, 98, 255, 0.08); border-left-color: #2962ff; }
-        
-        /* Highlight for the Widget Library button */
         .nav-link.action-btn { color: #58a6ff; font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid #1c2230; padding-bottom: 15px; }
         .nav-link.action-btn:hover { background: rgba(88, 166, 255, 0.1); }
-
         .nav-icon { width: 20px; height: 20px; margin-right: 15px; fill: currentColor; flex-shrink: 0; }
         .nav-text { transition: opacity 0.2s; opacity: 1; }
         .sidebar.collapsed .nav-text { opacity: 0; pointer-events: none; }
         
-        /* Inline Settings Menu */
         .settings-accordion { display: none; background: #05070a; flex-direction: column; border-top: 1px solid #1c2230; border-bottom: 1px solid #1c2230; }
         .settings-accordion.open { display: flex; }
         .sidebar.collapsed .settings-accordion { position: absolute; left: 65px; width: 180px; background: #161b22; border: 1px solid #30363d; border-radius: 0 8px 8px 0; box-shadow: 4px 4px 15px rgba(0,0,0,0.5); top: auto; bottom: 0; display: none; z-index: 1000; }
@@ -61,46 +48,51 @@
         .sub-link:hover { background: #21262d; color: #fff; }
         .sub-link.danger { color: #f85149; }
 
-        /* ========================================================================= */
-        /* MAIN WORKSPACE                                                            */
-        /* ========================================================================= */
         .main-content { flex-grow: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #05070a; }
 
-        /* WIDGET LIBRARY DOCK (Standard Flow, NOT floating, initially hidden) */
-        #dock-wrapper { background: #0d1117; border-bottom: 1px dashed #30363d; padding: 15px 20px; flex-shrink: 0; display: none; }
+        /* WIDGET LIBRARY DOCK - FIXED SIZE & SCROLLBAR */
+        #dock-wrapper { 
+            background: #0d1117; 
+            border-bottom: 2px solid #30363d; 
+            padding: 15px 20px; 
+            flex-shrink: 0; 
+            display: none; 
+            max-height: 180px; /* Strong visual boundary */
+            overflow-y: auto; 
+            overflow-x: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
         
+        /* Clean scrollbar for dock */
+        #dock-wrapper::-webkit-scrollbar { width: 6px; }
+        #dock-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        #dock-wrapper::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+
         .dock-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .dock-title { font-size: 10px; color: #8b949e; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
         .close-dock-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #c9d1d9; cursor: pointer; font-size: 10px; padding: 4px 10px; font-weight: 600; text-transform: uppercase; transition: 0.2s; }
         .close-dock-btn:hover { background: rgba(248,81,73,0.1); color: #ff7b72; border-color: rgba(248,81,73,0.3); }
 
         #dock-grid { min-height: 55px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 5px; border: 1px dashed #30363d; }
-        
-        /* Fix for Dock Item Text Cropping */
         #dock-grid .grid-stack-item-content { background: #161b22; border: 1px solid #30363d; border-radius: 6px; cursor: grab; transition: background 0.2s, border-color 0.2s; }
         #dock-grid .grid-stack-item-content:hover { background: #21262d; border-color: #8b949e; }
         #dock-grid .panel { background: transparent; border: none; box-shadow: none; height: 100%; display: flex; align-items: center; justify-content: center; }
         #dock-grid .panel-controls { display: none !important; }
-        
-        /* Allow text to wrap inside the dock on mobile */
         #dock-grid .panel-header { background: transparent; border: none; padding: 4px; color: #c9d1d9; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10px; line-height: 1.2; white-space: normal; cursor: grab; pointer-events: auto; }
-        
         #dock-grid .panel-content { display: none !important; }
         #dock-grid .ui-resizable-handle { display: none !important; }
 
-        /* DASHBOARD AREA - DEADZONE & HEIGHT FIXES */
-        /* display: block instead of flex ensures the child min-height resolves properly */
-        .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; display: block; }
+        /* DASHBOARD AREA - TIGHTER GAPS */
+        .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 5px; display: block; }
         
-        /* Enforces a massive physical drop boundary for Gridstack */
         #main-grid { 
-            min-height: calc(100vh - 30px) !important; 
-            background: rgba(41, 98, 255, 0.02); 
+            min-height: calc(100vh - 10px) !important; 
+            background: transparent; 
             border-radius: 10px; 
             margin: 0; 
         }
         
-        /* Standard Panel adjustments */
+        /* Standard Panel */
         .grid-stack-item-content { display: flex; flex-direction: column; }
         .panel { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .panel-header { background: #161b22; padding: 8px 15px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; color: #8b949e; user-select: none; cursor: grab; touch-action: none; display: flex; justify-content: space-between; align-items: center; white-space: nowrap; }
@@ -112,16 +104,19 @@
         .close-btn { color: #f85149; border-color: rgba(248,81,73,0.3); margin-left: 8px; }
         .close-btn:hover { background: rgba(248,81,73,0.2); color: #ff7b72; }
         .zoom-label { font-size: 9px; width: 35px; text-align: center; color: #c9d1d9; font-family: monospace; }
-        .panel-content { flex-grow: 1; overflow: auto; position: relative; }
-
-        /* ADAPTIVE WRAPPER */
-        .adaptive-wrapper { transform-origin: top left; width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; }
-        body.is-dragging iframe { pointer-events: none !important; }
+        
+        /* OVERFLOW FIX TO PREVENT DOUBLE SCROLLBARS */
+        .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
+        .adaptive-wrapper { transform-origin: top left; width: 100%; height: 100%; overflow: visible !important; }
+        
+        /* BULLETPROOF IFRAME SHIELD FOR RESIZING/DRAGGING */
+        body.is-dragging iframe, body.is-dragging .adaptive-wrapper { pointer-events: none !important; }
+        
         .ui-resizable-handle { z-index: 9999 !important; width: 15px !important; height: 15px !important; bottom: 2px !important; right: 2px !important; background: radial-gradient(circle at 100% 100%, rgba(255,255,255,0.2) 20%, transparent 40%); }
         
-        .adaptive-wrapper::-webkit-scrollbar, .panel-content::-webkit-scrollbar { width: 6px; }
-        .adaptive-wrapper::-webkit-scrollbar-track, .panel-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
-        .adaptive-wrapper::-webkit-scrollbar-thumb, .panel-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+        .panel-content::-webkit-scrollbar { width: 6px; }
+        .panel-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
+        .panel-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 
         /* Widget specific visual styles */
         #hot-asset-table td { padding: 8px 10px; border-bottom: 1px solid #1c2230; font-size: 10px; vertical-align: middle; }
@@ -162,7 +157,7 @@
     </div>
     <div class="nav-links">
         
-        <!-- Toggle Library Button integrated cleanly into Sidebar -->
+        <!-- Toggle Library Button -->
         <a class="nav-link action-btn" onclick="toggleDock()">
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             <span class="nav-text">Widget Library</span>
@@ -217,7 +212,6 @@
         </div>
         <div id="dock-grid" class="grid-stack">
             
-            <!-- Notice: gs-w="3" ensures widgets are wide enough in the dock on mobile/tablets -->
             <div class="grid-stack-item" gs-id="newsfeed" gs-w="3" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -306,20 +300,23 @@
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
                         </div>
+                        <!-- WRAPPED IN ADAPTIVE WRAPPER FOR ZOOM -->
                         <div class="panel-content" style="padding: 0;">
-                            <table id="hot-asset-table" style="width: 100%; border-collapse: collapse; text-align: left;">
-                                <thead>
-                                    <tr>
-                                        <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Ticker</th>
-                                        <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Bias</th>
-                                        <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">State</th>
-                                        <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="hot-radar-body">
-                                    <tr><td colspan="4" style="text-align: center; color: #8b949e; padding: 30px; font-size: 11px;">Scanning radar arrays for conviction signals...</td></tr>
-                                </tbody>
-                            </table>
+                            <div class="adaptive-wrapper">
+                                <table id="hot-asset-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                                    <thead>
+                                        <tr>
+                                            <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Ticker</th>
+                                            <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Bias</th>
+                                            <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">State</th>
+                                            <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="hot-radar-body">
+                                        <tr><td colspan="4" style="text-align: center; color: #8b949e; padding: 30px; font-size: 11px;">Scanning radar arrays for conviction signals...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -337,13 +334,16 @@
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
                         </div>
+                        <!-- WRAPPED IN ADAPTIVE WRAPPER FOR ZOOM -->
                         <div class="panel-content">
-                            <div class="market-sessions-widget">
-                                <div class="msw-header">
-                                    <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple sessions are open.">HOT MARKET</div>
-                                    <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
+                            <div class="adaptive-wrapper">
+                                <div class="market-sessions-widget">
+                                    <div class="msw-header">
+                                        <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple sessions are open.">HOT MARKET</div>
+                                        <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
+                                    </div>
+                                    <div id="msw-sessions-container"></div>
                                 </div>
-                                <div id="msw-sessions-container"></div>
                             </div>
 
                             <style>
@@ -468,6 +468,9 @@
 </div>
 
 <script>
+    // System Variables
+    let dockGrid, mainGrid;
+
     // Sidebar Toggle
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
@@ -508,16 +511,6 @@
         window.location.reload();
     }
 
-    // Bulletproof iframe shield
-    document.addEventListener('mousedown', function(e) {
-        if (e.target.closest('.panel-header') || e.target.closest('.ui-resizable-handle')) {
-            document.body.classList.add('is-dragging');
-        }
-    });
-    document.addEventListener('mouseup', function() {
-        document.body.classList.remove('is-dragging');
-    });
-
     // Adjust Manual Zoom
     function adjustZoom(btn, delta) {
         const el = btn.closest('.grid-stack-item');
@@ -540,6 +533,7 @@
         let zoomMult = parseFloat(panelItem.getAttribute('data-zoom')) || 1.0;
         let finalScale = baseScale * zoomMult;
         wrapper.style.transform = `scale(${finalScale})`;
+        // Using inverse scaling so the wrapper fits perfectly without forcing double scrollbars
         wrapper.style.width = `${100 / finalScale}%`;
         wrapper.style.height = `${100 / finalScale}%`;
     }
@@ -553,93 +547,134 @@
         if (label) label.innerText = '100%';
         document.getElementById('dock-grid').appendChild(el);
         dockGrid.makeWidget(el);
-        // Force width to 3 columns inside dock to prevent text clipping on mobile
         dockGrid.update(el, {w: 3, h: 1}); 
         saveLayoutState();
     }
 
-    // 1. PRE-LOAD LAYOUT STRICTLY USING V4
-    const savedLayout = localStorage.getItem('analystWireLayoutV4');
-    if (savedLayout) {
-        try {
-            const parsed = JSON.parse(savedLayout);
-            parsed.forEach(item => {
-                if (item.id) {
-                    const el = document.querySelector(`[gs-id="${item.id}"]`);
-                    if (el) {
-                        el.setAttribute('gs-x', item.x);
-                        el.setAttribute('gs-y', item.y);
-                        el.setAttribute('gs-w', item.w);
-                        el.setAttribute('gs-h', item.h);
-                        const savedZoom = item.zoom || '1.0';
-                        el.setAttribute('data-zoom', savedZoom);
-                        const label = el.querySelector('.zoom-label');
-                        if (label) label.innerText = Math.round(parseFloat(savedZoom) * 100) + '%';
-                        if (item.grid === 'main') {
-                            el.setAttribute('data-in-dock', 'false');
-                            document.getElementById('main-grid').appendChild(el);
-                        } else {
-                            el.setAttribute('data-in-dock', 'true');
-                            document.getElementById('dock-grid').appendChild(el);
+    // INITIALIZATION INSIDE WINDOW ONLOAD TO ENSURE PROPER DIMENSIONS
+    window.onload = function() {
+        // 1. PRE-LOAD LAYOUT STRICTLY USING V4
+        const savedLayout = localStorage.getItem('analystWireLayoutV4');
+        if (savedLayout) {
+            try {
+                const parsed = JSON.parse(savedLayout);
+                parsed.forEach(item => {
+                    if (item.id) {
+                        const el = document.querySelector(`[gs-id="${item.id}"]`);
+                        if (el) {
+                            el.setAttribute('gs-x', item.x);
+                            el.setAttribute('gs-y', item.y);
+                            el.setAttribute('gs-w', item.w);
+                            el.setAttribute('gs-h', item.h);
+                            const savedZoom = item.zoom || '1.0';
+                            el.setAttribute('data-zoom', savedZoom);
+                            const label = el.querySelector('.zoom-label');
+                            if (label) label.innerText = Math.round(parseFloat(savedZoom) * 100) + '%';
+                            if (item.grid === 'main') {
+                                el.setAttribute('data-in-dock', 'false');
+                                document.getElementById('main-grid').appendChild(el);
+                            } else {
+                                el.setAttribute('data-in-dock', 'true');
+                                document.getElementById('dock-grid').appendChild(el);
+                            }
                         }
                     }
+                });
+            } catch (e) {
+                console.error("Layout parse failed", e);
+            }
+        }
+
+        // 2. INITIALIZE DOCK GRID
+        // CRITICAL: maxRow prevents the library from expanding downward forever, fixing the drop deadzone
+        dockGrid = GridStack.init({
+            cellHeight: '45px',
+            margin: 5,
+            acceptWidgets: true,
+            disableResize: true, 
+            float: false,
+            maxRow: 4, 
+            disableOneColumnMode: true,        
+            handle: '.panel-header'
+        }, '#dock-grid');
+
+        // 3. INITIALIZE MAIN DASHBOARD GRID
+        mainGrid = GridStack.init({
+            cellHeight: '60px', 
+            margin: 5,         
+            handle: '.panel-header', 
+            animate: true,
+            alwaysShowResizeHandle: true,
+            acceptWidgets: true,
+            float: true,
+            minRow: 15
+        }, '#main-grid');
+
+        // IFRAME EVENT FIX: PREVENTS STICKY RESIZING/DRAGGING OVER IFRAMES
+        mainGrid.on('dragstart resizestart', function(e, ui) {
+            document.body.classList.add('is-dragging');
+        });
+        mainGrid.on('dragstop resizestop', function(e, ui) {
+            document.body.classList.remove('is-dragging');
+        });
+
+        // 4. HANDLE DRAG & DROP SIZING AUTOMATION
+        mainGrid.on('added', function(e, items) {
+            items.forEach(item => {
+                let el = item.el;
+                if (el.getAttribute('data-in-dock') === 'true') {
+                    el.setAttribute('data-in-dock', 'false');
+                    let defaultW = parseInt(el.getAttribute('data-default-w')) || 4;
+                    let defaultH = parseInt(el.getAttribute('data-default-h')) || 4;
+                    mainGrid.update(el, {w: defaultW, h: defaultH});
                 }
             });
-        } catch (e) {
-            console.error("Layout parse failed", e);
-        }
-    }
+            saveLayoutState();
+        });
 
-    // 2. INITIALIZE DOCK GRID 
-    let dockGrid = GridStack.init({
-        cellHeight: '45px',
-        margin: 5,
-        acceptWidgets: true,
-        disableResize: true, 
-        float: false,
-        disableOneColumnMode: true,        
-        handle: '.panel-header'
-    }, '#dock-grid');
+        dockGrid.on('added', function(e, items) {
+            items.forEach(item => {
+                let el = item.el;
+                el.setAttribute('data-in-dock', 'true');
+                el.setAttribute('data-zoom', '1.0');
+                const label = el.querySelector('.zoom-label');
+                if(label) label.innerText = '100%';
+                dockGrid.update(el, {w: 3, h: 1}); 
+            });
+            saveLayoutState();
+        });
 
-    // 3. INITIALIZE MAIN DASHBOARD GRID
-    // CRITICAL FIX: minRow is set to 15 to map out an undeniable physical drop zone
-    let mainGrid = GridStack.init({
-        cellHeight: '60px', 
-        margin: 8,         
-        handle: '.panel-header', 
-        animate: true,
-        alwaysShowResizeHandle: true,
-        acceptWidgets: true,
-        float: true,
-        minRow: 15 
-    }, '#main-grid');
+        mainGrid.on('change', saveLayoutState);
+        dockGrid.on('change', saveLayoutState);
+        mainGrid.on('removed', saveLayoutState);
+        dockGrid.on('removed', saveLayoutState);
 
-    // 4. HANDLE DRAG & DROP SIZING AUTOMATION
-    mainGrid.on('added', function(e, items) {
-        items.forEach(item => {
-            let el = item.el;
-            if (el.getAttribute('data-in-dock') === 'true') {
-                el.setAttribute('data-in-dock', 'false');
-                let defaultW = parseInt(el.getAttribute('data-default-w')) || 4;
-                let defaultH = parseInt(el.getAttribute('data-default-h')) || 4;
-                mainGrid.update(el, {w: defaultW, h: defaultH});
+        // Dynamic Scale Down & Zoom Observer
+        const panelObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                const width = entry.contentRect.width;
+                const target = entry.target; 
+                const wrapper = target.querySelector('.adaptive-wrapper');
+                const panelItem = target.closest('.grid-stack-item');
+                
+                if (wrapper && width > 0) {
+                    let baseScale = width < 480 ? Math.max(width / 480, 0.4) : 1;
+                    let zoomMult = parseFloat(panelItem.getAttribute('data-zoom')) || 1.0;
+                    let finalScale = baseScale * zoomMult;
+                    wrapper.style.transform = `scale(${finalScale})`;
+                    wrapper.style.width = `${100 / finalScale}%`;
+                    wrapper.style.height = `${100 / finalScale}%`;
+                }
             }
         });
-        saveLayoutState();
-    });
 
-    dockGrid.on('added', function(e, items) {
-        items.forEach(item => {
-            let el = item.el;
-            el.setAttribute('data-in-dock', 'true');
-            el.setAttribute('data-zoom', '1.0');
-            const label = el.querySelector('.zoom-label');
-            if(label) label.innerText = '100%';
-            // Reset to 3 wide inside the dock to prevent text clipping
-            dockGrid.update(el, {w: 3, h: 1}); 
+        document.querySelectorAll('.panel-content').forEach(panel => {
+            panelObserver.observe(panel);
         });
-        saveLayoutState();
-    });
+        
+        // Execute Authentication and Data Loads
+        init();
+    };
 
     // 5. SAVE LAYOUT STATE STRICTLY TO V4
     function saveLayoutState() {
@@ -653,33 +688,6 @@
         localStorage.setItem('analystWireLayoutV4', JSON.stringify(combined));
     }
 
-    mainGrid.on('change', saveLayoutState);
-    dockGrid.on('change', saveLayoutState);
-    mainGrid.on('removed', saveLayoutState);
-    dockGrid.on('removed', saveLayoutState);
-
-    // Dynamic Scale Down & Zoom Observer
-    const panelObserver = new ResizeObserver(entries => {
-        for (let entry of entries) {
-            const width = entry.contentRect.width;
-            const target = entry.target; 
-            const wrapper = target.querySelector('.adaptive-wrapper');
-            const panelItem = target.closest('.grid-stack-item');
-            
-            if (wrapper && width > 0) {
-                let baseScale = width < 480 ? Math.max(width / 480, 0.4) : 1;
-                let zoomMult = parseFloat(panelItem.getAttribute('data-zoom')) || 1.0;
-                let finalScale = baseScale * zoomMult;
-                wrapper.style.transform = `scale(${finalScale})`;
-                wrapper.style.width = `${100 / finalScale}%`;
-                wrapper.style.height = `${100 / finalScale}%`;
-            }
-        }
-    });
-
-    document.querySelectorAll('.panel-content').forEach(panel => {
-        panelObserver.observe(panel);
-    });
 
     // Original Security and Logic Scripts
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
@@ -916,7 +924,6 @@
 
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
     
-    init();
 </script>
 </body>
 </html>
