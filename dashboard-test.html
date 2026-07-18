@@ -42,6 +42,10 @@
         .nav-link { display: flex; align-items: center; padding: 12px 20px; color: #8b949e; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s, background 0.2s; white-space: nowrap; cursor: pointer; border-left: 3px solid transparent; }
         .nav-link:hover { color: #fff; background: rgba(255,255,255,0.03); }
         .nav-link.active { color: #2962ff; background: rgba(41, 98, 255, 0.08); border-left-color: #2962ff; }
+        
+        /* Highlight for the Widget Library button */
+        .nav-link.action-btn { color: #58a6ff; font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid #1c2230; padding-bottom: 15px; }
+        .nav-link.action-btn:hover { background: rgba(88, 166, 255, 0.1); }
 
         .nav-icon { width: 20px; height: 20px; margin-right: 15px; fill: currentColor; flex-shrink: 0; }
         .nav-text { transition: opacity 0.2s; opacity: 1; }
@@ -62,14 +66,14 @@
         /* ========================================================================= */
         .main-content { flex-grow: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #05070a; }
 
-        /* WIDGET MENU TAB BAR */
-        .workspace-tab-bar { background: #090b10; border-bottom: 1px solid #1c2230; padding: 10px 15px; flex-shrink: 0; display: flex; align-items: center; }
-        .widget-toggle-btn { background: #161b22; border: 1px solid #30363d; color: #c9d1d9; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
-        .widget-toggle-btn:hover { background: #21262d; color: #fff; border-color: #8b949e; }
-
-        /* WIDGET LIBRARY DOCK (Standard Flow, NOT floating) */
+        /* WIDGET LIBRARY DOCK (Standard Flow, NOT floating, initially hidden) */
         #dock-wrapper { background: #0d1117; border-bottom: 1px dashed #30363d; padding: 15px 20px; flex-shrink: 0; display: none; }
         
+        .dock-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .dock-title { font-size: 10px; color: #8b949e; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .close-dock-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #c9d1d9; cursor: pointer; font-size: 10px; padding: 4px 10px; font-weight: 600; text-transform: uppercase; transition: 0.2s; }
+        .close-dock-btn:hover { background: rgba(248,81,73,0.1); color: #ff7b72; border-color: rgba(248,81,73,0.3); }
+
         #dock-grid { min-height: 55px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 5px; border: 1px dashed #30363d; }
         
         /* Fix for Dock Item Text Cropping */
@@ -84,12 +88,13 @@
         #dock-grid .panel-content { display: none !important; }
         #dock-grid .ui-resizable-handle { display: none !important; }
 
-        /* DASHBOARD AREA - DEADZONE COMPLETELY REMOVED */
-        .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; display: flex; flex-direction: column; }
+        /* DASHBOARD AREA - DEADZONE & HEIGHT FIXES */
+        /* display: block instead of flex ensures the child min-height resolves properly */
+        .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; display: block; }
         
+        /* Enforces a massive physical drop boundary for Gridstack */
         #main-grid { 
-            flex-grow: 1; 
-            min-height: 100%; 
+            min-height: calc(100vh - 30px) !important; 
             background: rgba(41, 98, 255, 0.02); 
             border-radius: 10px; 
             margin: 0; 
@@ -156,6 +161,13 @@
         <button class="collapse-btn" onclick="toggleSidebar()" id="sidebar-toggle-btn">&lt;&lt;</button>
     </div>
     <div class="nav-links">
+        
+        <!-- Toggle Library Button integrated cleanly into Sidebar -->
+        <a class="nav-link action-btn" onclick="toggleDock()">
+            <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <span class="nav-text">Widget Library</span>
+        </a>
+
         <a href="terminal.html" class="nav-link active">
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
             <span class="nav-text">Dashboard</span>
@@ -196,14 +208,13 @@
 
 <!-- MAIN WORKSPACE -->
 <div class="main-content">
-    
-    <!-- WIDGET MENU TAB BAR -->
-    <div class="workspace-tab-bar">
-        <button class="widget-toggle-btn" id="widget-toggle-btn" onclick="toggleDock()">➕ Open Widget Library</button>
-    </div>
 
     <!-- WIDGET LIBRARY DOCK -->
     <div id="dock-wrapper">
+        <div class="dock-header">
+            <div class="dock-title">Widget Library</div>
+            <button class="close-dock-btn" onclick="toggleDock()">Hide Library ▲</button>
+        </div>
         <div id="dock-grid" class="grid-stack">
             
             <!-- Notice: gs-w="3" ensures widgets are wide enough in the dock on mobile/tablets -->
@@ -484,15 +495,7 @@
     // Dock Toggle Logic
     function toggleDock() {
         const dock = document.getElementById('dock-wrapper');
-        const btn = document.getElementById('widget-toggle-btn');
-        
-        if (dock.style.display === 'block') {
-            dock.style.display = 'none';
-            btn.innerHTML = '➕ Open Widget Library';
-        } else {
-            dock.style.display = 'block';
-            btn.innerHTML = '✖ Hide Library';
-        }
+        dock.style.display = (dock.style.display === 'block') ? 'none' : 'block';
     }
 
     // System Reset Function
@@ -599,6 +602,7 @@
     }, '#dock-grid');
 
     // 3. INITIALIZE MAIN DASHBOARD GRID
+    // CRITICAL FIX: minRow is set to 15 to map out an undeniable physical drop zone
     let mainGrid = GridStack.init({
         cellHeight: '60px', 
         margin: 8,         
@@ -607,7 +611,7 @@
         alwaysShowResizeHandle: true,
         acceptWidgets: true,
         float: true,
-        minRow: 1 // Ensures empty dashboard keeps its structural drop zone height
+        minRow: 15 
     }, '#main-grid');
 
     // 4. HANDLE DRAG & DROP SIZING AUTOMATION
