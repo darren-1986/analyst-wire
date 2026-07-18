@@ -50,20 +50,19 @@
 
         .main-content { flex-grow: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #05070a; }
 
-        /* WIDGET LIBRARY DOCK - FIXED SIZE & SCROLLBAR */
+        /* WIDGET LIBRARY DOCK - FIXED BOUNDARY */
         #dock-wrapper { 
             background: #0d1117; 
             border-bottom: 2px solid #30363d; 
             padding: 15px 20px; 
             flex-shrink: 0; 
             display: none; 
-            max-height: 180px; /* Strong visual boundary */
+            max-height: 180px; 
             overflow-y: auto; 
             overflow-x: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         
-        /* Clean scrollbar for dock */
         #dock-wrapper::-webkit-scrollbar { width: 6px; }
         #dock-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
         #dock-wrapper::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
@@ -82,7 +81,7 @@
         #dock-grid .panel-content { display: none !important; }
         #dock-grid .ui-resizable-handle { display: none !important; }
 
-        /* DASHBOARD AREA - TIGHTER GAPS */
+        /* DASHBOARD AREA */
         .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 5px; display: block; }
         
         #main-grid { 
@@ -105,7 +104,6 @@
         .close-btn:hover { background: rgba(248,81,73,0.2); color: #ff7b72; }
         .zoom-label { font-size: 9px; width: 35px; text-align: center; color: #c9d1d9; font-family: monospace; }
         
-        /* OVERFLOW FIX TO PREVENT DOUBLE SCROLLBARS */
         .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
         .adaptive-wrapper { transform-origin: top left; width: 100%; height: 100%; overflow: visible !important; }
         
@@ -553,8 +551,8 @@
 
     // INITIALIZATION INSIDE WINDOW ONLOAD TO ENSURE PROPER DIMENSIONS
     window.onload = function() {
-        // 1. PRE-LOAD LAYOUT STRICTLY USING V6
-        const savedLayout = localStorage.getItem('analystWireLayoutV6');
+        // 1. PRE-LOAD LAYOUT STRICTLY USING V7
+        const savedLayout = localStorage.getItem('analystWireLayoutV7');
         if (savedLayout) {
             try {
                 const parsed = JSON.parse(savedLayout);
@@ -586,14 +584,14 @@
         }
 
         // 2. INITIALIZE DOCK GRID
-        // CRITICAL: maxRow prevents the library from expanding downward forever, fixing the drop deadzone
+        // CRITICAL FIX: acceptWidgets set to FALSE to kill the infinite expansion drag bug
         dockGrid = GridStack.init({
             cellHeight: '45px',
             margin: 5,
-            acceptWidgets: true,
+            acceptWidgets: false, 
+            dragOut: true,
             disableResize: true, 
             float: false,
-            maxRow: 4, 
             disableOneColumnMode: true,        
             handle: '.panel-header'
         }, '#dock-grid');
