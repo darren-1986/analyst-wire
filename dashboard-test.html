@@ -13,9 +13,7 @@
     <link href="https://cdn.jsdelivr.net/npm/gridstack@10.0.1/dist/gridstack.min.css" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/gridstack@10.0.1/dist/gridstack-all.js"></script>
 
-    <!-- ========================================== -->
-    <!-- NEW TRADINGVIEW WIDGET SCRIPTS             -->
-    <!-- ========================================== -->
+    <!-- TRADINGVIEW WIDGET SCRIPTS -->
     <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-market-data.js"></script>
     <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-technical-analysis.js"></script>
 
@@ -57,18 +55,7 @@
         .main-content { flex-grow: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #05070a; }
 
         /* WIDGET LIBRARY DOCK */
-        #dock-wrapper { 
-            background: #0d1117; 
-            border-bottom: 2px solid #30363d; 
-            padding: 15px 20px; 
-            flex-shrink: 0; 
-            display: none; 
-            max-height: 180px; 
-            overflow-y: auto; 
-            overflow-x: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        
+        #dock-wrapper { background: #0d1117; border-bottom: 2px solid #30363d; padding: 15px 20px; flex-shrink: 0; display: none; max-height: 180px; overflow-y: auto; overflow-x: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         #dock-wrapper::-webkit-scrollbar { width: 6px; }
         #dock-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
         #dock-wrapper::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
@@ -90,36 +77,25 @@
 
         /* DASHBOARD AREA */
         .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 5px; display: block; }
+        #main-grid { min-height: calc(100vh - 10px) !important; background: transparent; border-radius: 10px; margin: 0; }
         
-        #main-grid { 
-            min-height: calc(100vh - 10px) !important; 
-            background: transparent; 
-            border-radius: 10px; 
-            margin: 0; 
-        }
-        
-        /* Standard Panel */
         .grid-stack-item-content { display: flex; flex-direction: column; }
         .panel { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .panel-header { background: #161b22; padding: 8px 15px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; color: #8b949e; user-select: none; cursor: grab; touch-action: none; display: flex; justify-content: space-between; align-items: center; white-space: nowrap; }
         .panel-header:active { cursor: grabbing; }
         
-        /* Custom Select for dynamic widgets */
         .widget-asset-selector { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; outline: none; margin-left: 6px; max-width: 95px; text-overflow: ellipsis; white-space: nowrap; }
         .widget-asset-selector:focus { border-color: #58a6ff; }
         
-        /* FIXED: Added flex-shrink: 0 to guarantee buttons never get squeezed out */
         .panel-controls { display: flex; align-items: center; gap: 5px; cursor: default; flex-shrink: 0; }
         .panel-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8b949e; border-radius: 4px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; transition: 0.15s; font-family: monospace; flex-shrink: 0; }
         .panel-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
         
-        /* ADD/CLOSE BUTTON LOGIC CSS */
         .add-btn { color: #2ea043; border-color: rgba(46,160,67,0.3); margin-left: 8px; }
         .add-btn:hover { background: rgba(46,160,67,0.2); color: #4ade80; border-color: rgba(74,222,128,0.5); }
         .close-btn { color: #f85149; border-color: rgba(248,81,73,0.3); margin-left: 8px; }
         .close-btn:hover { background: rgba(248,81,73,0.2); color: #ff7b72; border-color: rgba(255,123,114,0.5); }
         
-        /* Button Visibility Toggle Based on Location */
         [data-in-dock="true"] .close-btn { display: none !important; }
         [data-in-dock="true"] .add-btn { display: flex !important; }
         [data-in-dock="false"] .add-btn { display: none !important; }
@@ -130,9 +106,7 @@
         .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
         .adaptive-wrapper { transform-origin: top left; width: 100%; height: 100%; overflow: visible !important; }
         
-        /* BULLETPROOF IFRAME SHIELD FOR RESIZING/DRAGGING */
         body.is-dragging iframe, body.is-dragging .adaptive-wrapper { pointer-events: none !important; }
-        
         .ui-resizable-handle { z-index: 9999 !important; width: 15px !important; height: 15px !important; bottom: 2px !important; right: 2px !important; background: radial-gradient(circle at 100% 100%, rgba(255,255,255,0.2) 20%, transparent 40%); }
         
         .panel-content::-webkit-scrollbar { width: 6px; }
@@ -177,13 +151,10 @@
         <button class="collapse-btn" onclick="toggleSidebar()" id="sidebar-toggle-btn">&lt;&lt;</button>
     </div>
     <div class="nav-links">
-        
-        <!-- Toggle Library Button -->
         <a class="nav-link action-btn" onclick="toggleDock()">
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             <span class="nav-text">Widget Library</span>
         </a>
-
         <a href="terminal.html" class="nav-link active">
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
             <span class="nav-text">Dashboard</span>
@@ -204,9 +175,7 @@
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2.12-1.15V17h2V7.4L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72l5 2.73 5-2.73v3.72z"/></svg>
             <span class="nav-text">Courses</span>
         </a>
-        
         <div style="margin-top: auto;">
-            <!-- Settings Accordion -->
             <a class="nav-link nav-link-settings" onclick="toggleSettingsMenu()">
                 <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
                 <span class="nav-text">Settings</span>
@@ -224,8 +193,6 @@
 
 <!-- MAIN WORKSPACE -->
 <div class="main-content">
-
-    <!-- WIDGET LIBRARY DOCK -->
     <div id="dock-wrapper">
         <div class="dock-header">
             <div class="dock-title">Widget Library</div>
@@ -233,7 +200,6 @@
         </div>
         <div id="dock-grid" class="grid-stack">
             
-            <!-- ================= WIDGET: NEWSFEED LATEST ================= -->
             <div class="grid-stack-item" gs-id="newsfeed" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -256,7 +222,6 @@
                 </div>
             </div>
             
-            <!-- ================= WIDGET: LATEST BRIEFING ================= -->
             <div class="grid-stack-item" gs-id="briefing" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -279,7 +244,7 @@
                 </div>
             </div>
 
-            <!-- ================= WIDGET: ECONOMIC CALENDAR ================= -->
+            <!-- ECONOMIC CALENDAR (Injected via JS to prevent detachment bugs) -->
             <div class="grid-stack-item" gs-id="calendar" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -295,27 +260,13 @@
                         </div>
                         <div class="panel-content">
                             <div class="adaptive-wrapper" style="padding: 15px;">
-                                <div class="tradingview-widget-container" style="height: 100%; width: 100%;">
-                                    <div class="tradingview-widget-container__widget" style="height: 100%; width: 100%;"></div>
-                                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
-                                    {
-                                      "colorTheme": "dark",
-                                      "isTransparent": false,
-                                      "locale": "en",
-                                      "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
-                                      "importanceFilter": "-1,0,1",
-                                      "width": "100%",
-                                      "height": "100%"
-                                    }
-                                    </script>
-                                </div>
+                                <!-- Rendered dynamically on load/move -->
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- ================= WIDGET: HOT ASSET RADAR ================= -->
             <div class="grid-stack-item" gs-id="radar" gs-w="2" gs-h="1" data-default-w="3" data-default-h="7" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -350,7 +301,6 @@
                 </div>
             </div>
 
-            <!-- ================= WIDGET: FOREX MARKET HOURS ================= -->
             <div class="grid-stack-item" gs-id="forex-hours" gs-w="2" gs-h="1" data-default-w="2" data-default-h="7" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -453,7 +403,6 @@
                 </div>
             </div>
 
-            <!-- ================= WIDGET: BLOOMBERG TV ================= -->
             <div class="grid-stack-item" gs-id="bloomberg" gs-w="2" gs-h="1" data-default-w="5" data-default-h="5" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -476,7 +425,7 @@
                 </div>
             </div>
 
-            <!-- ================= WIDGET: TV MARKET DATA ================= -->
+            <!-- TV MARKET DATA (Injected via JS to prevent detachment bugs) -->
             <div class="grid-stack-item" gs-id="tv-market-data" gs-w="2" gs-h="1" data-default-w="6" data-default-h="6" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -492,22 +441,20 @@
                         </div>
                         <div class="panel-content">
                             <div class="adaptive-wrapper">
-                                <tv-market-data symbol-sectors='[{"sectionName":"Indices","symbols":["FOREXCOM:SPXUSD","FOREXCOM:NSXUSD","FOREXCOM:DJI","INDEX:NKY","INDEX:DEU40","FOREXCOM:UKXGBP"]},{"sectionName":"Futures","symbols":["BMFBOVESPA:ISP1!","BMFBOVESPA:EUR1!","CMCMARKETS:GOLD","TVC:USOIL","BMFBOVESPA:CCM1!"]},{"sectionName":"Bonds","symbols":["EUREX:FGBL1!","EUREX:FBTP1!","EUREX:FGBM1!"]},{"sectionName":"Forex","symbols":["FX:EURUSD","FX:GBPUSD","FX:USDJPY","FX:USDCHF","FX:AUDUSD","FX:USDCAD","OANDA:USDCHF","OANDA:AUDNZD","OANDA:USDNOK","OANDA:EURNOK","OANDA:EURGBP","OANDA:NZDUSD"]},{"sectionName":"Commodities","symbols":["OANDA:XAUUSD","OANDA:XAGUSD","OANDA:XPTUSD","OANDA:XCUUSD","OANDA:BCOUSD","TVC:USOIL"]}]' view="performance" heatmap></tv-market-data>
+                                <!-- Rendered dynamically on load/move -->
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ================= WIDGET: TV TECHNICAL ANALYSIS ================= -->
-            <!-- FIXED: Widened to gs-w="3" so the title, dropdown, and buttons have enough physical room in the dock -->
+            <!-- TV TECHNICAL ANALYSIS (Injected via JS to prevent detachment bugs) -->
             <div class="grid-stack-item" gs-id="tv-technical-analysis" gs-w="3" gs-h="1" data-default-w="4" data-default-h="6" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">
                             <div style="display: flex; align-items: center; min-width: 0;">
                                 <span style="white-space: nowrap; font-size: 10px;">Tech Analysis</span>
-                                <!-- DYNAMIC ASSET SELECTOR -->
                                 <select class="widget-asset-selector" onchange="updateTAWidget(this)" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                     <optgroup label="Forex">
                                         <option value="OANDA:EURUSD">EUR/USD</option>
@@ -539,7 +486,7 @@
                         </div>
                         <div class="panel-content">
                             <div class="adaptive-wrapper">
-                                <tv-technical-analysis symbol="OANDA:XAUUSD" hide-logo-and-name hide-intervals></tv-technical-analysis>
+                                <!-- Rendered dynamically on load/move -->
                             </div>
                         </div>
                     </div>
@@ -558,13 +505,79 @@
 
 <script>
     let dockGrid, mainGrid;
+    
+    // ==========================================
+    // TRADINGVIEW RE-RENDER ENGINE
+    // Automatically rebuilds custom elements & iframes from scratch 
+    // to sidestep browser bugs when Gridstack detaches elements from the DOM.
+    // ==========================================
+    const marketDataSymbols = [
+        {"sectionName":"Indices","symbols":["FOREXCOM:SPXUSD","FOREXCOM:NSXUSD","FOREXCOM:DJI","INDEX:NKY","INDEX:DEU40","FOREXCOM:UKXGBP"]},
+        {"sectionName":"Futures","symbols":["BMFBOVESPA:ISP1!","BMFBOVESPA:EUR1!","CMCMARKETS:GOLD","TVC:USOIL","BMFBOVESPA:CCM1!"]},
+        {"sectionName":"Bonds","symbols":["EUREX:FGBL1!","EUREX:FBTP1!","EUREX:FGBM1!"]},
+        {"sectionName":"Forex","symbols":["FX:EURUSD","FX:GBPUSD","FX:USDJPY","FX:USDCHF","FX:AUDUSD","FX:USDCAD","OANDA:USDCHF","OANDA:AUDNZD","OANDA:USDNOK","OANDA:EURNOK","OANDA:EURGBP","OANDA:NZDUSD"]},
+        {"sectionName":"Commodities","symbols":["OANDA:XAUUSD","OANDA:XAGUSD","OANDA:XPTUSD","OANDA:XCUUSD","OANDA:BCOUSD","TVC:USOIL"]}
+    ];
 
-    // JavaScript to handle the Dynamic Technical Analysis Asset Selector
+    function refreshTradingViewWidgets(panelEl) {
+        const gsId = panelEl.getAttribute('gs-id');
+        const wrapper = panelEl.querySelector('.panel-content .adaptive-wrapper');
+        if (!wrapper) return;
+
+        if (gsId === 'tv-technical-analysis') {
+            const taSelect = panelEl.querySelector('.widget-asset-selector');
+            const symbol = taSelect ? taSelect.value : 'OANDA:XAUUSD';
+            wrapper.innerHTML = '';
+            
+            // Programmatically creating the element forces the browser to run the component lifecycle, resolving the innerHTML failure
+            const tv = document.createElement('tv-technical-analysis');
+            tv.setAttribute('symbol', symbol);
+            tv.setAttribute('color-theme', 'dark'); // Force dark mode to eliminate the white screen
+            tv.setAttribute('hide-logo-and-name', 'true');
+            tv.setAttribute('hide-intervals', 'true');
+            wrapper.appendChild(tv);
+        } 
+        else if (gsId === 'tv-market-data') {
+            wrapper.innerHTML = '';
+            const tv = document.createElement('tv-market-data');
+            tv.setAttribute('color-theme', 'dark'); // Force dark mode to eliminate the white screen
+            tv.setAttribute('view', 'performance');
+            tv.setAttribute('heatmap', 'true');
+            tv.setAttribute('symbol-sectors', JSON.stringify(marketDataSymbols));
+            wrapper.appendChild(tv);
+        }
+        else if (gsId === 'calendar') {
+            wrapper.innerHTML = '';
+            const container = document.createElement('div');
+            container.className = 'tradingview-widget-container';
+            container.style.cssText = 'height: 100%; width: 100%;';
+            const widget = document.createElement('div');
+            widget.className = 'tradingview-widget-container__widget';
+            widget.style.cssText = 'height: 100%; width: 100%;';
+            container.appendChild(widget);
+            
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
+            script.async = true;
+            script.innerHTML = JSON.stringify({
+                "colorTheme": "dark",
+                "isTransparent": true,
+                "locale": "en",
+                "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
+                "importanceFilter": "-1,0,1",
+                "width": "100%",
+                "height": "100%"
+            });
+            container.appendChild(script);
+            wrapper.appendChild(container);
+        }
+    }
+
     function updateTAWidget(selectElement) {
-        const panel = selectElement.closest('.panel');
-        const taWidget = panel.querySelector('tv-technical-analysis');
-        if (taWidget) {
-            taWidget.setAttribute('symbol', selectElement.value);
+        const panelItem = selectElement.closest('.grid-stack-item');
+        if (panelItem) {
+            refreshTradingViewWidgets(panelItem);
         }
     }
 
@@ -629,58 +642,43 @@
         wrapper.style.height = `${100 / finalScale}%`;
     }
 
-    // THE NEW "CLICK TO ADD" LOGIC
     function moveToDashboard(btn) {
         const el = btn.closest('.grid-stack-item');
-        
-        // Pull it out of the static dock grid
         dockGrid.removeWidget(el, false); 
-        
-        // Update its state (This CSS triggers the Add vs Close buttons)
         el.setAttribute('data-in-dock', 'false');
-        
-        // Throw it into the main dashboard grid
         document.getElementById('main-grid').appendChild(el);
         mainGrid.makeWidget(el);
-        
-        // Expand it to its full default size
         let defaultW = parseInt(el.getAttribute('data-default-w')) || 4;
         let defaultH = parseInt(el.getAttribute('data-default-h')) || 4;
         mainGrid.update(el, {w: defaultW, h: defaultH, autoPosition: true});
-        
         saveLayoutState();
+        
+        // Gridstack DOM detachment breaks the web component iframe; Re-render instantly
+        refreshTradingViewWidgets(el);
     }
 
-    // THE REVERSE "SEND TO LIBRARY" LOGIC
     function returnToDock(btn) {
         const el = btn.closest('.grid-stack-item');
-        
-        // Remove from dashboard
         mainGrid.removeWidget(el, false); 
-        
-        // Update state
         el.setAttribute('data-in-dock', 'true');
         el.setAttribute('data-zoom', '1.0');
         const label = el.querySelector('.zoom-label');
         if (label) label.innerText = '100%';
-        
-        // Dynamic re-sizing when placed back in the dock
         let returnWidth = 2;
         if (el.getAttribute('gs-id') === 'tv-technical-analysis') {
-            returnWidth = 3; // ensure it keeps its wider size in dock
+            returnWidth = 3;
         }
-
-        // Throw it back in the dock and shrink it down
         document.getElementById('dock-grid').appendChild(el);
         dockGrid.makeWidget(el);
         dockGrid.update(el, {w: returnWidth, h: 1}); 
-        
         saveLayoutState();
+        
+        // Gridstack DOM detachment breaks the web component iframe; Re-render instantly
+        refreshTradingViewWidgets(el);
     }
 
     window.onload = function() {
-        // 1. BRAND NEW CACHE KEY (V8) TO CLEAR OLD SAVES AND APPLY NEW CSS
-        const savedLayout = localStorage.getItem('analystWireLayoutV8');
+        const savedLayout = localStorage.getItem('analystWireLayoutV11');
         if (savedLayout) {
             try {
                 const parsed = JSON.parse(savedLayout);
@@ -697,7 +695,6 @@
                             const label = el.querySelector('.zoom-label');
                             if (label) label.innerText = Math.round(parseFloat(savedZoom) * 100) + '%';
                             
-                            // Re-route to correct grid based on save state
                             if (item.grid === 'main') {
                                 el.setAttribute('data-in-dock', 'false');
                                 document.getElementById('main-grid').appendChild(el);
@@ -713,33 +710,16 @@
             }
         }
 
-        // 2. LIBRARY GRID IS 100% STATIC (No dragging out, no rearranging)
         dockGrid = GridStack.init({
-            cellHeight: '45px',
-            margin: 5,
-            acceptWidgets: false, // Cannot drag items in
-            disableDrag: true,    // Cannot drag items out or around
-            disableResize: true,  // Cannot resize
-            float: false,
-            disableOneColumnMode: true,        
+            cellHeight: '45px', margin: 5, acceptWidgets: false, disableDrag: true, disableResize: true, float: false, disableOneColumnMode: true,        
         }, '#dock-grid');
 
-        // 3. MAIN DASHBOARD GRID INITIALIZATION
         mainGrid = GridStack.init({
-            cellHeight: '60px', 
-            margin: 5,         
-            handle: '.panel-header', 
-            animate: true,
-            alwaysShowResizeHandle: true,
-            acceptWidgets: false, // Doesn't need to accept dropped widgets since we are using JS buttons
-            float: true,
-            minRow: 1
+            cellHeight: '60px', margin: 5, handle: '.panel-header', animate: true, alwaysShowResizeHandle: true, acceptWidgets: false, float: true, minRow: 1
         }, '#main-grid');
 
-        // IFRAME DRAG SHIELD - PREVENTS STICKING ON DASHBOARD
         mainGrid.on('dragstart resizestart', function() { document.body.classList.add('is-dragging'); });
         mainGrid.on('dragstop resizestop', function() { document.body.classList.remove('is-dragging'); });
-
         mainGrid.on('change', saveLayoutState);
         mainGrid.on('removed', saveLayoutState);
 
@@ -749,7 +729,6 @@
                 const target = entry.target; 
                 const wrapper = target.querySelector('.adaptive-wrapper');
                 const panelItem = target.closest('.grid-stack-item');
-                
                 if (wrapper && width > 0) {
                     let baseScale = width < 480 ? Math.max(width / 480, 0.4) : 1;
                     let zoomMult = parseFloat(panelItem.getAttribute('data-zoom')) || 1.0;
@@ -761,14 +740,16 @@
             }
         });
 
-        document.querySelectorAll('.panel-content').forEach(panel => {
-            panelObserver.observe(panel);
+        document.querySelectorAll('.panel-content').forEach(panel => { panelObserver.observe(panel); });
+        
+        // Finalize layout initialization before spinning up TV elements to avoid rendering glitches
+        document.querySelectorAll('.grid-stack-item').forEach(el => {
+            refreshTradingViewWidgets(el);
         });
         
         init();
     };
 
-    // 5. SAVES TO THE NEW V8 KEY
     function saveLayoutState() {
         const dockItems = dockGrid.engine.nodes.map(n => ({
             id: n.id, grid: 'dock', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
@@ -777,10 +758,9 @@
             id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
         }));
         const combined = [...dockItems, ...mainItems];
-        localStorage.setItem('analystWireLayoutV8', JSON.stringify(combined));
+        localStorage.setItem('analystWireLayoutV11', JSON.stringify(combined));
     }
 
-    // Security and Database Logic
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
     const tvSymbolMap = { 'S&P500': 'SPY', 'NASDAQ': 'QQQ', 'DOW': 'DIA', 'WTI': 'USOIL', 'COPPER': 'HG1!', 'COCOA': 'CC1!', 'COFFEE': 'KC1!', 'CORN': 'ZC1!', 'WHEAT': 'ZW1!', 'SOYBEANS': 'ZS1!', 'COTTONSUGAR': 'CT1!' };
