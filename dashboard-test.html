@@ -13,6 +13,12 @@
     <link href="https://cdn.jsdelivr.net/npm/gridstack@10.0.1/dist/gridstack.min.css" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/gridstack@10.0.1/dist/gridstack-all.js"></script>
 
+    <!-- ========================================== -->
+    <!-- NEW TRADINGVIEW WIDGET SCRIPTS             -->
+    <!-- ========================================== -->
+    <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-market-data.js"></script>
+    <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-technical-analysis.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -50,7 +56,7 @@
 
         .main-content { flex-grow: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #05070a; }
 
-        /* WIDGET LIBRARY DOCK - FIXED BOUNDARY */
+        /* WIDGET LIBRARY DOCK */
         #dock-wrapper { 
             background: #0d1117; 
             border-bottom: 2px solid #30363d; 
@@ -80,7 +86,6 @@
         #dock-grid .panel-header { background: transparent; border: none; padding: 6px 12px; color: #c9d1d9; width: 100%; height: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left; font-size: 11px; white-space: normal; pointer-events: auto; cursor: default; }
         #dock-grid .panel-content { display: none !important; }
         #dock-grid .ui-resizable-handle { display: none !important; }
-        /* Hide zoom controls inside the dock for cleaner UI */
         #dock-grid .zoom-btn, #dock-grid .zoom-label { display: none !important; }
 
         /* DASHBOARD AREA */
@@ -99,11 +104,15 @@
         .panel-header { background: #161b22; padding: 8px 15px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; color: #8b949e; user-select: none; cursor: grab; touch-action: none; display: flex; justify-content: space-between; align-items: center; white-space: nowrap; }
         .panel-header:active { cursor: grabbing; }
         
+        /* Custom Select for dynamic widgets */
+        .widget-asset-selector { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; outline: none; margin-left: 10px; }
+        .widget-asset-selector:focus { border-color: #58a6ff; }
+        
         .panel-controls { display: flex; align-items: center; gap: 5px; cursor: default; }
         .panel-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8b949e; border-radius: 4px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; transition: 0.15s; font-family: monospace; }
         .panel-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
         
-        /* NEW BUTTON LOGIC CSS */
+        /* ADD/CLOSE BUTTON LOGIC CSS */
         .add-btn { color: #2ea043; border-color: rgba(46,160,67,0.3); margin-left: 8px; }
         .add-btn:hover { background: rgba(46,160,67,0.2); color: #4ade80; border-color: rgba(74,222,128,0.5); }
         .close-btn { color: #f85149; border-color: rgba(248,81,73,0.3); margin-left: 8px; }
@@ -223,6 +232,7 @@
         </div>
         <div id="dock-grid" class="grid-stack">
             
+            <!-- ================= WIDGET: NEWSFEED LATEST ================= -->
             <div class="grid-stack-item" gs-id="newsfeed" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -245,6 +255,7 @@
                 </div>
             </div>
             
+            <!-- ================= WIDGET: LATEST BRIEFING ================= -->
             <div class="grid-stack-item" gs-id="briefing" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -267,6 +278,7 @@
                 </div>
             </div>
 
+            <!-- ================= WIDGET: ECONOMIC CALENDAR ================= -->
             <div class="grid-stack-item" gs-id="calendar" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -302,6 +314,7 @@
                 </div>
             </div>
             
+            <!-- ================= WIDGET: HOT ASSET RADAR ================= -->
             <div class="grid-stack-item" gs-id="radar" gs-w="2" gs-h="1" data-default-w="3" data-default-h="7" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -336,6 +349,7 @@
                 </div>
             </div>
 
+            <!-- ================= WIDGET: FOREX MARKET HOURS ================= -->
             <div class="grid-stack-item" gs-id="forex-hours" gs-w="2" gs-h="1" data-default-w="2" data-default-h="7" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -359,7 +373,6 @@
                                     <div id="msw-sessions-container"></div>
                                 </div>
                             </div>
-
                             <style>
                                 .market-sessions-widget { box-sizing: border-box; width: 100%; min-height: 100%; background-color: #0A0A0A; padding: 12px; color: #f8fafc; font-family: sans-serif; }
                                 .msw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -376,7 +389,6 @@
                                 .msw-zone-time { font-size: 9px; color: #64748b; font-family: monospace; display: block; margin-top: 1px; }
                                 .msw-countdown-text { font-size: 9px; color: #94a3b8; font-family: monospace; text-align: right; min-width: 80px; }
                             </style>
-
                             <script>
                             (function() {
                                 const SESSIONS = [
@@ -385,36 +397,27 @@
                                     { name: 'London', zone: 'Europe/London', open: 8, close: 16 },
                                     { name: 'New York', zone: 'America/New_York', open: 8, close: 16 }
                                 ];
-
                                 function tick() {
                                     const now = new Date();
                                     const timeEl = document.getElementById('msw-user-time');
                                     if(timeEl) timeEl.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-                                    
                                     let openCount = 0;
-                                    
                                     SESSIONS.forEach(s => {
-                                        const formatter = new Intl.DateTimeFormat('en-US', {
-                                            timeZone: s.zone, hour: '2-digit', minute: '2-digit', weekday: 'long', hour12: false
-                                        });
+                                        const formatter = new Intl.DateTimeFormat('en-US', { timeZone: s.zone, hour: '2-digit', minute: '2-digit', weekday: 'long', hour12: false });
                                         const parts = formatter.formatToParts(now);
                                         const h = parseInt(parts.find(p => p.type === 'hour').value);
                                         const m = parseInt(parts.find(p => p.type === 'minute').value);
                                         const day = parts.find(p => p.type === 'weekday').value;
                                         const timeDecimal = h + (m / 60);
-
                                         const isWeekend = (day === 'Saturday' || day === 'Sunday');
                                         const isOpen = !isWeekend && (timeDecimal >= s.open && timeDecimal < s.close);
-                                        
                                         if(isOpen) openCount++;
-                                        
                                         const timeRow = document.getElementById('time-'+s.name);
                                         if(timeRow){
                                             timeRow.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
                                             document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
                                             document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
                                             document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
-                                            
                                             let output = "";
                                             if (isOpen) {
                                                 let minsLeft = (s.close - timeDecimal) * 60;
@@ -433,7 +436,6 @@
                                     const hotAlert = document.getElementById('msw-hot-alert');
                                     if(hotAlert) hotAlert.style.display = (openCount > 1) ? 'block' : 'none';
                                 }
-
                                 const container = document.getElementById('msw-sessions-container');
                                 if(container){
                                     container.innerHTML = '';
@@ -450,6 +452,7 @@
                 </div>
             </div>
 
+            <!-- ================= WIDGET: BLOOMBERG TV ================= -->
             <div class="grid-stack-item" gs-id="bloomberg" gs-w="2" gs-h="1" data-default-w="5" data-default-h="5" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -471,6 +474,75 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ================= WIDGET: TV MARKET DATA ================= -->
+            <div class="grid-stack-item" gs-id="tv-market-data" gs-w="2" gs-h="1" data-default-w="6" data-default-h="6" data-in-dock="true" data-zoom="1.0">
+                <div class="grid-stack-item-content">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span>Market Data Heatmap</span>
+                            <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                <span class="zoom-label">100%</span>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+                                <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+                            </div>
+                        </div>
+                        <div class="panel-content">
+                            <div class="adaptive-wrapper">
+                                <tv-market-data symbol-sectors='[{"sectionName":"Indices","symbols":["FOREXCOM:SPXUSD","FOREXCOM:NSXUSD","FOREXCOM:DJI","INDEX:NKY","INDEX:DEU40","FOREXCOM:UKXGBP"]},{"sectionName":"Futures","symbols":["BMFBOVESPA:ISP1!","BMFBOVESPA:EUR1!","CMCMARKETS:GOLD","TVC:USOIL","BMFBOVESPA:CCM1!"]},{"sectionName":"Bonds","symbols":["EUREX:FGBL1!","EUREX:FBTP1!","EUREX:FGBM1!"]},{"sectionName":"Forex","symbols":["FX:EURUSD","FX:GBPUSD","FX:USDJPY","FX:USDCHF","FX:AUDUSD","FX:USDCAD","OANDA:USDCHF","OANDA:AUDNZD","OANDA:USDNOK","OANDA:EURNOK","OANDA:EURGBP","OANDA:NZDUSD"]},{"sectionName":"Commodities","symbols":["OANDA:XAUUSD","OANDA:XAGUSD","OANDA:XPTUSD","OANDA:XCUUSD","OANDA:BCOUSD","TVC:USOIL"]}]' view="performance" heatmap></tv-market-data>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= WIDGET: TV TECHNICAL ANALYSIS ================= -->
+            <div class="grid-stack-item" gs-id="tv-technical-analysis" gs-w="2" gs-h="1" data-default-w="4" data-default-h="6" data-in-dock="true" data-zoom="1.0">
+                <div class="grid-stack-item-content">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div style="display: flex; align-items: center;">
+                                <span>Tech Analysis</span>
+                                <!-- DYNAMIC ASSET SELECTOR -->
+                                <select class="widget-asset-selector" onchange="updateTAWidget(this)" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+                                    <optgroup label="Forex">
+                                        <option value="OANDA:EURUSD">EUR/USD</option>
+                                        <option value="OANDA:GBPUSD">GBP/USD</option>
+                                        <option value="OANDA:AUDUSD">AUD/USD</option>
+                                        <option value="OANDA:NZDUSD">NZD/USD</option>
+                                        <option value="OANDA:AUDNZD">AUD/NZD</option>
+                                        <option value="OANDA:USDJPY">USD/JPY</option>
+                                        <option value="OANDA:EURJPY">EUR/JPY</option>
+                                        <option value="OANDA:USDCHF">USD/CHF</option>
+                                        <option value="OANDA:EURCHF">EUR/CHF</option>
+                                    </optgroup>
+                                    <optgroup label="Commodities">
+                                        <option value="OANDA:XAUUSD" selected>XAU/USD (Gold)</option>
+                                        <option value="OANDA:XAGUSD">XAG/USD (Silver)</option>
+                                        <option value="OANDA:XPTUSD">XPT/USD (Platinum)</option>
+                                        <option value="OANDA:XCUUSD">XCU/USD (Copper)</option>
+                                        <option value="OANDA:BCOUSD">BCO/USD (Brent)</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                <span class="zoom-label">100%</span>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+                                <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+                            </div>
+                        </div>
+                        <div class="panel-content">
+                            <div class="adaptive-wrapper">
+                                <tv-technical-analysis symbol="OANDA:XAUUSD" hide-logo-and-name hide-intervals></tv-technical-analysis>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
         </div>
     </div>
@@ -484,6 +556,15 @@
 
 <script>
     let dockGrid, mainGrid;
+
+    // JavaScript to handle the Dynamic Technical Analysis Asset Selector
+    function updateTAWidget(selectElement) {
+        const panel = selectElement.closest('.panel');
+        const taWidget = panel.querySelector('tv-technical-analysis');
+        if (taWidget) {
+            taWidget.setAttribute('symbol', selectElement.value);
+        }
+    }
 
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
@@ -590,8 +671,8 @@
     }
 
     window.onload = function() {
-        // 1. BRAND NEW CACHE KEY TO WIPE THE OLD BROKEN DRAG PHYSICS (V6)
-        const savedLayout = localStorage.getItem('analystWireLayoutV6');
+        // 1. BRAND NEW CACHE KEY (V7) TO CLEAR OLD SAVES AND SHOW NEW WIDGETS
+        const savedLayout = localStorage.getItem('analystWireLayoutV7');
         if (savedLayout) {
             try {
                 const parsed = JSON.parse(savedLayout);
@@ -624,7 +705,7 @@
             }
         }
 
-        // 2. LIBRARY GRID IS NOW 100% STATIC (No dragging out, no rearranging)
+        // 2. LIBRARY GRID IS 100% STATIC (No dragging out, no rearranging)
         dockGrid = GridStack.init({
             cellHeight: '45px',
             margin: 5,
@@ -679,7 +760,7 @@
         init();
     };
 
-    // 5. SAVES TO THE NEW V6 KEY
+    // 5. SAVES TO THE NEW V7 KEY
     function saveLayoutState() {
         const dockItems = dockGrid.engine.nodes.map(n => ({
             id: n.id, grid: 'dock', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
@@ -688,7 +769,7 @@
             id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
         }));
         const combined = [...dockItems, ...mainItems];
-        localStorage.setItem('analystWireLayoutV6', JSON.stringify(combined));
+        localStorage.setItem('analystWireLayoutV7', JSON.stringify(combined));
     }
 
     // Security and Database Logic
