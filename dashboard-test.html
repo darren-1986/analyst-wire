@@ -105,11 +105,12 @@
         .panel-header:active { cursor: grabbing; }
         
         /* Custom Select for dynamic widgets */
-        .widget-asset-selector { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; outline: none; margin-left: 10px; }
+        .widget-asset-selector { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; outline: none; margin-left: 6px; max-width: 95px; text-overflow: ellipsis; white-space: nowrap; }
         .widget-asset-selector:focus { border-color: #58a6ff; }
         
-        .panel-controls { display: flex; align-items: center; gap: 5px; cursor: default; }
-        .panel-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8b949e; border-radius: 4px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; transition: 0.15s; font-family: monospace; }
+        /* FIXED: Added flex-shrink: 0 to guarantee buttons never get squeezed out */
+        .panel-controls { display: flex; align-items: center; gap: 5px; cursor: default; flex-shrink: 0; }
+        .panel-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8b949e; border-radius: 4px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; transition: 0.15s; font-family: monospace; flex-shrink: 0; }
         .panel-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
         
         /* ADD/CLOSE BUTTON LOGIC CSS */
@@ -480,7 +481,7 @@
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">
-                            <span>Market Data Heatmap</span>
+                            <span>Market Data</span>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                 <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
@@ -499,12 +500,13 @@
             </div>
 
             <!-- ================= WIDGET: TV TECHNICAL ANALYSIS ================= -->
-            <div class="grid-stack-item" gs-id="tv-technical-analysis" gs-w="2" gs-h="1" data-default-w="4" data-default-h="6" data-in-dock="true" data-zoom="1.0">
+            <!-- FIXED: Widened to gs-w="3" so the title, dropdown, and buttons have enough physical room in the dock -->
+            <div class="grid-stack-item" gs-id="tv-technical-analysis" gs-w="3" gs-h="1" data-default-w="4" data-default-h="6" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">
-                            <div style="display: flex; align-items: center;">
-                                <span>Tech Analysis</span>
+                            <div style="display: flex; align-items: center; min-width: 0;">
+                                <span style="white-space: nowrap; font-size: 10px;">Tech Analysis</span>
                                 <!-- DYNAMIC ASSET SELECTOR -->
                                 <select class="widget-asset-selector" onchange="updateTAWidget(this)" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                     <optgroup label="Forex">
@@ -662,17 +664,23 @@
         const label = el.querySelector('.zoom-label');
         if (label) label.innerText = '100%';
         
+        // Dynamic re-sizing when placed back in the dock
+        let returnWidth = 2;
+        if (el.getAttribute('gs-id') === 'tv-technical-analysis') {
+            returnWidth = 3; // ensure it keeps its wider size in dock
+        }
+
         // Throw it back in the dock and shrink it down
         document.getElementById('dock-grid').appendChild(el);
         dockGrid.makeWidget(el);
-        dockGrid.update(el, {w: 2, h: 1}); 
+        dockGrid.update(el, {w: returnWidth, h: 1}); 
         
         saveLayoutState();
     }
 
     window.onload = function() {
-        // 1. BRAND NEW CACHE KEY (V7) TO CLEAR OLD SAVES AND SHOW NEW WIDGETS
-        const savedLayout = localStorage.getItem('analystWireLayoutV7');
+        // 1. BRAND NEW CACHE KEY (V8) TO CLEAR OLD SAVES AND APPLY NEW CSS
+        const savedLayout = localStorage.getItem('analystWireLayoutV8');
         if (savedLayout) {
             try {
                 const parsed = JSON.parse(savedLayout);
@@ -760,7 +768,7 @@
         init();
     };
 
-    // 5. SAVES TO THE NEW V7 KEY
+    // 5. SAVES TO THE NEW V8 KEY
     function saveLayoutState() {
         const dockItems = dockGrid.engine.nodes.map(n => ({
             id: n.id, grid: 'dock', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
@@ -769,7 +777,7 @@
             id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
         }));
         const combined = [...dockItems, ...mainItems];
-        localStorage.setItem('analystWireLayoutV7', JSON.stringify(combined));
+        localStorage.setItem('analystWireLayoutV8', JSON.stringify(combined));
     }
 
     // Security and Database Logic
