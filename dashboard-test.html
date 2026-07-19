@@ -50,19 +50,16 @@
 
         .main-content { flex-grow: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #05070a; }
 
-        /* WIDGET LIBRARY DOCK - ABSOLUTE TREADMILL KILLER */
+        /* WIDGET LIBRARY DOCK - FIXED BOUNDARY */
         #dock-wrapper { 
             background: #0d1117; 
             border-bottom: 2px solid #30363d; 
-            padding: 10px 15px; 
+            padding: 15px 20px; 
             flex-shrink: 0; 
             display: none; 
-            height: 140px !important;  /* Strict height prevents pushing the dashboard down */
-            min-height: 140px !important;
-            max-height: 140px !important;
+            max-height: 180px; 
             overflow-y: auto; 
             overflow-x: hidden;
-            box-sizing: border-box;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         
@@ -70,25 +67,27 @@
         #dock-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
         #dock-wrapper::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
 
-        .dock-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .dock-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .dock-title { font-size: 10px; color: #8b949e; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
         .close-dock-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #c9d1d9; cursor: pointer; font-size: 10px; padding: 4px 10px; font-weight: 600; text-transform: uppercase; transition: 0.2s; }
         .close-dock-btn:hover { background: rgba(248,81,73,0.1); color: #ff7b72; border-color: rgba(248,81,73,0.3); }
 
-        #dock-grid { background: rgba(255,255,255,0.02); border-radius: 8px; padding: 5px; border: 1px dashed #30363d; }
-        #dock-grid .grid-stack-item-content { background: #161b22; border: 1px solid #30363d; border-radius: 6px; cursor: grab; transition: background 0.2s, border-color 0.2s; }
+        #dock-grid { min-height: 55px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 5px; border: 1px dashed #30363d; }
+        #dock-grid .grid-stack-item-content { background: #161b22; border: 1px solid #30363d; border-radius: 6px; transition: background 0.2s, border-color 0.2s; }
         #dock-grid .grid-stack-item-content:hover { background: #21262d; border-color: #8b949e; }
         #dock-grid .panel { background: transparent; border: none; box-shadow: none; height: 100%; display: flex; align-items: center; justify-content: center; }
-        #dock-grid .panel-controls { display: none !important; }
-        #dock-grid .panel-header { background: transparent; border: none; padding: 4px; color: #c9d1d9; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10px; line-height: 1.2; white-space: normal; cursor: grab; pointer-events: auto; }
+        #dock-grid .panel-controls { display: flex !important; margin-left: auto; }
+        #dock-grid .panel-header { background: transparent; border: none; padding: 6px 12px; color: #c9d1d9; width: 100%; height: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left; font-size: 11px; white-space: normal; pointer-events: auto; cursor: default; }
         #dock-grid .panel-content { display: none !important; }
         #dock-grid .ui-resizable-handle { display: none !important; }
+        /* Hide zoom controls inside the dock for cleaner UI */
+        #dock-grid .zoom-btn, #dock-grid .zoom-label { display: none !important; }
 
         /* DASHBOARD AREA */
-        .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 10px; display: block; }
+        .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 5px; display: block; }
         
         #main-grid { 
-            min-height: calc(100vh - 20px) !important; 
+            min-height: calc(100vh - 10px) !important; 
             background: transparent; 
             border-radius: 10px; 
             margin: 0; 
@@ -103,8 +102,19 @@
         .panel-controls { display: flex; align-items: center; gap: 5px; cursor: default; }
         .panel-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8b949e; border-radius: 4px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; transition: 0.15s; font-family: monospace; }
         .panel-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        
+        /* NEW BUTTON LOGIC CSS */
+        .add-btn { color: #2ea043; border-color: rgba(46,160,67,0.3); margin-left: 8px; }
+        .add-btn:hover { background: rgba(46,160,67,0.2); color: #4ade80; border-color: rgba(74,222,128,0.5); }
         .close-btn { color: #f85149; border-color: rgba(248,81,73,0.3); margin-left: 8px; }
-        .close-btn:hover { background: rgba(248,81,73,0.2); color: #ff7b72; }
+        .close-btn:hover { background: rgba(248,81,73,0.2); color: #ff7b72; border-color: rgba(255,123,114,0.5); }
+        
+        /* Button Visibility Toggle Based on Location */
+        [data-in-dock="true"] .close-btn { display: none !important; }
+        [data-in-dock="true"] .add-btn { display: flex !important; }
+        [data-in-dock="false"] .add-btn { display: none !important; }
+        [data-in-dock="false"] .close-btn { display: flex !important; }
+
         .zoom-label { font-size: 9px; width: 35px; text-align: center; color: #c9d1d9; font-family: monospace; }
         
         .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
@@ -219,9 +229,10 @@
                         <div class="panel-header">
                             <span>Newsfeed Latest</span>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
-                                <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
                         </div>
@@ -240,9 +251,10 @@
                         <div class="panel-header">
                             <span>Latest Briefing</span>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
-                                <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
                         </div>
@@ -261,9 +273,10 @@
                         <div class="panel-header">
                             <span>Economic Calendar</span>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
-                                <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
                         </div>
@@ -295,9 +308,10 @@
                         <div class="panel-header">
                             <span>Hot Asset Radar</span>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
-                                <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
                         </div>
@@ -328,9 +342,10 @@
                         <div class="panel-header">
                             <span>Forex Market Hours</span>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
-                                <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
                         </div>
@@ -441,9 +456,10 @@
                         <div class="panel-header">
                             <span>Bloomberg TV</span>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
-                                <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
                         </div>
@@ -469,7 +485,6 @@
 <script>
     let dockGrid, mainGrid;
 
-    // Sidebar Toggle
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const btn = document.getElementById('sidebar-toggle-btn');
@@ -482,7 +497,6 @@
         }
     }
 
-    // Settings Toggle
     function toggleSettingsMenu() {
         const sidebar = document.getElementById('sidebar');
         if(sidebar.classList.contains('collapsed')) {
@@ -493,13 +507,11 @@
         }
     }
 
-    // Dock Toggle Logic
     function toggleDock() {
         const dock = document.getElementById('dock-wrapper');
         dock.style.display = (dock.style.display === 'block') ? 'none' : 'block';
     }
 
-    // UPDATED SYSTEM RESET - CLEARS THE NEW V5 CACHE
     function resetLayout() {
         Object.keys(localStorage).forEach(key => {
             if(key.startsWith('analystWireLayout')) {
@@ -509,7 +521,6 @@
         window.location.reload();
     }
 
-    // Adjust Manual Zoom
     function adjustZoom(btn, delta) {
         const el = btn.closest('.grid-stack-item');
         let currentZoom = parseFloat(el.getAttribute('data-zoom')) || 1.0;
@@ -535,22 +546,52 @@
         wrapper.style.height = `${100 / finalScale}%`;
     }
 
+    // THE NEW "CLICK TO ADD" LOGIC
+    function moveToDashboard(btn) {
+        const el = btn.closest('.grid-stack-item');
+        
+        // Pull it out of the static dock grid
+        dockGrid.removeWidget(el, false); 
+        
+        // Update its state (This CSS triggers the Add vs Close buttons)
+        el.setAttribute('data-in-dock', 'false');
+        
+        // Throw it into the main dashboard grid
+        document.getElementById('main-grid').appendChild(el);
+        mainGrid.makeWidget(el);
+        
+        // Expand it to its full default size
+        let defaultW = parseInt(el.getAttribute('data-default-w')) || 4;
+        let defaultH = parseInt(el.getAttribute('data-default-h')) || 4;
+        mainGrid.update(el, {w: defaultW, h: defaultH, autoPosition: true});
+        
+        saveLayoutState();
+    }
+
+    // THE REVERSE "SEND TO LIBRARY" LOGIC
     function returnToDock(btn) {
         const el = btn.closest('.grid-stack-item');
+        
+        // Remove from dashboard
         mainGrid.removeWidget(el, false); 
+        
+        // Update state
         el.setAttribute('data-in-dock', 'true');
         el.setAttribute('data-zoom', '1.0');
         const label = el.querySelector('.zoom-label');
         if (label) label.innerText = '100%';
+        
+        // Throw it back in the dock and shrink it down
         document.getElementById('dock-grid').appendChild(el);
         dockGrid.makeWidget(el);
         dockGrid.update(el, {w: 2, h: 1}); 
+        
         saveLayoutState();
     }
 
     window.onload = function() {
-        // 1. FORCE LOAD NEW LAYOUT KEY (V5) TO BYPASS CORRUPTED CACHE
-        const savedLayout = localStorage.getItem('analystWireLayoutV5');
+        // 1. BRAND NEW CACHE KEY TO WIPE THE OLD BROKEN DRAG PHYSICS (V6)
+        const savedLayout = localStorage.getItem('analystWireLayoutV6');
         if (savedLayout) {
             try {
                 const parsed = JSON.parse(savedLayout);
@@ -566,6 +607,8 @@
                             el.setAttribute('data-zoom', savedZoom);
                             const label = el.querySelector('.zoom-label');
                             if (label) label.innerText = Math.round(parseFloat(savedZoom) * 100) + '%';
+                            
+                            // Re-route to correct grid based on save state
                             if (item.grid === 'main') {
                                 el.setAttribute('data-in-dock', 'false');
                                 document.getElementById('main-grid').appendChild(el);
@@ -581,72 +624,36 @@
             }
         }
 
-        // 2. INITIALIZE DOCK GRID - STRICT LIMITS APPLIED
+        // 2. LIBRARY GRID IS NOW 100% STATIC (No dragging out, no rearranging)
         dockGrid = GridStack.init({
             cellHeight: '45px',
             margin: 5,
-            acceptWidgets: false, // Prevents library from taking back dragged items automatically
-            dragOut: true,
-            disableResize: true, 
+            acceptWidgets: false, // Cannot drag items in
+            disableDrag: true,    // Cannot drag items out or around
+            disableResize: true,  // Cannot resize
             float: false,
-            maxRow: 3, // Kills the infinite expansion bug
             disableOneColumnMode: true,        
-            handle: '.panel-header'
         }, '#dock-grid');
 
-        // 3. INITIALIZE MAIN DASHBOARD GRID
+        // 3. MAIN DASHBOARD GRID INITIALIZATION
         mainGrid = GridStack.init({
             cellHeight: '60px', 
             margin: 5,         
             handle: '.panel-header', 
             animate: true,
             alwaysShowResizeHandle: true,
-            acceptWidgets: true,
+            acceptWidgets: false, // Doesn't need to accept dropped widgets since we are using JS buttons
             float: true,
-            minRow: 15
+            minRow: 1
         }, '#main-grid');
 
-        // IFRAME DRAG SHIELD - NOW APPLIED TO BOTH GRIDS
-        function applyDragShield() { document.body.classList.add('is-dragging'); }
-        function removeDragShield() { document.body.classList.remove('is-dragging'); }
-        
-        mainGrid.on('dragstart resizestart', applyDragShield);
-        mainGrid.on('dragstop resizestop', removeDragShield);
-        dockGrid.on('dragstart', applyDragShield);
-        dockGrid.on('dragstop', removeDragShield);
-
-        // 4. HANDLE DRAG & DROP SIZING AUTOMATION
-        mainGrid.on('added', function(e, items) {
-            items.forEach(item => {
-                let el = item.el;
-                if (el.getAttribute('data-in-dock') === 'true') {
-                    el.setAttribute('data-in-dock', 'false');
-                    let defaultW = parseInt(el.getAttribute('data-default-w')) || 4;
-                    let defaultH = parseInt(el.getAttribute('data-default-h')) || 4;
-                    mainGrid.update(el, {w: defaultW, h: defaultH});
-                }
-            });
-            saveLayoutState();
-        });
-
-        dockGrid.on('added', function(e, items) {
-            items.forEach(item => {
-                let el = item.el;
-                el.setAttribute('data-in-dock', 'true');
-                el.setAttribute('data-zoom', '1.0');
-                const label = el.querySelector('.zoom-label');
-                if(label) label.innerText = '100%';
-                dockGrid.update(el, {w: 2, h: 1}); 
-            });
-            saveLayoutState();
-        });
+        // IFRAME DRAG SHIELD - PREVENTS STICKING ON DASHBOARD
+        mainGrid.on('dragstart resizestart', function() { document.body.classList.add('is-dragging'); });
+        mainGrid.on('dragstop resizestop', function() { document.body.classList.remove('is-dragging'); });
 
         mainGrid.on('change', saveLayoutState);
-        dockGrid.on('change', saveLayoutState);
         mainGrid.on('removed', saveLayoutState);
-        dockGrid.on('removed', saveLayoutState);
 
-        // Dynamic Scale Down & Zoom Observer
         const panelObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
                 const width = entry.contentRect.width;
@@ -672,7 +679,7 @@
         init();
     };
 
-    // 5. SAVES TO THE NEW V5 KEY
+    // 5. SAVES TO THE NEW V6 KEY
     function saveLayoutState() {
         const dockItems = dockGrid.engine.nodes.map(n => ({
             id: n.id, grid: 'dock', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
@@ -681,10 +688,10 @@
             id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
         }));
         const combined = [...dockItems, ...mainItems];
-        localStorage.setItem('analystWireLayoutV5', JSON.stringify(combined));
+        localStorage.setItem('analystWireLayoutV6', JSON.stringify(combined));
     }
 
-    // Original Security and Logic Scripts
+    // Security and Database Logic
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
     const tvSymbolMap = { 'S&P500': 'SPY', 'NASDAQ': 'QQQ', 'DOW': 'DIA', 'WTI': 'USOIL', 'COPPER': 'HG1!', 'COCOA': 'CC1!', 'COFFEE': 'KC1!', 'CORN': 'ZC1!', 'WHEAT': 'ZW1!', 'SOYBEANS': 'ZS1!', 'COTTONSUGAR': 'CT1!' };
