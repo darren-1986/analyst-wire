@@ -16,6 +16,7 @@
     <!-- TRADINGVIEW WIDGET SCRIPTS -->
     <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-market-data.js"></script>
     <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-technical-analysis.js"></script>
+    <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-forex-table.js"></script> <!-- NEW -->
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -244,7 +245,7 @@
                 </div>
             </div>
 
-            <!-- ECONOMIC CALENDAR (Injected via JS to prevent detachment bugs) -->
+            <!-- ECONOMIC CALENDAR -->
             <div class="grid-stack-item" gs-id="calendar" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -425,7 +426,30 @@
                 </div>
             </div>
 
-            <!-- TV MARKET DATA (Injected via JS to prevent detachment bugs) -->
+            <!-- FOREX HEATMAP (New Widget) -->
+            <div class="grid-stack-item" gs-id="forex-heatmap" gs-w="2" gs-h="1" data-default-w="6" data-default-h="5" data-in-dock="true" data-zoom="1.0">
+                <div class="grid-stack-item-content">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span>Forex Heatmap</span>
+                            <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                <span class="zoom-label">100%</span>
+                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+                                <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+                            </div>
+                        </div>
+                        <div class="panel-content">
+                            <div class="adaptive-wrapper">
+                                <!-- Rendered dynamically on load/move -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TV MARKET DATA -->
             <div class="grid-stack-item" gs-id="tv-market-data" gs-w="2" gs-h="1" data-default-w="6" data-default-h="6" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -448,7 +472,7 @@
                 </div>
             </div>
 
-            <!-- TV TECHNICAL ANALYSIS (Injected via JS to prevent detachment bugs) -->
+            <!-- TV TECHNICAL ANALYSIS -->
             <div class="grid-stack-item" gs-id="tv-technical-analysis" gs-w="3" gs-h="1" data-default-w="4" data-default-h="6" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -532,7 +556,7 @@
             // Programmatically creating the element forces the browser to run the component lifecycle, resolving the innerHTML failure
             const tv = document.createElement('tv-technical-analysis');
             tv.setAttribute('symbol', symbol);
-            tv.setAttribute('color-theme', 'dark'); // Force dark mode to eliminate the white screen
+            tv.setAttribute('theme', 'dark'); // FIXED: Modern TV components use `theme="dark"` instead of `color-theme="dark"`
             tv.setAttribute('hide-logo-and-name', 'true');
             tv.setAttribute('hide-intervals', 'true');
             wrapper.appendChild(tv);
@@ -540,10 +564,17 @@
         else if (gsId === 'tv-market-data') {
             wrapper.innerHTML = '';
             const tv = document.createElement('tv-market-data');
-            tv.setAttribute('color-theme', 'dark'); // Force dark mode to eliminate the white screen
+            tv.setAttribute('theme', 'dark'); // FIXED: Modern TV components use `theme="dark"` instead of `color-theme="dark"`
             tv.setAttribute('view', 'performance');
             tv.setAttribute('heatmap', 'true');
             tv.setAttribute('symbol-sectors', JSON.stringify(marketDataSymbols));
+            wrapper.appendChild(tv);
+        }
+        else if (gsId === 'forex-heatmap') {
+            wrapper.innerHTML = '';
+            const tv = document.createElement('tv-forex-table');
+            tv.setAttribute('theme', 'dark');
+            tv.setAttribute('currencies', 'EUR,USD,JPY,GBP,CHF,AUD,CAD,NZD,NOK,MXN');
             wrapper.appendChild(tv);
         }
         else if (gsId === 'calendar') {
@@ -561,7 +592,7 @@
             script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
             script.async = true;
             script.innerHTML = JSON.stringify({
-                "colorTheme": "dark",
+                "colorTheme": "dark", // Standard script iframe embeds still correctly use `colorTheme`
                 "isTransparent": true,
                 "locale": "en",
                 "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
@@ -678,7 +709,7 @@
     }
 
     window.onload = function() {
-        const savedLayout = localStorage.getItem('analystWireLayoutV11');
+        const savedLayout = localStorage.getItem('analystWireLayoutV12');
         if (savedLayout) {
             try {
                 const parsed = JSON.parse(savedLayout);
@@ -758,7 +789,7 @@
             id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
         }));
         const combined = [...dockItems, ...mainItems];
-        localStorage.setItem('analystWireLayoutV11', JSON.stringify(combined));
+        localStorage.setItem('analystWireLayoutV12', JSON.stringify(combined));
     }
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
