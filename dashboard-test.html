@@ -16,7 +16,7 @@
     <!-- TRADINGVIEW WIDGET SCRIPTS -->
     <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-market-data.js"></script>
     <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-technical-analysis.js"></script>
-    <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-forex-table.js"></script> <!-- NEW -->
+    <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-forex-table.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -71,7 +71,10 @@
         #dock-grid .grid-stack-item-content:hover { background: #21262d; border-color: #8b949e; }
         #dock-grid .panel { background: transparent; border: none; box-shadow: none; height: 100%; display: flex; align-items: center; justify-content: center; }
         #dock-grid .panel-controls { display: flex !important; margin-left: auto; }
-        #dock-grid .panel-header { background: transparent; border: none; padding: 6px 12px; color: #c9d1d9; width: 100%; height: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left; font-size: 11px; white-space: normal; pointer-events: auto; cursor: default; }
+        
+        /* FIX: Overlap and truncation bugs handled here */
+        #dock-grid .panel-header { background: transparent; border: none; padding: 6px 12px; width: 100%; height: 100%; white-space: normal; pointer-events: auto; cursor: default; }
+        
         #dock-grid .panel-content { display: none !important; }
         #dock-grid .ui-resizable-handle { display: none !important; }
         #dock-grid .zoom-btn, #dock-grid .zoom-label { display: none !important; }
@@ -82,13 +85,70 @@
         
         .grid-stack-item-content { display: flex; flex-direction: column; }
         .panel { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .panel-header { background: #161b22; padding: 8px 15px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #30363d; color: #8b949e; user-select: none; cursor: grab; touch-action: none; display: flex; justify-content: space-between; align-items: center; white-space: nowrap; }
-        .panel-header:active { cursor: grabbing; }
         
-        .widget-asset-selector { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; outline: none; margin-left: 6px; max-width: 95px; text-overflow: ellipsis; white-space: nowrap; }
+        .panel-header { 
+            background: #161b22; 
+            padding: 8px 15px; 
+            font-size: 11px; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            border-bottom: 1px solid #30363d; 
+            color: #8b949e; 
+            user-select: none; 
+            cursor: grab; 
+            touch-action: none; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: nowrap; 
+            overflow: hidden; 
+            gap: 10px; 
+        }
+        .panel-header:active { cursor: grabbing; }
+
+        /* Structural Wrappers to allow text truncation without pushing buttons off screen */
+        .panel-title-wrapper {
+            display: flex;
+            align-items: center;
+            min-width: 0; /* Critical for flex child truncation */
+            flex: 1 1 auto;
+            gap: 8px;
+        }
+
+        .panel-title-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 0 1 auto;
+        }
+        
+        .widget-asset-selector { 
+            background: #0d1117; 
+            color: #c9d1d9; 
+            border: 1px solid #30363d; 
+            border-radius: 4px; 
+            padding: 2px 6px; 
+            font-size: 10px; 
+            cursor: pointer; 
+            outline: none; 
+            flex: 0 1 auto; /* Allow the select box to shrink if necessary */
+            min-width: 40px; 
+            max-width: 95px; 
+            text-overflow: ellipsis; 
+            white-space: nowrap; 
+        }
         .widget-asset-selector:focus { border-color: #58a6ff; }
         
-        .panel-controls { display: flex; align-items: center; gap: 5px; cursor: default; flex-shrink: 0; }
+        .panel-controls { 
+            display: flex; 
+            align-items: center; 
+            gap: 5px; 
+            cursor: default; 
+            flex: 0 0 auto; /* Ensure buttons never shrink */
+            background: #161b22; 
+        }
+        
         .panel-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8b949e; border-radius: 4px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; transition: 0.15s; font-family: monospace; flex-shrink: 0; }
         .panel-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
         
@@ -205,7 +265,9 @@
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">
-                            <span>Newsfeed Latest</span>
+                            <div class="panel-title-wrapper">
+                                <span class="panel-title-text">Newsfeed Latest</span>
+                            </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                 <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
@@ -227,7 +289,9 @@
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">
-                            <span>Latest Briefing</span>
+                            <div class="panel-title-wrapper">
+                                <span class="panel-title-text">Latest Briefing</span>
+                            </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                 <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
@@ -250,7 +314,9 @@
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">
-                            <span>Economic Calendar</span>
+                            <div class="panel-title-wrapper">
+                                <span class="panel-title-text">Economic Calendar</span>
+                            </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                 <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
@@ -272,7 +338,9 @@
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">
-                            <span>Hot Asset Radar</span>
+                            <div class="panel-title-wrapper">
+                                <span class="panel-title-text">Hot Asset Radar</span>
+                            </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                 <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
@@ -306,7 +374,9 @@
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">
-                            <span>Forex Market Hours</span>
+                            <div class="panel-title-wrapper">
+                                <span class="panel-title-text">Forex Market Hours</span>
+                            </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                 <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
@@ -408,7 +478,9 @@
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">
-                            <span>Bloomberg TV</span>
+                            <div class="panel-title-wrapper">
+                                <span class="panel-title-text">Bloomberg TV</span>
+                            </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                 <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
@@ -426,12 +498,14 @@
                 </div>
             </div>
 
-            <!-- FOREX HEATMAP (New Widget) -->
+            <!-- FOREX HEATMAP -->
             <div class="grid-stack-item" gs-id="forex-heatmap" gs-w="2" gs-h="1" data-default-w="6" data-default-h="5" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">
-                            <span>Forex Heatmap</span>
+                            <div class="panel-title-wrapper">
+                                <span class="panel-title-text">Forex Heatmap</span>
+                            </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                 <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
@@ -454,7 +528,9 @@
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">
-                            <span>Market Data</span>
+                            <div class="panel-title-wrapper">
+                                <span class="panel-title-text">Market Data</span>
+                            </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                 <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
                                 <span class="zoom-label">100%</span>
@@ -477,8 +553,8 @@
                 <div class="grid-stack-item-content">
                     <div class="panel">
                         <div class="panel-header">
-                            <div style="display: flex; align-items: center; min-width: 0;">
-                                <span style="white-space: nowrap; font-size: 10px;">Tech Analysis</span>
+                            <div class="panel-title-wrapper">
+                                <span class="panel-title-text">Tech Analysis</span>
                                 <select class="widget-asset-selector" onchange="updateTAWidget(this)" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                     <optgroup label="Forex">
                                         <option value="OANDA:EURUSD">EUR/USD</option>
@@ -556,7 +632,7 @@
             // Programmatically creating the element forces the browser to run the component lifecycle, resolving the innerHTML failure
             const tv = document.createElement('tv-technical-analysis');
             tv.setAttribute('symbol', symbol);
-            tv.setAttribute('theme', 'dark'); // FIXED: Modern TV components use `theme="dark"` instead of `color-theme="dark"`
+            tv.setAttribute('theme', 'dark'); 
             tv.setAttribute('hide-logo-and-name', 'true');
             tv.setAttribute('hide-intervals', 'true');
             wrapper.appendChild(tv);
@@ -564,7 +640,7 @@
         else if (gsId === 'tv-market-data') {
             wrapper.innerHTML = '';
             const tv = document.createElement('tv-market-data');
-            tv.setAttribute('theme', 'dark'); // FIXED: Modern TV components use `theme="dark"` instead of `color-theme="dark"`
+            tv.setAttribute('theme', 'dark');
             tv.setAttribute('view', 'performance');
             tv.setAttribute('heatmap', 'true');
             tv.setAttribute('symbol-sectors', JSON.stringify(marketDataSymbols));
@@ -592,7 +668,7 @@
             script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
             script.async = true;
             script.innerHTML = JSON.stringify({
-                "colorTheme": "dark", // Standard script iframe embeds still correctly use `colorTheme`
+                "colorTheme": "dark", 
                 "isTransparent": true,
                 "locale": "en",
                 "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
@@ -709,7 +785,7 @@
     }
 
     window.onload = function() {
-        const savedLayout = localStorage.getItem('analystWireLayoutV12');
+        const savedLayout = localStorage.getItem('analystWireLayoutV13');
         if (savedLayout) {
             try {
                 const parsed = JSON.parse(savedLayout);
@@ -789,7 +865,7 @@
             id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
         }));
         const combined = [...dockItems, ...mainItems];
-        localStorage.setItem('analystWireLayoutV12', JSON.stringify(combined));
+        localStorage.setItem('analystWireLayoutV13', JSON.stringify(combined));
     }
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
