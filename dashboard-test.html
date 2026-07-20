@@ -80,7 +80,10 @@
         
         #dock-container .panel { background: transparent; border: none; box-shadow: none; height: 100%; display: flex; align-items: center; justify-content: center; }
         #dock-container .panel-controls { display: flex !important; margin-left: auto; }
-        #dock-container .panel-header { background: transparent; border: none; padding: 0 12px; height: 100%; min-height: 100%; pointer-events: auto; cursor: default; }
+        
+        /* Overriding touch-action so finger swipes aren't blocked by gridstack's drag listener */
+        #dock-container .panel-header { background: transparent; border: none; padding: 0 12px; height: 100%; min-height: 100%; pointer-events: auto; cursor: default; touch-action: pan-x pan-y !important; }
+        
         #dock-container .panel-content { display: none !important; }
         #dock-container .ui-resizable-handle { display: none !important; }
 
@@ -172,10 +175,13 @@
             .sidebar-header { display: none; } /* Hide logo inside sidebar */
             .nav-links { max-height: calc(100vh - 120px); }
             
-            /* Dock scrolling */
-            #dock-wrapper { padding: 10px; }
-            #dock-container { flex-wrap: nowrap; overflow-x: auto; padding: 5px; }
-            #dock-container .grid-stack-item { flex: 0 0 auto; }
+            /* Dock scrolling fix */
+            #dock-wrapper { overflow-x: auto !important; overflow-y: hidden !important; padding: 10px 5px !important; -webkit-overflow-scrolling: touch; }
+            #dock-container { flex-wrap: nowrap !important; width: max-content !important; min-width: 100%; gap: 10px; padding: 5px; }
+            #dock-container .grid-stack-item { flex: 0 0 auto; width: max-content !important; }
+            
+            /* Lock Dashboard Widgets to 100% Width & Disable Resizing */
+            #main-grid .ui-resizable-handle { display: none !important; }
             
             /* Enable mobile settings */
             .mobile-only { display: flex; }
@@ -186,6 +192,7 @@
         .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
         .adaptive-wrapper { transform-origin: top left; width: 100%; height: 100%; overflow: visible !important; }
         body.is-dragging iframe, body.is-dragging .adaptive-wrapper { pointer-events: none !important; }
+        
         .ui-resizable-handle { z-index: 9999 !important; width: 15px !important; height: 15px !important; bottom: 2px !important; right: 2px !important; background: radial-gradient(circle at 100% 100%, rgba(255,255,255,0.2) 20%, transparent 40%); }
         .panel-content::-webkit-scrollbar { width: 6px; }
         .panel-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
@@ -1018,7 +1025,7 @@
     }
 
     window.onload = function() {
-        const savedLayout = localStorage.getItem('analystWireLayoutV16');
+        const savedLayout = localStorage.getItem('analystWireLayoutV17');
         
         // Initialize Main Grid ONLY
         mainGrid = GridStack.init({
@@ -1101,7 +1108,7 @@
             id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
         }));
         
-        localStorage.setItem('analystWireLayoutV16', JSON.stringify([...dockItems, ...mainItems]));
+        localStorage.setItem('analystWireLayoutV17', JSON.stringify([...dockItems, ...mainItems]));
     }
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
