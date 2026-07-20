@@ -60,7 +60,7 @@
 
         .main-content { flex-grow: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #05070a; }
 
-        /* FLEXBOX DOCK CONTAINER (Decoupled from GridStack) */
+        /* WIDGET LIBRARY DOCK */
         #dock-wrapper { background: #0d1117; border-bottom: 2px solid #30363d; padding: 15px 20px; flex-shrink: 0; display: none; max-height: 180px; overflow-y: auto; overflow-x: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         #dock-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
         #dock-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
@@ -73,17 +73,13 @@
 
         #dock-container { display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px dashed #30363d; min-height: 64px; }
         
-        /* Forces items in the dock to behave purely as flex items */
         #dock-container .grid-stack-item { position: relative !important; display: block !important; width: max-content !important; height: 42px !important; min-width: 160px; top: auto !important; left: auto !important; margin: 0 !important; transform: none !important; }
         #dock-container .grid-stack-item-content { position: relative !important; inset: auto !important; width: 100% !important; height: 100% !important; background: #161b22; border: 1px solid #30363d; border-radius: 6px; transition: background 0.2s, border-color 0.2s; overflow: visible !important; }
         #dock-container .grid-stack-item-content:hover { background: #21262d; border-color: #8b949e; }
         
         #dock-container .panel { background: transparent; border: none; box-shadow: none; height: 100%; display: flex; align-items: center; justify-content: center; }
         #dock-container .panel-controls { display: flex !important; margin-left: auto; }
-        
-        /* Overriding touch-action so finger swipes aren't blocked by gridstack's drag listener */
         #dock-container .panel-header { background: transparent; border: none; padding: 0 12px; height: 100%; min-height: 100%; pointer-events: auto; cursor: default; touch-action: pan-x pan-y !important; }
-        
         #dock-container .panel-content { display: none !important; }
         #dock-container .ui-resizable-handle { display: none !important; }
 
@@ -125,7 +121,6 @@
         .compact-widget .full-text { display: none; }
         .compact-widget .short-text { display: inline; }
         
-        /* Bulletproof override so it NEVER triggers in the dock */
         [data-in-dock="true"] .compact-widget .full-text { display: inline !important; }
         [data-in-dock="true"] .compact-widget .short-text { display: none !important; }
         
@@ -168,11 +163,11 @@
         .mobile-arrow { display: none !important; }
 
         @media (max-width: 768px) {
-            body { flex-direction: column; }
+            body { flex-direction: column; overflow: auto !important; height: auto !important; }
             .mobile-topbar { display: flex; }
             .sidebar { position: absolute; top: 60px; left: 0; width: 100%; height: auto; z-index: 2000; display: flex; flex-direction: column; transform: translateY(-150%); transition: transform 0.3s ease; opacity: 0; pointer-events: none; border-bottom: 1px solid #1c2230; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
             .sidebar.mobile-open { transform: translateY(0); opacity: 1; pointer-events: auto; }
-            .sidebar-header { display: none; } /* Hide logo inside sidebar */
+            .sidebar-header { display: none; }
             .nav-links { max-height: calc(100vh - 120px); }
             
             /* Dock scrolling fix */
@@ -180,14 +175,15 @@
             #dock-container { flex-wrap: nowrap !important; width: max-content !important; min-width: 100%; gap: 10px; padding: 5px; }
             #dock-container .grid-stack-item { flex: 0 0 auto; width: max-content !important; }
             
-            /* TRUE FULL WIDTH MOBILE WIDGETS */
-            .dashboard-area { padding: 0 !important; }
-            #main-grid { margin: 0 !important; }
-            #main-grid .grid-stack-item { width: 100% !important; left: 0 !important; padding: 0 !important; margin: 0 !important; }
-            #main-grid .panel { border-radius: 0 !important; border-left: none !important; border-right: none !important; }
+            /* FULL NATIVE MOBILE STACK (Bypasses Gridstack clipping bug) */
+            .main-content { overflow: visible !important; height: auto !important; flex-grow: unset !important; }
+            .dashboard-area { padding: 0 !important; overflow: visible !important; height: auto !important; }
+            #main-grid.grid-stack { position: relative !important; height: auto !important; min-height: unset !important; display: flex !important; flex-direction: column !important; gap: 10px !important; margin: 0 !important; }
+            #main-grid .grid-stack-item { position: relative !important; width: 100% !important; left: 0 !important; top: auto !important; height: auto !important; min-height: 250px; padding: 0 !important; margin: 0 !important; transform: none !important; }
+            #main-grid .grid-stack-item-content { position: relative !important; inset: auto !important; width: 100% !important; height: 100% !important; }
+            #main-grid .panel { border-radius: 0 !important; border-left: none !important; border-right: none !important; height: 100% !important; }
             #main-grid .ui-resizable-handle { display: none !important; }
             
-            /* Enable mobile settings */
             .mobile-only { display: flex; }
             [data-in-dock="false"] .mobile-arrow { display: flex !important; color: #58a6ff; border-color: rgba(88, 166, 255, 0.3); }
             [data-in-dock="false"] .mobile-arrow:hover { background: rgba(88, 166, 255, 0.1); }
@@ -798,7 +794,6 @@
     }
 
     function toggleWidgetSettings(btn) {
-        // Close all others first
         document.querySelectorAll('.widget-settings-menu.open').forEach(menu => {
             if (menu !== btn.nextElementSibling) {
                 menu.classList.remove('open');
@@ -812,7 +807,6 @@
         }
     }
 
-    // Close settings dropdown if clicking outside
     document.addEventListener('click', (event) => {
         if (!event.target.closest('.settings-container')) {
             document.querySelectorAll('.widget-settings-menu.open').forEach(menu => {
@@ -955,64 +949,88 @@
 
     function adjustHeight(btn, delta) {
         const el = btn.closest('.grid-stack-item');
-        const node = el.gridstackNode;
-        if (!node) return;
-        let currentH = node.h || parseInt(el.getAttribute('data-default-h')) || 4;
-        let newH = Math.max(2, currentH + delta);
-        mainGrid.update(el, { h: newH });
-        const label = el.querySelector('.h-label');
-        if (label) label.innerText = newH;
-        saveLayoutState();
-    }
-
-    // Move widget vertically in GridStack 1-column mode
-    function moveWidget(btn, direction) {
-        const el = btn.closest('.grid-stack-item');
-        const node = el.gridstackNode;
-        if(!node) return;
-        const nodes = mainGrid.engine.nodes.slice().sort((a,b) => a.y - b.y);
-        const currentIndex = nodes.findIndex(n => n.el === el);
-        
-        if (direction === -1 && currentIndex > 0) {
-            const targetNode = nodes[currentIndex - 1];
-            const tempY = targetNode.y;
-            mainGrid.update(targetNode.el, { y: node.y });
-            mainGrid.update(el, { y: tempY });
-        } else if (direction === 1 && currentIndex < nodes.length - 1) {
-            const targetNode = nodes[currentIndex + 1];
-            const tempY = targetNode.y;
-            mainGrid.update(targetNode.el, { y: node.y });
-            mainGrid.update(el, { y: tempY });
+        if (window.innerWidth <= 768) {
+            // Pure DOM height adjustment for mobile stack mode
+            const panel = el.querySelector('.panel');
+            let currentHeight = panel.clientHeight || 300;
+            let newHeight = Math.max(150, currentHeight + (delta * 50));
+            panel.style.height = `${newHeight}px`;
+            const label = el.querySelector('.h-label');
+            if (label) label.innerText = `${Math.round(newHeight)}px`;
+        } else {
+            const node = el.gridstackNode;
+            if (!node) return;
+            let currentH = node.h || parseInt(el.getAttribute('data-default-h')) || 4;
+            let newH = Math.max(2, currentH + delta);
+            mainGrid.update(el, { h: newH });
+            const label = el.querySelector('.h-label');
+            if (label) label.innerText = newH;
         }
         saveLayoutState();
     }
 
+    // Move widget vertically in mobile stack or desktop grid
+    function moveWidget(btn, direction) {
+        const el = btn.closest('.grid-stack-item');
+        if (window.innerWidth <= 768) {
+            const container = document.getElementById('main-grid');
+            const items = Array.from(container.children);
+            const index = items.indexOf(el);
+            if (direction === -1 && index > 0) {
+                container.insertBefore(el, items[index - 1]);
+            } else if (direction === 1 && index < items.length - 1) {
+                container.insertBefore(items[index + 1], el);
+            }
+            saveLayoutState();
+        } else {
+            const node = el.gridstackNode;
+            if(!node) return;
+            const nodes = mainGrid.engine.nodes.slice().sort((a,b) => a.y - b.y);
+            const currentIndex = nodes.findIndex(n => n.el === el);
+            if (direction === -1 && currentIndex > 0) {
+                const targetNode = nodes[currentIndex - 1];
+                const tempY = targetNode.y;
+                mainGrid.update(targetNode.el, { y: node.y });
+                mainGrid.update(el, { y: tempY });
+            } else if (direction === 1 && currentIndex < nodes.length - 1) {
+                const targetNode = nodes[currentIndex + 1];
+                const tempY = targetNode.y;
+                mainGrid.update(targetNode.el, { y: node.y });
+                mainGrid.update(el, { y: tempY });
+            }
+            saveLayoutState();
+        }
+    }
+
     function moveToDashboard(btn) {
         const el = btn.closest('.grid-stack-item');
-        // Remove from Flexbox Dock
         el.parentNode.removeChild(el);
         el.setAttribute('data-in-dock', 'false');
         
-        // Add to GridStack
-        document.getElementById('main-grid').appendChild(el);
-        mainGrid.makeWidget(el);
+        const mainContainer = document.getElementById('main-grid');
+        mainContainer.appendChild(el);
         
-        let defaultW = parseInt(el.getAttribute('data-default-w')) || 4;
-        let defaultH = parseInt(el.getAttribute('data-default-h')) || 4;
-        mainGrid.update(el, {w: defaultW, h: defaultH, autoPosition: true});
+        if (window.innerWidth > 768) {
+            mainGrid.makeWidget(el);
+            let defaultW = parseInt(el.getAttribute('data-default-w')) || 4;
+            let defaultH = parseInt(el.getAttribute('data-default-h')) || 4;
+            mainGrid.update(el, {w: defaultW, h: defaultH, autoPosition: true});
+        }
         saveLayoutState();
         refreshTradingViewWidgets(el);
     }
 
     function returnToDock(btn) {
         const el = btn.closest('.grid-stack-item');
-        // Remove from GridStack Engine, but keep in DOM
-        mainGrid.removeWidget(el, false, false);
+        if (window.innerWidth > 768) {
+            mainGrid.removeWidget(el, false, false);
+        } else {
+            el.parentNode.removeChild(el);
+        }
         el.setAttribute('data-in-dock', 'true');
         el.setAttribute('data-zoom', '1.0');
-        el.removeAttribute('style'); // Clear absolute positioning
+        el.removeAttribute('style');
         
-        // Reset Zoom Menu
         const menu = el.querySelector('.widget-settings-menu');
         const toggleBtn = el.querySelector('.settings-toggle-btn');
         if (menu && toggleBtn) {
@@ -1022,24 +1040,14 @@
         const label = el.querySelector('.zoom-label');
         if (label) label.innerText = '100%';
 
-        // Append to Flexbox Dock
         document.getElementById('dock-container').appendChild(el);
         saveLayoutState();
         refreshTradingViewWidgets(el);
     }
 
-    function updateGridMoveState() {
-        if (window.innerWidth <= 768) {
-            mainGrid.enableMove(false);
-        } else {
-            mainGrid.enableMove(true);
-        }
-    }
-
     window.onload = function() {
-        const savedLayout = localStorage.getItem('analystWireLayoutV18');
+        const savedLayout = localStorage.getItem('analystWireLayoutV19');
         
-        // Initialize Main Grid ONLY
         mainGrid = GridStack.init({
             cellHeight: '60px', margin: 5, handle: '.panel-header', animate: true, 
             alwaysShowResizeHandle: true, acceptWidgets: false, float: true, minRow: 1
@@ -1049,10 +1057,6 @@
         mainGrid.on('dragstop resizestop', function() { document.body.classList.remove('is-dragging'); });
         mainGrid.on('change', saveLayoutState);
         mainGrid.on('removed', saveLayoutState);
-
-        // Turn off drag-to-move dynamically if we are on a mobile device
-        window.addEventListener('resize', updateGridMoveState);
-        updateGridMoveState();
 
         if (savedLayout) {
             try {
@@ -1069,8 +1073,10 @@
                             if (item.grid === 'main') {
                                 el.setAttribute('data-in-dock', 'false');
                                 document.getElementById('main-grid').appendChild(el);
-                                mainGrid.makeWidget(el);
-                                mainGrid.update(el, {x: item.x, y: item.y, w: item.w, h: item.h});
+                                if (window.innerWidth > 768) {
+                                    mainGrid.makeWidget(el);
+                                    mainGrid.update(el, {x: item.x, y: item.y, w: item.w, h: item.h});
+                                }
                             } else {
                                 el.setAttribute('data-in-dock', 'true');
                                 document.getElementById('dock-container').appendChild(el);
@@ -1087,7 +1093,6 @@
                 const targetPanel = entry.target; 
                 const panelItem = targetPanel.closest('.grid-stack-item'); 
                 
-                // Truncate header title ONLY if the panel shrinks AND it is NOT in the dock
                 const isInDock = panelItem && panelItem.getAttribute('data-in-dock') === 'true';
                 if (width < 260 && !isInDock) {
                     targetPanel.classList.add('compact-widget');
@@ -1114,17 +1119,22 @@
     };
 
     function saveLayoutState() {
-        // Read native DOM flexbox items for dock
         const dockItems = Array.from(document.getElementById('dock-container').children).map(el => ({
             id: el.getAttribute('gs-id'), grid: 'dock', zoom: el.getAttribute('data-zoom') || '1.0'
         }));
         
-        // Read Gridstack nodes for main dashboard
-        const mainItems = mainGrid.engine.nodes.map(n => ({
-            id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
-        }));
+        let mainItems = [];
+        if (window.innerWidth <= 768) {
+            mainItems = Array.from(document.getElementById('main-grid').children).map((el, idx) => ({
+                id: el.getAttribute('gs-id'), grid: 'main', x: 0, y: idx, w: 1, h: 4, zoom: el.getAttribute('data-zoom') || '1.0'
+            }));
+        } else {
+            mainItems = mainGrid.engine.nodes.map(n => ({
+                id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
+            }));
+        }
         
-        localStorage.setItem('analystWireLayoutV18', JSON.stringify([...dockItems, ...mainItems]));
+        localStorage.setItem('analystWireLayoutV19', JSON.stringify([...dockItems, ...mainItems]));
     }
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
