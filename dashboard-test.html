@@ -24,6 +24,11 @@
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #090b10; color: #d1d4dc; margin: 0; height: 100vh; width: 100vw; display: flex; flex-direction: row; overflow: hidden; font-size: 13px; position: relative; }
         *, *:before, *:after { box-sizing: border-box; }
         
+        /* MOBILE TOPBAR */
+        .mobile-topbar { display: none; height: 60px; background: #0d1117; border-bottom: 1px solid #1c2230; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 2001; flex-shrink: 0; }
+        .mobile-logo-btn { height: 32px; cursor: pointer; }
+        .mobile-menu-icon { fill: #c9d1d9; width: 24px; height: 24px; cursor: pointer; }
+
         /* SIDEBAR */
         .sidebar { background: #0d1117; width: 220px; border-right: 1px solid #1c2230; display: flex; flex-direction: column; transition: width 0.3s ease; z-index: 1000; flex-shrink: 0; position: relative; }
         .sidebar.collapsed { width: 65px; }
@@ -55,9 +60,9 @@
 
         .main-content { flex-grow: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #05070a; }
 
-        /* WIDGET LIBRARY DOCK */
+        /* FLEXBOX DOCK CONTAINER (Decoupled from GridStack) */
         #dock-wrapper { background: #0d1117; border-bottom: 2px solid #30363d; padding: 15px 20px; flex-shrink: 0; display: none; max-height: 180px; overflow-y: auto; overflow-x: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        #dock-wrapper::-webkit-scrollbar { width: 6px; }
+        #dock-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
         #dock-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
         #dock-wrapper::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
 
@@ -66,17 +71,18 @@
         .close-dock-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #c9d1d9; cursor: pointer; font-size: 10px; padding: 4px 10px; font-weight: 600; text-transform: uppercase; transition: 0.2s; }
         .close-dock-btn:hover { background: rgba(248,81,73,0.1); color: #ff7b72; border-color: rgba(248,81,73,0.3); }
 
-        #dock-grid { min-height: 55px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 5px; border: 1px dashed #30363d; }
-        #dock-grid .grid-stack-item-content { background: #161b22; border: 1px solid #30363d; border-radius: 6px; transition: background 0.2s, border-color 0.2s; }
-        #dock-grid .grid-stack-item-content:hover { background: #21262d; border-color: #8b949e; }
-        #dock-grid .panel { background: transparent; border: none; box-shadow: none; height: 100%; display: flex; align-items: center; justify-content: center; }
-        #dock-grid .panel-controls { display: flex !important; margin-left: auto; }
+        #dock-container { display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px dashed #30363d; min-height: 64px; }
         
-        #dock-grid .panel-header { background: transparent; border: none; padding: 0 12px; height: 100%; min-height: 100%; pointer-events: auto; cursor: default; }
+        /* Forces items in the dock to behave purely as flex items */
+        #dock-container .grid-stack-item { position: relative !important; display: block !important; width: max-content !important; height: 42px !important; min-width: 160px; top: auto !important; left: auto !important; margin: 0 !important; transform: none !important; }
+        #dock-container .grid-stack-item-content { position: relative !important; inset: auto !important; width: 100% !important; height: 100% !important; background: #161b22; border: 1px solid #30363d; border-radius: 6px; transition: background 0.2s, border-color 0.2s; overflow: visible !important; }
+        #dock-container .grid-stack-item-content:hover { background: #21262d; border-color: #8b949e; }
         
-        #dock-grid .panel-content { display: none !important; }
-        #dock-grid .ui-resizable-handle { display: none !important; }
-        #dock-grid .zoom-container { display: none !important; }
+        #dock-container .panel { background: transparent; border: none; box-shadow: none; height: 100%; display: flex; align-items: center; justify-content: center; }
+        #dock-container .panel-controls { display: flex !important; margin-left: auto; }
+        #dock-container .panel-header { background: transparent; border: none; padding: 0 12px; height: 100%; min-height: 100%; pointer-events: auto; cursor: default; }
+        #dock-container .panel-content { display: none !important; }
+        #dock-container .ui-resizable-handle { display: none !important; }
 
         /* DASHBOARD AREA */
         .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 5px; display: block; }
@@ -105,24 +111,11 @@
             align-items: center; 
             flex-wrap: nowrap; 
             gap: 10px; 
-            /* Removed overflow: hidden so dropdowns can escape the header */
         }
         .panel-header:active { cursor: grabbing; }
 
-        .panel-title-wrapper {
-            display: flex;
-            align-items: center;
-            min-width: 0; 
-            flex: 1 1 auto;
-            gap: 8px;
-        }
-
-        .panel-title-text {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            flex: 0 1 auto;
-        }
+        .panel-title-wrapper { display: flex; align-items: center; min-width: 0; flex: 1 1 auto; gap: 8px; }
+        .panel-title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
 
         /* COMPACT WIDGET STYLES */
         .short-text { display: none; font-size: 13px; font-weight: 700; color: #c9d1d9; }
@@ -133,54 +126,26 @@
         [data-in-dock="true"] .compact-widget .full-text { display: inline !important; }
         [data-in-dock="true"] .compact-widget .short-text { display: none !important; }
         
-        .widget-asset-selector { 
-            background: #0d1117; 
-            color: #c9d1d9; 
-            border: 1px solid #30363d; 
-            border-radius: 4px; 
-            padding: 2px 6px; 
-            font-size: 10px; 
-            cursor: pointer; 
-            outline: none; 
-            flex: 0 1 auto; 
-            min-width: 40px; 
-            max-width: 95px; 
-            text-overflow: ellipsis; 
-            white-space: nowrap; 
-        }
+        .widget-asset-selector { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; outline: none; flex: 0 1 auto; min-width: 40px; max-width: 95px; text-overflow: ellipsis; white-space: nowrap; }
         .widget-asset-selector:focus { border-color: #58a6ff; }
         
-        .panel-controls { 
-            display: flex; 
-            align-items: center; 
-            gap: 5px; 
-            cursor: default; 
-            flex: 0 0 auto; 
-            background: #161b22; 
-        }
+        .panel-controls { display: flex; align-items: center; gap: 5px; cursor: default; flex: 0 0 auto; background: #161b22; }
         
         .panel-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8b949e; border-radius: 4px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; transition: 0.15s; font-family: monospace; flex-shrink: 0; padding: 0; }
         .panel-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
         
-        /* ZOOM MENU SYSTEM (Fixed dropdown) */
-        .zoom-container { position: relative; display: flex; }
-        .zoom-menu { 
-            display: none; 
-            position: absolute;
-            top: 26px; /* Pops out just below the button */
-            right: 0;
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 4px;
-            padding: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center; 
-            gap: 5px;
-            flex-direction: row; 
+        /* SETTINGS MENU SYSTEM */
+        .settings-container { position: relative; display: flex; }
+        .widget-settings-menu { 
+            display: none; position: absolute; top: 26px; right: 0;
+            background: #161b22; border: 1px solid #30363d; border-radius: 4px; padding: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1000;
+            flex-direction: column; gap: 8px; width: 140px; 
         }
-        .zoom-menu.open { display: flex; }
-        .zoom-toggle-btn.active { background: rgba(88, 166, 255, 0.15); color: #58a6ff; border-color: rgba(88, 166, 255, 0.3); }
+        .widget-settings-menu.open { display: flex; }
+        .settings-toggle-btn.active { background: rgba(88, 166, 255, 0.15); color: #58a6ff; border-color: rgba(88, 166, 255, 0.3); }
+        .menu-row { display: flex; align-items: center; justify-content: space-between; gap: 5px; }
+        .menu-label { font-size: 10px; color: #8b949e; text-transform: uppercase; font-weight: 600;}
 
         .add-btn { color: #2ea043; border-color: rgba(46,160,67,0.3); margin-left: 4px; }
         .add-btn:hover { background: rgba(46,160,67,0.2); color: #4ade80; border-color: rgba(74,222,128,0.5); }
@@ -189,17 +154,39 @@
         
         [data-in-dock="true"] .close-btn { display: none !important; }
         [data-in-dock="true"] .add-btn { display: flex !important; }
+        [data-in-dock="true"] .settings-container { display: none !important; }
         [data-in-dock="false"] .add-btn { display: none !important; }
         [data-in-dock="false"] .close-btn { display: flex !important; }
 
-        .zoom-label { font-size: 9px; width: 32px; text-align: center; color: #c9d1d9; font-family: monospace; }
+        .zoom-label, .h-label { font-size: 9px; width: 32px; text-align: center; color: #c9d1d9; font-family: monospace; }
         
+        /* Mobile Specific Overrides */
+        .mobile-only { display: none; }
+        .mobile-arrow { display: none !important; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .mobile-topbar { display: flex; }
+            .sidebar { position: absolute; top: 60px; left: 0; width: 100%; height: auto; z-index: 2000; display: flex; flex-direction: column; transform: translateY(-150%); transition: transform 0.3s ease; opacity: 0; pointer-events: none; border-bottom: 1px solid #1c2230; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+            .sidebar.mobile-open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+            .sidebar-header { display: none; } /* Hide logo inside sidebar */
+            .nav-links { max-height: calc(100vh - 120px); }
+            
+            /* Dock scrolling */
+            #dock-wrapper { padding: 10px; }
+            #dock-container { flex-wrap: nowrap; overflow-x: auto; padding: 5px; }
+            #dock-container .grid-stack-item { flex: 0 0 auto; }
+            
+            /* Enable mobile settings */
+            .mobile-only { display: flex; }
+            [data-in-dock="false"] .mobile-arrow { display: flex !important; color: #58a6ff; border-color: rgba(88, 166, 255, 0.3); }
+            [data-in-dock="false"] .mobile-arrow:hover { background: rgba(88, 166, 255, 0.1); }
+        }
+
         .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
         .adaptive-wrapper { transform-origin: top left; width: 100%; height: 100%; overflow: visible !important; }
-        
         body.is-dragging iframe, body.is-dragging .adaptive-wrapper { pointer-events: none !important; }
         .ui-resizable-handle { z-index: 9999 !important; width: 15px !important; height: 15px !important; bottom: 2px !important; right: 2px !important; background: radial-gradient(circle at 100% 100%, rgba(255,255,255,0.2) 20%, transparent 40%); }
-        
         .panel-content::-webkit-scrollbar { width: 6px; }
         .panel-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
         .panel-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
@@ -235,14 +222,20 @@
 </head>
 <body>
 
-<!-- LEFT SIDEBAR -->
+<!-- MOBILE TOPBAR -->
+<div class="mobile-topbar">
+    <img src="assets/logo.png" alt="Analyst Wire" class="mobile-logo-btn" onclick="toggleMobileMenu()">
+    <svg class="mobile-menu-icon" onclick="toggleMobileMenu()" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+</div>
+
+<!-- LEFT SIDEBAR / MOBILE MENU -->
 <nav id="sidebar" class="sidebar">
     <div class="sidebar-header">
         <img src="assets/logo.png" alt="Analyst Wire" class="logo-img">
         <button class="collapse-btn" onclick="toggleSidebar()" id="sidebar-toggle-btn">&lt;&lt;</button>
     </div>
     <div class="nav-links">
-        <a class="nav-link action-btn" onclick="toggleDock()">
+        <a class="nav-link action-btn" onclick="toggleDock(); toggleMobileMenu();">
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             <span class="nav-text">Widget Library</span>
         </a>
@@ -289,8 +282,10 @@
             <div class="dock-title">Widget Library</div>
             <button class="close-dock-btn" onclick="toggleDock()">Hide Library ▲</button>
         </div>
-        <div id="dock-grid" class="grid-stack">
+        <!-- Dock is now a standard flex container to prevent truncation issues -->
+        <div id="dock-container">
             
+            <!-- NEWSFEED -->
             <div class="grid-stack-item" gs-id="newsfeed" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -299,12 +294,23 @@
                                 <span class="panel-title-text"><span class="full-text">Newsfeed Latest</span><span class="short-text">N</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <div class="zoom-container">
-                                    <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-                                    <div class="zoom-menu">
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                        <span class="zoom-label">100%</span>
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+                                <div class="settings-container">
+                                    <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+                                    <div class="widget-settings-menu">
+                                        <div class="menu-row">
+                                            <span class="menu-label">Zoom</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                            <span class="zoom-label">100%</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                        </div>
+                                        <div class="menu-row mobile-only">
+                                            <span class="menu-label">Height</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+                                            <span class="h-label">Auto</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
@@ -320,6 +326,7 @@
                 </div>
             </div>
             
+            <!-- BRIEFING -->
             <div class="grid-stack-item" gs-id="briefing" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -328,12 +335,23 @@
                                 <span class="panel-title-text"><span class="full-text">Latest Briefing</span><span class="short-text">L</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <div class="zoom-container">
-                                    <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-                                    <div class="zoom-menu">
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                        <span class="zoom-label">100%</span>
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+                                <div class="settings-container">
+                                    <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+                                    <div class="widget-settings-menu">
+                                        <div class="menu-row">
+                                            <span class="menu-label">Zoom</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                            <span class="zoom-label">100%</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                        </div>
+                                        <div class="menu-row mobile-only">
+                                            <span class="menu-label">Height</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+                                            <span class="h-label">Auto</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
@@ -358,12 +376,23 @@
                                 <span class="panel-title-text"><span class="full-text">Economic Calendar</span><span class="short-text">E</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <div class="zoom-container">
-                                    <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-                                    <div class="zoom-menu">
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                        <span class="zoom-label">100%</span>
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+                                <div class="settings-container">
+                                    <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+                                    <div class="widget-settings-menu">
+                                        <div class="menu-row">
+                                            <span class="menu-label">Zoom</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                            <span class="zoom-label">100%</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                        </div>
+                                        <div class="menu-row mobile-only">
+                                            <span class="menu-label">Height</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+                                            <span class="h-label">Auto</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
@@ -372,13 +401,14 @@
                         </div>
                         <div class="panel-content">
                             <div class="adaptive-wrapper" style="padding: 15px;">
-                                <!-- Rendered dynamically on load/move -->
+                                <!-- Rendered dynamically -->
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
+            <!-- HOT ASSET RADAR -->
             <div class="grid-stack-item" gs-id="radar" gs-w="2" gs-h="1" data-default-w="3" data-default-h="7" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -387,12 +417,23 @@
                                 <span class="panel-title-text"><span class="full-text">Hot Asset Radar</span><span class="short-text">H</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <div class="zoom-container">
-                                    <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-                                    <div class="zoom-menu">
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                        <span class="zoom-label">100%</span>
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+                                <div class="settings-container">
+                                    <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+                                    <div class="widget-settings-menu">
+                                        <div class="menu-row">
+                                            <span class="menu-label">Zoom</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                            <span class="zoom-label">100%</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                        </div>
+                                        <div class="menu-row mobile-only">
+                                            <span class="menu-label">Height</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+                                            <span class="h-label">Auto</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
@@ -420,6 +461,7 @@
                 </div>
             </div>
 
+            <!-- FOREX HOURS -->
             <div class="grid-stack-item" gs-id="forex-hours" gs-w="2" gs-h="1" data-default-w="2" data-default-h="7" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -428,12 +470,23 @@
                                 <span class="panel-title-text"><span class="full-text">Forex Market Hours</span><span class="short-text">F</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <div class="zoom-container">
-                                    <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-                                    <div class="zoom-menu">
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                        <span class="zoom-label">100%</span>
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+                                <div class="settings-container">
+                                    <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+                                    <div class="widget-settings-menu">
+                                        <div class="menu-row">
+                                            <span class="menu-label">Zoom</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                            <span class="zoom-label">100%</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                        </div>
+                                        <div class="menu-row mobile-only">
+                                            <span class="menu-label">Height</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+                                            <span class="h-label">Auto</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
@@ -529,6 +582,7 @@
                 </div>
             </div>
 
+            <!-- BLOOMBERG TV -->
             <div class="grid-stack-item" gs-id="bloomberg" gs-w="2" gs-h="1" data-default-w="5" data-default-h="5" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -537,12 +591,23 @@
                                 <span class="panel-title-text"><span class="full-text">Bloomberg TV</span><span class="short-text">B</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <div class="zoom-container">
-                                    <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-                                    <div class="zoom-menu">
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                        <span class="zoom-label">100%</span>
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+                                <div class="settings-container">
+                                    <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+                                    <div class="widget-settings-menu">
+                                        <div class="menu-row">
+                                            <span class="menu-label">Zoom</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                            <span class="zoom-label">100%</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                        </div>
+                                        <div class="menu-row mobile-only">
+                                            <span class="menu-label">Height</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+                                            <span class="h-label">Auto</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
@@ -567,12 +632,23 @@
                                 <span class="panel-title-text"><span class="full-text">Forex Heatmap</span><span class="short-text">F</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <div class="zoom-container">
-                                    <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-                                    <div class="zoom-menu">
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                        <span class="zoom-label">100%</span>
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+                                <div class="settings-container">
+                                    <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+                                    <div class="widget-settings-menu">
+                                        <div class="menu-row">
+                                            <span class="menu-label">Zoom</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                            <span class="zoom-label">100%</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                        </div>
+                                        <div class="menu-row mobile-only">
+                                            <span class="menu-label">Height</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+                                            <span class="h-label">Auto</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
@@ -581,7 +657,7 @@
                         </div>
                         <div class="panel-content">
                             <div class="adaptive-wrapper">
-                                <!-- Rendered dynamically on load/move -->
+                                <!-- Rendered dynamically -->
                             </div>
                         </div>
                     </div>
@@ -597,12 +673,23 @@
                                 <span class="panel-title-text"><span class="full-text">Market Data</span><span class="short-text">M</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <div class="zoom-container">
-                                    <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-                                    <div class="zoom-menu">
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                        <span class="zoom-label">100%</span>
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+                                <div class="settings-container">
+                                    <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+                                    <div class="widget-settings-menu">
+                                        <div class="menu-row">
+                                            <span class="menu-label">Zoom</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                            <span class="zoom-label">100%</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                        </div>
+                                        <div class="menu-row mobile-only">
+                                            <span class="menu-label">Height</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+                                            <span class="h-label">Auto</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
@@ -611,7 +698,7 @@
                         </div>
                         <div class="panel-content">
                             <div class="adaptive-wrapper">
-                                <!-- Rendered dynamically on load/move -->
+                                <!-- Rendered dynamically -->
                             </div>
                         </div>
                     </div>
@@ -647,12 +734,23 @@
                                 </select>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <div class="zoom-container">
-                                    <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-                                    <div class="zoom-menu">
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                        <span class="zoom-label">100%</span>
-                                        <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+                                <div class="settings-container">
+                                    <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+                                    <div class="widget-settings-menu">
+                                        <div class="menu-row">
+                                            <span class="menu-label">Zoom</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                            <span class="zoom-label">100%</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                        </div>
+                                        <div class="menu-row mobile-only">
+                                            <span class="menu-label">Height</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+                                            <span class="h-label">Auto</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
@@ -661,7 +759,7 @@
                         </div>
                         <div class="panel-content">
                             <div class="adaptive-wrapper">
-                                <!-- Rendered dynamically on load/move -->
+                                <!-- Rendered dynamically -->
                             </div>
                         </div>
                     </div>
@@ -679,23 +777,42 @@
 </div>
 
 <script>
-    let dockGrid, mainGrid;
+    let mainGrid;
     
     // ==========================================
-    // ZOOM TOGGLE ENGINE
+    // MOBILE MENU & SETTINGS TOGGLES
     // ==========================================
-    function toggleZoomMenu(btn) {
+    function toggleMobileMenu() {
+        document.getElementById('sidebar').classList.toggle('mobile-open');
+    }
+
+    function toggleWidgetSettings(btn) {
+        // Close all others first
+        document.querySelectorAll('.widget-settings-menu.open').forEach(menu => {
+            if (menu !== btn.nextElementSibling) {
+                menu.classList.remove('open');
+                menu.previousElementSibling.classList.remove('active');
+            }
+        });
         const menu = btn.nextElementSibling;
-        if(menu && menu.classList.contains('zoom-menu')) {
+        if(menu && menu.classList.contains('widget-settings-menu')) {
             menu.classList.toggle('open');
             btn.classList.toggle('active');
         }
     }
 
+    // Close settings dropdown if clicking outside
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.settings-container')) {
+            document.querySelectorAll('.widget-settings-menu.open').forEach(menu => {
+                menu.classList.remove('open');
+                menu.previousElementSibling.classList.remove('active');
+            });
+        }
+    });
+
     // ==========================================
     // TRADINGVIEW RE-RENDER ENGINE
-    // Automatically rebuilds custom elements & iframes from scratch 
-    // to sidestep browser bugs when Gridstack detaches elements from the DOM.
     // ==========================================
     const marketDataSymbols = [
         {"sectionName":"Indices","symbols":["FOREXCOM:SPXUSD","FOREXCOM:NSXUSD","FOREXCOM:DJI","INDEX:NKY","INDEX:DEU40","FOREXCOM:UKXGBP"]},
@@ -714,8 +831,6 @@
             const taSelect = panelEl.querySelector('.widget-asset-selector');
             const symbol = taSelect ? taSelect.value : 'OANDA:XAUUSD';
             wrapper.innerHTML = '';
-            
-            // Programmatically creating the element forces the browser to run the component lifecycle, resolving the innerHTML failure
             const tv = document.createElement('tv-technical-analysis');
             tv.setAttribute('symbol', symbol);
             tv.setAttribute('theme', 'dark'); 
@@ -754,13 +869,9 @@
             script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
             script.async = true;
             script.innerHTML = JSON.stringify({
-                "colorTheme": "dark", 
-                "isTransparent": true,
-                "locale": "en",
+                "colorTheme": "dark", "isTransparent": true, "locale": "en",
                 "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
-                "importanceFilter": "-1,0,1",
-                "width": "100%",
-                "height": "100%"
+                "importanceFilter": "-1,0,1", "width": "100%", "height": "100%"
             });
             container.appendChild(script);
             wrapper.appendChild(container);
@@ -769,9 +880,7 @@
 
     function updateTAWidget(selectElement) {
         const panelItem = selectElement.closest('.grid-stack-item');
-        if (panelItem) {
-            refreshTradingViewWidgets(panelItem);
-        }
+        if (panelItem) refreshTradingViewWidgets(panelItem);
     }
 
     function toggleSidebar() {
@@ -803,9 +912,7 @@
 
     function resetLayout() {
         Object.keys(localStorage).forEach(key => {
-            if(key.startsWith('analystWireLayout')) {
-                localStorage.removeItem(key);
-            }
+            if(key.startsWith('analystWireLayout')) localStorage.removeItem(key);
         });
         window.location.reload();
     }
@@ -835,52 +942,95 @@
         wrapper.style.height = `${100 / finalScale}%`;
     }
 
+    function adjustHeight(btn, delta) {
+        const el = btn.closest('.grid-stack-item');
+        const node = el.gridstackNode;
+        if (!node) return;
+        let currentH = node.h || parseInt(el.getAttribute('data-default-h')) || 4;
+        let newH = Math.max(2, currentH + delta);
+        mainGrid.update(el, { h: newH });
+        const label = el.querySelector('.h-label');
+        if (label) label.innerText = newH;
+        saveLayoutState();
+    }
+
+    // Move widget vertically in GridStack 1-column mode
+    function moveWidget(btn, direction) {
+        const el = btn.closest('.grid-stack-item');
+        const node = el.gridstackNode;
+        if(!node) return;
+        const nodes = mainGrid.engine.nodes.slice().sort((a,b) => a.y - b.y);
+        const currentIndex = nodes.findIndex(n => n.el === el);
+        
+        if (direction === -1 && currentIndex > 0) {
+            const targetNode = nodes[currentIndex - 1];
+            const tempY = targetNode.y;
+            mainGrid.update(targetNode.el, { y: node.y });
+            mainGrid.update(el, { y: tempY });
+        } else if (direction === 1 && currentIndex < nodes.length - 1) {
+            const targetNode = nodes[currentIndex + 1];
+            const tempY = targetNode.y;
+            mainGrid.update(targetNode.el, { y: node.y });
+            mainGrid.update(el, { y: tempY });
+        }
+        saveLayoutState();
+    }
+
     function moveToDashboard(btn) {
         const el = btn.closest('.grid-stack-item');
-        dockGrid.removeWidget(el, false); 
+        // Remove from Flexbox Dock
+        el.parentNode.removeChild(el);
         el.setAttribute('data-in-dock', 'false');
+        
+        // Add to GridStack
         document.getElementById('main-grid').appendChild(el);
         mainGrid.makeWidget(el);
+        
         let defaultW = parseInt(el.getAttribute('data-default-w')) || 4;
         let defaultH = parseInt(el.getAttribute('data-default-h')) || 4;
         mainGrid.update(el, {w: defaultW, h: defaultH, autoPosition: true});
         saveLayoutState();
-        
-        // Gridstack DOM detachment breaks the web component iframe; Re-render instantly
         refreshTradingViewWidgets(el);
     }
 
     function returnToDock(btn) {
         const el = btn.closest('.grid-stack-item');
-        mainGrid.removeWidget(el, false); 
+        // Remove from GridStack Engine, but keep in DOM
+        mainGrid.removeWidget(el, false, false);
         el.setAttribute('data-in-dock', 'true');
         el.setAttribute('data-zoom', '1.0');
+        el.removeAttribute('style'); // Clear absolute positioning
         
-        // Reset Zoom Menu logic
-        const menu = el.querySelector('.zoom-menu');
-        const toggleBtn = el.querySelector('.zoom-toggle-btn');
+        // Reset Zoom Menu
+        const menu = el.querySelector('.widget-settings-menu');
+        const toggleBtn = el.querySelector('.settings-toggle-btn');
         if (menu && toggleBtn) {
             menu.classList.remove('open');
             toggleBtn.classList.remove('active');
         }
-
         const label = el.querySelector('.zoom-label');
         if (label) label.innerText = '100%';
-        let returnWidth = 2;
-        if (el.getAttribute('gs-id') === 'tv-technical-analysis') {
-            returnWidth = 3;
-        }
-        document.getElementById('dock-grid').appendChild(el);
-        dockGrid.makeWidget(el);
-        dockGrid.update(el, {w: returnWidth, h: 1}); 
+
+        // Append to Flexbox Dock
+        document.getElementById('dock-container').appendChild(el);
         saveLayoutState();
-        
-        // Gridstack DOM detachment breaks the web component iframe; Re-render instantly
         refreshTradingViewWidgets(el);
     }
 
     window.onload = function() {
-        const savedLayout = localStorage.getItem('analystWireLayoutV15');
+        const savedLayout = localStorage.getItem('analystWireLayoutV16');
+        
+        // Initialize Main Grid ONLY
+        mainGrid = GridStack.init({
+            cellHeight: '60px', margin: 5, handle: '.panel-header', animate: true, 
+            alwaysShowResizeHandle: true, acceptWidgets: false, float: true, minRow: 1
+        }, '#main-grid');
+
+        mainGrid.on('dragstart resizestart', function() { document.body.classList.add('is-dragging'); });
+        mainGrid.on('dragstop resizestop', function() { document.body.classList.remove('is-dragging'); });
+        mainGrid.on('change', saveLayoutState);
+        mainGrid.on('removed', saveLayoutState);
+
         if (savedLayout) {
             try {
                 const parsed = JSON.parse(savedLayout);
@@ -888,10 +1038,6 @@
                     if (item.id) {
                         const el = document.querySelector(`[gs-id="${item.id}"]`);
                         if (el) {
-                            el.setAttribute('gs-x', item.x);
-                            el.setAttribute('gs-y', item.y);
-                            el.setAttribute('gs-w', item.w);
-                            el.setAttribute('gs-h', item.h);
                             const savedZoom = item.zoom || '1.0';
                             el.setAttribute('data-zoom', savedZoom);
                             const label = el.querySelector('.zoom-label');
@@ -900,30 +1046,17 @@
                             if (item.grid === 'main') {
                                 el.setAttribute('data-in-dock', 'false');
                                 document.getElementById('main-grid').appendChild(el);
+                                mainGrid.makeWidget(el);
+                                mainGrid.update(el, {x: item.x, y: item.y, w: item.w, h: item.h});
                             } else {
                                 el.setAttribute('data-in-dock', 'true');
-                                document.getElementById('dock-grid').appendChild(el);
+                                document.getElementById('dock-container').appendChild(el);
                             }
                         }
                     }
                 });
-            } catch (e) {
-                console.error("Layout parse failed", e);
-            }
+            } catch (e) { console.error("Layout parse failed", e); }
         }
-
-        dockGrid = GridStack.init({
-            cellHeight: '45px', margin: 5, acceptWidgets: false, disableDrag: true, disableResize: true, float: false, disableOneColumnMode: true,        
-        }, '#dock-grid');
-
-        mainGrid = GridStack.init({
-            cellHeight: '60px', margin: 5, handle: '.panel-header', animate: true, alwaysShowResizeHandle: true, acceptWidgets: false, float: true, minRow: 1
-        }, '#main-grid');
-
-        mainGrid.on('dragstart resizestart', function() { document.body.classList.add('is-dragging'); });
-        mainGrid.on('dragstop resizestop', function() { document.body.classList.remove('is-dragging'); });
-        mainGrid.on('change', saveLayoutState);
-        mainGrid.on('removed', saveLayoutState);
 
         const panelObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
@@ -952,28 +1085,26 @@
         });
 
         document.querySelectorAll('.panel').forEach(panel => { panelObserver.observe(panel); });
-        
-        // Finalize layout initialization before spinning up TV elements to avoid rendering glitches
-        document.querySelectorAll('.grid-stack-item').forEach(el => {
-            refreshTradingViewWidgets(el);
-        });
+        document.querySelectorAll('.grid-stack-item').forEach(el => { refreshTradingViewWidgets(el); });
         
         init();
     };
 
     function saveLayoutState() {
-        const dockItems = dockGrid.engine.nodes.map(n => ({
-            id: n.id, grid: 'dock', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
+        // Read native DOM flexbox items for dock
+        const dockItems = Array.from(document.getElementById('dock-container').children).map(el => ({
+            id: el.getAttribute('gs-id'), grid: 'dock', zoom: el.getAttribute('data-zoom') || '1.0'
         }));
+        
+        // Read Gridstack nodes for main dashboard
         const mainItems = mainGrid.engine.nodes.map(n => ({
             id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
         }));
-        const combined = [...dockItems, ...mainItems];
-        localStorage.setItem('analystWireLayoutV15', JSON.stringify(combined));
+        
+        localStorage.setItem('analystWireLayoutV16', JSON.stringify([...dockItems, ...mainItems]));
     }
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-
     const tvSymbolMap = { 'S&P500': 'SPY', 'NASDAQ': 'QQQ', 'DOW': 'DIA', 'WTI': 'USOIL', 'COPPER': 'HG1!', 'COCOA': 'CC1!', 'COFFEE': 'KC1!', 'CORN': 'ZC1!', 'WHEAT': 'ZW1!', 'SOYBEANS': 'ZS1!', 'COTTONSUGAR': 'CT1!' };
     const categoryMap = { 'EUR/USD': 'Forex', 'GBP/USD': 'Forex', 'AUD/USD': 'Forex', 'NZD/USD': 'Forex', 'AUD/NZD': 'Forex', 'EUR/CHF': 'Forex', 'USD/CHF': 'Forex', 'USD/CAD': 'Forex', 'USD/NOK': 'Forex', 'USD/MXN': 'Forex', 'USD/JPY': 'Forex', 'EUR/JPY': 'Forex', 'GBP/JPY': 'Forex', 'AUD/JPY': 'Forex', 'NZD/JPY': 'Forex', 'CAD/JPY': 'Forex', 'EUR/GBP': 'Forex', 'EUR/AUD': 'Forex', 'EUR/NZD': 'Forex', 'GBP/AUD': 'Forex', 'GBP/NZD': 'Forex', 'DXY': 'Forex', 'XAU/USD': 'Commodities', 'XAG/USD': 'Commodities', 'WTI': 'Commodities', 'COPPER': 'Commodities', 'COCOA': 'Commodities', 'COFFEE': 'Commodities', 'COTTONSUGAR': 'Commodities', 'CORN': 'Commodities', 'SOYBEANS': 'Commodities', 'WHEAT': 'Commodities', 'AAPL': 'Equities', 'AMZN': 'Equities', 'GOOG': 'Equities', 'MSFT': 'Equities', 'TSLA': 'Equities', 'META': 'Equities', 'V': 'Equities', 'JPM': 'Equities', 'KO': 'Equities', 'MCD': 'Equities', 'AMD': 'Equities', 'BABA': 'Equities', 'JNJ': 'Equities', 'NVDA': 'Equities', 'S&P500': 'Indices', 'NASDAQ': 'Indices', 'DOW': 'Indices', 'RUSSEL': 'Indices', 'FTSE': 'Indices', 'NIKKEI': 'Indices', 'HANG': 'Indices', 'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto' };
 
