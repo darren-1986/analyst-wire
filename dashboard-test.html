@@ -72,12 +72,11 @@
         #dock-grid .panel { background: transparent; border: none; box-shadow: none; height: 100%; display: flex; align-items: center; justify-content: center; }
         #dock-grid .panel-controls { display: flex !important; margin-left: auto; }
         
-        /* FIX: Overlap and truncation bugs handled here */
-        #dock-grid .panel-header { background: transparent; border: none; padding: 6px 12px; width: 100%; height: 100%; white-space: normal; pointer-events: auto; cursor: default; }
+        #dock-grid .panel-header { background: transparent; border: none; padding: 0 12px; height: 100%; min-height: 100%; pointer-events: auto; cursor: default; }
         
         #dock-grid .panel-content { display: none !important; }
         #dock-grid .ui-resizable-handle { display: none !important; }
-        #dock-grid .zoom-btn, #dock-grid .zoom-label { display: none !important; }
+        #dock-grid .zoom-btn, #dock-grid .zoom-label, #dock-grid .zoom-toggle-btn { display: none !important; }
 
         /* DASHBOARD AREA */
         .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 5px; display: block; }
@@ -86,9 +85,12 @@
         .grid-stack-item-content { display: flex; flex-direction: column; }
         .panel { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         
+        /* STANDARDIZED HEADER HEIGHT */
         .panel-header { 
             background: #161b22; 
-            padding: 8px 15px; 
+            padding: 0 12px; 
+            height: 42px; 
+            min-height: 42px;
             font-size: 11px; 
             font-weight: 600; 
             text-transform: uppercase; 
@@ -107,11 +109,10 @@
         }
         .panel-header:active { cursor: grabbing; }
 
-        /* Structural Wrappers to allow text truncation without pushing buttons off screen */
         .panel-title-wrapper {
             display: flex;
             align-items: center;
-            min-width: 0; /* Critical for flex child truncation */
+            min-width: 0; 
             flex: 1 1 auto;
             gap: 8px;
         }
@@ -122,6 +123,11 @@
             text-overflow: ellipsis;
             flex: 0 1 auto;
         }
+
+        /* COMPACT WIDGET STYLES (Triggered via JS Observer) */
+        .short-text { display: none; font-size: 13px; font-weight: 700; color: #c9d1d9; }
+        .compact-widget .full-text { display: none; }
+        .compact-widget .short-text { display: inline; }
         
         .widget-asset-selector { 
             background: #0d1117; 
@@ -132,7 +138,7 @@
             font-size: 10px; 
             cursor: pointer; 
             outline: none; 
-            flex: 0 1 auto; /* Allow the select box to shrink if necessary */
+            flex: 0 1 auto; 
             min-width: 40px; 
             max-width: 95px; 
             text-overflow: ellipsis; 
@@ -145,16 +151,21 @@
             align-items: center; 
             gap: 5px; 
             cursor: default; 
-            flex: 0 0 auto; /* Ensure buttons never shrink */
+            flex: 0 0 auto; 
             background: #161b22; 
         }
         
-        .panel-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8b949e; border-radius: 4px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; transition: 0.15s; font-family: monospace; flex-shrink: 0; }
+        .panel-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8b949e; border-radius: 4px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; transition: 0.15s; font-family: monospace; flex-shrink: 0; padding: 0; }
         .panel-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
         
-        .add-btn { color: #2ea043; border-color: rgba(46,160,67,0.3); margin-left: 8px; }
+        /* ZOOM MENU SYSTEM */
+        .zoom-menu { display: none; align-items: center; gap: 5px; }
+        .zoom-menu.open { display: flex; }
+        .zoom-toggle-btn.active { background: rgba(88, 166, 255, 0.15); color: #58a6ff; border-color: rgba(88, 166, 255, 0.3); }
+
+        .add-btn { color: #2ea043; border-color: rgba(46,160,67,0.3); margin-left: 4px; }
         .add-btn:hover { background: rgba(46,160,67,0.2); color: #4ade80; border-color: rgba(74,222,128,0.5); }
-        .close-btn { color: #f85149; border-color: rgba(248,81,73,0.3); margin-left: 8px; }
+        .close-btn { color: #f85149; border-color: rgba(248,81,73,0.3); margin-left: 4px; }
         .close-btn:hover { background: rgba(248,81,73,0.2); color: #ff7b72; border-color: rgba(255,123,114,0.5); }
         
         [data-in-dock="true"] .close-btn { display: none !important; }
@@ -162,7 +173,7 @@
         [data-in-dock="false"] .add-btn { display: none !important; }
         [data-in-dock="false"] .close-btn { display: flex !important; }
 
-        .zoom-label { font-size: 9px; width: 35px; text-align: center; color: #c9d1d9; font-family: monospace; }
+        .zoom-label { font-size: 9px; width: 32px; text-align: center; color: #c9d1d9; font-family: monospace; }
         
         .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
         .adaptive-wrapper { transform-origin: top left; width: 100%; height: 100%; overflow: visible !important; }
@@ -264,14 +275,17 @@
             <div class="grid-stack-item" gs-id="newsfeed" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
-                        <div class="panel-header">
+                        <div class="panel-header" title="Newsfeed Latest">
                             <div class="panel-title-wrapper">
-                                <span class="panel-title-text">Newsfeed Latest</span>
+                                <span class="panel-title-text"><span class="full-text">Newsfeed Latest</span><span class="short-text">N</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                <span class="zoom-label">100%</span>
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                                <div class="zoom-menu">
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                    <span class="zoom-label">100%</span>
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
@@ -288,14 +302,17 @@
             <div class="grid-stack-item" gs-id="briefing" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
-                        <div class="panel-header">
+                        <div class="panel-header" title="Latest Briefing">
                             <div class="panel-title-wrapper">
-                                <span class="panel-title-text">Latest Briefing</span>
+                                <span class="panel-title-text"><span class="full-text">Latest Briefing</span><span class="short-text">L</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                <span class="zoom-label">100%</span>
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                                <div class="zoom-menu">
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                    <span class="zoom-label">100%</span>
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
@@ -313,14 +330,17 @@
             <div class="grid-stack-item" gs-id="calendar" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
-                        <div class="panel-header">
+                        <div class="panel-header" title="Economic Calendar">
                             <div class="panel-title-wrapper">
-                                <span class="panel-title-text">Economic Calendar</span>
+                                <span class="panel-title-text"><span class="full-text">Economic Calendar</span><span class="short-text">E</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                <span class="zoom-label">100%</span>
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                                <div class="zoom-menu">
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                    <span class="zoom-label">100%</span>
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
@@ -337,14 +357,17 @@
             <div class="grid-stack-item" gs-id="radar" gs-w="2" gs-h="1" data-default-w="3" data-default-h="7" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
-                        <div class="panel-header">
+                        <div class="panel-header" title="Hot Asset Radar">
                             <div class="panel-title-wrapper">
-                                <span class="panel-title-text">Hot Asset Radar</span>
+                                <span class="panel-title-text"><span class="full-text">Hot Asset Radar</span><span class="short-text">H</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                <span class="zoom-label">100%</span>
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                                <div class="zoom-menu">
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                    <span class="zoom-label">100%</span>
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
@@ -373,14 +396,17 @@
             <div class="grid-stack-item" gs-id="forex-hours" gs-w="2" gs-h="1" data-default-w="2" data-default-h="7" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
-                        <div class="panel-header">
+                        <div class="panel-header" title="Forex Market Hours">
                             <div class="panel-title-wrapper">
-                                <span class="panel-title-text">Forex Market Hours</span>
+                                <span class="panel-title-text"><span class="full-text">Forex Market Hours</span><span class="short-text">F</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                <span class="zoom-label">100%</span>
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                                <div class="zoom-menu">
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                    <span class="zoom-label">100%</span>
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
@@ -477,14 +503,17 @@
             <div class="grid-stack-item" gs-id="bloomberg" gs-w="2" gs-h="1" data-default-w="5" data-default-h="5" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
-                        <div class="panel-header">
+                        <div class="panel-header" title="Bloomberg TV">
                             <div class="panel-title-wrapper">
-                                <span class="panel-title-text">Bloomberg TV</span>
+                                <span class="panel-title-text"><span class="full-text">Bloomberg TV</span><span class="short-text">B</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                <span class="zoom-label">100%</span>
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                                <div class="zoom-menu">
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                    <span class="zoom-label">100%</span>
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
@@ -502,14 +531,17 @@
             <div class="grid-stack-item" gs-id="forex-heatmap" gs-w="2" gs-h="1" data-default-w="6" data-default-h="5" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
-                        <div class="panel-header">
+                        <div class="panel-header" title="Forex Heatmap">
                             <div class="panel-title-wrapper">
-                                <span class="panel-title-text">Forex Heatmap</span>
+                                <span class="panel-title-text"><span class="full-text">Forex Heatmap</span><span class="short-text">F</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                <span class="zoom-label">100%</span>
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                                <div class="zoom-menu">
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                    <span class="zoom-label">100%</span>
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
@@ -527,14 +559,17 @@
             <div class="grid-stack-item" gs-id="tv-market-data" gs-w="2" gs-h="1" data-default-w="6" data-default-h="6" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
-                        <div class="panel-header">
+                        <div class="panel-header" title="Market Data">
                             <div class="panel-title-wrapper">
-                                <span class="panel-title-text">Market Data</span>
+                                <span class="panel-title-text"><span class="full-text">Market Data</span><span class="short-text">M</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                <span class="zoom-label">100%</span>
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                                <div class="zoom-menu">
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                    <span class="zoom-label">100%</span>
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
@@ -552,9 +587,9 @@
             <div class="grid-stack-item" gs-id="tv-technical-analysis" gs-w="3" gs-h="1" data-default-w="4" data-default-h="6" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
-                        <div class="panel-header">
+                        <div class="panel-header" title="Tech Analysis">
                             <div class="panel-title-wrapper">
-                                <span class="panel-title-text">Tech Analysis</span>
+                                <span class="panel-title-text"><span class="full-text">Tech Analysis</span><span class="short-text">T</span></span>
                                 <select class="widget-asset-selector" onchange="updateTAWidget(this)" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                     <optgroup label="Forex">
                                         <option value="OANDA:EURUSD">EUR/USD</option>
@@ -577,9 +612,12 @@
                                 </select>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                <span class="zoom-label">100%</span>
-                                <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                <button class="panel-btn zoom-toggle-btn" onclick="toggleZoomMenu(this)" title="Zoom Controls"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                                <div class="zoom-menu">
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                    <span class="zoom-label">100%</span>
+                                    <button class="panel-btn zoom-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                </div>
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
@@ -606,6 +644,17 @@
 <script>
     let dockGrid, mainGrid;
     
+    // ==========================================
+    // ZOOM TOGGLE ENGINE
+    // ==========================================
+    function toggleZoomMenu(btn) {
+        const menu = btn.nextElementSibling;
+        if(menu && menu.classList.contains('zoom-menu')) {
+            menu.classList.toggle('open');
+            btn.classList.toggle('active');
+        }
+    }
+
     // ==========================================
     // TRADINGVIEW RE-RENDER ENGINE
     // Automatically rebuilds custom elements & iframes from scratch 
@@ -769,6 +818,15 @@
         mainGrid.removeWidget(el, false); 
         el.setAttribute('data-in-dock', 'true');
         el.setAttribute('data-zoom', '1.0');
+        
+        // Reset Zoom Menu logic
+        const menu = el.querySelector('.zoom-menu');
+        const toggleBtn = el.querySelector('.zoom-toggle-btn');
+        if (menu && toggleBtn) {
+            menu.classList.remove('open');
+            toggleBtn.classList.remove('active');
+        }
+
         const label = el.querySelector('.zoom-label');
         if (label) label.innerText = '100%';
         let returnWidth = 2;
@@ -785,7 +843,7 @@
     }
 
     window.onload = function() {
-        const savedLayout = localStorage.getItem('analystWireLayoutV13');
+        const savedLayout = localStorage.getItem('analystWireLayoutV14');
         if (savedLayout) {
             try {
                 const parsed = JSON.parse(savedLayout);
@@ -833,9 +891,17 @@
         const panelObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
                 const width = entry.contentRect.width;
-                const target = entry.target; 
-                const wrapper = target.querySelector('.adaptive-wrapper');
-                const panelItem = target.closest('.grid-stack-item');
+                const targetPanel = entry.target; 
+                
+                // Truncate header title logic if panel shrinks heavily
+                if (width < 260) {
+                    targetPanel.classList.add('compact-widget');
+                } else {
+                    targetPanel.classList.remove('compact-widget');
+                }
+
+                const wrapper = targetPanel.querySelector('.adaptive-wrapper');
+                const panelItem = targetPanel.closest('.grid-stack-item');
                 if (wrapper && width > 0) {
                     let baseScale = width < 480 ? Math.max(width / 480, 0.4) : 1;
                     let zoomMult = parseFloat(panelItem.getAttribute('data-zoom')) || 1.0;
@@ -847,7 +913,8 @@
             }
         });
 
-        document.querySelectorAll('.panel-content').forEach(panel => { panelObserver.observe(panel); });
+        // Observe the main parent panel now to capture total element width correctly
+        document.querySelectorAll('.panel').forEach(panel => { panelObserver.observe(panel); });
         
         // Finalize layout initialization before spinning up TV elements to avoid rendering glitches
         document.querySelectorAll('.grid-stack-item').forEach(el => {
@@ -865,7 +932,7 @@
             id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
         }));
         const combined = [...dockItems, ...mainItems];
-        localStorage.setItem('analystWireLayoutV13', JSON.stringify(combined));
+        localStorage.setItem('analystWireLayoutV14', JSON.stringify(combined));
     }
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
