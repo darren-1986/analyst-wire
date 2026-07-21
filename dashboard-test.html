@@ -156,7 +156,7 @@
         [data-in-dock="false"] .add-btn { display: none !important; }
         [data-in-dock="false"] .close-btn { display: flex !important; }
 
-        .zoom-label, .h-label { font-size: 9px; width: 32px; text-align: center; color: #c9d1d9; font-family: monospace; }
+        .zoom-label, .h-label { font-size: 9px; width: 40px; text-align: center; color: #c9d1d9; font-family: monospace; }
         
         /* Mobile Specific Overrides */
         .mobile-only { display: none; }
@@ -175,11 +175,15 @@
             #dock-container { flex-wrap: nowrap !important; width: max-content !important; min-width: 100%; gap: 10px; padding: 5px; }
             #dock-container .grid-stack-item { flex: 0 0 auto; width: max-content !important; }
             
-            /* FULL NATIVE MOBILE STACK (Bypasses Gridstack clipping bug) */
+            /* FULL NATIVE MOBILE STACK */
             .main-content { overflow: visible !important; height: auto !important; flex-grow: unset !important; }
             .dashboard-area { padding: 0 !important; overflow: visible !important; height: auto !important; }
-            #main-grid.grid-stack { position: relative !important; height: auto !important; min-height: unset !important; display: flex !important; flex-direction: column !important; gap: 10px !important; margin: 0 !important; }
-            #main-grid .grid-stack-item { position: relative !important; width: 100% !important; left: 0 !important; top: auto !important; height: auto !important; min-height: 250px; padding: 0 !important; margin: 0 !important; transform: none !important; }
+            
+            /* Added padding-bottom and uniform gap */
+            #main-grid.grid-stack { position: relative !important; height: auto !important; min-height: unset !important; display: flex !important; flex-direction: column !important; gap: 12px !important; margin: 0 !important; padding-bottom: 20px !important; }
+            
+            /* Strictly tied widget container height to inline variable to fix random gaps */
+            #main-grid .grid-stack-item { position: relative !important; width: 100% !important; left: 0 !important; top: auto !important; height: var(--mobile-h, 350px) !important; min-height: unset !important; padding: 0 !important; margin: 0 !important; transform: none !important; display: block !important; }
             #main-grid .grid-stack-item-content { position: relative !important; inset: auto !important; width: 100% !important; height: 100% !important; }
             #main-grid .panel { border-radius: 0 !important; border-left: none !important; border-right: none !important; height: 100% !important; }
             #main-grid .ui-resizable-handle { display: none !important; }
@@ -800,10 +804,29 @@
                 menu.previousElementSibling.classList.remove('active');
             }
         });
+        
         const menu = btn.nextElementSibling;
         if(menu && menu.classList.contains('widget-settings-menu')) {
-            menu.classList.toggle('open');
+            const isOpen = menu.classList.toggle('open');
             btn.classList.toggle('active');
+            
+            // Populate Labels dynamically upon open
+            if (isOpen) {
+                const el = btn.closest('.grid-stack-item');
+                const currentZoom = parseFloat(el.getAttribute('data-zoom')) || 1.0;
+                const zoomLabel = el.querySelector('.zoom-label');
+                if (zoomLabel) zoomLabel.innerText = Math.round(currentZoom * 100) + '%';
+                
+                const hLabel = el.querySelector('.h-label');
+                if (hLabel) {
+                    if (window.innerWidth <= 768) {
+                        hLabel.innerText = (el.getAttribute('data-mobile-h') || 350) + 'px';
+                    } else {
+                        const node = el.gridstackNode;
+                        hLabel.innerText = node ? node.h : (el.getAttribute('data-default-h') || 4);
+                    }
+                }
+            }
         }
     }
 
@@ -841,6 +864,8 @@
             tv.setAttribute('theme', 'dark'); 
             tv.setAttribute('hide-logo-and-name', 'true');
             tv.setAttribute('hide-intervals', 'true');
+            tv.style.width = '100%';
+            tv.style.height = '100%';
             wrapper.appendChild(tv);
         } 
         else if (gsId === 'tv-market-data') {
@@ -850,6 +875,8 @@
             tv.setAttribute('view', 'performance');
             tv.setAttribute('heatmap', 'true');
             tv.setAttribute('symbol-sectors', JSON.stringify(marketDataSymbols));
+            tv.style.width = '100%';
+            tv.style.height = '100%';
             wrapper.appendChild(tv);
         }
         else if (gsId === 'forex-heatmap') {
@@ -857,6 +884,8 @@
             const tv = document.createElement('tv-forex-table');
             tv.setAttribute('theme', 'dark');
             tv.setAttribute('currencies', 'EUR,USD,JPY,GBP,CHF,AUD,CAD,NZD,NOK,MXN');
+            tv.style.width = '100%';
+            tv.style.height = '100%';
             wrapper.appendChild(tv);
         }
         else if (gsId === 'calendar') {
@@ -950,14 +979,15 @@
     function adjustHeight(btn, delta) {
         const el = btn.closest('.grid-stack-item');
         if (window.innerWidth <= 768) {
-            // Pure DOM height adjustment for mobile stack mode
-            const panel = el.querySelector('.panel');
-            let currentHeight = panel.clientHeight || 300;
-            let newHeight = Math.max(150, currentHeight + (delta * 50));
-            panel.style.height = `${newHeight}px`;
+            // Strictly push mobile inline CSS heights in 50px increments
+            let currentH = parseInt(el.getAttribute('data-mobile-h')) || 350;
+            let newH = Math.max(150, currentH + (delta * 50)); 
+            el.setAttribute('data-mobile-h', newH);
+            el.style.setProperty('--mobile-h', `${newH}px`);
             const label = el.querySelector('.h-label');
-            if (label) label.innerText = `${Math.round(newHeight)}px`;
+            if (label) label.innerText = `${newH}px`;
         } else {
+            // Native GridStack desktop block height modification
             const node = el.gridstackNode;
             if (!node) return;
             let currentH = node.h || parseInt(el.getAttribute('data-default-h')) || 4;
@@ -969,7 +999,6 @@
         saveLayoutState();
     }
 
-    // Move widget vertically in mobile stack or desktop grid
     function moveWidget(btn, direction) {
         const el = btn.closest('.grid-stack-item');
         if (window.innerWidth <= 768) {
@@ -1007,6 +1036,12 @@
         el.parentNode.removeChild(el);
         el.setAttribute('data-in-dock', 'false');
         
+        // Setup initial locked mobile height natively if it hasn't been set yet
+        if (!el.hasAttribute('data-mobile-h')) {
+            el.setAttribute('data-mobile-h', 350);
+            el.style.setProperty('--mobile-h', '350px');
+        }
+        
         const mainContainer = document.getElementById('main-grid');
         mainContainer.appendChild(el);
         
@@ -1029,7 +1064,7 @@
         }
         el.setAttribute('data-in-dock', 'true');
         el.setAttribute('data-zoom', '1.0');
-        el.removeAttribute('style');
+        el.removeAttribute('style'); // Clear desktop coordinate positioning overrides
         
         const menu = el.querySelector('.widget-settings-menu');
         const toggleBtn = el.querySelector('.settings-toggle-btn');
@@ -1046,7 +1081,7 @@
     }
 
     window.onload = function() {
-        const savedLayout = localStorage.getItem('analystWireLayoutV19');
+        const savedLayout = localStorage.getItem('analystWireLayoutV20');
         
         mainGrid = GridStack.init({
             cellHeight: '60px', margin: 5, handle: '.panel-header', animate: true, 
@@ -1073,6 +1108,16 @@
                             if (item.grid === 'main') {
                                 el.setAttribute('data-in-dock', 'false');
                                 document.getElementById('main-grid').appendChild(el);
+                                
+                                // Restore desktop attributes natively so they aren't lost on mobile re-saves
+                                if (item.x !== undefined) el.setAttribute('gs-x', item.x);
+                                if (item.w !== undefined) el.setAttribute('gs-w', item.w);
+                                if (item.h !== undefined) el.setAttribute('gs-h', item.h);
+                                
+                                const savedMobileH = item.mobileH || 350;
+                                el.setAttribute('data-mobile-h', savedMobileH);
+                                el.style.setProperty('--mobile-h', `${savedMobileH}px`);
+
                                 if (window.innerWidth > 768) {
                                     mainGrid.makeWidget(el);
                                     mainGrid.update(el, {x: item.x, y: item.y, w: item.w, h: item.h});
@@ -1120,21 +1165,29 @@
 
     function saveLayoutState() {
         const dockItems = Array.from(document.getElementById('dock-container').children).map(el => ({
-            id: el.getAttribute('gs-id'), grid: 'dock', zoom: el.getAttribute('data-zoom') || '1.0'
+            id: el.getAttribute('gs-id'), grid: 'dock', zoom: el.getAttribute('data-zoom') || '1.0', mobileH: el.getAttribute('data-mobile-h') || 350
         }));
         
         let mainItems = [];
         if (window.innerWidth <= 768) {
+            // Read background gs attributes so you don't corrupt the desktop layout cache when editing on phone
             mainItems = Array.from(document.getElementById('main-grid').children).map((el, idx) => ({
-                id: el.getAttribute('gs-id'), grid: 'main', x: 0, y: idx, w: 1, h: 4, zoom: el.getAttribute('data-zoom') || '1.0'
+                id: el.getAttribute('gs-id'), 
+                grid: 'main', 
+                x: parseInt(el.getAttribute('gs-x')) || 0, 
+                y: idx, 
+                w: parseInt(el.getAttribute('gs-w')) || parseInt(el.getAttribute('data-default-w')) || 4, 
+                h: parseInt(el.getAttribute('gs-h')) || parseInt(el.getAttribute('data-default-h')) || 4, 
+                zoom: el.getAttribute('data-zoom') || '1.0', 
+                mobileH: el.getAttribute('data-mobile-h') || 350
             }));
         } else {
             mainItems = mainGrid.engine.nodes.map(n => ({
-                id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0'
+                id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0', mobileH: n.el.getAttribute('data-mobile-h') || 350
             }));
         }
         
-        localStorage.setItem('analystWireLayoutV19', JSON.stringify([...dockItems, ...mainItems]));
+        localStorage.setItem('analystWireLayoutV20', JSON.stringify([...dockItems, ...mainItems]));
     }
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
