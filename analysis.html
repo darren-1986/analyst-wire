@@ -32,7 +32,6 @@
         .tabs-container { display: flex; flex-direction: column; height: calc(100vh - 55px); margin-top: 55px; padding: 20px 40px; width: 100%; max-width: 1800px; margin-left: auto; margin-right: auto; box-sizing: border-box; }
         
         /* Tab Buttons */
-        /* ADDED: flex-shrink: 0 to prevent squishing, increased bottom padding */
         .tab-buttons { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; white-space: nowrap; flex-shrink: 0; }
         .tab-buttons::-webkit-scrollbar { height: 4px; }
         .tab-buttons::-webkit-scrollbar-track { background: transparent; }
@@ -42,7 +41,6 @@
         .tab-btn.active { background: rgba(41, 98, 255, 0.1); color: #2962ff; border-color: rgba(41, 98, 255, 0.4); }
 
         /* Tab Content Area */
-        /* ADDED: min-height: 0 to allow flexbox internal scrolling (fixes cropping) */
         .tab-content { display: none; flex-grow: 1; min-height: 0; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; overflow-y: auto; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .tab-content.active { display: block; }
         
@@ -56,19 +54,17 @@
         .section-title { font-size: 18px; font-weight: 600; color: #fff; margin: 0 0 15px 0; border-bottom: 1px solid #30363d; padding-bottom: 10px; flex-shrink: 0; }
         
         /* SIDE-BY-SIDE DESKTOP LAYOUT */
-        /* REMOVED: fixed vertical heights to prevent stretching out of proportion */
         .split-layout { display: flex; gap: 30px; }
         .split-column { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
         /* Shared Media Wrapper Settings */
-        /* ADDED: aspect-ratio: 16/9 to lock standard video proportions */
         .video-wrapper, .report-wrapper { width: 100%; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.3); position: relative; aspect-ratio: 16 / 9; }
         .video-wrapper iframe, .report-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: block; }
 
-        /* Standard Single Column (For Daily Analysis & Trade Ideas) */
+        /* Standard Single Column */
         .media-section { max-width: 1200px; margin: 0 auto 40px auto; }
 
-        /* Content Styling (Text Tabs) */
+        /* Content Styling */
         .report-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #2962ff; margin-bottom: 10px; display: block; }
         .report-text { font-size: 14px; line-height: 1.6; color: #c9d1d9; margin-bottom: 15px; }
         .report-list { padding-left: 20px; margin-bottom: 15px; font-size: 14px; }
@@ -81,12 +77,12 @@
         .trade-direction { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .dir-long { background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.4); }
         .dir-short { background: rgba(248, 81, 73, 0.15); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); }
-        .trade-levels { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center; }
+        .trade-levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; text-align: center; }
         .level-box { display: flex; flex-direction: column; background: #090b10; padding: 10px; border-radius: 6px; border: 1px solid #21262d; }
         .level-label { font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 6px; }
         .level-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #c9d1d9; font-weight: 500; }
         
-        /* Mobile fallback for split layout */
+        /* Mobile fallback */
         @media (max-width: 900px) {
             .split-layout { flex-direction: column; }
             .report-wrapper { height: 75vh; }
@@ -156,54 +152,13 @@
     <script src="https://article-widget-platform.ai.studio/widget.js?category=Daily%20Market%20Snapshot"></script>
 </div>
 <!-- END AUTOMATED DAILY REPORT -->
-
-
-
-
-
-
-
-
-
-
-
-
         </div>
     </div>
 
     <div id="tab-trades" class="tab-content">
-        <div class="media-section">
-            
-            <div class="trade-card">
-                <div class="trade-header">
-                    <span class="trade-ticker">EUR/USD</span>
-                    <span class="trade-direction dir-short">SHORT</span>
-                </div>
-                <div class="trade-levels">
-                    <div class="level-box"><span class="level-label">Entry</span><span class="level-val">1.0950</span></div>
-                    <div class="level-box"><span class="level-label">Target</span><span class="level-val">1.0820</span></div>
-                    <div class="level-box"><span class="level-label">Stop Loss</span><span class="level-val">1.1015</span></div>
-                </div>
-                <p style="font-size: 13px; color: #8b949e; margin: 15px 0 0 0; line-height: 1.5;">
-                    Technical rejection at the 200-day moving average. Fundamental divergence widening between ECB and Fed rate paths.
-                </p>
-            </div>
-
-            <div class="trade-card">
-                <div class="trade-header">
-                    <span class="trade-ticker">XAU/USD (Gold)</span>
-                    <span class="trade-direction dir-long">LONG</span>
-                </div>
-                <div class="trade-levels">
-                    <div class="level-box"><span class="level-label">Entry</span><span class="level-val">2315.00</span></div>
-                    <div class="level-box"><span class="level-label">Target</span><span class="level-val">2360.00</span></div>
-                    <div class="level-box"><span class="level-label">Stop Loss</span><span class="level-val">2290.00</span></div>
-                </div>
-                <p style="font-size: 13px; color: #8b949e; margin: 15px 0 0 0; line-height: 1.5;">
-                    Buying the dip into major structural support. Safe-haven bids expected to return if equity volatility spikes.
-                </p>
-            </div>
-
+        <div class="media-section" id="trade-ideas-container">
+            <!-- Dynamic content will be injected here via JavaScript -->
+            <p style="color: #8b949e;">Loading Trade Ideas...</p>
         </div>
     </div>
 
@@ -231,6 +186,71 @@
     // --- Supabase Security & Auth ---
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
     
+    async function fetchTradeIdeas() {
+        const container = document.getElementById('trade-ideas-container');
+        
+        const { data, error } = await client
+            .from('trade_ideas')
+            .select('*')
+            .order('last_updated', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching trade ideas:", error);
+            container.innerHTML = `<p style="color: #f85149;">Error loading trade ideas.</p>`;
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            container.innerHTML = `<p style="color: #8b949e;">No trade ideas available at this time.</p>`;
+            return;
+        }
+
+        container.innerHTML = ''; // Clear loading text
+
+        data.forEach(trade => {
+            // Determine styling based on direction text
+            const dirText = (trade.direction || '').toLowerCase();
+            const isLong = dirText.includes('long') || dirText.includes('call') || dirText.includes('buy');
+            const dirClass = isLong ? 'dir-long' : 'dir-short';
+            
+            // Build levels grid dynamically based on provided values
+            let levelsHtml = '';
+            if (trade.entry) levelsHtml += `<div class="level-box"><span class="level-label">Entry</span><span class="level-val">${trade.entry}</span></div>`;
+            if (trade.strike) levelsHtml += `<div class="level-box"><span class="level-label">Strike</span><span class="level-val">${trade.strike}</span></div>`;
+            // Optional fallbacks if standard trades are uploaded instead of options
+            if (trade.target) levelsHtml += `<div class="level-box"><span class="level-label">Target</span><span class="level-val">${trade.target}</span></div>`;
+            if (trade.stop_loss) levelsHtml += `<div class="level-box"><span class="level-label">Stop Loss</span><span class="level-val">${trade.stop_loss}</span></div>`;
+
+            const card = document.createElement('div');
+            card.className = 'trade-card';
+            
+            let html = `
+                <div class="trade-header">
+                    <div>
+                        <span class="trade-ticker">${trade.instrument || 'Trade Setup'}</span>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${trade.trade_date || ''} ${trade.title ? '— ' + trade.title : ''}</div>
+                    </div>
+                    <span class="trade-direction ${dirClass}">${trade.direction || 'N/A'}</span>
+                </div>
+            `;
+            
+            if (levelsHtml) {
+                html += `<div class="trade-levels">${levelsHtml}</div>`;
+            }
+            
+            if (trade.rationale) {
+                html += `<p style="font-size: 13px; color: #8b949e; margin: 20px 0 5px 0; line-height: 1.5;"><strong>Rationale:</strong> ${trade.rationale}</p>`;
+            }
+            
+            if (trade.conditions) {
+                html += `<p style="font-size: 13px; color: #8b949e; margin: 10px 0 0 0; line-height: 1.5;"><strong>Conditions:</strong> ${trade.conditions}</p>`;
+            }
+
+            card.innerHTML = html;
+            container.appendChild(card);
+        });
+    }
+
     async function init() {
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
@@ -253,6 +273,9 @@
                 document.getElementById('nav-key-levels').style.display = 'block';
             }
         }
+
+        // Initialize Trade Ideas data fetch
+        fetchTradeIdeas();
     }
 
     document.getElementById('logoutBtn').addEventListener('click', async () => { 
