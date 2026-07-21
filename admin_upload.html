@@ -19,7 +19,9 @@
         .tab-button.active { color: #2962ff; border-bottom: 2px solid #2962ff; font-weight: bold; }
         .tab-pane { display: none; }
         .tab-pane.active { display: block; }
-        input[type="file"], input[type="date"] { margin: 15px 0; display: block; width: 100%; padding: 8px; background: #1a1d23; color: white; border: 1px solid #333; box-sizing: border-box; }
+        /* Added textarea styling to perfectly match inputs and maintain strict padding/height consistency */
+        input[type="file"], input[type="date"], textarea { margin: 15px 0; display: block; width: 100%; padding: 8px; background: #1a1d23; color: white; border: 1px solid #333; box-sizing: border-box; font-family: sans-serif; }
+        textarea { resize: vertical; line-height: 1.4; }
         button.action-btn { background: #2962ff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; }
         button.action-btn:hover { background: #1e4bd8; }
         .status-msg { margin-top: 20px; font-size: 14px; }
@@ -40,7 +42,7 @@
     <div class="tabs-header">
         <button class="tab-button active" onclick="switchTab(event, 'tab-key-levels')">Key Levels</button>
         <button class="tab-button" onclick="switchTab(event, 'tab-expiries')">FX Option Expiries</button>
-        <button class="tab-button" onclick="switchTab(event, 'tab-project-3')">Section 3</button>
+        <button class="tab-button" onclick="switchTab(event, 'tab-project-3')">Trade Ideas</button>
     </div>
 
     <div id="tab-key-levels" class="tab-pane active">
@@ -63,8 +65,11 @@
     </div>
 
     <div id="tab-project-3" class="tab-pane">
-        <h2>Section 3</h2>
-        <p style="color: #787b86;">Future upload tools will go here.</p>
+        <h2>Upload Trade Ideas</h2>
+        <p style="color: #787b86; margin-bottom: 5px; font-size: 14px;">Paste raw text containing one or multiple trade ideas below.</p>
+        <textarea id="trade-ideas-text" rows="12" placeholder="July 21st 2026:&#10;Trade Idea 1: EUR/GBP Call Option&#10;Instrument: EUR/GBP&#10;Direction: Long&#10;Strike: 0.8510 call&#10;..."></textarea>
+        <button class="action-btn" onclick="processTradeIdeas()">Upload Trade Ideas</button>
+        <div id="status-ti" class="status-msg"></div>
     </div>
 </div>
 
@@ -133,11 +138,9 @@
                 rawHeaders.forEach((header, idx) => {
                     if (header === undefined || header === null) return;
 
-                    // Bulletproof parsing: Strips out hidden newlines and spaces completely
                     let h = String(header).toLowerCase().replace(/[^a-z0-9]/g, '');
                     let dbKey = "";
 
-                    // Hyper-aggressive mapping to guarantee it catches the column
                     if (h.includes('ticker') || h.includes('symbol')) dbKey = 'ticker';
                     else if (h.includes('prev') || h.includes('prior') || h.includes('previous')) dbKey = 'prev_bull_bear';
                     else if (h.includes('bull') || h.includes('bear')) dbKey = 'bull_bear_line';
@@ -160,7 +163,6 @@
                             if (numericColumns.includes(dbKey)) {
                                 val = val.replace(/,/g, '.').replace(/[^\d.-]/g, '');
                                 let parsedVal = parseFloat(val);
-                                // The Failsafe: Prevents NaN corruption from silent-dropping in Supabase
                                 payloadObj[dbKey] = isNaN(parsedVal) ? null : parsedVal;
                             } else {
                                 payloadObj[dbKey] = val;
@@ -215,8 +217,8 @@
             const rows = await parseFileToRows(fileInput.files[0]);
             if (rows.length < 3) return statusDiv.innerText = "Error: Dataset lacks required structural row depth.";
 
-            const headers = rows[0]; // Row 1: Tickers/Currencies
-            const spotRow = rows[1]; // Row 2: Spot Prices
+            const headers = rows[0]; 
+            const spotRow = rows[1]; 
 
             const tickerMap = {};
             const spotPriceMap = {};
@@ -234,11 +236,9 @@
             });
 
             const flatData = [];
-            // Regex handles mixed content entries like 1.0850 (600m) or 1,0850 (600m) safely
             const regex = /([\d\.,]+)\s*\([^\d]*([\d\.,]+)([bm]+)\)/gi;
             const uploadTimestamp = new Date().toISOString();
 
-            // Row 3 is index 2 in programmatic arrays
             for (let i = 2; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row) continue;
@@ -277,6 +277,99 @@
             const { error } = await client.from('order_levels').insert(flatData);
 
             statusDiv.innerText = error ? "Supabase Error: " + error.message : `Success! Uploaded ${flatData.length} FX Option Expiries seamlessly.`;
+
+        } catch (err) {
+            statusDiv.innerText = "Execution Failure: " + err.message;
+        }
+    }
+
+    // ==========================================================
+    // MULTILINE TRADE IDEAS PARSER & UPLOAD ENGINE
+    // ==========================================================
+    async function processTradeIdeas() {
+        const textInput = document.getElementById('trade-ideas-text').value.trim();
+        const statusDiv = document.getElementById('status-ti');
+
+        if (!textInput) return alert("Please paste trade ideas text.");
+        statusDiv.innerText = "Parsing Trade Ideas...";
+
+        try {
+            // Extracts a global date string if provided at the absolute top (e.g., "July 21st 2026:")
+            let globalDate = new Date().toISOString().split('T')[0];
+            const dateLineMatch = textInput.match(/^([A-Za-z]+ \d{1,2}(?:st|nd|rd|th)? \d{4})/i);
+            if (dateLineMatch) {
+                globalDate = dateLineMatch[1];
+            }
+
+            // Split the raw text dynamically by "Trade Idea X:" blocks
+            const tradeBlocks = textInput.split(/Trade Idea \d+:/i);
+            const parsedData = [];
+            const uploadTimestamp = new Date().toISOString();
+
+            tradeBlocks.forEach((block, index) => {
+                if (!block.trim()) return;
+                
+                // Skip the initial date string block if it doesn't contain trade setup fields
+                if (index === 0 && !block.toLowerCase().includes('instrument:')) return;
+
+                const lines = block.trim().split('\n');
+                let currentKey = 'title';
+                let trade = {
+                    trade_date: globalDate,
+                    title: '',
+                    instrument: '',
+                    direction: '',
+                    strike: '',
+                    entry: '',
+                    rationale: '',
+                    conditions: '',
+                    last_updated: uploadTimestamp
+                };
+
+                // State-machine parsing line-by-line allows for multi-line paragraphs in Rationale and Conditions
+                lines.forEach(line => {
+                    line = line.trim();
+                    if (!line) return;
+
+                    let lowerLine = line.toLowerCase();
+                    if (lowerLine.startsWith('instrument:')) { currentKey = 'instrument'; trade.instrument = line.substring(11).trim(); }
+                    else if (lowerLine.startsWith('direction:')) { currentKey = 'direction'; trade.direction = line.substring(10).trim(); }
+                    else if (lowerLine.startsWith('strike:')) { currentKey = 'strike'; trade.strike = line.substring(7).trim(); }
+                    else if (lowerLine.startsWith('entry:')) { currentKey = 'entry'; trade.entry = line.substring(6).trim(); }
+                    else if (lowerLine.startsWith('rationale:')) { currentKey = 'rationale'; trade.rationale = line.substring(10).trim(); }
+                    else if (lowerLine.startsWith('conditions:')) { currentKey = 'conditions'; trade.conditions = line.substring(11).trim(); }
+                    else {
+                        // Append trailing multi-line text to whatever key was triggered last
+                        if (currentKey && trade[currentKey] !== undefined) {
+                            if (currentKey === 'title') {
+                                trade.title += (trade.title ? ' ' : '') + line;
+                            } else {
+                                trade[currentKey] += ' ' + line;
+                            }
+                        }
+                    }
+                });
+
+                if (trade.instrument) {
+                    parsedData.push(trade);
+                }
+            });
+
+            if (parsedData.length === 0) {
+                return statusDiv.innerText = "Error: No valid trade ideas could be parsed from the text provided.";
+            }
+
+            statusDiv.innerText = `Pushing ${parsedData.length} Trade Ideas to Supabase...`;
+            
+            // Connects dynamically to a table assumed to be named 'trade_ideas'
+            const { error } = await client.from('trade_ideas').insert(parsedData);
+
+            if (error) {
+                statusDiv.innerText = "Supabase Error: " + error.message;
+            } else {
+                statusDiv.innerText = `Success! Uploaded ${parsedData.length} Trade Idea(s).`;
+                document.getElementById('trade-ideas-text').value = ''; 
+            }
 
         } catch (err) {
             statusDiv.innerText = "Execution Failure: " + err.message;
