@@ -94,21 +94,132 @@
 
 <script>
     const courseData = [
-        { title: "1. Module One", video: "https://fast.wistia.net/embed/iframe/z4ly46xelg", lessons: [
-            { title: "Financial Market", time: 11 },
-            { title: "Macro Connection", time: 497 },
-            { title: "Intrinsic Compass", time: 940 },
-            { title: "The Market Machine", time: 1347 },
-            { title: "Market Driver", time: 1962 },
-            { title: "FX Participant Hierarchy", time: 2395 },
-            { title: "Master Market Moves", time: 2728 },
-            { title: "Market Sentiment Foundations", time: 3259 }
-        ]},
-        ...Array.from({length: 8}, (_, i) => ({
-            title: `${i + 2}. Module ${['Two','Three','Four','Five','Six','Seven','Eight','Nine'][i]}`,
-            video: "https://fast.wistia.net/embed/iframe/z4ly46xelg",
-            lessons: Array.from({length: 15}, (_, l) => ({ title: `Lesson ${l+1}`, time: 0 }))
-        }))
+        { 
+            title: "1. Module One", 
+            video: "https://fast.wistia.net/embed/iframe/z4ly46xelg", 
+            lessons: [
+                { title: "Financial Market", time: 11 },
+                { title: "Macro Connection", time: 497 },
+                { title: "Intrinsic Compass", time: 940 },
+                { title: "The Market Machine", time: 1347 },
+                { title: "Market Driver", time: 1962 },
+                { title: "FX Participant Hierarchy", time: 2395 },
+                { title: "Master Market Moves", time: 2728 },
+                { title: "Market Sentiment Foundations", time: 3259 }
+            ] 
+        },
+        { 
+            title: "2. Module Two", 
+            video: "https://analyst-wire-1.wistia.com/s/nmmd8p1sk87yqk3", 
+            lessons: [
+                { title: "Financial Market", time: 11 },
+                { title: "Macro Connection", time: 497 },
+                { title: "Intrinsic Compass", time: 940 },
+                { title: "The Market Machine", time: 1347 },
+                { title: "Market Driver", time: 1962 },
+                { title: "FX Participant Hierarchy", time: 2395 },
+                { title: "Master Market Moves", time: 2728 },
+                { title: "Market Sentiment Foundations", time: 3259 }
+            ] 
+        },
+        { 
+            title: "3. Module Three", 
+            video: "https://analyst-wire-1.wistia.com/s/6zk9ugoqjxx9hvh", 
+            lessons: [
+                { title: "Financial Market", time: 11 },
+                { title: "Macro Connection", time: 497 },
+                { title: "Intrinsic Compass", time: 940 },
+                { title: "The Market Machine", time: 1347 },
+                { title: "Market Driver", time: 1962 },
+                { title: "FX Participant Hierarchy", time: 2395 },
+                { title: "Master Market Moves", time: 2728 },
+                { title: "Market Sentiment Foundations", time: 3259 }
+            ] 
+        },
+        { 
+            title: "4. Module Four", 
+            video: "https://analyst-wire-1.wistia.com/s/qhq1t1qfqm8thud", 
+            lessons: [
+                { title: "Financial Market", time: 11 },
+                { title: "Macro Connection", time: 497 },
+                { title: "Intrinsic Compass", time: 940 },
+                { title: "The Market Machine", time: 1347 },
+                { title: "Market Driver", time: 1962 },
+                { title: "FX Participant Hierarchy", time: 2395 },
+                { title: "Master Market Moves", time: 2728 },
+                { title: "Market Sentiment Foundations", time: 3259 }
+            ] 
+        },
+        { 
+            title: "5. Module Five", 
+            video: "https://analyst-wire-1.wistia.com/s/o88qbss4055jrv3", 
+            lessons: [
+                { title: "Financial Market", time: 11 },
+                { title: "Macro Connection", time: 497 },
+                { title: "Intrinsic Compass", time: 940 },
+                { title: "The Market Machine", time: 1347 },
+                { title: "Market Driver", time: 1962 },
+                { title: "FX Participant Hierarchy", time: 2395 },
+                { title: "Master Market Moves", time: 2728 },
+                { title: "Market Sentiment Foundations", time: 3259 }
+            ] 
+        },
+        { 
+            title: "6. Module Six", 
+            video: "https://analyst-wire-1.wistia.com/s/pz61t7ld269xheh", 
+            lessons: [
+                { title: "Financial Market", time: 11 },
+                { title: "Macro Connection", time: 497 },
+                { title: "Intrinsic Compass", time: 940 },
+                { title: "The Market Machine", time: 1347 },
+                { title: "Market Driver", time: 1962 },
+                { title: "FX Participant Hierarchy", time: 2395 },
+                { title: "Master Market Moves", time: 2728 },
+                { title: "Market Sentiment Foundations", time: 3259 }
+            ] 
+        },
+        { 
+            title: "7. Module Seven", 
+            video: "https://analyst-wire-1.wistia.com/s/ie88e752m84xf4p", 
+            lessons: [
+                { title: "Financial Market", time: 11 },
+                { title: "Macro Connection", time: 497 },
+                { title: "Intrinsic Compass", time: 940 },
+                { title: "The Market Machine", time: 1347 },
+                { title: "Market Driver", time: 1962 },
+                { title: "FX Participant Hierarchy", time: 2395 },
+                { title: "Master Market Moves", time: 2728 },
+                { title: "Market Sentiment Foundations", time: 3259 }
+            ] 
+        },
+        { 
+            title: "8. Module Eight", 
+            video: "https://analyst-wire-1.wistia.com/s/5n1yzegdp78r8k8", 
+            lessons: [
+                { title: "Financial Market", time: 11 },
+                { title: "Macro Connection", time: 497 },
+                { title: "Intrinsic Compass", time: 940 },
+                { title: "The Market Machine", time: 1347 },
+                { title: "Market Driver", time: 1962 },
+                { title: "FX Participant Hierarchy", time: 2395 },
+                { title: "Master Market Moves", time: 2728 },
+                { title: "Market Sentiment Foundations", time: 3259 }
+            ] 
+        },
+        { 
+            title: "9. Module Nine", 
+            video: "https://analyst-wire-1.wistia.com/s/wj90au3wu1skyzl", 
+            lessons: [
+                { title: "Financial Market", time: 11 },
+                { title: "Macro Connection", time: 497 },
+                { title: "Intrinsic Compass", time: 940 },
+                { title: "The Market Machine", time: 1347 },
+                { title: "Market Driver", time: 1962 },
+                { title: "FX Participant Hierarchy", time: 2395 },
+                { title: "Master Market Moves", time: 2728 },
+                { title: "Market Sentiment Foundations", time: 3259 }
+            ] 
+        }
     ];
 
     // Helper: Seconds to H:MM:SS
