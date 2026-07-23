@@ -395,10 +395,23 @@ async function init() {
     fetchOrderData();
 }
 
+// Global Helper to safely parse column names regardless of user CSV case
+function getCol(row, possibleNames) {
+    if (!row) return 0;
+    for (let name of possibleNames) {
+        if (row[name] !== undefined && row[name] !== null && row[name] !== '') {
+            const parsed = parseFloat(row[name]);
+            if (!isNaN(parsed)) return parsed;
+        }
+    }
+    return 0;
+}
+
 function getAssetVolatilityMetrics(r) {
     const assetClass = categoryMap[r.ticker] || 'Forex';
-    const s1Num = parseFloat(r.s1) || 0;
-    const r1Num = parseFloat(r.r1) || 0;
+    // Deep fallback checking to ensure S1/R1 are never missed due to casing
+    const s1Num = getCol(r, ['s1', 'S1', 'support_1', 'Support1']);
+    const r1Num = getCol(r, ['r1', 'R1', 'resistance_1', 'Resistance1']);
     const rawDiff = Math.abs(r1Num - s1Num);
 
     let rangeFormatted;
@@ -490,18 +503,14 @@ async function fetchRadarData() {
     badge.innerText = "Updating...";
 
     try {
-        // Fetch Today's Data
         const todayRes = await client.from('key_levels').select('*').eq('trade_date', dateStr);
         const todayData = todayRes.data || [];
         
         let pastRows = [];
-        
-        // Dynamically find the exact last available trade date before the selected date to prevent weekend/holiday nulls
         const { data: dateData } = await client.from('key_levels').select('trade_date').lt('trade_date', dateStr).order('trade_date', { ascending: false }).limit(1);
         
         if (dateData && dateData.length > 0) {
             const lastTradeDate = dateData[0].trade_date;
-            // Fetch ALL rows for that exact previous date without arbitrarily limiting it
             const pastRes = await client.from('key_levels').select('*').eq('trade_date', lastTradeDate);
             pastRows = pastRes.data || [];
         }
@@ -511,39 +520,33 @@ async function fetchRadarData() {
         cachedData = todayData.map(todayRow => {
             let score = 0;
             
-            // 1. BIAS MOMENTUM SCORE MATRIX
             if (todayRow.bias === 'Strong Bullish') score += 3;
             else if (todayRow.bias === 'Medium Bullish') score += 1;
             else if (todayRow.bias === 'Strong Bearish') score -= 3;
             else if (todayRow.bias === 'Medium Bearish') score -= 1;
 
-            // 2. VOLATILITY TREND MATRIX
             const metrics = getAssetVolatilityMetrics(todayRow);
             if (metrics.isTrending) {
                 if (score > 0) score += 2;
                 else if (score < 0) score -= 2;
             }
 
-            // 3. LOLLIPOP MOMENTUM MATRIX
             const lolli = (todayRow.lollipop || '').toUpperCase();
             if (lolli.includes('UPPER') || lolli.includes('BREAK OUT')) score += 2;
             else if (lolli.includes('LOWER') || lolli.includes('BREAK DOWN')) score -= 2;
 
-            // 4. DAY-OVER-DAY VELOCITY MATRIX (USING LIVE PREV_BULL_BEAR & HISTORICAL LOOKUPS)
-            const todayBB = parseFloat(todayRow.bull_bear_line) || 0;
-            let yesterdayBB = parseFloat(todayRow.prev_bull_bear) || 0;
+            // Safe column mapping 
+            const todayBB = getCol(todayRow, ['bull_bear_line', 'bull_bear', 'bull/bear', 'Bull/Bear']);
+            let yesterdayBB = getCol(todayRow, ['prev_bull_bear', 'previous_bull_bear', 'prev_bull/bear']);
 
             const yRow = pastRows.find(y => y.ticker === todayRow.ticker);
-            
-            // Auto fallback if prev_bull_bear is missing but historic data exists
             if (yesterdayBB === 0 && yRow) {
-                yesterdayBB = parseFloat(yRow.bull_bear_line) || 0;
+                yesterdayBB = getCol(yRow, ['bull_bear_line', 'bull_bear', 'bull/bear', 'Bull/Bear']);
             }
 
             // VALUE MIGRATION ENGINE
             if (yesterdayBB !== 0 && todayBB !== 0) {
                 const bbDelta = todayBB - yesterdayBB;
-                // Minor tolerance added for floating point comparison issues
                 if (bbDelta > 0.00001) {
                     todayRow.value_migration = "Upward (Accumulation)";
                     score += 1;
@@ -551,35 +554,42 @@ async function fetchRadarData() {
                     todayRow.value_migration = "Downward (Distribution)";
                     score -= 1;
                 } else {
-                    todayRow.value_migration = "Flat (Equilibrium)";
+                    // Update text so you clearly see the math fired but produced zero
+                    todayRow.value_migration = "Flat (No Day-over-Day Migration)";
                 }
             } else {
-                todayRow.value_migration = "Flat (Insufficient Data)";
+                todayRow.value_migration = "Data Pending (Check BB Columns)";
             }
 
-            // VOLATILITY VELOCITY & STRUCTURAL FLOOR COMPILER
+            const tS1 = getCol(todayRow, ['s1', 'S1', 'support_1']);
+            const tR1 = getCol(todayRow, ['r1', 'R1', 'resistance_1']);
+            let yS1 = 0, yR1 = 0;
+            if (yRow) {
+                yS1 = getCol(yRow, ['s1', 'S1', 'support_1']);
+                yR1 = getCol(yRow, ['r1', 'R1', 'resistance_1']);
+            }
+
+            // VOLATILITY & STRUCTURAL SHIFT
             if (yRow) {
                 const yMetrics = getAssetVolatilityMetrics(yRow);
                 
-                // Expanding / Compressing Range detection
-                if (metrics.rawDiff > yMetrics.rawDiff + 0.0001) {
+                if (metrics.rawDiff === 0 || yMetrics.rawDiff === 0) {
+                    todayRow.vol_velocity = "Awaiting Range Data";
+                } else if (metrics.rawDiff > yMetrics.rawDiff + 0.0001) {
                     todayRow.vol_velocity = "Expanding Volatility";
                 } else if (metrics.rawDiff < yMetrics.rawDiff - 0.0001) {
                     todayRow.vol_velocity = "Compressing Range";
                 } else {
-                    todayRow.vol_velocity = "Static Volatility";
+                    // Updating text to show difference was identical
+                    todayRow.vol_velocity = "Volatility Unchanged";
                 }
 
-                // Parse core structural pivots
-                const tS1 = parseFloat(todayRow.s1) || 0;
-                const tR1 = parseFloat(todayRow.r1) || 0;
-                const yS1 = parseFloat(yRow.s1) || 0;
-                const yR1 = parseFloat(yRow.r1) || 0;
-
-                if (tS1 > yR1 && yR1 !== 0) {
+                if (tS1 === 0 || yR1 === 0 || tR1 === 0 || yS1 === 0) {
+                    todayRow.structural_shift = "Awaiting S1/R1 Mapping";
+                } else if (tS1 > yR1) {
                     todayRow.structural_shift = "Bullish Floor Flip (Support > Prior Resistance)";
                     score += 2;
-                } else if (tR1 < yS1 && yS1 !== 0) {
+                } else if (tR1 < yS1) {
                     todayRow.structural_shift = "Bearish Ceiling Flip (Resistance < Prior Support)";
                     score -= 2;
                 } else if (tS1 > yS1 + 0.00001 && tR1 > yR1 + 0.00001) {
@@ -589,10 +599,9 @@ async function fetchRadarData() {
                     todayRow.structural_shift = "Bearish Range Migration";
                     score -= 1;
                 } else {
-                    todayRow.structural_shift = "Maintaining Structural Range";
+                    todayRow.structural_shift = "Structural Range Intact";
                 }
             } else if (yesterdayBB !== 0 && todayBB !== 0) {
-                // Failsafe execution if previous S1/R1 is missing entirely but we still have a valid pivot line diff
                 todayRow.vol_velocity = metrics.isTrending ? "Expanding Volatility" : "Compressing Range";
                 const bbDelta = todayBB - yesterdayBB;
                 if (bbDelta > 0.00001) {
@@ -602,11 +611,11 @@ async function fetchRadarData() {
                     todayRow.structural_shift = "Bearish Pivot Migration";
                     score -= 1;
                 } else {
-                    todayRow.structural_shift = "Maintaining Structural Range";
+                    todayRow.structural_shift = "Structural Range Intact";
                 }
             } else {
-                todayRow.vol_velocity = metrics.isTrending ? "Expanding Volatility" : "Compressing Range";
-                todayRow.structural_shift = "Maintaining Structural Range";
+                todayRow.vol_velocity = "Awaiting Historical Data";
+                todayRow.structural_shift = "Awaiting Historical Data";
             }
             
             todayRow.convictionScore = score;
@@ -615,7 +624,6 @@ async function fetchRadarData() {
             return todayRow;
         });
 
-        // 5. TOP CONVICTION LOGIC SELECTION MATRIX
         const sortedData = [...cachedData].sort((a, b) => b.convictionScore - a.convictionScore);
         let wCount = 0; let lCount = 0;
         for (let i = 0; i < sortedData.length; i++) {
@@ -699,6 +707,9 @@ function render() {
             convictionIcon = '<span style="margin-left: 6px; font-size: 9px; font-weight: 700; color: #f85149;">[WEAK]</span>';
         }
 
+        let bullBearText = getCol(r, ['bull_bear_line', 'bull_bear', 'bull/bear', 'Bull/Bear']);
+        bullBearText = bullBearText !== 0 ? bullBearText : (r.bull_bear_line || 'N/A');
+
         return `
         <tr>
         <td>${r.trade_date}</td>
@@ -709,7 +720,7 @@ function render() {
             </div>
         </td>
         <td class="${biasClass}">${directionalArrow}</td>
-        <td><strong>${r.bull_bear_line || 'N/A'}</strong></td>
+        <td><strong>${bullBearText}</strong></td>
         <td><span class="state-badge ${stateClass}">${state}</span></td>
         <td><span class="range-badge">${metrics.rangeFormatted}</span></td>
         <td><button id="expand-btn-${index}" class="expand-toggle-btn" onclick="toggleDrawer(${index}, '${r.ticker}')">Expand ▼</button></td>
