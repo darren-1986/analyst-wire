@@ -27,6 +27,8 @@
         .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
         .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
 
+        .mobile-menu-btn { display: none; font-size: 24px; color: #8b949e; cursor: pointer; background: none; border: none; }
+
         /* Dropdown Styling */
         .dropdown { position: relative; margin-left: 10px; }
         .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
@@ -46,8 +48,11 @@
         .controls { display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px; background: #0A0A0a; }
         .filter-btn { padding: 5px 10px; cursor: pointer; border-radius: 4px; border: 1px solid #475569; background: #1e293b; color: white; }
         .filter-btn.active { background: #00b4f9; border-color: #00b4f9; }
-        #searchBar { padding: 5px 10px; border-radius: 4px; border: 1px solid #475569; }
         
+        #searchBar { padding: 5px 10px; border-radius: 4px; border: 1px solid #475569; transition: all 0.3s ease; width: 160px; }
+        
+        #mobileFilter { display: none; padding: 5px 10px; border-radius: 4px; border: 1px solid #475569; background: #1e293b; color: white; outline: none; cursor: pointer; }
+
         .audio-container { display: flex; align-items: center; gap: 10px; margin-right: auto; }
         .audio-container img { height: 30px; width: auto; }
         /* CHANGED: Replaced #0f172a with #0A0A0A */
@@ -59,12 +64,63 @@
         .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: #00b4f9; border-radius: 50%; cursor: pointer; transition: background 0.2s; }
         .vol-slider::-webkit-slider-thumb:hover { background: #ffffff; }
 
-        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: "🌙"; font-size: 12px; display: flex; align-items: center; justify-content: center; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #00b4f9; }
         input:checked + .slider:before { transform: translateX(26px); content: "☀️"; }
+
+        /* --- MOBILE RESPONSIVE STYLES --- */
+        @media (max-width: 850px) {
+            .custom-newsfeed-header { padding-left: 20px; }
+            .mobile-menu-btn { display: block; }
+            
+            /* Responsive Nav */
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 55px;
+                left: 0;
+                width: 100%;
+                background: #0d1117;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 20px;
+                border-bottom: 1px solid #1c2230;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            }
+            .nav-links.active-nav { display: flex; }
+            .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
+            .dropdown { margin-left: 0; width: 100%; margin-top: 5px; }
+            .dropbtn { padding-left: 0; }
+            .dropdown-content { position: static; width: 100%; box-shadow: none; border: 1px solid #30363d; margin-top: 5px; }
+            
+            /* Responsive Controls */
+            .filter-btn { display: none; } /* Hide buttons on mobile */
+            #mobileFilter { display: block; } /* Show dropdown on mobile */
+            
+            .audio-container { width: 100%; justify-content: space-between; margin-bottom: 5px; }
+            #audioToggle { min-width: auto; }
+            
+            /* Expandable Search Bar */
+            #searchBar {
+                width: 38px;
+                padding: 5px;
+                color: transparent;
+                cursor: pointer;
+                background: #1e293b url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23ffffff" class="bi bi-search" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>') no-repeat center;
+            }
+            #searchBar::placeholder { color: transparent; }
+            #searchBar:focus {
+                width: 140px;
+                background-image: none;
+                color: white;
+                cursor: text;
+                padding-left: 10px;
+            }
+            #searchBar:focus::placeholder { color: #94a3b8; }
+        }
     </style>
 </head>
 <body class="dark">
@@ -73,15 +129,18 @@
        <div style="height: 50px; display: flex; align-items: center;">
             <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px;">
        </div>
-       <div class="nav-links">
+       
+       <button class="mobile-menu-btn" onclick="toggleNav()">☰</button>
+       
+       <div class="nav-links" id="navLinks">
             <a href="terminal.html">Dashboard</a>
             <a href="/newsfeed" class="active">Newsfeed</a>
             <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
-    <a href="analysis.html">Analysis</a>
+            <a href="analysis.html">Analysis</a>
             <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
             
             <div class="dropdown">
-                <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+                <button class="dropbtn" onclick="toggleDropdown(event)">⚙️</button>
                 <div id="settingsDropdown" class="dropdown-content">
                     <a href="account.html">Account</a>
                     <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
@@ -102,12 +161,25 @@
         </div>
         
         <input type="text" id="searchBar" placeholder="Search keywords..." onkeyup="filterFeed()">
-        <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
-        <button class="filter-btn" onclick="setFilter('commodities', this)">Commodities</button>
-        <button class="filter-btn" onclick="setFilter('forex', this)">Forex</button>
-        <button class="filter-btn" onclick="setFilter('equities', this)">Equities</button>
-        <button class="filter-btn" onclick="setFilter('crypto', this)">Crypto</button>
-        <button class="filter-btn" onclick="setFilter('centralBanks', this)">Central Banks</button>
+        
+        <!-- Mobile Dropdown Filter -->
+        <select id="mobileFilter" onchange="setFilter(this.value)">
+            <option value="all">All</option>
+            <option value="commodities">Commodities</option>
+            <option value="forex">Forex</option>
+            <option value="equities">Equities</option>
+            <option value="crypto">Crypto</option>
+            <option value="centralBanks">Central Banks</option>
+        </select>
+
+        <!-- Desktop Filter Buttons -->
+        <button class="filter-btn active" data-type="all" onclick="setFilter('all')">All</button>
+        <button class="filter-btn" data-type="commodities" onclick="setFilter('commodities')">Commodities</button>
+        <button class="filter-btn" data-type="forex" onclick="setFilter('forex')">Forex</button>
+        <button class="filter-btn" data-type="equities" onclick="setFilter('equities')">Equities</button>
+        <button class="filter-btn" data-type="crypto" onclick="setFilter('crypto')">Crypto</button>
+        <button class="filter-btn" data-type="centralBanks" onclick="setFilter('centralBanks')">Central Banks</button>
+        
         <label class="switch">
             <input type="checkbox" id="themeToggle" checked>
             <span class="slider"></span>
@@ -148,13 +220,27 @@
             }
         }
 
-        function toggleDropdown() { document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
-        window.onclick = function(event) { if (!event.target.matches('.dropbtn')) document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); }
+        // --- NAVIGATION LOGIC ---
+        function toggleNav() {
+            document.getElementById("navLinks").classList.toggle("active-nav");
+        }
+
+        function toggleDropdown(event) { 
+            event.stopPropagation();
+            document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); 
+        }
+
+        window.onclick = function(event) { 
+            if (!event.target.matches('.dropbtn')) {
+                document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); 
+            }
+        }
+        
         document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
 
         // --- AUDIO ENGINE ---
         let audioEnabled = false, seconds = 0, timerInterval;
-        let audioCtx = null; // Global Web Audio Context
+        let audioCtx = null; 
         
         function initAudioContext() {
             if (!audioCtx) {
@@ -174,7 +260,6 @@
             oscillator.type = 'sine';
             oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
             
-            // Apply volume slider value and create a quick fade-out
             gainNode.gain.setValueAtTime(volumeLevel * 0.3, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
             
@@ -202,10 +287,7 @@
                 document.getElementById('timerText').innerText = ""; 
             } else { 
                 lbl.innerText = "Connecting..."; 
-                
-                // Initialize the Web Audio API on explicit user click to satisfy browser policies
                 initAudioContext();
-
                 await new Promise(r => setTimeout(r, 800)); 
                 audioEnabled = true; 
                 seconds = 0; 
@@ -218,11 +300,42 @@
 
         // --- FILTER LOGIC ---
         let currentFilter = 'all';
-        const filters = { commodities: ['oil', 'gold', 'metal', 'copper', 'gas', 'brent', 'wti', 'silver'], forex: ['usd', 'eur', 'jpy', 'gbp', 'fx', 'forex', 'currency', 'yield'], equities: ['stock', 'equity', 'sp500', 'nasdaq', 'dow', 'nikkei', 'shares'], crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'coin'], centralBanks: ['fed', 'ecb', 'boj', 'bank of england', 'rba', 'central bank', 'interest rate', 'hike', 'cut'] };
+        const filters = { 
+            commodities: ['oil', 'gold', 'metal', 'copper', 'gas', 'brent', 'wti', 'silver'], 
+            forex: ['usd', 'eur', 'jpy', 'gbp', 'fx', 'forex', 'currency', 'yield'], 
+            equities: ['stock', 'equity', 'sp500', 'nasdaq', 'dow', 'nikkei', 'shares'], 
+            crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'coin'], 
+            centralBanks: ['fed', 'ecb', 'boj', 'bank of england', 'rba', 'central bank', 'interest rate', 'hike', 'cut'] 
+        };
         const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'S&P Global Manufacturing', 'ISM Manufacturing', 'CPI', 'JOLTS', 'ADP', 'S&P Global Services', 'ISM Non-Manufacturing', 'Crude Oil Inventories', 'Initial Jobless Claims', 'New Home Sales', 'Average Hourly Earnings', 'Nonfarm Payrolls', 'Unemployment Rate', 'GDP', 'Core CPI', 'BoC Interest Rate Decision', 'BoJ Interest Rate Decision', 'Fed Interest Rate Decision', 'SNB Interest Rate Decision', 'BoE Interest Rate Decision', 'Retail Sales', 'Core Retail Sales', 'RBA Interest Rate Decision', 'Core PCE Price Index', 'Durable Goods Orders', 'Philadelphia Fed Manufacturing Index', '10-Year Note Auction', 'ECB Interest Rate Decision', 'PPI', 'German CPI', 'Manufacturing PMI', 'CB Consumer Confidence', 'Chicago PMI', 'HCOB Spain Manufacturing PMI', 'Yield Rises', 'Treasury Falls', 'Rate-Hike', 'Monetary Policy', 'Military Strikes', 'Missile Attack', 'Revokes', 'WTI Oil Jumps', 'Gold', 'Australia', 'AUD', 'US Military', 'Central Command', 'USA'];
         
-        function setFilter(type, btn) { currentFilter = type; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); if(btn) btn.classList.add('active'); filterFeed(); }
-        function filterFeed() { const query = document.getElementById('searchBar').value.toLowerCase(); document.querySelectorAll('.news__item__outer').forEach(item => { const text = item.innerText.toLowerCase(); const matchesCategory = (currentFilter === 'all' || filters[currentFilter].some(word => text.includes(word))); const matchesSearch = text.includes(query); item.style.display = (matchesCategory && matchesSearch) ? '' : 'none'; }); }
+        function setFilter(type) { 
+            currentFilter = type; 
+            
+            // Sync Desktop Buttons
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                if (b.dataset.type === type) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+            
+            // Sync Mobile Dropdown
+            const mobileSelect = document.getElementById('mobileFilter');
+            if (mobileSelect && mobileSelect.value !== type) {
+                mobileSelect.value = type;
+            }
+            
+            filterFeed(); 
+        }
+
+        function filterFeed() { 
+            const query = document.getElementById('searchBar').value.toLowerCase(); 
+            document.querySelectorAll('.news__item__outer').forEach(item => { 
+                const text = item.innerText.toLowerCase(); 
+                const matchesCategory = (currentFilter === 'all' || filters[currentFilter].some(word => text.includes(word))); 
+                const matchesSearch = text.includes(query); 
+                item.style.display = (matchesCategory && matchesSearch) ? '' : 'none'; 
+            }); 
+        }
         
         window.messenger_start_init = function() { if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); };
         document.getElementById('themeToggle').addEventListener('change', () => { document.body.classList.toggle('dark'); document.body.classList.toggle('light'); });
@@ -233,19 +346,15 @@
         new MutationObserver((mutations) => { 
             mutations.forEach(m => m.addedNodes.forEach(node => { 
                 if (node.classList && node.classList.contains('news__item__outer')) { 
-                    
                     if (audioEnabled) {
                         const rawText = node.innerText;
                         const lowerText = rawText.toLowerCase();
                         
-                        // Check if the headline matches any of our priority keywords
                         const hasKeyword = audioTriggerKeywords.some(kw => lowerText.includes(kw.toLowerCase()));
                         
                         if (hasKeyword) {
-                            // Option A: If it has a keyword, read the text out loud
                             speakText(rawText); 
                         } else {
-                            // Option B: If no keyword, play the short electronic ping
                             const vol = parseFloat(document.getElementById('volSlider').value);
                             playSynthesizedPing(vol);
                         }
