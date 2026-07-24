@@ -31,6 +31,8 @@
         .dropdown { position: relative; margin-left: 10px; }
         .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
         .dropbtn:hover { color: #fff; }
+        .dropbtn .mobile-text { display: none; } /* Strictly hidden on desktop */
+        
         .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
         .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; border-radius: 0; }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
@@ -84,6 +86,8 @@
             /* Dropdown behavior for mobile */
             .dropdown { margin-left: 0; width: 100%; border-top: 1px solid #1c2230; margin-top: 5px; }
             .dropbtn { width: 100%; text-align: left; padding: 12px 20px; font-size: 14px; display: flex; justify-content: space-between; }
+            .dropbtn .mobile-text { display: inline; } /* Shown on mobile */
+            
             .dropdown-content { position: static; box-shadow: none; border: none; background: #0b0e14; padding: 5px 0; border-radius: 0; }
             .dropdown-content a { padding: 12px 30px; }
             
@@ -112,7 +116,9 @@
         <a id="nav-key-levels" href="key-levels.html" >Key Levels</a>
         
         <div class="dropdown">
-            <button class="dropbtn" onclick="toggleDropdown()">Account ⚙️</button>
+            <button class="dropbtn" onclick="toggleDropdown()">
+                <span class="mobile-text">Account </span>⚙️
+            </button>
             <div id="settingsDropdown" class="dropdown-content">
                 <a href="account.html">Account</a>
                 <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
@@ -140,7 +146,6 @@
                 </select>
             </div>
 
-            <!-- Removed fixed width/height so CSS aspect-ratio controls fluid sizing -->
             <iframe id="lesson-player" class="lesson-iframe" src="" allow="autoplay; fullscreen" allowfullscreen frameborder="0"></iframe>
             
             <h1 id="module-title" style="margin-top: 20px; font-weight: 600;">Select a Module</h1>
