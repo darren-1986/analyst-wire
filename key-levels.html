@@ -210,6 +210,15 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
     .embedded-chart-frame {
         min-height: 250px; /* Give the chart some room when stacked */
     }
+
+    /* Zoom out TradingView Widgets by 30% */
+    tv-market-data, tv-forex-table {
+        display: block;
+        width: 142.85%;
+        height: 142.85%;
+        transform: scale(0.7);
+        transform-origin: top left;
+    }
 }
 </style>
 </head>
