@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="media/favicon.png">
     <title>Analyst Wire | Account</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
@@ -19,6 +20,8 @@
         .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
         .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
         .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
+
+        .mobile-menu-btn { display: none; font-size: 24px; color: #8b949e; cursor: pointer; background: none; border: none; }
 
         /* Dropdown Styling */
         .dropdown { position: relative; margin-left: 10px; }
@@ -44,6 +47,39 @@
         .badge { color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         .badge-active { background: #089981; }
         .badge-canceled { background: #f85149; }
+
+        /* --- MOBILE RESPONSIVE STYLES --- */
+        @media (max-width: 850px) {
+            .mobile-menu-btn { display: block; }
+            
+            /* Responsive Nav */
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 55px;
+                left: 0;
+                width: 100%;
+                background: #0d1117;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 20px;
+                border-bottom: 1px solid #1c2230;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            }
+            .nav-links.active-nav { display: flex; }
+            .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
+            
+            /* Dropdown adjustments for mobile */
+            .dropdown { margin-left: 0; width: 100%; margin-top: 5px; }
+            .dropbtn { padding-left: 0; }
+            .dropdown-content { position: static; width: 100%; box-shadow: none; border: 1px solid #30363d; margin-top: 5px; }
+
+            /* Account Container Adjustments */
+            .account-container { margin: 20px 15px; padding: 20px; }
+            
+            /* Stack Info Grid on Mobile */
+            .info-grid { grid-template-columns: 1fr; gap: 0px; }
+        }
     </style>
 </head>
 <body>
@@ -52,7 +88,10 @@
     <div style="height: 50px; display: flex; align-items: center;">
         <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px; width: auto; object-fit: contain;">
     </div>
-    <div class="nav-links">
+    
+    <button class="mobile-menu-btn" onclick="toggleNav()">☰</button>
+
+    <div class="nav-links" id="navLinks">
         <a href="terminal.html">Dashboard</a>
         <a href="/newsfeed">Newsfeed</a>
         <a href="analysis.html">Analysis</a>
@@ -60,7 +99,7 @@
         <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
         
         <div class="dropdown">
-            <button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+            <button class="dropbtn" onclick="toggleDropdown(event)">⚙️</button>
             <div id="settingsDropdown" class="dropdown-content">
                 <a href="account.html" class="active">Account</a>
                 <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
@@ -93,9 +132,21 @@
 </div>
 
 <script>
-    function toggleDropdown() {
+    // --- NAVIGATION LOGIC ---
+    function toggleNav() {
+        document.getElementById("navLinks").classList.toggle("active-nav");
+    }
+
+    function toggleDropdown(event) { 
+        if (event) event.stopPropagation();
         document.getElementById("settingsDropdown").style.display = 
-            document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block";
+            document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; 
+    }
+
+    window.onclick = function(event) { 
+        if (!event.target.matches('.dropbtn')) {
+            document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); 
+        }
     }
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
