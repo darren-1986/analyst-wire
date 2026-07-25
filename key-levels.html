@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="media/favicon.png">
 <title>Analyst Wire | Key Levels</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
@@ -12,11 +13,13 @@
 body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #090b10; color: #d1d4dc; margin: 0; min-height: 100vh; font-size: 13px; }
 
 /* Navigation */
-.top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; }
+.top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; position: relative; z-index: 1000; }
 .nav-links { display: flex; align-items: center; gap: 5px; }
 .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
 .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
 .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
+
+.mobile-menu-btn { display: none; font-size: 24px; color: #8b949e; cursor: pointer; background: none; border: none; }
 
 /* Dropdown Styling */
 .dropdown { position: relative; margin-left: 10px; }
@@ -94,15 +97,6 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Robo
     overflow: hidden;
 }
 
-.placeholder-quadrant {
-    align-items: center;
-    justify-content: center;
-    color: #8b949e;
-    font-weight: 500;
-    border: 1px dashed #30363d;
-    background: rgba(13, 17, 23, 0.4);
-}
-
 .quadrant-top-bar {
     display: flex;
     justify-content: space-between;
@@ -137,15 +131,16 @@ select:focus, input[type="date"]:focus { border-color: #2962ff; }
     box-shadow: none;
     flex: 1;
     overflow-y: auto;
+    overflow-x: auto; /* Added for mobile tables */
     min-height: 0;
 }
 
-.table-container::-webkit-scrollbar { width: 6px; }
+.table-container::-webkit-scrollbar { width: 6px; height: 6px; }
 .table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
 .table-container::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 .table-container::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 
-table { width: 100%; border-collapse: collapse; text-align: left; }
+table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px; /* Prevent squishing */ }
 th { background: #161b22; padding: 5px 6px; color: #8b949e; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-bottom: 1px solid #30363d; cursor: pointer; transition: color 0.2s; user-select: none; position: sticky; top: 0; z-index: 10; }
 th:hover { color: #fff; }
 td { padding: 5px 6px; border-bottom: 1px solid #1c2230; color: #c9d1d9; vertical-align: middle; font-size: 9.5px; }
@@ -175,6 +170,47 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 /* Dynamic Frame Scaling for Quadrant */
 .embedded-chart-frame { position: relative; height: 100%; min-height: 140px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; }
 .embedded-chart-frame iframe { position: absolute; top: 0; left: 0; width: 166.66%; height: 166.66%; transform: scale(0.6); transform-origin: top left; border: none; }
+
+/* --- MOBILE RESPONSIVE STYLES --- */
+@media (max-width: 850px) {
+    .mobile-menu-btn { display: block; }
+    
+    /* Responsive Nav */
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 55px;
+        left: 0;
+        width: 100%;
+        background: #0d1117;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px 20px;
+        border-bottom: 1px solid #1c2230;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .nav-links.active-nav { display: flex; }
+    .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
+    .dropdown { margin-left: 0; width: 100%; margin-top: 5px; }
+    .dropbtn { padding-left: 0; }
+    .dropdown-content { position: static; width: 100%; box-shadow: none; border: 1px solid #30363d; margin-top: 5px; }
+
+    /* Responsive Grid */
+    .grid-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        height: auto;
+    }
+    .quadrant { height: 450px; } /* Fixed height so tables scroll internally on mobile */
+
+    /* Drawer Adjustments for Mobile */
+    .drawer-container {
+        grid-template-columns: 1fr;
+    }
+    .embedded-chart-frame {
+        min-height: 250px; /* Give the chart some room when stacked */
+    }
+}
 </style>
 </head>
 <body>
@@ -210,14 +246,17 @@ tbody tr:hover { background-color: rgba(255,255,255,0.03); }
 <div style="height: 50px; display: flex; align-items: center;">
 <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px;">
 </div>
-<div class="nav-links">
+
+<button class="mobile-menu-btn" onclick="toggleNav()">☰</button>
+
+<div class="nav-links" id="navLinks">
 <a href="terminal.html">Dashboard</a>
 <a href="/newsfeed">Newsfeed</a>
 <a href="key-levels.html" class="active">Key Levels</a>
 <a href="analysis.html">Analysis</a>
 <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
 <div class="dropdown">
-<button class="dropbtn" onclick="toggleDropdown()">⚙️</button>
+<button class="dropbtn" onclick="toggleDropdown(event)">⚙️</button>
 <div id="settingsDropdown" class="dropdown-content">
 <a href="account.html">Account</a>
 <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
@@ -347,7 +386,25 @@ function formatTimestamp(isoString) {
 
 function openModal(modalId) { document.getElementById(modalId).style.display = "block"; }
 function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
-window.onclick = function(event) { if (event.target.classList.contains('modal')) event.target.style.display = "none"; }
+
+// --- NAVIGATION LOGIC ---
+function toggleNav() {
+    document.getElementById("navLinks").classList.toggle("active-nav");
+}
+
+function toggleDropdown(event) { 
+    event.stopPropagation();
+    document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); 
+}
+
+window.onclick = function(event) { 
+    if (!event.target.matches('.dropbtn')) {
+        document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); 
+    }
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = "none";
+    }
+}
 
 function toggleDrawer(index, ticker) {
     const row = document.getElementById(`drawer-row-${index}`);
@@ -757,7 +814,6 @@ function render() {
     }).join('') : '<tr><td colspan="7" style="text-align: center; color: #8b949e; padding: 30px;">No records available.</td></tr>';
 }
 
-function toggleDropdown() { document.getElementById("settingsDropdown").style.display = document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; }
 document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
 
 window.onload = init;
