@@ -60,28 +60,65 @@
         /* Shared Media Wrapper Settings */
         .video-wrapper, .report-wrapper { width: 100%; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.3); position: relative; aspect-ratio: 16 / 9; }
         .video-wrapper iframe, .report-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: block; }
+        .media-section { max-width: 1400px; margin: 0 auto 40px auto; }
 
-        /* Standard Single Column */
-        .media-section { max-width: 1200px; margin: 0 auto 40px auto; }
+        /* -------------------------------------
+           MODERN TRADE IDEAS STYLING 
+        ---------------------------------------- */
+        .trade-card { 
+            background: linear-gradient(145deg, #161b22, #10141a); 
+            border: 1px solid #30363d; 
+            border-radius: 12px; 
+            padding: 25px; 
+            margin-bottom: 25px; 
+            display: grid; 
+            grid-template-columns: 1fr 450px; 
+            gap: 35px; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15); 
+        }
+        .trade-card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3); 
+            border-color: #4b5563; 
+        }
+        
+        .trade-info { display: flex; flex-direction: column; justify-content: flex-start; }
+        
+        .trade-chart { 
+            border-radius: 8px; 
+            overflow: hidden; 
+            background: #090b10; 
+            border: 1px solid #30363d; 
+            min-height: 280px; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5); 
+            display: flex;
+        }
 
-        /* Trade Ideas Styling */
-        .trade-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 15px; }
-        .trade-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 15px; margin-bottom: 15px; }
-        .trade-ticker { font-size: 18px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
-        .trade-direction { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .trade-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(48, 54, 61, 0.5); padding-bottom: 15px; margin-bottom: 20px; }
+        .trade-ticker { font-size: 20px; font-weight: 700; color: #fff; font-family: 'Inter', sans-serif; letter-spacing: -0.5px; }
+        
+        .trade-direction { padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
         .dir-long { background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.4); }
         .dir-short { background: rgba(248, 81, 73, 0.15); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); }
-        .trade-levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; text-align: center; }
-        .level-box { display: flex; flex-direction: column; background: #090b10; padding: 10px; border-radius: 6px; border: 1px solid #21262d; }
-        .level-label { font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 6px; }
-        .level-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #c9d1d9; font-weight: 500; }
+        
+        .trade-levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; text-align: center; margin-bottom: 20px; }
+        .level-box { display: flex; flex-direction: column; background: rgba(9, 11, 16, 0.6); padding: 12px; border-radius: 8px; border: 1px solid #21262d; transition: border-color 0.2s; }
+        .level-box:hover { border-color: #30363d; background: rgba(9, 11, 16, 0.9); }
+        .level-label { font-size: 10px; color: #8b949e; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.5px; }
+        .level-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #e6edf3; font-weight: 500; }
+        
+        .trade-desc { font-size: 13.5px; color: #a5b2c0; margin: 0 0 12px 0; line-height: 1.6; }
+        .trade-desc strong { color: #c9d1d9; font-weight: 600; }
         
         /* Mobile fallback */
-        @media (max-width: 900px) {
+        @media (max-width: 1100px) {
             .split-layout { flex-direction: column; }
             .report-wrapper { height: 75vh; }
             .tabs-container { padding: 10px; }
             .tab-content { padding: 15px; }
+            .trade-card { grid-template-columns: 1fr; gap: 20px; }
+            .trade-chart { min-height: 350px; }
         }
     </style>
 </head>
@@ -174,6 +211,24 @@
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
     
+    // Maps raw instrument names (EUR/GBP, Silver) to valid TradingView symbols
+    function getTradingViewSymbol(instrument) {
+        if (!instrument) return 'FX:EURUSD';
+        const clean = instrument.toUpperCase().trim();
+        
+        // Commodities Overrides
+        if (clean.includes('SILVER') || clean.includes('XAG')) return 'TVC:SILVER';
+        if (clean.includes('GOLD') || clean.includes('XAU')) return 'OANDA:XAUUSD';
+        
+        // Forex parsing (Stripping slashes to generate FX:EURGBP)
+        const stripped = clean.replace(/[^A-Z]/g, '');
+        if (stripped.length === 6) {
+            return 'FX:' + stripped;
+        }
+        
+        return stripped || 'FX:EURUSD';
+    }
+
     async function fetchTradeIdeas() {
         const container = document.getElementById('trade-ideas-container');
         
@@ -212,36 +267,46 @@
             if (trade.target) levelsHtml += `<div class="level-box"><span class="level-label">Target</span><span class="level-val">${trade.target}</span></div>`;
             if (trade.stop_loss) levelsHtml += `<div class="level-box"><span class="level-label">Stop Loss</span><span class="level-val">${trade.stop_loss}</span></div>`;
 
-            const card = document.createElement('div');
-            card.className = 'trade-card';
-            
-            let html = `
-                <div class="trade-header">
-                    <div>
-                        <span class="trade-ticker">${trade.instrument || 'Trade Setup'}</span>
-                        <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${trade.trade_date || ''} ${trade.title ? '— ' + trade.title : ''}</div>
+            // Build Info Section (Left side)
+            let infoHtml = `
+                <div class="trade-info">
+                    <div class="trade-header">
+                        <div>
+                            <span class="trade-ticker">${trade.instrument || 'Trade Setup'}</span>
+                            <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${trade.trade_date || ''} ${trade.title ? '— ' + trade.title : ''}</div>
+                        </div>
+                        <span class="trade-direction ${dirClass}">${displayDir}</span>
                     </div>
-                    <span class="trade-direction ${dirClass}">${displayDir}</span>
-                </div>
             `;
             
             if (levelsHtml) {
-                html += `<div class="trade-levels">${levelsHtml}</div>`;
+                infoHtml += `<div class="trade-levels">${levelsHtml}</div>`;
             }
 
             if (trade.key_levels) {
-                html += `<p style="font-size: 13px; color: #8b949e; margin: 20px 0 5px 0; line-height: 1.5;"><strong>Key Levels:</strong> ${trade.key_levels}</p>`;
+                infoHtml += `<p class="trade-desc"><strong>Key Levels:</strong> ${trade.key_levels}</p>`;
             }
-            
             if (trade.rationale) {
-                html += `<p style="font-size: 13px; color: #8b949e; margin: 15px 0 5px 0; line-height: 1.5;"><strong>Rationale:</strong> ${trade.rationale}</p>`;
+                infoHtml += `<p class="trade-desc"><strong>Rationale:</strong> ${trade.rationale}</p>`;
+            }
+            if (trade.conditions) {
+                infoHtml += `<p class="trade-desc"><strong>Conditions:</strong> ${trade.conditions}</p>`;
             }
             
-            if (trade.conditions) {
-                html += `<p style="font-size: 13px; color: #8b949e; margin: 10px 0 0 0; line-height: 1.5;"><strong>Conditions:</strong> ${trade.conditions}</p>`;
-            }
+            infoHtml += `</div>`; // Close trade-info
 
-            card.innerHTML = html;
+            // Build Chart Section (Right side)
+            const tvSymbol = getTradingViewSymbol(trade.instrument);
+            let chartHtml = `
+                <div class="trade-chart">
+                    <iframe src="https://s.tradingview.com/widgetembed/?symbol=${tvSymbol}&interval=D&theme=dark&style=1&timezone=Etc%2FUTC&hidesidetoolbar=1&symboledit=1&saveimage=0&toolbarbg=090b10&studies=%5B%5D&hideideas=1" width="100%" height="100%" frameborder="0" allowtransparency="true" scrolling="no" allowfullscreen></iframe>
+                </div>
+            `;
+
+            const card = document.createElement('div');
+            card.className = 'trade-card';
+            card.innerHTML = infoHtml + chartHtml;
+            
             container.appendChild(card);
         });
     }
