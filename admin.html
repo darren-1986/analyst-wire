@@ -25,7 +25,8 @@
         .manage-user-form h3 { margin: 0 10px 0 0; font-size: 1rem; color: #888; }
         .manage-user-form input, .manage-user-form select { padding: 8px; background: #1a1d23; border: 1px solid #333; color: white; border-radius: 4px; }
 
-        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; justify-content: space-between; }
+        .filters { display: flex; gap: 10px; align-items: center; }
         .search-box, .filter-select { padding: 8px; background: #242831; border: 1px solid #333; color: white; border-radius: 4px; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; cursor: pointer; }
@@ -65,21 +66,25 @@
         </div>
 
         <div class="controls">
-            <h2>User Management</h2>
-            <input type="text" id="search" class="search-box" placeholder="Search name or email...">
-            <select id="filter-status" class="filter-select">
-                <option value="all">Status: All</option>
-                <option value="active">Active</option>
-                <option value="canceled">Canceled</option>
-            </select>
-            <select id="filter-tag" class="filter-select">
-                <option value="all">Tag: All</option>
-                <option value="pro">Pro</option>
-                <option value="audio squawk">Audio Squawk</option>
-                <option value="newsfeed">Newsfeed</option>
-                <option value="free">Free</option>
-            </select>
+            <div class="filters">
+                <h2 style="margin: 0; margin-right: 15px;">User Management</h2>
+                <input type="text" id="search" class="search-box" placeholder="Search name or email...">
+                <select id="filter-status" class="filter-select">
+                    <option value="all">Status: All</option>
+                    <option value="active">Active</option>
+                    <option value="canceled">Canceled</option>
+                </select>
+                <select id="filter-tag" class="filter-select">
+                    <option value="all">Tag: All</option>
+                    <option value="pro">Pro</option>
+                    <option value="audio squawk">Audio Squawk</option>
+                    <option value="newsfeed">Newsfeed</option>
+                    <option value="free">Free</option>
+                </select>
+            </div>
+            <button onclick="forceDowngradeCancelled()" style="background:#f23645; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold;">Clean Up Cancelled Users</button>
         </div>
+        
         <table id="admin-table">
             <thead>
                 <tr>
@@ -139,6 +144,34 @@
         }
     }
 
+    // New Function: Automatically downgrade users who are marked as cancelled but still have pro tags
+    async function forceDowngradeCancelled() {
+        if (!confirm("This will instantly downgrade all cancelled users to 'free' and 'inactive'. Proceed?")) return;
+        
+        const toDowngrade = allUsers.filter(u => {
+            const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
+            const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
+            return isCancelled && u.subscription_tag !== 'free';
+        });
+
+        if (toDowngrade.length === 0) {
+            alert("No cancelled users found that need downgrading. Everything is clean!");
+            return;
+        }
+
+        let successCount = 0;
+        for (const user of toDowngrade) {
+            const { error } = await client.from('profiles').update({
+                subscription_tag: 'free',
+                sub_status: 'inactive'
+            }).eq('id', user.id);
+            if (!error) successCount++;
+        }
+
+        alert(`Successfully downgraded ${successCount} cancelled user(s).`);
+        init(); // Refresh the table
+    }
+
     function showSection(id, btn) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.top-nav button').forEach(b => b.classList.remove('active'));
@@ -163,21 +196,25 @@
     function renderTable(users) {
         const tbody = document.getElementById('admin-body');
         tbody.innerHTML = users.length ? users.map(u => {
-            // Logic to normalize "cancel" status
+            
             const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
             const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
-            const statusLabel = isCancelled ? 'Cancelled' : 'Active';
-            const statusClass = isCancelled ? 'status-inactive' : 'status-active';
+            const cancelLabel = isCancelled ? 'Cancelled' : 'Active';
+            const cancelClass = isCancelled ? 'status-inactive' : 'status-active';
+            
+            // Format DB sub_status explicitly
+            const subStatusRaw = String(u.sub_status || 'active').toLowerCase();
+            const subStatusClass = (subStatusRaw === 'inactive' || subStatusRaw === 'null') ? 'status-inactive' : '';
 
             return `
             <tr onclick="selectUser('${u.email}', '${u.full_name || ''}', '${u.subscription_tag || ''}')">
                 <td>${u.full_name || '-'}</td>
                 <td>${u.email || '-'}</td>
                 <td>${u.subscription_tag || '-'}</td>
-                <td>${(u.sub_status || 'active').toUpperCase()}</td>
+                <td class="${subStatusClass}">${(u.sub_status || 'active').toUpperCase()}</td>
                 <td>${u.trial_expires_at ? new Date(u.trial_expires_at).toLocaleDateString() : '-'}</td>
                 <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
-                <td class="${statusClass}">${statusLabel}</td>
+                <td class="${cancelClass}">${cancelLabel}</td>
             </tr>
         `}).join('') : '<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>';
     }
@@ -195,7 +232,6 @@
         const filtered = allUsers.filter(u => {
             const matchesSearch = (u.full_name?.toLowerCase().includes(term)) || (u.email?.toLowerCase().includes(term));
             
-            // Re-use logic for filtering
             const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
             const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
             
