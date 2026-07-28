@@ -126,9 +126,13 @@
         const { data: existingUser } = await client.from('profiles').select('id').eq('email', email).maybeSingle();
 
         if (existingUser) {
+            // Also force sub_status to inactive if setting tag to free manually
+            const newSubStatus = tag === 'free' ? 'inactive' : 'active';
+            
             const { error } = await client.from('profiles').update({
                 full_name: name,
                 subscription_tag: tag,
+                sub_status: newSubStatus,
                 trial_expires_at: expiry || null
             }).eq('email', email);
 
@@ -137,21 +141,21 @@
         } else {
             const { error } = await client.auth.admin.inviteUserByEmail(email, {
                 redirectTo: 'https://analyst-wire.pages.dev/setup',
-                data: { full_name: name, subscription_tag: tag, trial_expires_at: expiry || null }
+                data: { full_name: name, subscription_tag: tag, sub_status: tag === 'free' ? 'inactive' : 'active', trial_expires_at: expiry || null }
             });
             if (error) alert('Invite Error: ' + error.message);
             else { alert('Invite sent!'); init(); }
         }
     }
 
-    // New Function: Automatically downgrade users who are marked as cancelled but still have pro tags
     async function forceDowngradeCancelled() {
         if (!confirm("This will instantly downgrade all cancelled users to 'free' and 'inactive'. Proceed?")) return;
         
         const toDowngrade = allUsers.filter(u => {
             const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
             const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
-            return isCancelled && u.subscription_tag !== 'free';
+            // Catch anyone who is cancelled but hasn't had BOTH their tag and status updated yet
+            return isCancelled && (u.subscription_tag !== 'free' || String(u.sub_status).toLowerCase() !== 'inactive');
         });
 
         if (toDowngrade.length === 0) {
@@ -202,16 +206,18 @@
             const cancelLabel = isCancelled ? 'Cancelled' : 'Active';
             const cancelClass = isCancelled ? 'status-inactive' : 'status-active';
             
-            // Format DB sub_status explicitly
-            const subStatusRaw = String(u.sub_status || 'active').toLowerCase();
-            const subStatusClass = (subStatusRaw === 'inactive' || subStatusRaw === 'null') ? 'status-inactive' : '';
+            // Strictly check the sub_status database column
+            const subStatusRaw = String(u.sub_status || 'inactive').toLowerCase();
+            const isSubActive = subStatusRaw === 'active';
+            const subStatusLabel = isSubActive ? 'ACTIVE' : 'INACTIVE';
+            const subStatusClass = isSubActive ? 'status-active' : 'status-inactive';
 
             return `
             <tr onclick="selectUser('${u.email}', '${u.full_name || ''}', '${u.subscription_tag || ''}')">
                 <td>${u.full_name || '-'}</td>
                 <td>${u.email || '-'}</td>
                 <td>${u.subscription_tag || '-'}</td>
-                <td class="${subStatusClass}">${(u.sub_status || 'active').toUpperCase()}</td>
+                <td class="${subStatusClass}">${subStatusLabel}</td>
                 <td>${u.trial_expires_at ? new Date(u.trial_expires_at).toLocaleDateString() : '-'}</td>
                 <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
                 <td class="${cancelClass}">${cancelLabel}</td>
