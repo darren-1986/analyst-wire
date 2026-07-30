@@ -29,12 +29,38 @@
         .filters { display: flex; gap: 10px; align-items: center; }
         .search-box, .filter-select { padding: 8px; background: #242831; border: 1px solid #333; color: white; border-radius: 4px; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; cursor: pointer; }
+        /* Table & Sorting */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         tr:hover { background: #2a2e39; }
         th, td { padding: 12px; border: 1px solid #333; text-align: left; }
-        th { background: #242831; text-transform: uppercase; font-size: 0.75rem; color: #888; }
+        th { background: #242831; text-transform: uppercase; font-size: 0.75rem; color: #888; user-select: none; }
+        th.sortable { cursor: pointer; transition: color 0.2s; }
+        th.sortable:hover { color: #fff; background: #2a2e39; }
+        .sort-icon { font-size: 0.7rem; margin-left: 5px; color: #555; }
+        
         .status-active { color: #089981; font-weight: bold; }
         .status-inactive { color: #f23645; font-weight: bold; }
+        
+        .btn-profile { background: #333; color: white; border: 1px solid #555; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: background 0.2s; }
+        .btn-profile:hover { background: #2962ff; border-color: #2962ff; }
+
+        /* Modal Overlay */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; }
+        .modal { background: #1a1d23; border: 1px solid #333; border-radius: 8px; width: 100%; max-width: 500px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .modal-header h2 { margin: 0; font-size: 1.2rem; }
+        .close-btn { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
+        .close-btn:hover { color: #f23645; }
+        
+        .profile-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+        .profile-group { display: flex; flex-direction: column; gap: 5px; }
+        .profile-group label { font-size: 0.8rem; color: #888; text-transform: uppercase; }
+        .profile-group input { padding: 10px; background: #242831; border: 1px solid #333; color: white; border-radius: 4px; }
+        .profile-group .readonly-data { padding: 10px; background: #0f1115; border: 1px solid #333; border-radius: 4px; color: #ccc; font-family: monospace; font-size: 0.9rem; }
+        
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #333; padding-top: 15px; }
+        .btn-save { background: #089981; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-save:hover { background: #067a67; }
     </style>
 </head>
 <body>
@@ -56,6 +82,7 @@
             <input type="text" id="m-name" placeholder="Full Name">
             <select id="m-tag">
                 <option value="pro">Pro</option>
+                <option value="course">Course</option> <!-- Added Course -->
                 <option value="newsfeed">Newsfeed</option>
                 <option value="audio squawk">Audio Squawk</option>
                 <option value="free">Free (No Access)</option>
@@ -77,6 +104,7 @@
                 <select id="filter-tag" class="filter-select">
                     <option value="all">Tag: All</option>
                     <option value="pro">Pro</option>
+                    <option value="course">Course</option> <!-- Added Course -->
                     <option value="audio squawk">Audio Squawk</option>
                     <option value="newsfeed">Newsfeed</option>
                     <option value="free">Free</option>
@@ -88,11 +116,18 @@
         <table id="admin-table">
             <thead>
                 <tr>
-                    <th>Name</th><th>Email</th><th>Tag</th><th>Status</th><th>Trial Record</th><th>Next Billing</th><th>Cancel?</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th class="sortable" onclick="handleSort('tag')">Tag <span id="sort-icon-tag" class="sort-icon">↕</span></th>
+                    <th class="sortable" onclick="handleSort('status')">Status <span id="sort-icon-status" class="sort-icon">↕</span></th>
+                    <th>Trial Record</th>
+                    <th class="sortable" onclick="handleSort('billing')">Next Billing <span id="sort-icon-billing" class="sort-icon">↕</span></th>
+                    <th class="sortable" onclick="handleSort('cancel')">Cancel? <span id="sort-icon-cancel" class="sort-icon">↕</span></th>
+                    <th>Profile</th> <!-- New Column -->
                 </tr>
             </thead>
             <tbody id="admin-body">
-                <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
+                <tr><td colspan="8" style="text-align:center;">Loading...</td></tr>
             </tbody>
         </table>
     </div>
@@ -104,10 +139,184 @@
 
 </div>
 
+<!-- Profile Modal -->
+<div class="modal-overlay" id="profileModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>User Profile Details</h2>
+            <button class="close-btn" onclick="closeProfileModal()">×</button>
+        </div>
+        
+        <div class="profile-grid">
+            <input type="hidden" id="p-id">
+            
+            <div class="profile-group">
+                <label>Full Name</label>
+                <input type="text" id="p-name" placeholder="Full Name">
+            </div>
+            
+            <div class="profile-group">
+                <label>Email Address</label>
+                <input type="email" id="p-email" placeholder="Email Address">
+            </div>
+
+            <div class="profile-group">
+                <label>Last Logged In</label>
+                <div class="readonly-data" id="p-last-login">Fetching...</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="profile-group">
+                    <label>Country (IP)</label>
+                    <div class="readonly-data" id="p-country">Requires Backend Tracker</div>
+                </div>
+                <div class="profile-group">
+                    <label>Device Used</label>
+                    <div class="readonly-data" id="p-device">Requires Backend Tracker</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-save" id="btn-save-profile" onclick="saveProfileDetails()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    // Populate form from table click
+    let allUsers = [];
+    let currentFilteredUsers = [];
+    
+    // Sorting State
+    let sortState = { column: null, asc: true };
+
+    async function init() {
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) { window.location.href = 'index.html'; return; }
+        const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
+        if (!profile || profile.is_admin !== true) { window.location.href = 'terminal.html'; return; }
+
+        const { data, error } = await client.from('profiles').select('*');
+        if (error) { document.getElementById('admin-body').innerHTML = `<tr><td colspan="8" style="text-align:center;">Error: ${error.message}</td></tr>`; return; }
+        
+        allUsers = data;
+        applyFilters(); // This will render the table
+    }
+
+    // --- SORTING LOGIC ---
+    function handleSort(column) {
+        if (sortState.column === column) {
+            sortState.asc = !sortState.asc; // Toggle direction
+        } else {
+            sortState.column = column;
+            sortState.asc = true; // Default to ascending on new column
+        }
+
+        // Reset all icons
+        document.querySelectorAll('.sort-icon').forEach(icon => icon.innerText = '↕');
+        document.querySelectorAll('.sort-icon').forEach(icon => icon.style.color = '#555');
+        
+        // Update active icon
+        const activeIcon = document.getElementById(`sort-icon-${column}`);
+        activeIcon.innerText = sortState.asc ? '↑' : '↓';
+        activeIcon.style.color = '#2962ff';
+
+        sortData();
+    }
+
+    function sortData() {
+        if (!sortState.column) return;
+
+        currentFilteredUsers.sort((a, b) => {
+            let valA, valB;
+
+            switch (sortState.column) {
+                case 'tag':
+                    valA = a.subscription_tag || '';
+                    valB = b.subscription_tag || '';
+                    break;
+                case 'status':
+                    valA = String(a.sub_status || 'inactive').toLowerCase();
+                    valB = String(b.sub_status || 'inactive').toLowerCase();
+                    break;
+                case 'billing':
+                    valA = a.current_period_end ? new Date(a.current_period_end).getTime() : 0;
+                    valB = b.current_period_end ? new Date(b.current_period_end).getTime() : 0;
+                    break;
+                case 'cancel':
+                    const rawCancelA = String(a.cancel_at_period_end || '').toLowerCase();
+                    valA = rawCancelA.includes('true') || rawCancelA.includes('cancel') ? 1 : 0;
+                    const rawCancelB = String(b.cancel_at_period_end || '').toLowerCase();
+                    valB = rawCancelB.includes('true') || rawCancelB.includes('cancel') ? 1 : 0;
+                    break;
+            }
+
+            if (valA < valB) return sortState.asc ? -1 : 1;
+            if (valA > valB) return sortState.asc ? 1 : -1;
+            return 0;
+        });
+
+        renderTable(currentFilteredUsers);
+    }
+
+    function renderTable(users) {
+        const tbody = document.getElementById('admin-body');
+        tbody.innerHTML = users.length ? users.map(u => {
+            
+            const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
+            const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
+            const cancelLabel = isCancelled ? 'Cancelled' : 'Active';
+            const cancelClass = isCancelled ? 'status-inactive' : 'status-active';
+            
+            const subStatusRaw = String(u.sub_status || 'inactive').toLowerCase();
+            const isSubActive = subStatusRaw === 'active';
+            const subStatusLabel = isSubActive ? 'ACTIVE' : 'INACTIVE';
+            const subStatusClass = isSubActive ? 'status-active' : 'status-inactive';
+
+            return `
+            <tr style="cursor: pointer;" onclick="selectUser('${u.email}', '${u.full_name || ''}', '${u.subscription_tag || ''}')">
+                <td>${u.full_name || '-'}</td>
+                <td>${u.email || '-'}</td>
+                <td>${u.subscription_tag || '-'}</td>
+                <td class="${subStatusClass}">${subStatusLabel}</td>
+                <td>${u.trial_expires_at ? new Date(u.trial_expires_at).toLocaleDateString() : '-'}</td>
+                <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
+                <td class="${cancelClass}">${cancelLabel}</td>
+                <td><button class="btn-profile" onclick="event.stopPropagation(); openProfileModal('${u.id}')">View</button></td>
+            </tr>
+        `}).join('') : '<tr><td colspan="8" style="text-align:center;">No users found.</td></tr>';
+    }
+
+    function applyFilters() {
+        const term = document.getElementById('search').value.toLowerCase();
+        const statusFilter = document.getElementById('filter-status').value;
+        const tag = document.getElementById('filter-tag').value;
+
+        currentFilteredUsers = allUsers.filter(u => {
+            const matchesSearch = (u.full_name?.toLowerCase().includes(term)) || (u.email?.toLowerCase().includes(term));
+            
+            const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
+            const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
+            
+            let matchesStatus = true;
+            if (statusFilter === 'active') matchesStatus = !isCancelled;
+            if (statusFilter === 'canceled') matchesStatus = isCancelled;
+            
+            const matchesTag = (tag === 'all') || (u.subscription_tag?.toLowerCase() === tag);
+            return matchesSearch && matchesStatus && matchesTag;
+        });
+        
+        // Re-apply sorting if a column is selected
+        if (sortState.column) {
+            sortData();
+        } else {
+            renderTable(currentFilteredUsers);
+        }
+    }
+
+    // --- QUICK EDIT FORM (Top) ---
     function selectUser(email, name, tag) {
         document.getElementById('m-email').value = email;
         document.getElementById('m-name').value = name || '';
@@ -126,9 +335,7 @@
         const { data: existingUser } = await client.from('profiles').select('id').eq('email', email).maybeSingle();
 
         if (existingUser) {
-            // Also force sub_status to inactive if setting tag to free manually
             const newSubStatus = tag === 'free' ? 'inactive' : 'active';
-            
             const { error } = await client.from('profiles').update({
                 full_name: name,
                 subscription_tag: tag,
@@ -154,7 +361,6 @@
         const toDowngrade = allUsers.filter(u => {
             const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
             const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
-            // Catch anyone who is cancelled but hasn't had BOTH their tag and status updated yet
             return isCancelled && (u.subscription_tag !== 'free' || String(u.sub_status).toLowerCase() !== 'inactive');
         });
 
@@ -173,9 +379,68 @@
         }
 
         alert(`Successfully downgraded ${successCount} cancelled user(s).`);
-        init(); // Refresh the table
+        init(); 
     }
 
+    // --- PROFILE MODAL LOGIC ---
+    async function openProfileModal(userId) {
+        document.getElementById('profileModal').style.display = 'flex';
+        const userRow = allUsers.find(u => u.id === userId);
+        
+        document.getElementById('p-id').value = userId;
+        document.getElementById('p-name').value = userRow.full_name || '';
+        document.getElementById('p-email').value = userRow.email || '';
+        document.getElementById('p-last-login').innerText = 'Fetching...';
+
+        // Fetch auth data using the service role key embedded in this client
+        const { data: authData, error } = await client.auth.admin.getUserById(userId);
+        
+        if (error) {
+            document.getElementById('p-last-login').innerText = "Unable to load data.";
+        } else if (authData && authData.user) {
+            const lastLogin = authData.user.last_sign_in_at;
+            document.getElementById('p-last-login').innerText = lastLogin ? new Date(lastLogin).toLocaleString() : 'Never logged in';
+        }
+    }
+
+    function closeProfileModal() {
+        document.getElementById('profileModal').style.display = 'none';
+    }
+
+    async function saveProfileDetails() {
+        const userId = document.getElementById('p-id').value;
+        const newName = document.getElementById('p-name').value;
+        const newEmail = document.getElementById('p-email').value;
+        const saveBtn = document.getElementById('btn-save-profile');
+
+        saveBtn.innerText = "Saving...";
+        saveBtn.disabled = true;
+
+        try {
+            // 1. Update Email in Auth Server (Requires Service Role Key)
+            const { error: authError } = await client.auth.admin.updateUserById(userId, { email: newEmail });
+            if (authError) throw authError;
+
+            // 2. Update Name and Email in Profiles Table
+            const { error: dbError } = await client.from('profiles').update({
+                full_name: newName,
+                email: newEmail
+            }).eq('id', userId);
+            
+            if (dbError) throw dbError;
+
+            alert("Profile details updated successfully!");
+            closeProfileModal();
+            init(); // Refresh table
+        } catch (err) {
+            alert("Error saving profile: " + err.message);
+        } finally {
+            saveBtn.innerText = "Save Changes";
+            saveBtn.disabled = false;
+        }
+    }
+
+    // --- NAVIGATION ---
     function showSection(id, btn) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.top-nav button').forEach(b => b.classList.remove('active'));
@@ -183,73 +448,11 @@
         btn.classList.add('active');
     }
 
-    let allUsers = [];
-
-    async function init() {
-        const { data: { session } } = await client.auth.getSession();
-        if (!session) { window.location.href = 'index.html'; return; }
-        const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
-        if (!profile || profile.is_admin !== true) { window.location.href = 'terminal.html'; return; }
-
-        const { data, error } = await client.from('profiles').select('*');
-        if (error) { document.getElementById('admin-body').innerHTML = `<tr><td colspan="7" style="text-align:center;">Error: ${error.message}</td></tr>`; return; }
-        allUsers = data;
-        renderTable(allUsers);
-    }
-
-    function renderTable(users) {
-        const tbody = document.getElementById('admin-body');
-        tbody.innerHTML = users.length ? users.map(u => {
-            
-            const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
-            const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
-            const cancelLabel = isCancelled ? 'Cancelled' : 'Active';
-            const cancelClass = isCancelled ? 'status-inactive' : 'status-active';
-            
-            // Strictly check the sub_status database column
-            const subStatusRaw = String(u.sub_status || 'inactive').toLowerCase();
-            const isSubActive = subStatusRaw === 'active';
-            const subStatusLabel = isSubActive ? 'ACTIVE' : 'INACTIVE';
-            const subStatusClass = isSubActive ? 'status-active' : 'status-inactive';
-
-            return `
-            <tr onclick="selectUser('${u.email}', '${u.full_name || ''}', '${u.subscription_tag || ''}')">
-                <td>${u.full_name || '-'}</td>
-                <td>${u.email || '-'}</td>
-                <td>${u.subscription_tag || '-'}</td>
-                <td class="${subStatusClass}">${subStatusLabel}</td>
-                <td>${u.trial_expires_at ? new Date(u.trial_expires_at).toLocaleDateString() : '-'}</td>
-                <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
-                <td class="${cancelClass}">${cancelLabel}</td>
-            </tr>
-        `}).join('') : '<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>';
-    }
-
+    // Listeners
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
     document.getElementById('search').addEventListener('input', applyFilters);
     document.getElementById('filter-status').addEventListener('change', applyFilters);
     document.getElementById('filter-tag').addEventListener('change', applyFilters);
-
-    function applyFilters() {
-        const term = document.getElementById('search').value.toLowerCase();
-        const statusFilter = document.getElementById('filter-status').value;
-        const tag = document.getElementById('filter-tag').value;
-
-        const filtered = allUsers.filter(u => {
-            const matchesSearch = (u.full_name?.toLowerCase().includes(term)) || (u.email?.toLowerCase().includes(term));
-            
-            const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
-            const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
-            
-            let matchesStatus = true;
-            if (statusFilter === 'active') matchesStatus = !isCancelled;
-            if (statusFilter === 'canceled') matchesStatus = isCancelled;
-            
-            const matchesTag = (tag === 'all') || (u.subscription_tag?.toLowerCase() === tag);
-            return matchesSearch && matchesStatus && matchesTag;
-        });
-        renderTable(filtered);
-    }
 
     init();
 </script>
