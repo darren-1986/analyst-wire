@@ -536,10 +536,9 @@
                             </style>
                             <script>
                             (function() {
+                                // Updated to target exact user filters: Gold, Australia (Sydney), and USA (New York)
                                 const SESSIONS = [
                                     { name: 'Sydney', zone: 'Australia/Sydney', open: 8, close: 16 },
-                                    { name: 'Tokyo', zone: 'Asia/Tokyo', open: 8, close: 16 },
-                                    { name: 'London', zone: 'Europe/London', open: 8, close: 16 },
                                     { name: 'New York', zone: 'America/New_York', open: 8, close: 16 }
                                 ];
                                 function tick() {
@@ -1247,8 +1246,11 @@
         ]);
 
         if (todayRes.error) return;
-        const todayData = todayRes.data || [];
+        let todayData = todayRes.data || [];
         const yesterdayData = yesterdayRes.data || [];
+
+        // Apply Gold filter rule here based on saved preferences
+        todayData = todayData.filter(row => row.ticker === 'XAU/USD' || row.ticker.includes('AUD') || row.ticker.includes('USD'));
 
         let radarData = todayData.map(todayRow => {
             let score = 0;
