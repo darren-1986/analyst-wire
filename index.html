@@ -33,6 +33,50 @@
 
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // --- DEVICE TRACKING FUNCTION ---
+    async function logUserDeviceAndLocation(userId) {
+        try {
+            // 1. Parse basic device information from the browser's User-Agent
+            const ua = navigator.userAgent;
+            let deviceType = "Desktop";
+            if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+                deviceType = "Mobile";
+            } else if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+                deviceType = "Tablet";
+            }
+            
+            // Grab the OS to make it more detailed
+            let os = "Unknown OS";
+            if (ua.indexOf("Win") !== -1) os = "Windows";
+            if (ua.indexOf("Mac") !== -1) os = "MacOS";
+            if (ua.indexOf("Linux") !== -1) os = "Linux";
+            if (ua.indexOf("Android") !== -1) os = "Android";
+            if (ua.indexOf("like Mac") !== -1) os = "iOS";
+            
+            const finalDeviceString = `${deviceType} - ${os}`;
+
+            // 2. Fetch the Country using a free IP Geolocation API
+            let country = "Unknown";
+            try {
+                const geoResponse = await fetch('https://ipapi.co/json/');
+                const geoData = await geoResponse.json();
+                if (geoData.country_name) country = geoData.country_name;
+            } catch (apiError) {
+                console.log("Adblocker blocked IP tracking, skipping country.");
+            }
+
+            // 3. Silently update the database
+            await client.from('profiles').update({
+                last_device: finalDeviceString,
+                last_country: country
+            }).eq('id', userId);
+
+        } catch (err) {
+            console.error("Device tracking failed:", err);
+        }
+    }
+
+    // --- LOGIN HANDLER ---
     document.getElementById('loginBtn').addEventListener('click', async () => {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
@@ -59,16 +103,22 @@
             status.style.color = '#28a745';
             status.innerText = 'Success! Checking permissions...';
             
-            // Check if user is admin
+            // Check user role and subscription tag
             const { data: profile, error: profileError } = await client
                 .from('profiles')
-                .select('is_admin')
+                .select('is_admin, subscription_tag')
                 .eq('id', data.user.id)
                 .single();
 
-            // Redirect based on role
+            // Run the device tracker in the background before redirecting
+            await logUserDeviceAndLocation(data.user.id);
+
+            // Redirect based on role & tag
             if (profile?.is_admin === true) {
                 window.location.href = '/admin.html';
+            } else if (profile?.subscription_tag === 'course') {
+                // Route standalone course buyers straight to the course page
+                window.location.href = 'https://analyst-wire.pages.dev/courses.html';
             } else {
                 window.location.href = 'https://analyst-wire.pages.dev/terminal.html';
             }
