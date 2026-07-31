@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="media/favicon.png">
     <title>Analyst Wire | Courses</title>
+    
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -12,86 +14,191 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
         /* Unified Dark Theme */
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #090b10; color: #d1d4dc; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: #090b10; 
+            color: #d1d4dc; 
+            margin: 0; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            font-size: 13px; 
+        }
         *, *:before, *:after { box-sizing: border-box; }
         
         /* Navigation */
-        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1001; position: relative; width: 100%; }
+        .top-nav { 
+            background: #0d1117; 
+            padding: 0 20px; 
+            height: 55px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #1c2230; 
+            z-index: 1001; 
+            position: relative; 
+            width: 100%; 
+        }
         .nav-brand { display: flex; align-items: center; height: 50px; }
         .nav-links { display: flex; align-items: center; gap: 5px; }
-        .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
+        .nav-links a { 
+            color: #8b949e; 
+            text-decoration: none; 
+            margin-left: 15px; 
+            font-size: 13px; 
+            font-weight: 500; 
+            cursor: pointer; 
+            transition: color 0.2s; 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+        }
         .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
         .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
 
         /* Mobile Burger Button */
-        .mobile-menu-btn { display: none; font-size: 24px; color: #8b949e; cursor: pointer; padding: 5px 10px; border-radius: 4px; background: none; border: none; transition: color 0.2s; }
+        .mobile-menu-btn { 
+            display: none; 
+            font-size: 24px; 
+            color: #8b949e; 
+            cursor: pointer; 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            background: none; 
+            border: none; 
+            transition: color 0.2s; 
+        }
         .mobile-menu-btn:hover { color: #fff; }
 
         /* Dropdown Styling */
         .dropdown { position: relative; margin-left: 10px; }
         .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
         .dropbtn:hover { color: #fff; }
-        .dropbtn .mobile-text { display: none; } /* Strictly hidden on desktop */
+        .dropbtn .mobile-text { display: none; }
         
-        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
-        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; border-radius: 0; }
+        .dropdown-content { 
+            display: none; 
+            position: absolute; 
+            right: 0; 
+            top: 35px; 
+            background-color: #161b22; 
+            min-width: 160px; 
+            border: 1px solid #30363d; 
+            z-index: 1000; 
+            border-radius: 8px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5); 
+            overflow: hidden; 
+        }
+        .dropdown-content a { 
+            color: #c9d1d9; 
+            padding: 10px 16px; 
+            text-decoration: none; 
+            display: block; 
+            font-size: 13px; 
+            cursor: pointer; 
+            transition: background 0.15s; 
+            margin: 0; 
+            border-radius: 0; 
+        }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
         /* Layout */
         .page-container { display: flex; flex-grow: 1; overflow: hidden; width: 100%; }
         .sidebar { width: 320px; min-width: 320px; background: #0b0e14; border-right: 1px solid #1c2230; overflow-y: auto; }
-        .sidebar h3 { color: white; padding: 20px; font-size: 16px; margin: 0; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; }
+        .sidebar h3 { color: white; padding: 20px; font-size: 16px; margin: 0; border-bottom: 1px solid #1c2230; font-weight: 600; }
         
-        /* Mobile Module Dropdown (Hidden on Desktop) */
+        /* Mobile Module Dropdown */
         .mobile-module-selector { display: none; width: 100%; margin-bottom: 20px; }
-        .mobile-module-selector select { width: 100%; padding: 12px 15px; background: #0d1117; color: #d1d4dc; border: 1px solid #30363d; border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; appearance: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .mobile-module-selector select { 
+            width: 100%; 
+            padding: 12px 15px; 
+            background: #0d1117; 
+            color: #d1d4dc; 
+            border: 1px solid #30363d; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            font-family: 'Inter', sans-serif; 
+            outline: none; 
+            appearance: none; 
+            cursor: pointer; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+        }
         .mobile-module-selector select:focus { border-color: #2962ff; }
         
         .video-content { flex-grow: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; width: 100%; }
         .video-container { width: 100%; max-width: 900px; display: flex; flex-direction: column; }
         
-        /* Iframe - Updated for fluid aspect ratio */
+        /* Iframe */
         .lesson-iframe { display: block; width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px; background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         
         /* Module Headers */
-        .module-header { padding: 15px 20px; background: #0d1117; font-weight: 600; font-size: 13px; border-bottom: 1px solid #1c2230; color: #8b949e; text-decoration: none; display: block; transition: background 0.2s, color 0.2s; }
+        .module-header { 
+            padding: 15px 20px; 
+            background: #0d1117; 
+            font-weight: 600; 
+            font-size: 13px; 
+            border-bottom: 1px solid #1c2230; 
+            color: #8b949e; 
+            text-decoration: none; 
+            display: block; 
+            transition: background 0.2s, color 0.2s; 
+        }
         .module-header:hover { background: #161b22; color: #d1d4dc; }
         .module-header.active { color: #2962ff; border-left: 3px solid #2962ff; background: #161b22; }
         
         /* Reference List */
         .lesson-reference { background: #0d1117; padding: 20px; margin-top: 20px; border-radius: 8px; width: 100%; border: 1px solid #30363d; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .ref-item { padding: 10px 0; border-bottom: 1px solid #1c2230; font-size: 14px; font-family: 'Inter', sans-serif; display: flex; align-items: center; }
+        .ref-item { padding: 10px 0; border-bottom: 1px solid #1c2230; font-size: 14px; display: flex; align-items: center; }
         .ref-item:last-child { border-bottom: none; }
-        .ref-time { color: #2962ff; font-weight: 600; margin-right: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(41, 98, 255, 0.1); padding: 3px 8px; border-radius: 4px; min-width: 65px; text-align: center; }
+        .ref-time { 
+            color: #2962ff; 
+            font-weight: 600; 
+            margin-right: 12px; 
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 12px; 
+            background: rgba(41, 98, 255, 0.1); 
+            padding: 3px 8px; 
+            border-radius: 4px; 
+            min-width: 65px; 
+            text-align: center; 
+        }
 
-        /* --- MOBILE RESPONSIVE QUERIES --- */
+        /* Responsive Queries */
         @media (max-width: 900px) {
             .sidebar { width: 250px; min-width: 250px; }
             .video-content { padding: 30px 20px; }
         }
 
         @media (max-width: 768px) {
-            /* Switch to vertical layout */
             .page-container { flex-direction: column; }
             .sidebar { display: none; }
             .mobile-module-selector { display: block; }
             .video-content { padding: 20px 15px; }
             
-            /* Navbar adjustments */
             .mobile-menu-btn { display: block; }
-            .nav-links { display: none; flex-direction: column; position: absolute; top: 55px; left: 0; width: 100%; background: #0d1117; padding: 10px 0; border-bottom: 1px solid #1c2230; box-shadow: 0 10px 20px rgba(0,0,0,0.5); align-items: stretch; }
+            .nav-links { 
+                display: none; 
+                flex-direction: column; 
+                position: absolute; 
+                top: 55px; 
+                left: 0; 
+                width: 100%; 
+                background: #0d1117; 
+                padding: 10px 0; 
+                border-bottom: 1px solid #1c2230; 
+                box-shadow: 0 10px 20px rgba(0,0,0,0.5); 
+                align-items: stretch; 
+            }
             .nav-links.mobile-active { display: flex; }
             .nav-links a { margin: 0; padding: 12px 20px; border-radius: 0; width: 100%; text-align: left; font-size: 14px; }
             
-            /* Dropdown behavior for mobile */
             .dropdown { margin-left: 0; width: 100%; border-top: 1px solid #1c2230; margin-top: 5px; }
             .dropbtn { width: 100%; text-align: left; padding: 12px 20px; font-size: 14px; display: flex; justify-content: space-between; }
-            .dropbtn .mobile-text { display: inline; } /* Shown on mobile */
+            .dropbtn .mobile-text { display: inline; }
             
             .dropdown-content { position: static; box-shadow: none; border: none; background: #0b0e14; padding: 5px 0; border-radius: 0; }
             .dropdown-content a { padding: 12px 30px; }
             
-            /* Text adjustments */
             #module-title { font-size: 20px; }
             .ref-item { font-size: 13px; flex-wrap: wrap; }
         }
@@ -104,7 +211,6 @@
         <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px; width: auto; object-fit: contain;">
     </div>
     
-    <!-- Mobile Hamburger Menu Button -->
     <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
 
     <div class="nav-links" id="nav-links">
@@ -113,7 +219,7 @@
         <a href="analysis.html">Analysis</a>
         <a href="interest-rate-tracker.html">Rate Tracker</a>
         <a href="courses.html" class="active">Courses</a>
-        <a id="nav-key-levels" href="key-levels.html" >Key Levels</a>
+        <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
         
         <div class="dropdown">
             <button class="dropbtn" onclick="toggleDropdown()">
@@ -130,20 +236,14 @@
 </div>
 
 <div class="page-container">
-    <!-- Desktop Sidebar -->
     <div class="sidebar" id="sidebar">
         <h3>The Macro-Fundamental Analyst Program</h3>
     </div>
 
-    <!-- Main Content Area -->
     <div class="video-content">
         <div class="video-container">
-            
-            <!-- Mobile Module Dropdown -->
             <div class="mobile-module-selector">
-                <select id="mobile-module-select" onchange="window.location.href='?m=' + this.value">
-                    <!-- Options populated by JS -->
-                </select>
+                <select id="mobile-module-select" onchange="window.location.href='?m=' + this.value"></select>
             </div>
 
             <iframe id="lesson-player" class="lesson-iframe" src="" allow="autoplay; fullscreen" allowfullscreen frameborder="0"></iframe>
@@ -305,7 +405,6 @@
         }
     ];
 
-    // Helper: Seconds to H:MM:SS
     function formatTime(s) {
         const total = parseInt(s);
         const h = Math.floor(total / 3600);
@@ -320,16 +419,13 @@
     const sidebar = document.getElementById('sidebar');
     const mobileSelect = document.getElementById('mobile-module-select');
     
-    // Populate both Desktop Sidebar and Mobile Dropdown
     courseData.forEach((mod, mIdx) => {
-        // Desktop Link
         const modEl = document.createElement('a');
         modEl.href = `?m=${mIdx}`;
         modEl.className = `module-header ${mIdx === m ? 'active' : ''}`;
         modEl.innerText = mod.title;
         sidebar.appendChild(modEl);
 
-        // Mobile Option
         const optEl = document.createElement('option');
         optEl.value = mIdx;
         optEl.innerText = mod.title;
@@ -340,8 +436,6 @@
     if (m < courseData.length) {
         const mod = courseData[m];
         const player = document.getElementById('lesson-player');
-        
-        // Force start at first lesson of the module
         const startTime = mod.lessons[0].time;
         player.src = `${mod.video}?wtime=${startTime}&resume=false&videoFoam=true&_t=${Date.now()}`;
         document.getElementById('module-title').innerText = mod.title;
@@ -354,7 +448,6 @@
         `).join('');
     }
 
-    // --- NAV LOGIC ---
     function toggleMobileMenu() { 
         document.getElementById("nav-links").classList.toggle("mobile-active"); 
     }
@@ -364,26 +457,36 @@
         dropdown.style.display = (dropdown.style.display === "block" ? "none" : "block"); 
     }
 
-    // --- AUTH ---
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
     async function init() {
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
+        
         const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
+        
         if (!profile || (profile.is_admin !== true && profile.subscription_tag !== 'pro')) {
             alert("Access Denied.");
             await client.auth.signOut();
             window.location.href = 'index.html';
             return;
         }
+        
         if (profile.is_admin === true) {
             document.getElementById('nav-admin').style.display = 'block';
             document.getElementById('nav-upload').style.display = 'block';
         }
-        if (profile.is_admin === true || profile.subscription_tag === 'pro') document.getElementById('nav-key-levels').style.display = 'block';
+        
+        if (profile.is_admin === true || profile.subscription_tag === 'pro') {
+            document.getElementById('nav-key-levels').style.display = 'block';
+        }
     }
-    document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+    
+    document.getElementById('logoutBtn').addEventListener('click', async () => { 
+        await client.auth.signOut(); 
+        window.location.href = 'index.html'; 
+    });
+    
     init();
 </script>
 </body>
