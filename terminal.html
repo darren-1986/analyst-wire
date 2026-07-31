@@ -1406,22 +1406,38 @@
 
         const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
 
-        if (!profile || profile.subscription_tag === 'free') {
+        if (!profile || profile.subscription_tag === 'free' || !profile.subscription_tag) {
             alert("Your subscription is inactive. Redirecting to login.");
             await client.auth.signOut();
             window.location.href = 'index.html';
             return;
         }
 
-        if (profile) {
-            if (profile.is_admin === true) {
-                document.getElementById('nav-admin').style.display = 'block';
-                document.getElementById('nav-upload').style.display = 'block';
+        const tag = profile.subscription_tag.toLowerCase();
+        const isAdmin = profile.is_admin === true;
+
+        // --- HARD ROUTING (BOUNCER LOGIC) ---
+        if (!isAdmin && tag !== 'pro') {
+            if (tag === 'courses' || tag === 'course') {
+                window.location.href = 'courses.html';
+                return;
+            } else if (tag === 'newsfeed') {
+                window.location.href = '/newsfeed';
+                return;
+            } else {
+                window.location.href = 'account.html';
+                return;
             }
-            if (profile.is_admin === true || profile.subscription_tag === 'pro') {
-                document.getElementById('nav-courses').style.display = 'flex';
-                document.getElementById('nav-key-levels').style.display = 'flex';
-            }
+        }
+
+        // --- STRICT NAVIGATION VISIBILITY ---
+        // Since only Admin and Pro can reach here, we reveal the Pro links.
+        document.getElementById('nav-courses').style.display = 'flex';
+        document.getElementById('nav-key-levels').style.display = 'flex';
+
+        if (isAdmin) {
+            document.getElementById('nav-admin').style.display = 'block';
+            document.getElementById('nav-upload').style.display = 'block';
         }
         
         loadHotAssets();
