@@ -9,9 +9,11 @@
         body { font-family: sans-serif; background: #0f0f0f; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .container { background: #1a1a1a; padding: 30px; border-radius: 8px; text-align: center; width: 100%; max-width: 400px; }
         input { padding: 12px; width: 100%; box-sizing: border-box; margin: 10px 0; color: black; border-radius: 4px; border: none; }
-        button { padding: 12px 20px; cursor: pointer; width: 100%; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; margin-top: 10px; }
+        input:disabled { background: #cccccc; cursor: not-allowed; }
+        button { padding: 12px 20px; cursor: pointer; width: 100%; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; margin-top: 10px; transition: background 0.2s; }
         button:hover { background: #218838; }
-        #status { margin-top: 15px; color: #ff4444; }
+        button:disabled { background: #555555; color: #888888; cursor: not-allowed; }
+        #status { margin-top: 15px; color: #ff4444; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -20,38 +22,61 @@
     <img src="media/logo.png" alt="Company Logo" style="max-width: 150px; margin-bottom: 20px;">
     <h2>Create Your Password</h2>
     <p style="color: #b3b3b3; font-size: 14px;">Please set a password for your account.</p>
+    
     <input type="password" id="password" placeholder="New Password">
     <input type="password" id="confirmPassword" placeholder="Confirm Password">
     <button id="saveBtn">Save Password & Enter Terminal</button>
+    
     <p id="status"></p>
 </div>
 
 <script>
-    // 1. YOUR SUPABASE DETAILS
     const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY';
     
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // 1. Check for a valid session on load
+    async function verifySession() {
+        const { data: { session }, error } = await client.auth.getSession();
+        const status = document.getElementById('status');
+        const btn = document.getElementById('saveBtn');
+        const inputs = document.querySelectorAll('input');
+
+        if (!session) {
+            // Lock the form if they navigated here without a valid email token
+            status.innerText = "Invalid or expired invite link. Please request a new one or try logging in.";
+            btn.disabled = true;
+            inputs.forEach(input => input.disabled = true);
+        }
+    }
+
+    // Run the check immediately
+    verifySession();
+
+    // 2. Handle the save button click
     document.getElementById('saveBtn').addEventListener('click', async () => {
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         const status = document.getElementById('status');
+        const btn = document.getElementById('saveBtn');
         
         if (!password || password.length < 6) {
+            status.style.color = "#ff4444";
             status.innerText = "Password must be at least 6 characters.";
             return;
         }
 
         if (password !== confirmPassword) {
+            status.style.color = "#ff4444";
             status.innerText = "Passwords do not match.";
             return;
         }
 
         status.style.color = "#b3b3b3";
         status.innerText = "Saving password...";
+        btn.disabled = true;
 
-        // 2. THIS UPDATES THE USER'S PASSWORD IN SUPABASE
         const { data, error } = await client.auth.updateUser({
             password: password
         });
@@ -59,13 +84,13 @@
         if (error) {
             status.style.color = "#ff4444";
             status.innerText = "Error: " + error.message;
+            btn.disabled = false;
         } else {
             status.style.color = "#28a745";
             status.innerText = "Success! Redirecting to Terminal...";
             
-            // 3. SEND THEM TO THE TERMINAL
             setTimeout(() => {
-                window.location.href = 'https://analyst-wire.pages.dev/terminal.html';
+                window.location.href = 'terminal.html';
             }, 1500);
         }
     });
