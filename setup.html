@@ -36,25 +36,14 @@
     
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 1. Check for a valid session on load
-    async function verifySession() {
-        const { data: { session }, error } = await client.auth.getSession();
-        const status = document.getElementById('status');
-        const btn = document.getElementById('saveBtn');
-        const inputs = document.querySelectorAll('input');
-
-        if (!session) {
-            // Lock the form if they navigated here without a valid email token
-            status.innerText = "Invalid or expired invite link. Please request a new one or try logging in.";
-            btn.disabled = true;
-            inputs.forEach(input => input.disabled = true);
+    // Supabase will automatically parse the #access_token from the URL in the background.
+    // We listen for it to confirm connection, without locking the UI prematurely.
+    client.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') {
+            console.log("Session established via URL token.");
         }
-    }
+    });
 
-    // Run the check immediately
-    verifySession();
-
-    // 2. Handle the save button click
     document.getElementById('saveBtn').addEventListener('click', async () => {
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
