@@ -16,7 +16,6 @@
         *, *:before, *:after { box-sizing: border-box; }
         
         body, .messenger__outer { transition: background 0.3s, color 0.3s; }
-        /* CHANGED: Replaced #0f172a with #0A0A0A for dark background colors */
         body.dark, .dark .messenger__outer { background-color: #0A0A0a !important; color: #ffffff !important; }
         body.light, .light .messenger__outer { background-color: #ffffff !important; color: #000000 !important; }
         body.dark .messenger__outer, .dark .messenger__outer * { color: #e2e8f0 !important; }
@@ -45,7 +44,6 @@
         .custom-newsfeed-header { display: flex; align-items: center; padding: 15px 0 15px 165px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 16px; }
         .green-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; margin-right: 12px; }
 
-        /* CHANGED: Replaced #0f172a with #0A0A0A */
         .controls { display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px; background: #0A0A0a; }
         .filter-btn { padding: 5px 10px; cursor: pointer; border-radius: 4px; border: 1px solid #475569; background: #1e293b; color: white; }
         .filter-btn.active { background: #00b4f9; border-color: #00b4f9; }
@@ -56,7 +54,6 @@
 
         .audio-container { display: flex; align-items: center; gap: 10px; margin-right: auto; }
         .audio-container img { height: 30px; width: auto; }
-        /* CHANGED: Replaced #0f172a with #0A0A0A */
         .audio-wrapper { display: flex; align-items: center; gap: 15px; border: 1px solid #00b4f9; padding: 6px 14px; border-radius: 8px; background: #0A0A0a; }
         #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 8px; min-width: 190px; }
         .status-on { color: #22c55e !important; }
@@ -98,8 +95,8 @@
             .dropdown-content { position: static; width: 100%; box-shadow: none; border: 1px solid #30363d; margin-top: 5px; }
             
             /* Responsive Controls */
-            .filter-btn { display: none; } /* Hide buttons on mobile */
-            #mobileFilter { display: block; } /* Show dropdown on mobile */
+            .filter-btn { display: none; }
+            #mobileFilter { display: block; }
             
             .audio-container { width: 100%; justify-content: space-between; margin-bottom: 5px; }
             #audioToggle { min-width: auto; }
@@ -134,11 +131,11 @@
        <button class="mobile-menu-btn" onclick="toggleNav()">☰</button>
        
        <div class="nav-links" id="navLinks">
-            <a href="terminal.html">Dashboard</a>
-            <a href="/newsfeed" class="active">Newsfeed</a>
-            <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
-            <a href="analysis.html">Analysis</a>
-            <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
+            <a href="terminal.html" id="nav-dashboard" style="display: none;">Dashboard</a>
+            <a href="/newsfeed" id="nav-newsfeed" class="active" style="display: none;">Newsfeed</a>
+            <a href="key-levels.html" id="nav-key-levels" style="display: none;">Key Levels</a>
+            <a href="analysis.html" id="nav-analysis" style="display: none;">Analysis</a>
+            <a href="courses.html" id="nav-courses" style="display: none;">Courses</a>
             
             <div class="dropdown">
                 <button class="dropbtn" onclick="toggleDropdown(event)">⚙️</button>
@@ -196,28 +193,68 @@
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
         async function init() {
+            // 1. Session check
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
             
+            // 2. Fetch Profile
             const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
-            const allowedTags = ['pro', 'newsfeed', 'squawk'];
             
-            if (!profile || (profile.is_admin !== true && !allowedTags.includes(profile.subscription_tag))) {
-                alert("Your subscription does not include access to this page.");
+            if (!profile || profile.subscription_tag === 'free' || !profile.subscription_tag) {
+                alert("Your subscription is inactive. Redirecting to login.");
                 await client.auth.signOut();
                 window.location.href = 'index.html';
                 return;
             }
 
-            if (profile) {
-                if (profile.is_admin === true) {
-                    document.getElementById('nav-admin').style.display = 'block';
-                    document.getElementById('nav-upload').style.display = 'block';
+            const tag = profile.subscription_tag.toLowerCase();
+            const isAdmin = profile.is_admin === true;
+            const allowedTags = ['pro', 'newsfeed', 'squawk'];
+
+            // ==========================================
+            // 3. HARD ROUTING (BOUNCER LOGIC)
+            // ==========================================
+            if (!isAdmin && !allowedTags.includes(tag)) {
+                if (tag === 'courses' || tag === 'course') {
+                    window.location.href = 'courses.html';
+                    return;
+                } else {
+                    window.location.href = 'account.html';
+                    return;
                 }
-                if (profile.is_admin === true || profile.subscription_tag === 'pro') {
-                    document.getElementById('nav-courses').style.display = 'block';
-                    document.getElementById('nav-key-levels').style.display = 'block';
+            }
+
+            // ==========================================
+            // 4. STRICT NAVIGATION VISIBILITY
+            // ==========================================
+            const navElements = {
+                dashboard: document.getElementById('nav-dashboard'),
+                newsfeed: document.getElementById('nav-newsfeed'),
+                keyLevels: document.getElementById('nav-key-levels'),
+                analysis: document.getElementById('nav-analysis'),
+                courses: document.getElementById('nav-courses'),
+                admin: document.getElementById('nav-admin'),
+                upload: document.getElementById('nav-upload')
+            };
+
+            // Hide everything by default
+            Object.values(navElements).forEach(el => { if (el) el.style.display = 'none'; });
+
+            // Reveal items based on tier
+            if (isAdmin || tag === 'pro') {
+                if (navElements.dashboard) navElements.dashboard.style.display = 'block';
+                if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
+                if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
+                if (navElements.analysis) navElements.analysis.style.display = 'block';
+                if (navElements.courses) navElements.courses.style.display = 'block';
+                
+                if (isAdmin) {
+                    if (navElements.admin) navElements.admin.style.display = 'block';
+                    if (navElements.upload) navElements.upload.style.display = 'block';
                 }
+            } else if (allowedTags.includes(tag)) {
+                // Newsfeed tier ONLY gets the Newsfeed page link
+                if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
             }
         }
 
@@ -313,13 +350,11 @@
         function setFilter(type) { 
             currentFilter = type; 
             
-            // Sync Desktop Buttons
             document.querySelectorAll('.filter-btn').forEach(b => {
                 if (b.dataset.type === type) b.classList.add('active');
                 else b.classList.remove('active');
             });
             
-            // Sync Mobile Dropdown
             const mobileSelect = document.getElementById('mobileFilter');
             if (mobileSelect && mobileSelect.value !== type) {
                 mobileSelect.value = type;
