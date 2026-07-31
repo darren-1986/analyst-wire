@@ -9,7 +9,6 @@
         body { font-family: sans-serif; background: #0f0f0f; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .container { background: #1a1a1a; padding: 30px; border-radius: 8px; text-align: center; width: 100%; max-width: 400px; }
         input { padding: 12px; width: 100%; box-sizing: border-box; margin: 10px 0; color: black; border-radius: 4px; border: none; }
-        input:disabled { background: #cccccc; cursor: not-allowed; }
         button { padding: 12px 20px; cursor: pointer; width: 100%; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; margin-top: 10px; transition: background 0.2s; }
         button:hover { background: #218838; }
         button:disabled { background: #555555; color: #888888; cursor: not-allowed; }
@@ -36,13 +35,39 @@
     
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Supabase will automatically parse the #access_token from the URL in the background.
-    // We listen for it to confirm connection, without locking the UI prematurely.
-    client.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') {
-            console.log("Session established via URL token.");
+    // Explicitly handle token exchange from URL hash or query parameters on load
+    async function handleIncomingSession() {
+        const status = document.getElementById('status');
+        
+        // Check if there's a recovery code (PKCE flow) or access token in the URL
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const queryParams = new URLSearchParams(window.location.search);
+        
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const code = queryParams.get('code');
+
+        if (accessToken && refreshToken) {
+            // Set the session manually if tokens are in the hash fragment
+            const { error } = await client.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken
+            });
+            if (error) {
+                status.style.color = "#ff4444";
+                status.innerText = "Session Error: " + error.message;
+            }
+        } else if (code) {
+            // Exchange code for session if using PKCE flow
+            const { error } = await client.auth.exchangeCodeForSession(code);
+            if (error) {
+                status.style.color = "#ff4444";
+                status.innerText = "Auth Code Error: " + error.message;
+            }
         }
-    });
+    }
+
+    handleIncomingSession();
 
     document.getElementById('saveBtn').addEventListener('click', async () => {
         const password = document.getElementById('password').value;
@@ -65,6 +90,15 @@
         status.style.color = "#b3b3b3";
         status.innerText = "Saving password...";
         btn.disabled = true;
+
+        // Double check session exists right before updating
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) {
+            status.style.color = "#ff4444";
+            status.innerText = "Error: Auth session missing! Please open the link from your email again.";
+            btn.disabled = false;
+            return;
+        }
 
         const { data, error } = await client.auth.updateUser({
             password: password
