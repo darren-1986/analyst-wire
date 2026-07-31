@@ -129,9 +129,9 @@
         <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px; width: auto; object-fit: contain;">
     </div>
     <div class="nav-links">
-        <a href="terminal.html">Dashboard</a>
-        <a href="/newsfeed">Newsfeed</a>
-        <a href="analysis.html" class="active">Analysis</a>
+        <a href="terminal.html" id="nav-dashboard" style="display: none;">Dashboard</a>
+        <a href="/newsfeed" id="nav-newsfeed" style="display: none;">Newsfeed</a>
+        <a href="analysis.html" id="nav-analysis" class="active" style="display: none;">Analysis</a>
         <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
         <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
         
@@ -312,28 +312,71 @@
     }
 
     async function init() {
+        // 1. Session check
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
         
+        // 2. Fetch Profile
         const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
-        if (!profile || profile.subscription_tag === 'free') {
+        
+        if (!profile || profile.subscription_tag === 'free' || !profile.subscription_tag) {
             alert("Your subscription is inactive. Redirecting to login.");
             await client.auth.signOut();
             window.location.href = 'index.html';
             return;
         }
-        
-        if (profile) {
-            if (profile.is_admin === true) {
-                document.getElementById('nav-admin').style.display = 'block';
-                document.getElementById('nav-upload').style.display = 'block';
-            }
-            if (profile.is_admin === true || profile.subscription_tag === 'pro') {
-                document.getElementById('nav-courses').style.display = 'block';
-                document.getElementById('nav-key-levels').style.display = 'block';
+
+        const tag = profile.subscription_tag.toLowerCase();
+        const isAdmin = profile.is_admin === true;
+
+        // ==========================================
+        // 3. HARD ROUTING (BOUNCER LOGIC)
+        // ==========================================
+        // Only Admin and Pro users are allowed on the Analysis page.
+        if (!isAdmin && tag !== 'pro') {
+            if (tag === 'courses' || tag === 'course') {
+                window.location.href = 'courses.html';
+                return;
+            } else if (tag === 'newsfeed') {
+                window.location.href = '/newsfeed';
+                return;
+            } else {
+                window.location.href = 'account.html';
+                return;
             }
         }
 
+        // ==========================================
+        // 4. STRICT NAVIGATION VISIBILITY
+        // ==========================================
+        const navElements = {
+            dashboard: document.getElementById('nav-dashboard'),
+            newsfeed: document.getElementById('nav-newsfeed'),
+            analysis: document.getElementById('nav-analysis'),
+            courses: document.getElementById('nav-courses'),
+            keyLevels: document.getElementById('nav-key-levels'),
+            admin: document.getElementById('nav-admin'),
+            upload: document.getElementById('nav-upload')
+        };
+
+        // Hide everything by default
+        Object.values(navElements).forEach(el => { if (el) el.style.display = 'none'; });
+
+        // Reveal based on strict tier assignment
+        if (isAdmin || tag === 'pro') {
+            if (navElements.dashboard) navElements.dashboard.style.display = 'block';
+            if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
+            if (navElements.analysis) navElements.analysis.style.display = 'block';
+            if (navElements.courses) navElements.courses.style.display = 'block';
+            if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
+            
+            if (isAdmin) {
+                if (navElements.admin) navElements.admin.style.display = 'block';
+                if (navElements.upload) navElements.upload.style.display = 'block';
+            }
+        }
+
+        // Load page content
         fetchTradeIdeas();
     }
 
