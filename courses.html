@@ -460,25 +460,67 @@
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
     async function init() {
+        // 1. Session check
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
         
+        // 2. Fetch Profile
         const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
         
-        if (!profile || (profile.is_admin !== true && profile.subscription_tag !== 'pro')) {
-            alert("Access Denied.");
+        if (!profile || profile.subscription_tag === 'free' || !profile.subscription_tag) {
+            alert("Your subscription is inactive. Redirecting to login.");
             await client.auth.signOut();
             window.location.href = 'index.html';
             return;
         }
-        
-        if (profile.is_admin === true) {
-            document.getElementById('nav-admin').style.display = 'block';
-            document.getElementById('nav-upload').style.display = 'block';
+
+        const tag = profile.subscription_tag.toLowerCase();
+        const isAdmin = profile.is_admin === true;
+
+        // ==========================================
+        // 3. HARD ROUTING (BOUNCER LOGIC)
+        // ==========================================
+        // If not an admin, not a pro, AND not a course buyer, they don't belong here
+        if (!isAdmin && tag !== 'pro' && tag !== 'courses' && tag !== 'course') {
+            if (tag === 'newsfeed') {
+                window.location.href = '/newsfeed';
+                return;
+            } else {
+                window.location.href = 'account.html';
+                return;
+            }
         }
-        
-        if (profile.is_admin === true || profile.subscription_tag === 'pro') {
-            document.getElementById('nav-key-levels').style.display = 'block';
+
+        // ==========================================
+        // 4. STRICT NAVIGATION VISIBILITY
+        // ==========================================
+        // Grab all nav links
+        const navLinks = {
+            dashboard: document.querySelector('a[href="terminal.html"]'),
+            newsfeed: document.querySelector('a[href="/newsfeed"]'),
+            analysis: document.querySelector('a[href="analysis.html"]'),
+            rateTracker: document.querySelector('a[href="interest-rate-tracker.html"]'),
+            courses: document.querySelector('a[href="courses.html"]'),
+            keyLevels: document.getElementById('nav-key-levels')
+        };
+
+        // Hide everything by default first
+        Object.values(navLinks).forEach(link => { if (link) link.style.display = 'none'; });
+
+        // Reveal based on strict tier assignment
+        if (isAdmin || tag === 'pro') {
+            Object.values(navLinks).forEach(link => { if (link) link.style.display = 'block'; }); // Show all
+            
+            if (isAdmin) {
+                const navAdmin = document.getElementById('nav-admin');
+                const navUpload = document.getElementById('nav-upload');
+                if (navAdmin) navAdmin.style.display = 'block';
+                if (navUpload) navUpload.style.display = 'block';
+            }
+        } else if (tag === 'courses' || tag === 'course') {
+            // Courses tier ONLY gets the Courses link in the header 
+            // (Account dropdown is handled separately via the standard UI)
+            if (navLinks.courses) navLinks.courses.style.display = 'block';
         }
     }
     
