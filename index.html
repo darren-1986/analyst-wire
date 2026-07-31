@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login Test</title>
+    <title>Login</title>
     <link rel="icon" type="image/png" href="media/favicon.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     <style>
@@ -10,7 +10,7 @@
         input { padding: 12px; width: 100%; box-sizing: border-box; margin: 10px 0; border-radius: 4px; border: none; }
         button { padding: 12px; width: 100%; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:hover { background: #0056b3; }
-        #status { margin-top: 15px; color: #ff4444; }
+        #status { margin-top: 15px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -83,6 +83,7 @@
         const status = document.getElementById('status');
 
         if (!email || !password) {
+            status.style.color = '#ff4444';
             status.innerText = 'Please enter both email and password.';
             return;
         }
@@ -113,14 +114,23 @@
             // Run the device tracker in the background before redirecting
             await logUserDeviceAndLocation(data.user.id);
 
-            // Redirect based on role & tag
-            if (profile?.is_admin === true) {
-                window.location.href = '/admin.html';
-            } else if (profile?.subscription_tag === 'course') {
-                // Route standalone course buyers straight to the course page
-                window.location.href = 'https://analyst-wire.pages.dev/courses.html';
+            const tag = profile?.subscription_tag ? profile.subscription_tag.toLowerCase() : '';
+            const isAdmin = profile?.is_admin === true;
+
+            // Strict Routing & Access Control
+            if (isAdmin) {
+                window.location.href = 'admin.html';
+            } else if (tag === 'pro') {
+                window.location.href = 'terminal.html';
+            } else if (tag === 'newsfeed') {
+                window.location.href = '/newsfeed';
+            } else if (tag === 'courses' || tag === 'course') {
+                window.location.href = 'courses.html';
             } else {
-                window.location.href = 'https://analyst-wire.pages.dev/terminal.html';
+                // If they don't have one of the above tags (e.g., free, empty, or cancelled)
+                status.style.color = '#ff4444';
+                status.innerText = 'Access Denied: Active subscription required.';
+                await client.auth.signOut();
             }
         }
     });
