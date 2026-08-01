@@ -82,7 +82,7 @@
             <input type="text" id="m-name" placeholder="Full Name">
             <select id="m-tag">
                 <option value="pro">Pro</option>
-                <option value="course">Course</option> <!-- Added Course -->
+                <option value="course">Course</option>
                 <option value="newsfeed">Newsfeed</option>
                 <option value="audio squawk">Audio Squawk</option>
                 <option value="free">Free (No Access)</option>
@@ -104,7 +104,7 @@
                 <select id="filter-tag" class="filter-select">
                     <option value="all">Tag: All</option>
                     <option value="pro">Pro</option>
-                    <option value="course">Course</option> <!-- Added Course -->
+                    <option value="course">Course</option>
                     <option value="audio squawk">Audio Squawk</option>
                     <option value="newsfeed">Newsfeed</option>
                     <option value="free">Free</option>
@@ -123,7 +123,7 @@
                     <th>Trial Record</th>
                     <th class="sortable" onclick="handleSort('billing')">Next Billing <span id="sort-icon-billing" class="sort-icon">↕</span></th>
                     <th class="sortable" onclick="handleSort('cancel')">Cancel? <span id="sort-icon-cancel" class="sort-icon">↕</span></th>
-                    <th>Profile</th> <!-- New Column -->
+                    <th>Profile</th>
                 </tr>
             </thead>
             <tbody id="admin-body">
@@ -168,11 +168,11 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div class="profile-group">
                     <label>Country (IP)</label>
-                    <div class="readonly-data" id="p-country">Requires Backend Tracker</div>
+                    <div class="readonly-data" id="p-country">Fetching...</div>
                 </div>
                 <div class="profile-group">
                     <label>Device Used</label>
-                    <div class="readonly-data" id="p-device">Requires Backend Tracker</div>
+                    <div class="readonly-data" id="p-device">Fetching...</div>
                 </div>
             </div>
         </div>
@@ -391,6 +391,10 @@
         document.getElementById('p-name').value = userRow.full_name || '';
         document.getElementById('p-email').value = userRow.email || '';
         document.getElementById('p-last-login').innerText = 'Fetching...';
+        
+        // Dynamically insert tracked device and country data
+        document.getElementById('p-country').innerText = userRow.last_country || 'No data recorded';
+        document.getElementById('p-device').innerText = userRow.last_device || 'No data recorded';
 
         // Fetch auth data using the service role key embedded in this client
         const { data: authData, error } = await client.auth.admin.getUserById(userId);
