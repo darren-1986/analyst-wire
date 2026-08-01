@@ -10,6 +10,8 @@
         input { padding: 12px; width: 100%; box-sizing: border-box; margin: 10px 0; border-radius: 4px; border: none; }
         button { padding: 12px; width: 100%; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:hover { background: #0056b3; }
+        .forgot-link { display: block; margin-top: 15px; color: #8b949e; text-decoration: none; font-size: 13px; transition: color 0.2s; }
+        .forgot-link:hover { color: #fff; }
         #status { margin-top: 15px; font-size: 14px; }
     </style>
 </head>
@@ -21,6 +23,7 @@
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
     <button id="loginBtn">Login</button>
+    <a href="#" id="forgotBtn" class="forgot-link">Forgot Password?</a>
     <p id="status"></p>
 </div>
 
@@ -75,6 +78,34 @@
             console.error("Device tracking failed:", err);
         }
     }
+
+    // --- FORGOT PASSWORD HANDLER ---
+    document.getElementById('forgotBtn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const status = document.getElementById('status');
+
+        if (!email) {
+            status.style.color = '#ff4444';
+            status.innerText = 'Please enter your email address to reset your password.';
+            return;
+        }
+
+        status.style.color = '#b3b3b3';
+        status.innerText = 'Sending reset link...';
+
+        const { data, error } = await client.auth.resetPasswordForEmail(email, {
+            redirectTo: 'https://analyst-wire.pages.dev/setup.html',
+        });
+
+        if (error) {
+            status.style.color = '#ff4444';
+            status.innerText = 'Error: ' + error.message;
+        } else {
+            status.style.color = '#28a745';
+            status.innerText = 'Password reset link sent! Please check your email.';
+        }
+    });
 
     // --- LOGIN HANDLER ---
     document.getElementById('loginBtn').addEventListener('click', async () => {
