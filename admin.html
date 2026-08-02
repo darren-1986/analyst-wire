@@ -2,65 +2,103 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="media/favicon.png">
     <title>Analyst Wire | Admin Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #0f1115; color: white; font-family: sans-serif; margin: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body { background: #090b10; color: #c9d1d9; font-family: 'Inter', sans-serif; margin: 0; font-size: 14px; }
 
         /* Top Navigation */
-        .top-nav { background: #1c2230; padding: 15px 20px; display: flex; gap: 20px; border-bottom: 2px solid #2a2e39; align-items: center; }
-        .top-nav button, .top-nav a { background: none; border: none; color: #787b86; cursor: pointer; font-size: 1rem; text-decoration: none; font-weight: bold; }
-        .top-nav button:hover, .top-nav a:hover { color: #fff; }
-        .top-nav .active { color: #2962ff; }
+        .top-nav { background: #0d1117; padding: 15px 20px; display: flex; gap: 15px; border-bottom: 1px solid #30363d; align-items: center; flex-wrap: wrap; }
+        .top-nav button, .top-nav a { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 0.95rem; text-decoration: none; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
+        .top-nav button:hover, .top-nav a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .top-nav .active { color: #2962ff; background: rgba(41, 98, 255, 0.1); }
 
-        .admin-container { max-width: 1200px; margin: 20px auto; background: #1a1d23; border-radius: 8px; padding: 20px; }
+        /* Main Container */
+        .admin-container { max-width: 1400px; width: 95%; margin: 25px auto; background: #161b22; border-radius: 12px; padding: 25px; border: 1px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.2); box-sizing: border-box; }
 
         /* Sections */
         .section { display: none; }
         .section.active { display: block; }
 
-        /* Management Panel */
-        .manage-user-form { background: #242831; padding: 15px; border-radius: 6px; margin-bottom: 25px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border: 1px solid #333; }
-        .manage-user-form h3 { margin: 0 10px 0 0; font-size: 1rem; color: #888; }
-        .manage-user-form input, .manage-user-form select { padding: 8px; background: #1a1d23; border: 1px solid #333; color: white; border-radius: 4px; }
-
-        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; justify-content: space-between; }
-        .filters { display: flex; gap: 10px; align-items: center; }
-        .search-box, .filter-select { padding: 8px; background: #242831; border: 1px solid #333; color: white; border-radius: 4px; }
-
-        /* Table & Sorting */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        tr:hover { background: #2a2e39; }
-        th, td { padding: 12px; border: 1px solid #333; text-align: left; }
-        th { background: #242831; text-transform: uppercase; font-size: 0.75rem; color: #888; user-select: none; }
-        th.sortable { cursor: pointer; transition: color 0.2s; }
-        th.sortable:hover { color: #fff; background: #2a2e39; }
-        .sort-icon { font-size: 0.7rem; margin-left: 5px; color: #555; }
+        /* Management Panel Form */
+        .manage-user-form { background: #0d1117; padding: 20px; border-radius: 10px; margin-bottom: 25px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; border: 1px solid #30363d; }
+        .manage-user-form h3 { margin: 0; font-size: 1.05rem; color: #fff; width: 100%; flex-basis: 100%; font-weight: 600; }
+        .manage-user-form input, .manage-user-form select { flex: 1 1 180px; padding: 10px 14px; background: #161b22; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
+        .manage-user-form input:focus, .manage-user-form select:focus { border-color: #2962ff; }
         
-        .status-active { color: #089981; font-weight: bold; }
-        .status-inactive { color: #f23645; font-weight: bold; }
+        /* Buttons */
+        .btn-primary { flex: 1 1 150px; background: #2962ff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; font-family: 'Inter', sans-serif; }
+        .btn-primary:hover { background: #1c4ed8; }
+        .btn-danger { background: transparent; color: #f85149; border: 1px solid #f85149; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .btn-danger:hover { background: rgba(248, 81, 73, 0.1); }
+
+        /* Controls & Filters */
+        .controls { display: flex; gap: 15px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; justify-content: space-between; }
+        .filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: 1; }
+        .filters h2 { margin: 0; margin-right: 10px; color: #fff; font-size: 1.25rem; font-weight: 600; }
+        .search-box, .filter-select { padding: 9px 14px; background: #0d1117; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; flex: 1 1 150px; }
+
+        /* Table & Responsive Wrapper */
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #30363d; background: #0d1117; -webkit-overflow-scrolling: touch; }
+        .table-responsive::-webkit-scrollbar { height: 8px; width: 8px; }
+        .table-responsive::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        .table-responsive::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+        .table-responsive::-webkit-scrollbar-thumb:hover { background: #4b5563; }
         
-        .btn-profile { background: #333; color: white; border: 1px solid #555; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: background 0.2s; }
-        .btn-profile:hover { background: #2962ff; border-color: #2962ff; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        tr { border-bottom: 1px solid #30363d; transition: background 0.2s; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        tr:last-child { border-bottom: none; }
+        th, td { padding: 14px 16px; text-align: left; font-size: 0.9rem; }
+        th { background: #161b22; text-transform: uppercase; font-size: 0.75rem; color: #8b949e; user-select: none; font-weight: 600; letter-spacing: 0.5px; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
+        th.sortable { cursor: pointer; }
+        th.sortable:hover { color: #fff; }
+        .sort-icon { font-size: 0.8rem; margin-left: 5px; color: #4b5563; }
+        
+        /* Status Badges */
+        .status-active { color: #3fb950; font-weight: 600; background: rgba(46, 160, 67, 0.15); border: 1px solid rgba(46, 160, 67, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-inactive { color: #f85149; font-weight: 600; background: rgba(248, 81, 73, 0.15); border: 1px solid rgba(248, 81, 73, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Table Button */
+        .btn-profile { background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .btn-profile:hover { background: #2962ff; color: #fff; border-color: #2962ff; }
 
         /* Modal Overlay */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; }
-        .modal { background: #1a1d23; border: 1px solid #333; border-radius: 8px; width: 100%; max-width: 500px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .modal-header h2 { margin: 0; font-size: 1.2rem; }
-        .close-btn { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
-        .close-btn:hover { color: #f23645; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; width: 100%; max-width: 700px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); max-height: 95vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #30363d; padding-bottom: 15px; }
+        .modal-header h2 { margin: 0; font-size: 1.25rem; font-weight: 600; color: #fff; }
+        .close-btn { background: none; border: none; color: #8b949e; font-size: 1.75rem; cursor: pointer; line-height: 1; transition: color 0.2s; }
+        .close-btn:hover { color: #f85149; }
         
-        .profile-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
-        .profile-group { display: flex; flex-direction: column; gap: 5px; }
-        .profile-group label { font-size: 0.8rem; color: #888; text-transform: uppercase; }
-        .profile-group input { padding: 10px; background: #242831; border: 1px solid #333; color: white; border-radius: 4px; }
-        .profile-group .readonly-data { padding: 10px; background: #0f1115; border: 1px solid #333; border-radius: 4px; color: #ccc; font-family: monospace; font-size: 0.9rem; }
+        .profile-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-bottom: 25px; }
+        .profile-group { display: flex; flex-direction: column; gap: 8px; }
+        .profile-group label { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+        .profile-group input { padding: 12px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
+        .profile-group input:focus { border-color: #2962ff; }
+        .profile-group .readonly-data { padding: 12px; background: #090b10; border: 1px solid #30363d; border-radius: 6px; color: #8b949e; font-family: 'Inter', sans-serif; font-size: 0.9rem; }
         
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #333; padding-top: 15px; }
-        .btn-save { background: #089981; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-save:hover { background: #067a67; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #30363d; padding-top: 20px; margin-top: 20px; }
+        .btn-save { background: #238636; color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: 'Inter', sans-serif; transition: background 0.2s; }
+        .btn-save:hover { background: #2ea043; }
+
+        /* History Table Specific */
+        .history-table th { font-size: 0.7rem; padding: 10px; background: #0d1117; }
+        .history-table td { font-size: 0.85rem; padding: 10px; }
+
+        /* Mobile Adaptive Styling */
+        @media (max-width: 768px) {
+            .controls, .filters { flex-direction: column; align-items: stretch; width: 100%; }
+            .filters h2 { margin-bottom: 10px; text-align: center; }
+            .btn-danger { width: 100%; }
+            .manage-user-form input, .manage-user-form select, .btn-primary { flex-basis: 100%; }
+            .admin-container { padding: 15px; margin: 10px auto; }
+            .modal { padding: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -70,15 +108,15 @@
     <button onclick="showSection('revenue', this)">Revenue</button>
     <a href="terminal.html">Terminal</a>
     <a href="admin_upload.html">Upload Data</a>
-    <button id="logoutBtn">Logout</button>
+    <button id="logoutBtn" style="color: #f85149; margin-left: auto;">Logout</button>
 </div>
 
 <div class="admin-container">
 
     <div id="users-section" class="section active">
         <div class="manage-user-form">
-            <h3>Edit/Invite User</h3>
-            <input type="email" id="m-email" placeholder="Email">
+            <h3>Edit / Invite User</h3>
+            <input type="email" id="m-email" placeholder="Email Address">
             <input type="text" id="m-name" placeholder="Full Name">
             <select id="m-tag">
                 <option value="pro">Pro</option>
@@ -89,12 +127,12 @@
                 <option value="admin">Admin</option>
             </select>
             <input type="datetime-local" id="m-expiry" title="Trial Record Date">
-            <button onclick="saveUser()" style="background:#2962ff; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">Update / Invite</button>
+            <button class="btn-primary" onclick="saveUser()">Update / Invite</button>
         </div>
 
         <div class="controls">
             <div class="filters">
-                <h2 style="margin: 0; margin-right: 15px;">User Management</h2>
+                <h2>User Management</h2>
                 <input type="text" id="search" class="search-box" placeholder="Search name or email...">
                 <select id="filter-status" class="filter-select">
                     <option value="all">Status: All</option>
@@ -110,31 +148,33 @@
                     <option value="free">Free</option>
                 </select>
             </div>
-            <button onclick="forceDowngradeCancelled()" style="background:#f23645; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold;">Clean Up Cancelled Users</button>
+            <button class="btn-danger" onclick="forceDowngradeCancelled()">Clean Up Cancelled Users</button>
         </div>
         
-        <table id="admin-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th class="sortable" onclick="handleSort('tag')">Tag <span id="sort-icon-tag" class="sort-icon">↕</span></th>
-                    <th class="sortable" onclick="handleSort('status')">Status <span id="sort-icon-status" class="sort-icon">↕</span></th>
-                    <th>Trial Record</th>
-                    <th class="sortable" onclick="handleSort('billing')">Next Billing <span id="sort-icon-billing" class="sort-icon">↕</span></th>
-                    <th class="sortable" onclick="handleSort('cancel')">Cancel? <span id="sort-icon-cancel" class="sort-icon">↕</span></th>
-                    <th>Profile</th>
-                </tr>
-            </thead>
-            <tbody id="admin-body">
-                <tr><td colspan="8" style="text-align:center;">Loading...</td></tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table id="admin-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th class="sortable" onclick="handleSort('tag')">Tag <span id="sort-icon-tag" class="sort-icon">↕</span></th>
+                        <th class="sortable" onclick="handleSort('status')">Status <span id="sort-icon-status" class="sort-icon">↕</span></th>
+                        <th>Trial Record</th>
+                        <th class="sortable" onclick="handleSort('billing')">Next Billing <span id="sort-icon-billing" class="sort-icon">↕</span></th>
+                        <th class="sortable" onclick="handleSort('cancel')">Cancel? <span id="sort-icon-cancel" class="sort-icon">↕</span></th>
+                        <th>Profile</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-body">
+                    <tr><td colspan="8" style="text-align:center; padding: 30px; color: #8b949e;">Loading records...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div id="revenue-section" class="section">
-        <h2>Revenue Overview</h2>
-        <p style="color: #787b86;">Revenue data module initialization pending...</p>
+        <h2 style="margin-top: 0;">Revenue Overview</h2>
+        <p style="color: #8b949e;">Revenue data module initialization pending...</p>
     </div>
 
 </div>
@@ -150,30 +190,45 @@
         <div class="profile-grid">
             <input type="hidden" id="p-id">
             
-            <div class="profile-group">
-                <label>Full Name</label>
-                <input type="text" id="p-name" placeholder="Full Name">
-            </div>
-            
-            <div class="profile-group">
-                <label>Email Address</label>
-                <input type="email" id="p-email" placeholder="Email Address">
-            </div>
-
-            <div class="profile-group">
-                <label>Last Logged In</label>
-                <div class="readonly-data" id="p-last-login">Fetching...</div>
-            </div>
-
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div class="profile-group">
-                    <label>Country (IP)</label>
-                    <div class="readonly-data" id="p-country">Fetching...</div>
+                    <label>Full Name</label>
+                    <input type="text" id="p-name" placeholder="Full Name">
                 </div>
+                
                 <div class="profile-group">
-                    <label>Device Used</label>
-                    <div class="readonly-data" id="p-device">Fetching...</div>
+                    <label>Email Address</label>
+                    <input type="email" id="p-email" placeholder="Email Address">
                 </div>
+            </div>
+
+            <div class="profile-group">
+                <label>Latest Quick View</label>
+                <div class="readonly-data" id="p-quick-view" style="display: flex; justify-content: space-between;">
+                    <span id="p-last-login">Fetching...</span>
+                    <span><strong style="color: #fff;">Country:</strong> <span id="p-country">...</span></span>
+                    <span><strong style="color: #fff;">Device:</strong> <span id="p-device">...</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Login History Section -->
+        <div style="border-top: 1px solid #30363d; padding-top: 20px;">
+            <h3 style="margin-top: 0; font-size: 1.05rem; color: #fff; font-weight: 600;">Detailed Login History</h3>
+            <div class="table-responsive" style="max-height: 250px;">
+                <table class="history-table" style="min-width: 600px;">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>IP Address</th>
+                            <th>Country</th>
+                            <th>Device & OS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="p-login-history">
+                        <tr><td colspan="4" style="text-align:center; color: #8b949e;">Loading history...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -216,7 +271,7 @@
 
         // Reset all icons
         document.querySelectorAll('.sort-icon').forEach(icon => icon.innerText = '↕');
-        document.querySelectorAll('.sort-icon').forEach(icon => icon.style.color = '#555');
+        document.querySelectorAll('.sort-icon').forEach(icon => icon.style.color = '#4b5563');
         
         // Update active icon
         const activeIcon = document.getElementById(`sort-icon-${column}`);
@@ -280,13 +335,13 @@
                 <td>${u.full_name || '-'}</td>
                 <td>${u.email || '-'}</td>
                 <td>${u.subscription_tag || '-'}</td>
-                <td class="${subStatusClass}">${subStatusLabel}</td>
+                <td><span class="${subStatusClass}">${subStatusLabel}</span></td>
                 <td>${u.trial_expires_at ? new Date(u.trial_expires_at).toLocaleDateString() : '-'}</td>
                 <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
-                <td class="${cancelClass}">${cancelLabel}</td>
+                <td><span class="${cancelClass}">${cancelLabel}</span></td>
                 <td><button class="btn-profile" onclick="event.stopPropagation(); openProfileModal('${u.id}')">View</button></td>
             </tr>
-        `}).join('') : '<tr><td colspan="8" style="text-align:center;">No users found.</td></tr>';
+        `}).join('') : '<tr><td colspan="8" style="text-align:center; padding: 30px; color: #8b949e;">No users found.</td></tr>';
     }
 
     function applyFilters() {
@@ -392,18 +447,49 @@
         document.getElementById('p-email').value = userRow.email || '';
         document.getElementById('p-last-login').innerText = 'Fetching...';
         
-        // Dynamically insert tracked device and country data
-        document.getElementById('p-country').innerText = userRow.last_country || 'No data recorded';
-        document.getElementById('p-device').innerText = userRow.last_device || 'No data recorded';
-
-        // Fetch auth data using the service role key embedded in this client
-        const { data: authData, error } = await client.auth.admin.getUserById(userId);
+        // Populate quick view
+        document.getElementById('p-country').innerText = userRow.last_country || 'No data';
+        document.getElementById('p-device').innerText = userRow.last_device || 'No data';
         
-        if (error) {
+        // Reset history table visually
+        const historyTableBody = document.getElementById('p-login-history');
+        historyTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #8b949e;">Loading history...</td></tr>';
+
+        // 1. Fetch Auth Auth (Last Sign in)
+        const { data: authData, error: authError } = await client.auth.admin.getUserById(userId);
+        
+        if (authError) {
             document.getElementById('p-last-login').innerText = "Unable to load data.";
         } else if (authData && authData.user) {
             const lastLogin = authData.user.last_sign_in_at;
-            document.getElementById('p-last-login').innerText = lastLogin ? new Date(lastLogin).toLocaleString() : 'Never logged in';
+            document.getElementById('p-last-login').innerHTML = lastLogin ? `<strong style="color:#fff;">Last seen:</strong> ${new Date(lastLogin).toLocaleString()}` : 'Never logged in';
+        }
+        
+        // 2. Fetch Detailed Login History Table
+        const { data: historyData, error: historyError } = await client
+            .from('login_history')
+            .select('*')
+            .eq('user_id', userId)
+            .order('login_time', { ascending: false })
+            .limit(50);
+
+        if (historyError) {
+            historyTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: #f85149;">Error loading history: ${historyError.message}</td></tr>`;
+        } else if (historyData && historyData.length > 0) {
+            historyTableBody.innerHTML = historyData.map(record => {
+                const dateStr = new Date(record.login_time).toLocaleString();
+                const deviceStr = `${record.device_type || 'Unknown'} - ${record.os || 'Unknown'}`;
+                return `
+                    <tr>
+                        <td style="color: #c9d1d9;">${dateStr}</td>
+                        <td style="font-family: 'Inter', monospace; color: #8b949e;">${record.ip_address || 'N/A'}</td>
+                        <td style="color: #c9d1d9;">${record.country || 'N/A'}</td>
+                        <td style="color: #c9d1d9;">${deviceStr}</td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            historyTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #8b949e;">No detailed login history found.</td></tr>';
         }
     }
 
