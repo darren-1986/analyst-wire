@@ -58,17 +58,29 @@
             
             const finalDeviceString = `${deviceType} - ${os}`;
 
-            // 2. Fetch the Country using a free IP Geolocation API
+            // 2. Fetch the Country & IP using a free IP Geolocation API
             let country = "Unknown";
+            let ipAddress = "Unknown";
             try {
                 const geoResponse = await fetch('https://ipapi.co/json/');
                 const geoData = await geoResponse.json();
                 if (geoData.country_name) country = geoData.country_name;
+                if (geoData.ip) ipAddress = geoData.ip;
             } catch (apiError) {
-                console.log("Adblocker blocked IP tracking, skipping country.");
+                console.log("Adblocker blocked IP tracking, skipping country/IP.");
             }
 
-            // 3. Silently update the database
+            // 3. Insert the new record into the login_history table
+            await client.from('login_history').insert([{
+                user_id: userId,
+                ip_address: ipAddress,
+                country: country,
+                device_type: deviceType,
+                os: os,
+                raw_user_agent: ua
+            }]);
+
+            // 4. Silently update the database profiles table for quick view
             await client.from('profiles').update({
                 last_device: finalDeviceString,
                 last_country: country
