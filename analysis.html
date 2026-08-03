@@ -333,11 +333,11 @@
         // 3. HARD ROUTING (BOUNCER LOGIC)
         // ==========================================
         // Only Admin and Pro users are allowed on the Analysis page.
-        if (!isAdmin && tag !== 'pro') {
-            if (tag === 'courses' || tag === 'course') {
+        if (!isAdmin && !tag.includes('pro')) {
+            if (tag.includes('courses') || tag.includes('course')) {
                 window.location.href = 'courses.html';
                 return;
-            } else if (tag === 'newsfeed') {
+            } else if (tag.includes('newsfeed')) {
                 window.location.href = '/newsfeed';
                 return;
             } else {
@@ -363,7 +363,7 @@
         Object.values(navElements).forEach(el => { if (el) el.style.display = 'none'; });
 
         // Reveal based on strict tier assignment
-        if (isAdmin || tag === 'pro') {
+        if (isAdmin || tag.includes('pro')) {
             if (navElements.dashboard) navElements.dashboard.style.display = 'block';
             if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
             if (navElements.analysis) navElements.analysis.style.display = 'block';
