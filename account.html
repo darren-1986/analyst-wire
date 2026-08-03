@@ -107,6 +107,9 @@
         .info-label { font-size: 11px; color: #8b949e; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; letter-spacing: 0.5px; }
         .info-value { font-size: 14px; color: #fff; background: #161b22; padding: 12px; border-radius: 6px; border: 1px solid #30363d; }
         
+        .sub-card { margin-bottom: 25px; padding-bottom: 10px; border-bottom: 1px solid #1c2230; }
+        .sub-card:last-of-type { border-bottom: none; margin-bottom: 10px; padding-bottom: 0; }
+
         .pwd-input { 
             width: 100%; 
             padding: 12px; 
@@ -136,6 +139,7 @@
         .badge { color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         .badge-active { background: #089981; }
         .badge-canceled { background: #f85149; }
+        .badge-refunded { background: #d29922; }
 
         /* --- MOBILE RESPONSIVE STYLES --- */
         @media (max-width: 850px) {
@@ -181,9 +185,9 @@
     <button class="mobile-menu-btn" onclick="toggleNav()">☰</button>
 
     <div class="nav-links" id="navLinks">
-        <a href="terminal.html">Dashboard</a>
-        <a href="/newsfeed">Newsfeed</a>
-        <a href="analysis.html">Analysis</a>
+        <a href="terminal.html" id="nav-dashboard" style="display: none;">Dashboard</a>
+        <a href="/newsfeed" id="nav-newsfeed" style="display: none;">Newsfeed</a>
+        <a href="analysis.html" id="nav-analysis" style="display: none;">Analysis</a>
         <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
         <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
         
@@ -200,8 +204,9 @@
 </div>
 
 <div class="account-container">
-    <h2 style="margin-top: 0;">Subscription Details</h2>
-    <div class="info-grid">
+    <h2 style="margin-top: 0; margin-bottom: 25px;">Subscription Details</h2>
+    
+    <div class="info-grid" style="margin-bottom: 25px;">
         <div class="info-group">
             <div class="info-label">Member Name</div>
             <div class="info-value" id="user-name">Loading...</div>
@@ -211,29 +216,14 @@
             <div class="info-value" id="user-email">Loading...</div>
         </div>
     </div>
-    <div class="info-grid">
-        <div class="info-group">
-            <div class="info-label">Plan Type</div>
-            <div class="info-value" id="sub-type">Loading...</div>
-        </div>
-        <div class="info-group">
-            <div class="info-label">Status</div>
-            <div class="info-value" style="border:none; background: transparent; padding: 8px 0;">
-                <span class="badge" id="sub-status">Loading...</span>
-            </div>
-        </div>
-        <div class="info-group">
-            <div class="info-label">Subscription Price</div>
-            <div class="info-value" id="sub-price">Syncing...</div>
-        </div>
-        <div class="info-group">
-            <div class="info-label">Next Billing Date</div>
-            <div class="info-value" id="sub-date">Syncing...</div>
-        </div>
+
+    <div id="subscriptions-container">
+        <div style="color: #8b949e; text-align: center; padding: 20px;">Loading subscriptions...</div>
     </div>
+
     <button class="btn-update btn-secondary" id="manage-sub">Manage Subscription via Stripe</button>
     
-    <h3 style="margin-top: 30px;">Security & Login</h3>
+    <h3 style="margin-top: 40px;">Security & Login</h3>
     <input type="password" id="new-password" class="pwd-input" placeholder="New password">
     <input type="password" id="confirm-password" class="pwd-input" placeholder="Confirm password">
     <button class="btn-update" id="updatePwdBtn">Save New Password</button>
@@ -269,42 +259,90 @@
         const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
         
         if (profile) {
+            const tag = (profile.subscription_tag || 'free').toLowerCase();
+            const isAdmin = profile.is_admin === true;
+
             // Menu Visibility Logic
-            if (profile.is_admin === true) {
+            if (isAdmin) {
                 document.getElementById('nav-admin').style.display = 'block';
                 document.getElementById('nav-upload').style.display = 'block';
             }
             
-            // Show Courses and Key Levels for Pro/Admin
-            if (profile.is_admin === true || profile.subscription_tag === 'pro') {
+            if (isAdmin || tag.includes('pro')) {
+                document.getElementById('nav-dashboard').style.display = 'block';
+                document.getElementById('nav-newsfeed').style.display = 'block';
+                document.getElementById('nav-analysis').style.display = 'block';
                 document.getElementById('nav-courses').style.display = 'block';
                 document.getElementById('nav-key-levels').style.display = 'block';
+            } else if (tag.includes('course')) {
+                document.getElementById('nav-courses').style.display = 'block';
+            } else if (tag.includes('newsfeed') || tag.includes('squawk')) {
+                document.getElementById('nav-newsfeed').style.display = 'block';
             }
 
-            // Profile Data
+            // Global Profile Data
             document.getElementById('user-name').innerText = profile.full_name || 'N/A';
-            document.getElementById('sub-type').innerText = (profile.subscription_tag || 'FREE').toUpperCase();
             
-            const statusStr = (profile.stripe_status || profile.status || 'Active').toUpperCase();
-            const statusEl = document.getElementById('sub-status');
-            statusEl.innerText = statusStr;
-            statusEl.className = statusStr === 'ACTIVE' ? 'badge badge-active' : 'badge badge-canceled';
+            // Dynamic Subscription Rendering
+            const container = document.getElementById('subscriptions-container');
+            container.innerHTML = '';
             
-            document.getElementById('sub-price').innerText = profile.plan_price ? `$${profile.plan_price}/mo` : 'N/A';
+            // Handle multiple subscriptions stored as comma-separated strings
+            const tags = (profile.subscription_tag || 'FREE').split(',').map(s => s.trim());
+            const statuses = (profile.stripe_status || profile.status || 'ACTIVE').split(',').map(s => s.trim());
+            const prices = (profile.plan_price ? String(profile.plan_price) : '').split(',').map(s => s.trim());
+            const dates = (profile.current_period_end ? String(profile.current_period_end) : '').split(',').map(s => s.trim());
             
-            // Robust Date Parsing
-            if (profile.current_period_end) {
-                const val = profile.current_period_end;
-                const dateObj = typeof val === 'number' ? new Date(val * 1000) : new Date(val);
+            tags.forEach((tagItem, index) => {
+                // Fallback to the first item if subsequent arrays don't perfectly align
+                const statusStr = (statuses[index] || statuses[0] || 'ACTIVE').toUpperCase();
+                const priceStr = prices[index] || prices[0] || 'N/A';
+                const dateVal = dates[index] || dates[0] || null;
                 
-                if (!isNaN(dateObj.getTime())) {
-                    document.getElementById('sub-date').innerText = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                } else {
-                    document.getElementById('sub-date').innerText = 'N/A';
+                // Set correct badge color
+                let badgeClass = 'badge-active';
+                if (statusStr === 'CANCELED' || statusStr === 'CANCELLED') badgeClass = 'badge-canceled';
+                if (statusStr === 'REFUNDED') badgeClass = 'badge-refunded';
+
+                // Format Price
+                const priceDisplay = (priceStr !== 'N/A' && !priceStr.includes('$')) ? `$${priceStr}/mo` : priceStr;
+
+                // Format Date
+                let dateStr = 'N/A';
+                if (dateVal && dateVal !== 'null' && dateVal !== 'N/A') {
+                    const dateNum = Number(dateVal);
+                    const dateObj = isNaN(dateNum) ? new Date(dateVal) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
+                    if (!isNaN(dateObj.getTime())) {
+                        dateStr = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    }
                 }
-            } else {
-                document.getElementById('sub-date').innerText = 'N/A';
-            }
+
+                // Append Sub Card HTML
+                container.innerHTML += `
+                    <div class="sub-card">
+                        <div class="info-grid">
+                            <div class="info-group">
+                                <div class="info-label">Plan Type</div>
+                                <div class="info-value">${tagItem.toUpperCase()}</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">Status</div>
+                                <div class="info-value" style="border:none; background: transparent; padding: 8px 0;">
+                                    <span class="badge ${badgeClass}">${statusStr}</span>
+                                </div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">Subscription Price</div>
+                                <div class="info-value">${priceDisplay}</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">Next Billing Date</div>
+                                <div class="info-value">${dateStr}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
         }
     }
 
