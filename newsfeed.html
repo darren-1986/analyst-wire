@@ -209,13 +209,12 @@
 
             const tag = profile.subscription_tag.toLowerCase();
             const isAdmin = profile.is_admin === true;
-            const allowedTags = ['pro', 'newsfeed', 'squawk'];
 
             // ==========================================
             // 3. HARD ROUTING (BOUNCER LOGIC)
             // ==========================================
-            if (!isAdmin && !allowedTags.includes(tag)) {
-                if (tag === 'courses' || tag === 'course') {
+            if (!isAdmin && !tag.includes('pro') && !tag.includes('newsfeed') && !tag.includes('squawk')) {
+                if (tag.includes('courses') || tag.includes('course')) {
                     window.location.href = 'courses.html';
                     return;
                 } else {
@@ -241,7 +240,7 @@
             Object.values(navElements).forEach(el => { if (el) el.style.display = 'none'; });
 
             // Reveal items based on tier
-            if (isAdmin || tag === 'pro') {
+            if (isAdmin || tag.includes('pro')) {
                 if (navElements.dashboard) navElements.dashboard.style.display = 'block';
                 if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
                 if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
@@ -252,7 +251,7 @@
                     if (navElements.admin) navElements.admin.style.display = 'block';
                     if (navElements.upload) navElements.upload.style.display = 'block';
                 }
-            } else if (allowedTags.includes(tag)) {
+            } else if (tag.includes('newsfeed') || tag.includes('squawk')) {
                 // Newsfeed tier ONLY gets the Newsfeed page link
                 if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
             }
