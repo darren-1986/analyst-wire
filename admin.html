@@ -53,7 +53,7 @@
         tr { border-bottom: 1px solid #30363d; transition: background 0.2s; }
         tr:hover { background: rgba(255,255,255,0.02); }
         tr:last-child { border-bottom: none; }
-        th, td { padding: 14px 16px; text-align: left; font-size: 0.9rem; }
+        th, td { padding: 14px 16px; text-align: left; font-size: 0.9rem; vertical-align: top; }
         th { background: #161b22; text-transform: uppercase; font-size: 0.75rem; color: #8b949e; user-select: none; font-weight: 600; letter-spacing: 0.5px; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
         th.sortable { cursor: pointer; }
         th.sortable:hover { color: #fff; }
@@ -90,6 +90,10 @@
         .history-table th { font-size: 0.7rem; padding: 10px; background: #0d1117; }
         .history-table td { font-size: 0.85rem; padding: 10px; }
 
+        /* Multi-line stack formatting */
+        .multi-tag { margin-bottom: 8px; display: block; line-height: 1.4; }
+        .multi-tag:last-child { margin-bottom: 0; }
+
         /* Mobile Adaptive Styling */
         @media (max-width: 768px) {
             .controls, .filters { flex-direction: column; align-items: stretch; width: 100%; }
@@ -118,14 +122,7 @@
             <h3>Edit / Invite User</h3>
             <input type="email" id="m-email" placeholder="Email Address">
             <input type="text" id="m-name" placeholder="Full Name">
-            <select id="m-tag">
-                <option value="pro">Pro</option>
-                <option value="course">Course</option>
-                <option value="newsfeed">Newsfeed</option>
-                <option value="audio squawk">Audio Squawk</option>
-                <option value="free">Free (No Access)</option>
-                <option value="admin">Admin</option>
-            </select>
+            <input type="text" id="m-tag" placeholder="Tags (e.g. pro, course)">
             <input type="datetime-local" id="m-expiry" title="Trial Record Date">
             <button class="btn-primary" onclick="saveUser()">Update / Invite</button>
         </div>
@@ -257,23 +254,21 @@
         if (error) { document.getElementById('admin-body').innerHTML = `<tr><td colspan="8" style="text-align:center;">Error: ${error.message}</td></tr>`; return; }
         
         allUsers = data;
-        applyFilters(); // This will render the table
+        applyFilters(); 
     }
 
     // --- SORTING LOGIC ---
     function handleSort(column) {
         if (sortState.column === column) {
-            sortState.asc = !sortState.asc; // Toggle direction
+            sortState.asc = !sortState.asc; 
         } else {
             sortState.column = column;
-            sortState.asc = true; // Default to ascending on new column
+            sortState.asc = true; 
         }
 
-        // Reset all icons
         document.querySelectorAll('.sort-icon').forEach(icon => icon.innerText = '↕');
         document.querySelectorAll('.sort-icon').forEach(icon => icon.style.color = '#4b5563');
         
-        // Update active icon
         const activeIcon = document.getElementById(`sort-icon-${column}`);
         activeIcon.innerText = sortState.asc ? '↑' : '↓';
         activeIcon.style.color = '#2962ff';
@@ -318,27 +313,56 @@
 
     function renderTable(users) {
         const tbody = document.getElementById('admin-body');
+        
         tbody.innerHTML = users.length ? users.map(u => {
             
-            const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
-            const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
-            const cancelLabel = isCancelled ? 'Cancelled' : 'Active';
-            const cancelClass = isCancelled ? 'status-inactive' : 'status-active';
+            // Map comma-separated values into arrays
+            const tags = (u.subscription_tag || '-').split(',').map(s => s.trim());
+            const statuses = String(u.sub_status || 'inactive').split(',').map(s => s.trim().toLowerCase());
+            const cancels = String(u.cancel_at_period_end || '').split(',').map(s => s.trim().toLowerCase());
+            const trials = String(u.trial_expires_at || '').split(',').map(s => s.trim());
+            const billings = String(u.current_period_end || '').split(',').map(s => s.trim());
+
+            // Build stacked HTML structures based on the tags array length
+            const tagsHtml = tags.map(t => `<div class="multi-tag">${t}</div>`).join('');
             
-            const subStatusRaw = String(u.sub_status || 'inactive').toLowerCase();
-            const isSubActive = subStatusRaw === 'active';
-            const subStatusLabel = isSubActive ? 'ACTIVE' : 'INACTIVE';
-            const subStatusClass = isSubActive ? 'status-active' : 'status-inactive';
+            const statusHtml = tags.map((_, i) => {
+                const s = statuses[i] || statuses[0] || 'inactive';
+                const isActive = s === 'active';
+                const label = isActive ? 'ACTIVE' : 'INACTIVE';
+                const cls = isActive ? 'status-active' : 'status-inactive';
+                return `<div class="multi-tag" style="margin-bottom:6px;"><span class="${cls}">${label}</span></div>`;
+            }).join('');
+            
+            const trialHtml = tags.map((_, i) => {
+                const t = trials[i] || trials[0];
+                return `<div class="multi-tag">${t && t !== 'null' ? new Date(t).toLocaleDateString() : '-'}</div>`;
+            }).join('');
+            
+            const billingHtml = tags.map((_, i) => {
+                const b = billings[i] || billings[0];
+                const dateNum = Number(b);
+                const dateObj = isNaN(dateNum) ? new Date(b) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
+                return `<div class="multi-tag">${b && b !== 'null' && !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString() : '-'}</div>`;
+            }).join('');
+
+            const cancelHtml = tags.map((_, i) => {
+                const c = cancels[i] || cancels[0] || '';
+                const isCancelled = c.includes('true') || c.includes('cancel');
+                const label = isCancelled ? 'Cancelled' : 'Active';
+                const cls = isCancelled ? 'status-inactive' : 'status-active';
+                return `<div class="multi-tag" style="margin-bottom:6px;"><span class="${cls}">${label}</span></div>`;
+            }).join('');
 
             return `
             <tr style="cursor: pointer;" onclick="selectUser('${u.email}', '${u.full_name || ''}', '${u.subscription_tag || ''}')">
                 <td>${u.full_name || '-'}</td>
                 <td>${u.email || '-'}</td>
-                <td>${u.subscription_tag || '-'}</td>
-                <td><span class="${subStatusClass}">${subStatusLabel}</span></td>
-                <td>${u.trial_expires_at ? new Date(u.trial_expires_at).toLocaleDateString() : '-'}</td>
-                <td>${u.current_period_end ? new Date(u.current_period_end).toLocaleDateString() : '-'}</td>
-                <td><span class="${cancelClass}">${cancelLabel}</span></td>
+                <td>${tagsHtml}</td>
+                <td>${statusHtml}</td>
+                <td>${trialHtml}</td>
+                <td>${billingHtml}</td>
+                <td>${cancelHtml}</td>
                 <td><button class="btn-profile" onclick="event.stopPropagation(); openProfileModal('${u.id}')">View</button></td>
             </tr>
         `}).join('') : '<tr><td colspan="8" style="text-align:center; padding: 30px; color: #8b949e;">No users found.</td></tr>';
@@ -353,17 +377,17 @@
             const matchesSearch = (u.full_name?.toLowerCase().includes(term)) || (u.email?.toLowerCase().includes(term));
             
             const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
-            const isCancelled = rawCancel.includes('true') || rawCancel.includes('cancel');
+            const rawStatus = String(u.sub_status || 'inactive').toLowerCase();
             
             let matchesStatus = true;
-            if (statusFilter === 'active') matchesStatus = !isCancelled;
-            if (statusFilter === 'canceled') matchesStatus = isCancelled;
+            if (statusFilter === 'active') matchesStatus = rawStatus.includes('active');
+            if (statusFilter === 'canceled') matchesStatus = rawCancel.includes('true') || rawCancel.includes('cancel');
             
-            const matchesTag = (tag === 'all') || (u.subscription_tag?.toLowerCase() === tag);
+            const matchesTag = (tag === 'all') || (u.subscription_tag?.toLowerCase().includes(tag));
+            
             return matchesSearch && matchesStatus && matchesTag;
         });
         
-        // Re-apply sorting if a column is selected
         if (sortState.column) {
             sortData();
         } else {
@@ -390,7 +414,10 @@
         const { data: existingUser } = await client.from('profiles').select('id').eq('email', email).maybeSingle();
 
         if (existingUser) {
-            const newSubStatus = tag === 'free' ? 'inactive' : 'active';
+            // Check if ALL tags are 'free' to determine the entire active/inactive state fallback
+            const isAllFree = tag.toLowerCase().trim() === 'free';
+            const newSubStatus = isAllFree ? 'inactive' : 'active';
+            
             const { error } = await client.from('profiles').update({
                 full_name: name,
                 subscription_tag: tag,
@@ -401,9 +428,10 @@
             if (error) alert('Update Error: ' + error.message);
             else { alert('User updated successfully!'); init(); }
         } else {
+            const isAllFree = tag.toLowerCase().trim() === 'free';
             const { error } = await client.auth.admin.inviteUserByEmail(email, {
                 redirectTo: 'https://analyst-wire.pages.dev/setup',
-                data: { full_name: name, subscription_tag: tag, sub_status: tag === 'free' ? 'inactive' : 'active', trial_expires_at: expiry || null }
+                data: { full_name: name, subscription_tag: tag, sub_status: isAllFree ? 'inactive' : 'active', trial_expires_at: expiry || null }
             });
             if (error) alert('Invite Error: ' + error.message);
             else { alert('Invite sent!'); init(); }
@@ -447,17 +475,14 @@
         document.getElementById('p-email').value = userRow.email || '';
         document.getElementById('p-last-login').innerText = 'Fetching...';
         
-        // Populate quick view
         document.getElementById('p-country').innerText = userRow.last_country || 'No data';
         document.getElementById('p-device').innerText = userRow.last_device || 'No data';
         
-        // Reset history table visually
         const historyTableBody = document.getElementById('p-login-history');
         historyTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #8b949e;">Loading history...</td></tr>';
 
-        // 1. Fetch Auth Auth (Last Sign in)
+        // Fetch Last Sign in
         const { data: authData, error: authError } = await client.auth.admin.getUserById(userId);
-        
         if (authError) {
             document.getElementById('p-last-login').innerText = "Unable to load data.";
         } else if (authData && authData.user) {
@@ -465,7 +490,7 @@
             document.getElementById('p-last-login').innerHTML = lastLogin ? `<strong style="color:#fff;">Last seen:</strong> ${new Date(lastLogin).toLocaleString()}` : 'Never logged in';
         }
         
-        // 2. Fetch Detailed Login History Table
+        // Fetch Detailed Login History
         const { data: historyData, error: historyError } = await client
             .from('login_history')
             .select('*')
@@ -507,11 +532,9 @@
         saveBtn.disabled = true;
 
         try {
-            // 1. Update Email in Auth Server (Requires Service Role Key)
             const { error: authError } = await client.auth.admin.updateUserById(userId, { email: newEmail });
             if (authError) throw authError;
 
-            // 2. Update Name and Email in Profiles Table
             const { error: dbError } = await client.from('profiles').update({
                 full_name: newName,
                 email: newEmail
@@ -521,7 +544,7 @@
 
             alert("Profile details updated successfully!");
             closeProfileModal();
-            init(); // Refresh table
+            init(); 
         } catch (err) {
             alert("Error saving profile: " + err.message);
         } finally {
@@ -530,7 +553,6 @@
         }
     }
 
-    // --- NAVIGATION ---
     function showSection(id, btn) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.top-nav button').forEach(b => b.classList.remove('active'));
@@ -538,7 +560,6 @@
         btn.classList.add('active');
     }
 
-    // Listeners
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
     document.getElementById('search').addEventListener('input', applyFilters);
     document.getElementById('filter-status').addEventListener('change', applyFilters);
