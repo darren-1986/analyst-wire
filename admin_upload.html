@@ -82,6 +82,18 @@
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
+    // Admin authorization check
+    async function init() {
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) { window.location.href = 'index.html'; return; }
+        
+        const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
+        if (!profile || profile.is_admin !== true) { 
+            window.location.href = 'terminal.html'; 
+            return; 
+        }
+    }
+
     document.getElementById('logoutBtn').addEventListener('click', async () => { 
         await client.auth.signOut(); 
         window.location.href = 'index.html'; 
@@ -371,6 +383,9 @@
             statusDiv.innerText = "Execution Failure: " + err.message;
         }
     }
+    
+    // Initialize admin verification on load
+    init();
 </script>
 </body>
 </html>
