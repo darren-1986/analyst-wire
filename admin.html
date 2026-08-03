@@ -122,7 +122,7 @@
             <h3>Edit / Invite User</h3>
             <input type="email" id="m-email" placeholder="Email Address">
             <input type="text" id="m-name" placeholder="Full Name">
-            <input type="text" id="m-tag" placeholder="Tags (e.g. pro, course)">
+            <input type="text" id="m-tag" placeholder="Tags (e.g. course, newsfeed)">
             <input type="datetime-local" id="m-expiry" title="Trial Record Date">
             <button class="btn-primary" onclick="saveUser()">Update / Invite</button>
         </div>
@@ -209,7 +209,6 @@
             </div>
         </div>
 
-        <!-- NEW: Login History Section -->
         <div style="border-top: 1px solid #30363d; padding-top: 20px;">
             <h3 style="margin-top: 0; font-size: 1.05rem; color: #fff; font-weight: 600;">Detailed Login History</h3>
             <div class="table-responsive" style="max-height: 250px;">
@@ -315,54 +314,65 @@
         const tbody = document.getElementById('admin-body');
         
         tbody.innerHTML = users.length ? users.map(u => {
-            
-            // Map comma-separated values into arrays
-            const tags = (u.subscription_tag || '-').split(',').map(s => s.trim());
-            const statuses = String(u.sub_status || 'inactive').split(',').map(s => s.trim().toLowerCase());
-            const cancels = String(u.cancel_at_period_end || '').split(',').map(s => s.trim().toLowerCase());
-            const trials = String(u.trial_expires_at || '').split(',').map(s => s.trim());
-            const billings = String(u.current_period_end || '').split(',').map(s => s.trim());
+            // Robust parsing for comma-separated or JSON array or space/comma formats
+            const parseList = (val) => {
+                if (!val) return ['-'];
+                let str = String(val).trim();
+                if (str.startsWith('[') && str.endsWith(']')) {
+                    try {
+                        const parsed = JSON.parse(str);
+                        if (Array.isArray(parsed)) return parsed.map(String);
+                    } catch(e) {}
+                }
+                return str.split(',').map(s => s.trim()).filter(Boolean);
+            };
 
-            // Build stacked HTML structures based on the tags array length
-            const tagsHtml = tags.map(t => `<div class="multi-tag">${t}</div>`).join('');
-            
-            const statusHtml = tags.map((_, i) => {
-                const s = statuses[i] || statuses[0] || 'inactive';
+            const tags = parseList(u.subscription_tag);
+            const statuses = parseList(u.sub_status || 'active').map(s => s.toLowerCase());
+            const cancels = parseList(u.cancel_at_period_end || 'false').map(s => s.toLowerCase());
+            const trials = parseList(u.trial_expires_at);
+            const billings = parseList(u.current_period_end);
+
+            const maxLength = Math.max(tags.length, statuses.length, cancels.length, billings.length);
+
+            // Build stacked HTML structures ensuring strict alignment per product index
+            const tagsHtml = [];
+            const statusHtml = [];
+            const trialHtml = [];
+            const billingHtml = [];
+            const cancelHtml = [];
+
+            for (let i = 0; i < maxLength; i++) {
+                const t = tags[i] || tags[0] || 'N/A';
+                const s = statuses[i] || statuses[0] || 'active';
+                const c = cancels[i] || cancels[0] || 'false';
+                const tr = trials[i] || trials[0] || '-';
+                const b = billings[i] || billings[0] || '-';
+
+                tagsHtml.push(`<div class="multi-tag">${t}</div>`);
+
                 const isActive = s === 'active';
-                const label = isActive ? 'ACTIVE' : 'INACTIVE';
-                const cls = isActive ? 'status-active' : 'status-inactive';
-                return `<div class="multi-tag" style="margin-bottom:6px;"><span class="${cls}">${label}</span></div>`;
-            }).join('');
-            
-            const trialHtml = tags.map((_, i) => {
-                const t = trials[i] || trials[0];
-                return `<div class="multi-tag">${t && t !== 'null' ? new Date(t).toLocaleDateString() : '-'}</div>`;
-            }).join('');
-            
-            const billingHtml = tags.map((_, i) => {
-                const b = billings[i] || billings[0];
+                statusHtml.push(`<div class="multi-tag" style="margin-bottom:6px;"><span class="${isActive ? 'status-active' : 'status-inactive'}">${isActive ? 'ACTIVE' : 'INACTIVE'}</span></div>`);
+
+                trialHtml.push(`<div class="multi-tag">${tr && tr !== 'null' && tr !== '-' ? new Date(tr).toLocaleDateString() : '-'}</div>`);
+
                 const dateNum = Number(b);
                 const dateObj = isNaN(dateNum) ? new Date(b) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
-                return `<div class="multi-tag">${b && b !== 'null' && !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString() : '-'}</div>`;
-            }).join('');
+                billingHtml.push(`<div class="multi-tag">${b && b !== 'null' && b !== '-' && !isNaN(dateObj.getTime()) ? dateObj.toLocaleDateString() : '-'}</div>`);
 
-            const cancelHtml = tags.map((_, i) => {
-                const c = cancels[i] || cancels[0] || '';
                 const isCancelled = c.includes('true') || c.includes('cancel');
-                const label = isCancelled ? 'Cancelled' : 'Active';
-                const cls = isCancelled ? 'status-inactive' : 'status-active';
-                return `<div class="multi-tag" style="margin-bottom:6px;"><span class="${cls}">${label}</span></div>`;
-            }).join('');
+                cancelHtml.push(`<div class="multi-tag" style="margin-bottom:6px;"><span class="${isCancelled ? 'status-inactive' : 'status-active'}">${isCancelled ? 'Cancelled' : 'Active'}</span></div>`);
+            }
 
             return `
             <tr style="cursor: pointer;" onclick="selectUser('${u.email}', '${u.full_name || ''}', '${u.subscription_tag || ''}')">
                 <td>${u.full_name || '-'}</td>
                 <td>${u.email || '-'}</td>
-                <td>${tagsHtml}</td>
-                <td>${statusHtml}</td>
-                <td>${trialHtml}</td>
-                <td>${billingHtml}</td>
-                <td>${cancelHtml}</td>
+                <td>${tagsHtml.join('')}</td>
+                <td>${statusHtml.join('')}</td>
+                <td>${trialHtml.join('')}</td>
+                <td>${billingHtml.join('')}</td>
+                <td>${cancelHtml.join('')}</td>
                 <td><button class="btn-profile" onclick="event.stopPropagation(); openProfileModal('${u.id}')">View</button></td>
             </tr>
         `}).join('') : '<tr><td colspan="8" style="text-align:center; padding: 30px; color: #8b949e;">No users found.</td></tr>';
@@ -411,16 +421,19 @@
 
         if (!email) return alert("Email is required");
 
+        // To ensure user comedinewithgina@gmail.com or any user has multiple products correctly saved (e.g. "course, newsfeed"), 
+        // we clean up spaces around commas so Supabase stores them cleanly.
+        const cleanedTag = tag.split(',').map(s => s.trim()).filter(Boolean).join(', ');
+
         const { data: existingUser } = await client.from('profiles').select('id').eq('email', email).maybeSingle();
 
         if (existingUser) {
-            // Check if ALL tags are 'free' to determine the entire active/inactive state fallback
-            const isAllFree = tag.toLowerCase().trim() === 'free';
+            const isAllFree = cleanedTag.toLowerCase() === 'free' || !cleanedTag;
             const newSubStatus = isAllFree ? 'inactive' : 'active';
             
             const { error } = await client.from('profiles').update({
                 full_name: name,
-                subscription_tag: tag,
+                subscription_tag: cleanedTag,
                 sub_status: newSubStatus,
                 trial_expires_at: expiry || null
             }).eq('email', email);
@@ -428,10 +441,10 @@
             if (error) alert('Update Error: ' + error.message);
             else { alert('User updated successfully!'); init(); }
         } else {
-            const isAllFree = tag.toLowerCase().trim() === 'free';
+            const isAllFree = cleanedTag.toLowerCase() === 'free' || !cleanedTag;
             const { error } = await client.auth.admin.inviteUserByEmail(email, {
                 redirectTo: 'https://analyst-wire.pages.dev/setup',
-                data: { full_name: name, subscription_tag: tag, sub_status: isAllFree ? 'inactive' : 'active', trial_expires_at: expiry || null }
+                data: { full_name: name, subscription_tag: cleanedTag, sub_status: isAllFree ? 'inactive' : 'active', trial_expires_at: expiry || null }
             });
             if (error) alert('Invite Error: ' + error.message);
             else { alert('Invite sent!'); init(); }
@@ -481,7 +494,6 @@
         const historyTableBody = document.getElementById('p-login-history');
         historyTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #8b949e;">Loading history...</td></tr>';
 
-        // Fetch Last Sign in
         const { data: authData, error: authError } = await client.auth.admin.getUserById(userId);
         if (authError) {
             document.getElementById('p-last-login').innerText = "Unable to load data.";
@@ -490,7 +502,6 @@
             document.getElementById('p-last-login').innerHTML = lastLogin ? `<strong style="color:#fff;">Last seen:</strong> ${new Date(lastLogin).toLocaleString()}` : 'Never logged in';
         }
         
-        // Fetch Detailed Login History
         const { data: historyData, error: historyError } = await client
             .from('login_history')
             .select('*')
@@ -523,7 +534,7 @@
     }
 
     async function saveProfileDetails() {
-        const userId = document.getElementById('p-id').value;
+        const userId = document.getElementById('p-id', '').value;
         const newName = document.getElementById('p-name').value;
         const newEmail = document.getElementById('p-email').value;
         const saveBtn = document.getElementById('btn-save-profile');
