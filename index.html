@@ -163,14 +163,17 @@
             // Strict Routing & Access Control
             if (isAdmin) {
                 window.location.href = 'admin.html';
-            } else if (tag === 'pro') {
+            } else if (tag.includes('pro')) {
+                // Pro takes highest priority
                 window.location.href = 'terminal.html';
-            } else if (tag === 'newsfeed') {
-                window.location.href = '/newsfeed';
-            } else if (tag === 'courses' || tag === 'course') {
+            } else if (tag.includes('course') || tag.includes('courses')) {
+                // If they have the course (and aren't Pro), send to courses
                 window.location.href = 'courses.html';
+            } else if (tag.includes('newsfeed')) {
+                // If they only have newsfeed, send there
+                window.location.href = '/newsfeed';
             } else {
-                // If they don't have one of the above tags (e.g., free, empty, or cancelled)
+                // If they don't have any of the above tags (e.g., free, empty, or cancelled)
                 status.style.color = '#ff4444';
                 status.innerText = 'Access Denied: Active subscription required.';
                 await client.auth.signOut();
