@@ -1417,11 +1417,11 @@
         const isAdmin = profile.is_admin === true;
 
         // --- HARD ROUTING (BOUNCER LOGIC) ---
-        if (!isAdmin && tag !== 'pro') {
-            if (tag === 'courses' || tag === 'course') {
+        if (!isAdmin && !tag.includes('pro')) {
+            if (tag.includes('course') || tag.includes('courses')) {
                 window.location.href = 'courses.html';
                 return;
-            } else if (tag === 'newsfeed') {
+            } else if (tag.includes('newsfeed')) {
                 window.location.href = '/newsfeed';
                 return;
             } else {
