@@ -392,7 +392,7 @@
                 { title: "Implied Volatility", time: 483 },
                 { title: "Mastering Implied Volatility", time: 929 },
                 { title: "Central Bank Policy", time: 1560 },
-                { title: "Buy Rumor, Sell Fact", time: 1833 },
+                { title: "Buy Rumor, Sell Fact", time: 2124 },
                 { title: "Decoding Market Positioning", time: 2342 },
                 { title: "Predicting Volatility", time: 2737 },
                 { title: "The Calendar Effect", time: 3185 },
@@ -414,27 +414,27 @@
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-    const m = parseInt(urlParams.get('m')) || 0;
+    const moduleIdx = parseInt(urlParams.get('m')) || 0;
 
     const sidebar = document.getElementById('sidebar');
     const mobileSelect = document.getElementById('mobile-module-select');
     
-    courseData.forEach((mod, mIdx) => {
+    courseData.forEach((mod, idx) => {
         const modEl = document.createElement('a');
-        modEl.href = `?m=${mIdx}`;
-        modEl.className = `module-header ${mIdx === m ? 'active' : ''}`;
+        modEl.href = `?m=${idx}`;
+        modEl.className = `module-header ${idx === moduleIdx ? 'active' : ''}`;
         modEl.innerText = mod.title;
         sidebar.appendChild(modEl);
 
         const optEl = document.createElement('option');
-        optEl.value = mIdx;
+        optEl.value = idx;
         optEl.innerText = mod.title;
-        if(mIdx === m) optEl.selected = true;
+        if(idx === moduleIdx) optEl.selected = true;
         mobileSelect.appendChild(optEl);
     });
 
-    if (m < courseData.length) {
-        const mod = courseData[m];
+    if (moduleIdx < courseData.length) {
+        const mod = courseData[moduleIdx];
         const player = document.getElementById('lesson-player');
         const startTime = mod.lessons[0].time;
         player.src = `${mod.video}?wtime=${startTime}&resume=false&videoFoam=true&_t=${Date.now()}`;
@@ -481,8 +481,8 @@
         // 3. HARD ROUTING (BOUNCER LOGIC)
         // ==========================================
         // If not an admin, not a pro, AND not a course buyer, they don't belong here
-        if (!isAdmin && tag !== 'pro' && tag !== 'courses' && tag !== 'course') {
-            if (tag === 'newsfeed') {
+        if (!isAdmin && !tag.includes('pro') && !tag.includes('course')) {
+            if (tag.includes('newsfeed')) {
                 window.location.href = '/newsfeed';
                 return;
             } else {
@@ -508,7 +508,7 @@
         Object.values(navLinks).forEach(link => { if (link) link.style.display = 'none'; });
 
         // Reveal based on strict tier assignment
-        if (isAdmin || tag === 'pro') {
+        if (isAdmin || tag.includes('pro')) {
             Object.values(navLinks).forEach(link => { if (link) link.style.display = 'block'; }); // Show all
             
             if (isAdmin) {
@@ -517,7 +517,7 @@
                 if (navAdmin) navAdmin.style.display = 'block';
                 if (navUpload) navUpload.style.display = 'block';
             }
-        } else if (tag === 'courses' || tag === 'course') {
+        } else if (tag.includes('course')) {
             // Courses tier ONLY gets the Courses link in the header 
             // (Account dropdown is handled separately via the standard UI)
             if (navLinks.courses) navLinks.courses.style.display = 'block';
