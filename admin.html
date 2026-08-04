@@ -27,20 +27,20 @@
         /* Management Panel Form */
         .manage-user-form { background: #0d1117; padding: 20px; border-radius: 10px; margin-bottom: 25px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; border: 1px solid #30363d; }
         .manage-user-form h3 { margin: 0; font-size: 1.05rem; color: #fff; width: 100%; flex-basis: 100%; font-weight: 600; }
-        .manage-user-form input, .manage-user-form select { flex: 1 1 180px; padding: 10px 14px; background: #161b22; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
+        .manage-user-form input, .manage-user-form select { flex: 1 1 180px; padding: 10px 14px; background: #161b22; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
         .manage-user-form input:focus, .manage-user-form select:focus { border-color: #2962ff; }
         
         /* Buttons */
-        .btn-primary { flex: 1 1 150px; background: #2962ff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; font-family: 'Inter', sans-serif; }
+        .btn-primary { flex: 1 1 150px; background: #2962ff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; }
         .btn-primary:hover { background: #1c4ed8; }
-        .btn-danger { background: transparent; color: #f85149; border: 1px solid #f85149; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .btn-danger { background: transparent; color: #f85149; border: 1px solid #f85149; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; }
         .btn-danger:hover { background: rgba(248, 81, 73, 0.1); }
 
         /* Controls & Filters */
         .controls { display: flex; gap: 15px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; justify-content: space-between; }
         .filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: 1; }
         .filters h2 { margin: 0; margin-right: 10px; color: #fff; font-size: 1.25rem; font-weight: 600; }
-        .search-box, .filter-select { padding: 9px 14px; background: #0d1117; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; flex: 1 1 150px; }
+        .search-box, .filter-select { padding: 9px 14px; background: #0d1117; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; flex: 1 1 150px; box-sizing: border-box; }
 
         /* Table & Responsive Wrapper */
         .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #30363d; background: #0d1117; -webkit-overflow-scrolling: touch; }
@@ -59,9 +59,10 @@
         th.sortable:hover { color: #fff; }
         .sort-icon { font-size: 0.8rem; margin-left: 5px; color: #4b5563; }
         
-        /* Status Badges */
-        .status-active { color: #3fb950; font-weight: 600; background: rgba(46, 160, 67, 0.15); border: 1px solid rgba(46, 160, 67, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
-        .status-inactive { color: #f85149; font-weight: 600; background: rgba(248, 81, 73, 0.15); border: 1px solid rgba(248, 81, 73, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
+        /* Badges */
+        .status-active { color: #3fb950; font-weight: 600; background: rgba(46, 160, 67, 0.15); border: 1px solid rgba(46, 160, 67, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; margin: 2px 0; }
+        .status-inactive { color: #f85149; font-weight: 600; background: rgba(248, 81, 73, 0.15); border: 1px solid rgba(248, 81, 73, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; margin: 2px 0; }
+        .tag-badge { background: #1f2937; border: 1px solid #374151; padding: 4px 8px; border-radius: 6px; margin: 2px; display: inline-block; text-transform: capitalize; font-size: 0.75rem; color: #c9d1d9; font-weight: 600; }
         
         /* Table Button */
         .btn-profile { background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; }
@@ -78,24 +79,30 @@
         .profile-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-bottom: 25px; }
         .profile-group { display: flex; flex-direction: column; gap: 8px; }
         .profile-group label { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
-        .profile-group input { padding: 12px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
+        .profile-group input { padding: 12px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
         .profile-group input:focus { border-color: #2962ff; }
         .profile-group .readonly-data { padding: 12px; background: #090b10; border: 1px solid #30363d; border-radius: 6px; color: #8b949e; font-family: 'Inter', sans-serif; font-size: 0.9rem; }
         
         .modal-actions { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #30363d; padding-top: 20px; margin-top: 20px; }
-        .btn-save { background: #238636; color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: 'Inter', sans-serif; transition: background 0.2s; }
+        .btn-save { background: #238636; color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: 'Inter', sans-serif; transition: background 0.2s; box-sizing: border-box; }
         .btn-save:hover { background: #2ea043; }
 
         /* History Table Specific */
         .history-table th { font-size: 0.7rem; padding: 10px; background: #0d1117; }
         .history-table td { font-size: 0.85rem; padding: 10px; }
 
-        /* Mobile Adaptive Styling */
+        /* Mobile Adaptive Styling (Fixed Flex-Basis Bugs) */
         @media (max-width: 768px) {
             .controls, .filters { flex-direction: column; align-items: stretch; width: 100%; }
             .filters h2 { margin-bottom: 10px; text-align: center; }
             .btn-danger { width: 100%; }
-            .manage-user-form input, .manage-user-form select, .btn-primary { flex-basis: 100%; }
+            
+            /* Setting flex to none forces inputs to ignore vertical stretch in column layout */
+            .search-box, .filter-select { flex: none; width: 100%; min-height: 42px; margin-bottom: 8px; }
+            
+            .manage-user-form { flex-direction: column; align-items: stretch; }
+            .manage-user-form input, .manage-user-form select, .btn-primary { flex: none; width: 100%; margin-bottom: 12px; min-height: 42px; }
+            
             .admin-container { padding: 15px; margin: 10px auto; }
             .modal { padding: 20px; }
         }
@@ -150,7 +157,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Email</th>
-                        <th class="sortable" onclick="handleSort('tag')">Tag <span id="sort-icon-tag" class="sort-icon">↕</span></th>
+                        <th class="sortable" onclick="handleSort('tag')">Tags <span id="sort-icon-tag" class="sort-icon">↕</span></th>
                         <th class="sortable" onclick="handleSort('status')">Status <span id="sort-icon-status" class="sort-icon">↕</span></th>
                         <th>Trial Record</th>
                         <th class="sortable" onclick="handleSort('billing')">Next Billing <span id="sort-icon-billing" class="sort-icon">↕</span></th>
@@ -327,60 +334,59 @@
             };
 
             let tags = parseList(u.subscription_tag);
-            if (tags.length === 0) tags = ['free']; // Default state if no tag provided
+            if (tags.length === 0) tags = ['free']; 
+            const tagsHtml = tags.map(t => `<span class="tag-badge">${t}</span>`).join(' ');
 
-            const statuses = parseList(u.sub_status);
-            const cancels = parseList(u.cancel_at_period_end);
-            const trials = parseList(u.trial_expires_at);
-            const billings = parseList(u.current_period_end);
-
-            // Determine how many rows we need for this specific user
-            const maxLength = Math.max(tags.length, statuses.length, cancels.length, billings.length, 1);
-
-            // Create a SEPARATE row element for EACH subscription product a user owns
-            for (let i = 0; i < maxLength; i++) {
-                const t = tags[i] || tags[0] || 'free';
-                const s = statuses[i] || statuses[0] || 'inactive';
-                const c = cancels[i] || cancels[0] || 'false';
-                const tr = trials[i] || trials[0] || null;
-                const b = billings[i] || billings[0] || null;
-
+            let statuses = parseList(u.sub_status);
+            if (statuses.length === 0) statuses = ['inactive'];
+            const statusHtml = statuses.map(s => {
                 const isActive = s.toLowerCase() === 'active';
-                const statusBadge = `<span class="${isActive ? 'status-active' : 'status-inactive'}">${isActive ? 'ACTIVE' : 'INACTIVE'}</span>`;
-                
-                const isCancelled = c.toLowerCase().includes('true') || c.toLowerCase().includes('cancel');
-                const cancelBadge = `<span class="${isCancelled ? 'status-inactive' : 'status-active'}">${isCancelled ? 'Cancelled' : 'Active'}</span>`;
+                return `<span class="${isActive ? 'status-active' : 'status-inactive'}">${isActive ? 'ACTIVE' : 'INACTIVE'}</span>`;
+            }).join('<br>');
 
-                let trialHtml = '-';
+            let cancels = parseList(u.cancel_at_period_end);
+            if (cancels.length === 0) cancels = ['false'];
+            const cancelHtml = cancels.map(c => {
+                const isCancelled = c.toLowerCase().includes('true') || c.toLowerCase().includes('cancel');
+                return `<span class="${isCancelled ? 'status-inactive' : 'status-active'}">${isCancelled ? 'Cancelled' : 'Active'}</span>`;
+            }).join('<br>');
+
+            let trials = parseList(u.trial_expires_at);
+            const trialHtml = trials.map(tr => {
                 if (tr && tr !== 'null' && tr !== '-') {
                     const trDate = new Date(tr);
-                    if (!isNaN(trDate.getTime())) trialHtml = trDate.toLocaleDateString();
+                    if (!isNaN(trDate.getTime())) return trDate.toLocaleDateString();
                 }
+                return '-';
+            }).join('<br>');
 
-                let billingHtml = '-';
+            let billings = parseList(u.current_period_end);
+            const billingHtml = billings.map(b => {
                 const dateNum = Number(b);
                 const dateObj = isNaN(dateNum) ? new Date(b) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
                 if (b && b !== 'null' && b !== '-' && !isNaN(dateObj.getTime())) {
-                    billingHtml = dateObj.toLocaleDateString();
+                    return dateObj.toLocaleDateString();
                 }
+                return '-';
+            }).join('<br>');
 
-                const safeEmail = (u.email || '').replace(/'/g, "\\'");
-                const safeName = (u.full_name || '').replace(/'/g, "\\'");
-                const safeTag = (u.subscription_tag || '').replace(/'/g, "\\'");
+            const safeEmail = (u.email || '').replace(/'/g, "\\'");
+            const safeName = (u.full_name || '').replace(/'/g, "\\'");
+            const safeTag = tags.join(', ').replace(/'/g, "\\'");
 
-                rowsHtml += `
-                <tr style="cursor: pointer;" onclick="selectUser('${safeEmail}', '${safeName}', '${safeTag}')">
-                    <td>${u.full_name || '-'}</td>
-                    <td>${u.email || '-'}</td>
-                    <td><span style="font-weight: 600; color: #c9d1d9;">${t}</span></td>
-                    <td>${statusBadge}</td>
-                    <td>${trialHtml}</td>
-                    <td>${billingHtml}</td>
-                    <td>${cancelBadge}</td>
-                    <td><button class="btn-profile" onclick="event.stopPropagation(); openProfileModal('${u.id}')">View</button></td>
-                </tr>
-                `;
-            }
+            // Generate a SINGLE row per user containing grouped tag badges and statuses
+            rowsHtml += `
+            <tr style="cursor: pointer;" onclick="selectUser('${safeEmail}', '${safeName}', '${safeTag}')">
+                <td>${u.full_name || '-'}</td>
+                <td>${u.email || '-'}</td>
+                <td>${tagsHtml}</td>
+                <td>${statusHtml}</td>
+                <td>${trialHtml}</td>
+                <td>${billingHtml}</td>
+                <td>${cancelHtml}</td>
+                <td><button class="btn-profile" onclick="event.stopPropagation(); openProfileModal('${u.id}')">View</button></td>
+            </tr>
+            `;
         });
 
         tbody.innerHTML = rowsHtml || '<tr><td colspan="8" style="text-align:center; padding: 30px; color: #8b949e;">No users found.</td></tr>';
