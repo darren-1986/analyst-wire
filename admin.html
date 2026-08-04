@@ -52,7 +52,7 @@
         .table-responsive::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
         .table-responsive::-webkit-scrollbar-thumb:hover { background: #4b5563; }
         
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
         tr { border-bottom: 1px solid #30363d; transition: background 0.2s; }
         tr:hover { background: rgba(255,255,255,0.02); }
         tr:last-child { border-bottom: none; }
@@ -180,13 +180,14 @@
                         <th class="sortable" onclick="handleSort('tag')">Tags <span id="sort-icon-tag" class="sort-icon">↕</span></th>
                         <th class="sortable" onclick="handleSort('status')">Status <span id="sort-icon-status" class="sort-icon">↕</span></th>
                         <th>Trial Record</th>
+                        <th class="sortable" onclick="handleSort('last_billing')">Last Billing <span id="sort-icon-last_billing" class="sort-icon">↕</span></th>
                         <th class="sortable" onclick="handleSort('billing')">Next Billing <span id="sort-icon-billing" class="sort-icon">↕</span></th>
                         <th class="sortable" onclick="handleSort('cancel')">Cancel? <span id="sort-icon-cancel" class="sort-icon">↕</span></th>
                         <th>Profile</th>
                     </tr>
                 </thead>
                 <tbody id="admin-body">
-                    <tr><td colspan="8" style="text-align:center; padding: 30px; color: #8b949e;">Loading records...</td></tr>
+                    <tr><td colspan="9" style="text-align:center; padding: 30px; color: #8b949e;">Loading records...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -271,7 +272,7 @@
         if (!profile || profile.is_admin !== true) { window.location.href = 'terminal.html'; return; }
 
         const { data, error } = await client.from('profiles').select('*');
-        if (error) { document.getElementById('admin-body').innerHTML = `<tr><td colspan="8" style="text-align:center;">Error: ${error.message}</td></tr>`; return; }
+        if (error) { document.getElementById('admin-body').innerHTML = `<tr><td colspan="9" style="text-align:center;">Error: ${error.message}</td></tr>`; return; }
         
         allUsers = data;
         applyFilters(); 
@@ -280,6 +281,21 @@
     function toggleMenu() {
         document.getElementById('navLinks').classList.toggle('show');
     }
+
+    const parseList = (val) => {
+        if (!val) return [];
+        if (Array.isArray(val)) return val.map(String);
+        let str = String(val).trim();
+        if (str.startsWith('[') && str.endsWith(']')) {
+            try { const parsed = JSON.parse(str); if (Array.isArray(parsed)) return parsed.map(String); } catch(e) {}
+        }
+        return str.split(',').map(s => s.trim()).filter(Boolean);
+    };
+
+    const getSortDate = (val) => {
+        let parsed = parseList(val);
+        return (parsed.length && parsed[0] !== 'null') ? new Date(parsed[0]).getTime() : 0;
+    };
 
     // --- SORTING LOGIC ---
     function handleSort(column) {
@@ -303,7 +319,8 @@
             switch (sortState.column) {
                 case 'tag': valA = a.subscription_tag || ''; valB = b.subscription_tag || ''; break;
                 case 'status': valA = String(a.sub_status || 'inactive').toLowerCase(); valB = String(b.sub_status || 'inactive').toLowerCase(); break;
-                case 'billing': valA = a.current_period_end ? new Date(a.current_period_end).getTime() : 0; valB = b.current_period_end ? new Date(b.current_period_end).getTime() : 0; break;
+                case 'last_billing': valA = getSortDate(a.last_payment_date); valB = getSortDate(b.last_payment_date); break;
+                case 'billing': valA = getSortDate(a.current_period_end); valB = getSortDate(b.current_period_end); break;
                 case 'cancel': 
                     valA = (String(a.cancel_at_period_end || '').toLowerCase().includes('true') || String(a.cancel_at_period_end || '').toLowerCase().includes('cancel')) ? 1 : 0; 
                     valB = (String(b.cancel_at_period_end || '').toLowerCase().includes('true') || String(b.cancel_at_period_end || '').toLowerCase().includes('cancel')) ? 1 : 0; 
@@ -321,16 +338,6 @@
         let rowsHtml = '';
 
         users.forEach(u => {
-            const parseList = (val) => {
-                if (!val) return [];
-                if (Array.isArray(val)) return val.map(String);
-                let str = String(val).trim();
-                if (str.startsWith('[') && str.endsWith(']')) {
-                    try { const parsed = JSON.parse(str); if (Array.isArray(parsed)) return parsed.map(String); } catch(e) {}
-                }
-                return str.split(',').map(s => s.trim()).filter(Boolean);
-            };
-
             let tags = parseList(u.subscription_tag);
             if (tags.length === 0) tags = ['free']; 
             const tagsHtml = tags.map(t => `<span class="tag-badge">${t}</span>`).join(' ');
@@ -358,6 +365,16 @@
                 return '-';
             }).join('<br>');
 
+            let lastBills = parseList(u.last_payment_date);
+            const lastBillHtml = lastBills.map(b => {
+                const dateNum = Number(b);
+                const dateObj = isNaN(dateNum) ? new Date(b) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
+                if (b && b !== 'null' && b !== '-' && !isNaN(dateObj.getTime())) {
+                    return dateObj.toLocaleDateString();
+                }
+                return '-';
+            }).join('<br>');
+
             let billings = parseList(u.current_period_end);
             const billingHtml = billings.map(b => {
                 const dateNum = Number(b);
@@ -379,13 +396,14 @@
                 <td>${tagsHtml}</td>
                 <td>${statusHtml}</td>
                 <td>${trialHtml}</td>
+                <td>${lastBillHtml}</td>
                 <td>${billingHtml}</td>
                 <td>${cancelHtml}</td>
                 <td><button class="btn-profile" onclick="event.stopPropagation(); openProfileModal('${u.id}')">View</button></td>
             </tr>
             `;
         });
-        tbody.innerHTML = rowsHtml || '<tr><td colspan="8" style="text-align:center; padding: 30px; color: #8b949e;">No users found.</td></tr>';
+        tbody.innerHTML = rowsHtml || '<tr><td colspan="9" style="text-align:center; padding: 30px; color: #8b949e;">No users found.</td></tr>';
     }
 
     function applyFilters() {
