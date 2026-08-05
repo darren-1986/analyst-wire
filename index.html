@@ -36,6 +36,20 @@
 
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // --- HELPER FUNCTION: Safely parse JSON array tags ---
+    function userHasAccess(userTags, requiredTag) {
+        if (!userTags) return false;
+        try {
+            const parsedArray = JSON.parse(userTags);
+            if (Array.isArray(parsedArray)) {
+                return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+            }
+        } catch (e) {
+            return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
+        }
+        return false;
+    }
+
     // --- DEVICE TRACKING FUNCTION ---
     async function logUserDeviceAndLocation(userId) {
         try {
@@ -157,19 +171,19 @@
             // Run the device tracker in the background before redirecting
             await logUserDeviceAndLocation(data.user.id);
 
-            const tag = profile?.subscription_tag ? profile.subscription_tag.toLowerCase() : '';
+            const tag = profile?.subscription_tag ? profile.subscription_tag : '';
             const isAdmin = profile?.is_admin === true;
 
             // Strict Routing & Access Control
             if (isAdmin) {
                 window.location.href = 'admin.html';
-            } else if (tag.includes('pro')) {
+            } else if (userHasAccess(tag, 'pro')) {
                 // Pro takes highest priority
                 window.location.href = 'terminal.html';
-            } else if (tag.includes('course') || tag.includes('courses')) {
+            } else if (userHasAccess(tag, 'course') || userHasAccess(tag, 'courses')) {
                 // If they have the course (and aren't Pro), send to courses
                 window.location.href = 'courses.html';
-            } else if (tag.includes('newsfeed')) {
+            } else if (userHasAccess(tag, 'newsfeed')) {
                 // If they only have newsfeed, send there
                 window.location.href = '/newsfeed';
             } else {
