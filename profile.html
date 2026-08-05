@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="media/favicon.png">
+    <title>Analyst Wire | Member Network</title>
+    
+    <!-- Supabase for auth & nav bouncer check -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    
+    <style>
+        /* Modern typography import */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        /* Unified Dark Theme */
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: #090b10; 
+            color: #d1d4dc; 
+            margin: 0; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            font-size: 13px; 
+        }
+        *, *:before, *:after { box-sizing: border-box; }
+        
+        /* Navigation */
+        .top-nav { 
+            background: #0d1117; 
+            padding: 0 20px; 
+            height: 55px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #1c2230; 
+            z-index: 1001; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+        }
+        .nav-links { display: flex; align-items: center; gap: 5px; }
+        .nav-links a { 
+            color: #8b949e; 
+            text-decoration: none; 
+            margin-left: 15px; 
+            font-size: 13px; 
+            font-weight: 500; 
+            cursor: pointer; 
+            transition: color 0.2s; 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+        }
+        .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
+
+        .mobile-menu-btn { 
+            display: none; 
+            font-size: 24px; 
+            color: #8b949e; 
+            cursor: pointer; 
+            background: none; 
+            border: none; 
+        }
+
+        /* Dropdown Styling */
+        .dropdown { position: relative; margin-left: 10px; }
+        .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
+        .dropbtn:hover { color: #fff; }
+        .dropdown-content { 
+            display: none; 
+            position: absolute; 
+            right: 0; 
+            top: 35px; 
+            background-color: #161b22; 
+            min-width: 160px; 
+            border: 1px solid #30363d; 
+            z-index: 1000; 
+            border-radius: 8px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5); 
+            overflow: hidden; 
+        }
+        .dropdown-content a { 
+            color: #c9d1d9; 
+            padding: 10px 16px; 
+            text-decoration: none; 
+            display: block; 
+            font-size: 13px; 
+            cursor: pointer; 
+            transition: background 0.15s; 
+            margin: 0; 
+            border-radius: 0; 
+            font-family: 'Inter', sans-serif; 
+        }
+        .dropdown-content a:hover { background-color: #21262d; color: #fff; }
+
+        /* Two-Column Layout */
+        .network-container {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 25px;
+            height: calc(100vh - 55px);
+            margin-top: 55px;
+            padding: 20px 30px;
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+            box-sizing: border-box;
+        }
+
+        /* Left Sidebar: Profile & Search */
+        .sidebar-panel {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #1c2230;
+            background: #161b22;
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: #090b10;
+            border: 1px solid #30363d;
+            color: #fff;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: #2962ff; }
+
+        .profile-display-area {
+            padding: 25px 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .profile-banner {
+            height: 80px;
+            background: linear-gradient(135deg, #2962ff, #1e4bd8);
+            border-radius: 8px;
+            margin-bottom: -40px;
+        }
+        .profile-avatar-large {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #161b22;
+            border: 3px solid #0d1117;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #58a6ff;
+            margin-left: 15px;
+            margin-bottom: 15px;
+        }
+        .profile-name-title { font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 4px 0; }
+        .profile-handle { font-size: 12px; color: #8b949e; margin-bottom: 15px; font-family: 'JetBrains Mono', monospace; }
+        .profile-bio { font-size: 13px; color: #c9d1d9; line-height: 1.5; margin-bottom: 20px; word-break: break-word; }
+        
+        .sidebar-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn-action {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12.5px;
+            text-align: center;
+            transition: background 0.2s, color 0.2s;
+        }
+        .btn-action:hover { background: #30363d; color: #fff; }
+        .btn-primary-action {
+            background: #2962ff;
+            color: #fff;
+            border: none;
+            box-shadow: 0 2px 8px rgba(41, 98, 255, 0.3);
+        }
+        .btn-primary-action:hover { background: #1e4bd8; color: #fff; }
+
+        /* Right Panel: Feed Area */
+        .feed-panel {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .feed-header {
+            padding: 15px 25px;
+            border-bottom: 1px solid #1c2230;
+            background: #161b22;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .feed-scroll-area {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 20px 25px;
+        }
+        .feed-scroll-area::-webkit-scrollbar, .profile-display-area::-webkit-scrollbar { width: 6px; }
+        .feed-scroll-area::-webkit-scrollbar-thumb, .profile-display-area::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+
+        /* Post Composer */
+        .composer-box {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        .composer-textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 13.5px;
+            resize: none;
+            height: 70px;
+            outline: none;
+        }
+        .composer-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #21262d;
+            padding-top: 10px;
+            margin-top: 5px;
+        }
+        .word-counter { font-size: 11px; color: #8b949e; font-family: 'JetBrains Mono', monospace; }
+        .btn-post {
+            background: #2962ff;
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12.5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-post:hover { background: #1e4bd8; }
+
+        /* Post Card Styling */
+        .post-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 15px;
+            transition: border-color 0.2s;
+        }
+        .post-card:hover { border-color: #4b5563; }
+        .post-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .post-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(41, 98, 255, 0.15);
+            border: 1px solid rgba(41, 98, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #58a6ff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .post-author-info { display: flex; flex-direction: column; cursor: pointer; }
+        .post-author-name { font-weight: 600; color: #fff; font-size: 13.5px; }
+        .post-author-name:hover { color: #58a6ff; text-decoration: underline; }
+        .post-timestamp { font-size: 11px; color: #8b949e; }
+        
+        .post-body {
+            font-size: 13.5px;
+            color: #d1d4dc;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            word-break: break-word;
+        }
+
+        /* Replies Section */
+        .replies-container {
+            margin-top: 12px;
+            padding-left: 20px;
+            border-left: 2px solid #21262d;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .reply-item {
+            background: #0d1117;
+            border: 1px solid #21262d;
+            padding: 10px 14px;
+            border-radius: 8px;
+        }
+        .reply-meta { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11.5px; }
+        .reply-author { font-weight: 600; color: #58a6ff; cursor: pointer; }
+        .reply-text { font-size: 13px; color: #c9d1d9; word-break: break-word; }
+
+        .reply-composer {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .reply-input {
+            flex-grow: 1;
+            background: #090b10;
+            border: 1px solid #30363d;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            outline: none;
+        }
+        .reply-input:focus { border-color: #2962ff; }
+        .btn-reply-submit {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .btn-reply-submit:hover { background: #30363d; color: #fff; }
+
+        /* Modal Styles for Editing Profile */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
+        .modal-content { background-color: #0d1117; margin: 10% auto; padding: 30px; border: 1px solid #30363d; width: 90%; max-width: 450px; color: #c9d1d9; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        .modal-header { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { font-size: 11px; color: #8b949e; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; display: block; }
+        .form-input, .form-textarea { width: 100%; padding: 10px 12px; background: #161b22; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; }
+        .form-textarea { resize: vertical; height: 80px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+
+        /* --- MOBILE RESPONSIVE --- */
+        @media (max-width: 900px) {
+            body { height: auto; overflow: auto; }
+            .network-container { grid-template-columns: 1fr; height: auto; overflow: visible; padding: 10px; }
+            .sidebar-panel { height: auto; margin-bottom: 20px; }
+            .feed-panel { height: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-nav">
+    <div style="height: 50px; display: flex; align-items: center;">
+        <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px; width: auto; object-fit: contain;">
+    </div>
+    
+    <button class="mobile-menu-btn" onclick="toggleNav()">☰</button>
+
+    <div class="nav-links" id="navLinks">
+        <a href="terminal.html" id="nav-dashboard" style="display: none;">Dashboard</a>
+        <a href="/newsfeed" id="nav-newsfeed" style="display: none;">Newsfeed</a>
+        <a href="analysis.html" id="nav-analysis" style="display: none;">Analysis</a>
+        <a href="profile.html" id="nav-profile" class="active" style="display: none;">Network</a>
+        <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
+        <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
+        
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown(event)">⚙️</button>
+            <div id="settingsDropdown" class="dropdown-content">
+                <a href="account.html">Account</a>
+                <a href="support.html">Support</a>
+                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
+                <a id="logoutBtn" style="color: #f85149; cursor: pointer;">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">Edit Profile</div>
+        <div class="form-group">
+            <label class="form-label">Display Name</label>
+            <input type="text" id="edit-name" class="form-input">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Bio (Short Intro)</label>
+            <textarea id="edit-bio" class="form-textarea" placeholder="Tell the network about your trading focus..."></textarea>
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-action btn-primary-action" style="flex: 1;" onclick="saveProfileChanges()">Save Changes</button>
+            <button class="btn-action" style="flex: 1;" onclick="closeEditModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div class="network-container">
+    
+    <!-- LEFT SIDEBAR: PROFILE & SEARCH -->
+    <div class="sidebar-panel">
+        <div class="sidebar-header">
+            <input type="text" id="member-search" class="search-input" placeholder="Search members..." oninput="filterMembers(this.value)">
+        </div>
+        
+        <div class="profile-display-area" id="profile-display-card">
+            <!-- Dynamically populated profile card -->
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: FEED -->
+    <div class="feed-panel">
+        <div class="feed-header">Market Network Feed</div>
+        <div class="feed-scroll-area">
+            
+            <!-- Post Composer -->
+            <div class="composer-box">
+                <textarea id="post-input" class="composer-textarea" placeholder="Share a market insight or trade thought (max 100 words)..." oninput="updateWordCount()"></textarea>
+                <div class="composer-footer">
+                    <span id="word-counter" class="word-counter">100 words remaining</span>
+                    <button class="btn-post" onclick="submitPost()">Post Message</button>
+                </div>
+            </div>
+
+            <!-- Feed Posts Stream -->
+            <div id="posts-stream">
+                <div style="color: #8b949e; text-align: center; padding: 30px;">Loading feed...</div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ==========================================
+    // HELPER FUNCTIONS
+    // ==========================================
+    function userHasAccess(userTags, requiredTag) {
+        if (!userTags) return false;
+        try {
+            const parsedArray = JSON.parse(userTags);
+            if (Array.isArray(parsedArray)) {
+                return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+            }
+        } catch (e) {
+            return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
+        }
+        return false;
+    }
+
+    function toggleNav() {
+        document.getElementById("navLinks").classList.toggle("active-nav");
+    }
+
+    function toggleDropdown(event) { 
+        if (event) event.stopPropagation();
+        document.getElementById("settingsDropdown").style.display = 
+            document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; 
+    }
+
+    window.onclick = function(event) { 
+        if (!event.target.matches('.dropbtn')) {
+            document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); 
+        }
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = "none";
+        }
+    }
+
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    
+    let loggedInUser = null;
+    let viewedProfileEmail = null;
+    let allMembersCache = [];
+
+    // Local Storage Mock Database Cache
+    function getStoredPosts() {
+        const posts = localStorage.getItem('analyst_wire_posts');
+        if (!posts) {
+            const initial = [
+                {
+                    id: 'p1',
+                    email: 'marketmaker@analystwire.com',
+                    name: 'Alex Vance',
+                    text: 'Watching Gold closely around the daily key level. Liquidity clusters suggest a test of upper boundaries before any major distribution.',
+                    timestamp: '2 hours ago',
+                    replies: [
+                        { id: 'r1', email: 'trader_sarah@gmail.com', name: 'Sarah Jenkins', text: 'Agreed, DXY movement supports this thesis.', timestamp: '1 hour ago' }
+                    ]
+                }
+            ];
+            localStorage.setItem('analyst_wire_posts', JSON.stringify(initial));
+            return initial;
+        }
+        return JSON.parse(posts);
+    }
+
+    function saveStoredPosts(posts) {
+        localStorage.setItem('analyst_wire_posts', JSON.stringify(posts));
+    }
+
+    function getStoredProfiles() {
+        const profiles = localStorage.getItem('analyst_wire_profiles');
+        return profiles ? JSON.parse(profiles) : {};
+    }
+
+    function saveStoredProfiles(profiles) {
+        localStorage.setItem('analyst_wire_profiles', JSON.stringify(profiles));
+    }
+
+    // ==========================================
+    // INITIALIZATION & BOUNCER
+    // ==========================================
+    async function init() {
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) { window.location.href = 'index.html'; return; }
+        
+        loggedInUser = session.user;
+        viewedProfileEmail = loggedInUser.email; // Default left pane to your own profile
+
+        const { data: profile } = await client.from('profiles').select('*').eq('id', loggedInUser.id).single();
+        
+        if (profile) {
+            const tagStr = profile.subscription_tag || 'free';
+            const isAdmin = profile.is_admin === true;
+
+            // Nav visibility logic
+            if (isAdmin) {
+                document.getElementById('nav-admin').style.display = 'block';
+                document.getElementById('nav-upload').style.display = 'block';
+            }
+            
+            if (isAdmin || userHasAccess(tagStr, 'pro')) {
+                document.getElementById('nav-dashboard').style.display = 'block';
+                document.getElementById('nav-newsfeed').style.display = 'block';
+                document.getElementById('nav-analysis').style.display = 'block';
+                document.getElementById('nav-courses').style.display = 'block';
+                document.getElementById('nav-key-levels').style.display = 'block';
+                document.getElementById('nav-profile').style.display = 'block';
+            } else {
+                if (userHasAccess(tagStr, 'course') || userHasAccess(tagStr, 'courses')) {
+                    document.getElementById('nav-courses').style.display = 'block';
+                }
+                if (userHasAccess(tagStr, 'newsfeed') || userHasAccess(tagStr, 'squawk')) {
+                    document.getElementById('nav-newsfeed').style.display = 'block';
+                }
+                document.getElementById('nav-profile').style.display = 'block';
+            }
+
+            // Ensure profile exists in local cache with supabase name if not already there
+            const profilesCache = getStoredProfiles();
+            if (!profilesCache[loggedInUser.email]) {
+                profilesCache[loggedInUser.email] = {
+                    name: profile.full_name || loggedInUser.email.split('@')[0],
+                    bio: 'Active Analyst Wire Community Member & Trader.'
+                };
+                saveStoredProfiles(profilesCache);
+            }
+        }
+
+        // Build mock members cache from existing feed posters + logged in user
+        refreshMembersCache();
+        renderLeftProfile(viewedProfileEmail);
+        renderFeed();
+    }
+
+    function refreshMembersCache() {
+        const posts = getStoredPosts();
+        const profilesCache = getStoredProfiles();
+        
+        const memberMap = {};
+        memberMap[loggedInUser.email] = {
+            email: loggedInUser.email,
+            name: profilesCache[loggedInUser.email]?.name || loggedInUser.email.split('@')[0],
+            bio: profilesCache[loggedInUser.email]?.bio || 'Active member.'
+        };
+
+        posts.forEach(p => {
+            memberMap[p.email] = {
+                email: p.email,
+                name: profilesCache[p.email]?.name || p.name,
+                bio: profilesCache[p.email]?.bio || 'Community Trader.'
+            };
+            p.replies.forEach(r => {
+                memberMap[r.email] = {
+                    email: r.email,
+                    name: profilesCache[r.email]?.name || r.name,
+                    bio: profilesCache[r.email]?.bio || 'Community Trader.'
+                };
+            });
+        });
+
+        allMembersCache = Object.values(memberMap);
+    }
+
+    // ==========================================
+    // RENDER LEFT PROFILE SIDEBAR
+    // ==========================================
+    function renderLeftProfile(email) {
+        viewedProfileEmail = email;
+        const profilesCache = getStoredProfiles();
+        const member = allMembersCache.find(m => m.email === email) || {
+            email: email,
+            name: profilesCache[email]?.name || email.split('@')[0],
+            bio: profilesCache[email]?.bio || 'Member profile.'
+        };
+
+        const isMe = (email === loggedInUser.email);
+        const container = document.getElementById('profile-display-card');
+
+        let actionsHtml = '';
+        if (isMe) {
+            actionsHtml = `
+                <div class="sidebar-actions">
+                    <button class="btn-action btn-primary-action" onclick="openEditModal()">Edit Profile</button>
+                </div>
+            `;
+        } else {
+            actionsHtml = `
+                <div class="sidebar-actions">
+                    <button class="btn-action btn-primary-action" onclick="renderLeftProfile('${loggedInUser.email}')">Back to My Profile</button>
+                </div>
+            `;
+        }
+
+        container.innerHTML = `
+            <div class="profile-banner"></div>
+            <div class="profile-avatar-large">${member.name.charAt(0).toUpperCase()}</div>
+            <div class="profile-name-title">${member.name}</div>
+            <div class="profile-handle">${member.email}</div>
+            <div class="profile-bio">${member.bio}</div>
+            ${actionsHtml}
+        `;
+    }
+
+    function filterMembers(query) {
+        const q = query.toLowerCase();
+        const filtered = allMembersCache.filter(m => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q));
+        if (filtered.length > 0) {
+            renderLeftProfile(filtered[0].email);
+        }
+    }
+
+    // ==========================================
+    // PROFILE EDIT MODAL LOGIC
+    // ==========================================
+    function openEditModal() {
+        const profilesCache = getStoredProfiles();
+        const current = profilesCache[loggedInUser.email] || { name: '', bio: '' };
+        document.getElementById('edit-name').value = current.name;
+        document.getElementById('edit-bio').value = current.bio;
+        document.getElementById('editProfileModal').style.display = 'block';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editProfileModal').style.display = 'none';
+    }
+
+    function saveProfileChanges() {
+        const newName = document.getElementById('edit-name').value.trim();
+        const newBio = document.getElementById('edit-bio').value.trim();
+        
+        if (!newName) return;
+
+        const profilesCache = getStoredProfiles();
+        profilesCache[loggedInUser.email] = { name: newName, bio: newBio };
+        saveStoredProfiles(profilesCache);
+        
+        refreshMembersCache();
+        renderLeftProfile(loggedInUser.email);
+        closeEditModal();
+        renderFeed();
+    }
+
+    // ==========================================
+    // FEED & POST COMPOSER LOGIC
+    // ==========================================
+    function updateWordCount() {
+        const text = document.getElementById('post-input').value.trim();
+        const words = text === '' ? [] : text.split(/\s+/);
+        const remaining = 100 - words.length;
+        
+        const counter = document.getElementById('word-counter');
+        counter.innerText = `${remaining} words remaining`;
+        if (remaining < 0) {
+            counter.style.color = '#f85149';
+        } else {
+            counter.style.color = '#8b949e';
+        }
+    }
+
+    function submitPost() {
+        const text = document.getElementById('post-input').value.trim();
+        if (!text) return;
+
+        const words = text.split(/\s+/);
+        if (words.length > 100) {
+            alert('Post exceeds the 100-word limit.');
+            return;
+        }
+
+        const profilesCache = getStoredProfiles();
+        const myName = profilesCache[loggedInUser.email]?.name || loggedInUser.email.split('@')[0];
+
+        const posts = getStoredPosts();
+        const newPost = {
+            id: 'p_' + Date.now(),
+            email: loggedInUser.email,
+            name: myName,
+            text: text,
+            timestamp: 'Just now',
+            replies: []
+        };
+
+        posts.unshift(newPost);
+        saveStoredPosts(posts);
+
+        document.getElementById('post-input').value = '';
+        updateWordCount();
+        refreshMembersCache();
+        renderFeed();
+    }
+
+    function submitReply(postId) {
+        const inputElem = document.getElementById(`reply-input-${postId}`);
+        const text = inputElem.value.trim();
+        if (!text) return;
+
+        const profilesCache = getStoredProfiles();
+        const myName = profilesCache[loggedInUser.email]?.name || loggedInUser.email.split('@')[0];
+
+        const posts = getStoredPosts();
+        const post = posts.find(p => p.id === postId);
+        if (post) {
+            post.replies.push({
+                id: 'r_' + Date.now(),
+                email: loggedInUser.email,
+                name: myName,
+                text: text,
+                timestamp: 'Just now'
+            });
+            saveStoredPosts(posts);
+            refreshMembersCache();
+            renderFeed();
+        }
+    }
+
+    function renderFeed() {
+        const stream = document.getElementById('posts-stream');
+        const posts = getStoredPosts();
+        const profilesCache = getStoredProfiles();
+
+        if (posts.length === 0) {
+            stream.innerHTML = `<div style="color: #8b949e; text-align: center; padding: 30px;">No messages in the feed yet. Be the first to post!</div>`;
+            return;
+        }
+
+        stream.innerHTML = posts.map(post => {
+            // Keep names synced with latest profile cache
+            const authorName = profilesCache[post.email]?.name || post.name;
+            const repliesHtml = post.replies.map(reply => {
+                const replyAuthorName = profilesCache[reply.email]?.name || reply.name;
+                return `
+                    <div class="reply-item">
+                        <div class="reply-meta">
+                            <span class="reply-author" onclick="renderLeftProfile('${reply.email}')">${replyAuthorName}</span>
+                            <span class="post-timestamp">${reply.timestamp}</span>
+                        </div>
+                        <div class="reply-text">${reply.text}</div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="post-card">
+                    <div class="post-meta">
+                        <div class="post-avatar" onclick="renderLeftProfile('${post.email}')">${authorName.charAt(0).toUpperCase()}</div>
+                        <div class="post-author-info" onclick="renderLeftProfile('${post.email}')">
+                            <span class="post-author-name">${authorName}</span>
+                            <span class="post-timestamp">${post.timestamp}</span>
+                        </div>
+                    </div>
+                    <div class="post-body">${post.text}</div>
+                    
+                    <div class="replies-container">
+                        ${repliesHtml}
+                        <div class="reply-composer">
+                            <input type="text" id="reply-input-${post.id}" class="reply-input" placeholder="Write a reply...">
+                            <button class="btn-reply-submit" onclick="submitReply('${post.id}')">Reply</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => { 
+        await client.auth.signOut(); 
+        window.location.href = 'index.html'; 
+    });
+
+    init();
+</script>
+</body>
+</html>
