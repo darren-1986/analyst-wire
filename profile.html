@@ -6,83 +6,38 @@
     <link rel="icon" type="image/png" href="media/favicon.png">
     <title>Analyst Wire | Member Network</title>
     
-    <!-- Supabase for auth & nav bouncer check -->
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     
     <style>
-        /* Modern typography import */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-        /* Unified Dark Theme */
         body { 
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: #090b10; 
-            color: #d1d4dc; 
-            margin: 0; 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-            font-size: 13px; 
+            background: #090b10; color: #d1d4dc; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; 
         }
         *, *:before, *:after { box-sizing: border-box; }
         
-        /* Navigation */
-        .top-nav { 
-            background: #0d1117; 
-            padding: 0 20px; 
-            height: 55px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 1px solid #1c2230; 
-            z-index: 1001; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-        }
+        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1001; position: fixed; top: 0; left: 0; width: 100%; }
         .nav-links { display: flex; align-items: center; gap: 5px; }
         .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
         .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
         .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
 
         .mobile-menu-btn { display: none; font-size: 24px; color: #8b949e; cursor: pointer; background: none; border: none; }
-
-        /* Dropdown Styling */
         .dropdown { position: relative; margin-left: 10px; }
         .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
         .dropbtn:hover { color: #fff; }
         .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
-        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; font-family: 'Inter', sans-serif; }
+        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
-        /* Two-Column Layout */
-        .network-container {
-            display: grid;
-            grid-template-columns: 420px 1fr;
-            gap: 25px;
-            height: calc(100vh - 55px);
-            margin-top: 55px;
-            padding: 20px 30px;
-            max-width: 1600px;
-            margin-left: auto;
-            margin-right: auto;
-            box-sizing: border-box;
-        }
+        .network-container { display: grid; grid-template-columns: 420px 1fr; gap: 25px; height: calc(100vh - 55px); margin-top: 55px; padding: 20px 30px; max-width: 1600px; margin-left: auto; margin-right: auto; box-sizing: border-box; }
 
-        /* Left Sidebar: Profile & Search */
-        .sidebar-panel {
-            background: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
+        /* Left Sidebar */
+        .sidebar-panel { background: #0d1117; border: 1px solid #30363d; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .sidebar-header { padding: 15px 20px; border-bottom: 1px solid #1c2230; background: #161b22; }
-        .search-input { width: 100%; padding: 10px 14px; background: #090b10; border: 1px solid #30363d; color: #fff; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
+        .search-input { width: 100%; padding: 10px 14px; background: #090b10; border: 1px solid #30363d; color: #fff; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; }
         .search-input:focus { border-color: #2962ff; }
 
         .profile-display-area { padding: 0; overflow-y: auto; flex-grow: 1; }
@@ -96,7 +51,8 @@
         .profile-core-info { padding: 15px 20px 0 20px; }
         .profile-header-row { display: flex; justify-content: space-between; align-items: flex-start; }
         .profile-name-title { font-size: 20px; font-weight: 700; color: #fff; margin: 0 0 2px 0; }
-        .profile-handle { font-size: 12px; color: #8b949e; font-family: 'JetBrains Mono', monospace; }
+        .profile-meta-line { font-size: 12px; color: #8b949e; margin-top: 4px; display: flex; gap: 10px; align-items: center; }
+        .meta-divider { color: #30363d; }
         
         .follow-stats { display: flex; gap: 15px; margin-top: 12px; font-size: 13px; }
         .follow-stat { color: #8b949e; }
@@ -104,15 +60,16 @@
 
         .profile-tabs { display: flex; border-bottom: 1px solid #1c2230; margin-top: 20px; }
         .p-tab { flex: 1; text-align: center; padding: 12px 0; color: #8b949e; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; font-size: 12.5px; }
-        .p-tab:hover { color: #c9d1d9; background: rgba(255,255,255,0.02); }
         .p-tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
 
         .profile-tab-content { padding: 20px; display: none; }
         .profile-tab-content.active { display: block; }
         
-        .profile-bio { font-size: 13.5px; color: #c9d1d9; line-height: 1.6; word-break: break-word; }
+        /* About Tab Details */
+        .about-section-title { font-size: 11px; color: #8b949e; text-transform: uppercase; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .about-text { font-size: 13.5px; color: #c9d1d9; line-height: 1.6; word-break: break-word; margin-bottom: 20px; }
         
-        /* MyFxBook Style Stats */
+        /* Stats Tab */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .stat-box { background: #161b22; border: 1px solid #30363d; padding: 12px; border-radius: 8px; text-align: center; }
         .stat-label { font-size: 10px; color: #8b949e; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
@@ -122,9 +79,9 @@
         
         .sidebar-actions { padding: 0 20px 20px 20px; display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
         
-        .btn-action { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12.5px; text-align: center; transition: all 0.2s; }
+        .btn-action { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12.5px; text-align: center; }
         .btn-action:hover { background: #30363d; color: #fff; }
-        .btn-primary-action { background: #2962ff; color: #fff; border: none; box-shadow: 0 2px 8px rgba(41, 98, 255, 0.3); }
+        .btn-primary-action { background: #2962ff; color: #fff; border: none; }
         .btn-primary-action:hover { background: #1e4bd8; color: #fff; }
 
         /* Right Panel: Feed Area */
@@ -133,13 +90,11 @@
         
         .feed-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 15px; }
         .feed-tabs { display: flex; gap: 10px; }
-        .f-tab { background: transparent; border: none; color: #8b949e; font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
-        .f-tab:hover { color: #fff; }
+        .f-tab { background: transparent; border: none; color: #8b949e; font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 12px; border-radius: 6px; }
         .f-tab.active { background: rgba(41, 98, 255, 0.1); color: #58a6ff; }
         
         .feed-search-container { flex-grow: 1; max-width: 300px; }
         .feed-search-input { width: 100%; padding: 8px 12px; background: #090b10; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-size: 12px; outline: none; }
-        .feed-search-input:focus { border-color: #58a6ff; }
 
         .feed-scroll-area { overflow-y: auto; flex-grow: 1; padding: 20px 25px; }
         .feed-scroll-area::-webkit-scrollbar, .profile-display-area::-webkit-scrollbar { width: 6px; }
@@ -150,45 +105,39 @@
         .composer-textarea { width: 100%; background: transparent; border: none; color: #fff; font-family: 'Inter', sans-serif; font-size: 13.5px; resize: none; height: 70px; outline: none; }
         .composer-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 10px; margin-top: 5px; }
         .word-counter { font-size: 11px; color: #8b949e; font-family: 'JetBrains Mono', monospace; }
-        .btn-post { background: #2962ff; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; font-size: 12.5px; cursor: pointer; transition: background 0.2s; }
-        .btn-post:hover { background: #1e4bd8; }
+        .btn-post { background: #2962ff; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; font-size: 12.5px; cursor: pointer; }
 
         /* Post Card Styling */
-        .post-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 18px; margin-bottom: 15px; transition: border-color 0.2s; }
-        .post-card:hover { border-color: #4b5563; }
+        .post-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 18px; margin-bottom: 15px; }
         .post-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-        .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(41, 98, 255, 0.15); border: 1px solid rgba(41, 98, 255, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #58a6ff; font-size: 14px; cursor: pointer; position: relative; }
+        .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(41, 98, 255, 0.15); border: 1px solid rgba(41, 98, 255, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #58a6ff; font-size: 14px; cursor: pointer; }
         .post-author-info { display: flex; flex-direction: column; cursor: pointer; }
         .post-author-name { font-weight: 600; color: #fff; font-size: 13.5px; }
-        .post-author-name:hover { color: #58a6ff; text-decoration: underline; }
         .post-timestamp { font-size: 11px; color: #8b949e; }
-        
         .post-body { font-size: 13.5px; color: #d1d4dc; line-height: 1.6; margin-bottom: 15px; word-break: break-word; }
 
-        /* Replies Section */
+        /* Replies */
         .replies-container { margin-top: 12px; padding-left: 20px; border-left: 2px solid #21262d; display: flex; flex-direction: column; gap: 10px; }
         .reply-item { background: #0d1117; border: 1px solid #21262d; padding: 10px 14px; border-radius: 8px; }
         .reply-meta { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11.5px; }
         .reply-author { font-weight: 600; color: #58a6ff; cursor: pointer; }
         .reply-text { font-size: 13px; color: #c9d1d9; word-break: break-word; }
-
         .reply-composer { display: flex; gap: 8px; margin-top: 12px; }
         .reply-input { flex-grow: 1; background: #090b10; border: 1px solid #30363d; color: #fff; padding: 8px 12px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 12px; outline: none; }
-        .reply-input:focus { border-color: #2962ff; }
         .btn-reply-submit { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
-        .btn-reply-submit:hover { background: #30363d; color: #fff; }
 
         /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
-        .modal-content { background-color: #0d1117; margin: 5% auto; padding: 30px; border: 1px solid #30363d; width: 90%; max-width: 500px; color: #c9d1d9; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); max-height: 85vh; overflow-y: auto;}
+        .modal-content { background-color: #0d1117; margin: 2% auto; padding: 30px; border: 1px solid #30363d; width: 90%; max-width: 600px; color: #c9d1d9; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto;}
         .modal-header { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 20px; border-bottom: 1px solid #1c2230; padding-bottom: 10px;}
         .form-group { margin-bottom: 15px; }
         .form-label { font-size: 11px; color: #8b949e; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; display: block; }
-        .form-input, .form-textarea { width: 100%; padding: 10px 12px; background: #161b22; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; }
+        .form-input, .form-textarea, .form-select { width: 100%; padding: 10px 12px; background: #161b22; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; }
         .form-textarea { resize: vertical; height: 70px; }
-        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 25px; }
+        
+        .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-        /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 950px) {
             body { height: auto; overflow: auto; }
             .network-container { grid-template-columns: 1fr; height: auto; overflow: visible; padding: 10px; }
@@ -229,21 +178,51 @@
     </div>
 </div>
 
-<!-- Edit Profile Modal -->
+<!-- Edit Profile Modal with Full Database Schema Readiness -->
 <div id="editProfileModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">Edit Profile & Stats</div>
-        <div class="form-group">
-            <label class="form-label">Display Name</label>
-            <input type="text" id="edit-name" class="form-input">
+        <div class="modal-header">Edit Profile Information</div>
+        
+        <div class="edit-grid">
+            <div class="form-group">
+                <label class="form-label">Display Name</label>
+                <input type="text" id="edit-name" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Location</label>
+                <input type="text" id="edit-location" class="form-input" placeholder="e.g. London, UK">
+            </div>
         </div>
+
         <div class="form-group">
-            <label class="form-label">Bio (Strategy / Focus)</label>
-            <textarea id="edit-bio" class="form-textarea" placeholder="Tell the network about your trading focus..."></textarea>
+            <label class="form-label">Trading Experience</label>
+            <select id="edit-experience" class="form-select">
+                <option value="">Select experience level...</option>
+                <option value="Less than 1 year">Less than 1 year</option>
+                <option value="1-3 years">1-3 years</option>
+                <option value="3-5 years">3-5 years</option>
+                <option value="More than 5 years">More than 5 years</option>
+                <option value="10+ years Professional">10+ years Professional</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Bio</label>
+            <textarea id="edit-bio" class="form-textarea" placeholder="Who are you? What is your background?"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Trading Style</label>
+            <textarea id="edit-trading-style" class="form-textarea" placeholder="e.g. Intraday Trading & Precision Scalping..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Motto</label>
+            <input type="text" id="edit-motto" class="form-input" placeholder="e.g. Protect Capital | Trade with Discipline">
         </div>
         
-        <h4 style="color: #fff; margin: 20px 0 10px 0; font-size: 14px;">Trading Stats (MyFxBook Style)</h4>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <h4 style="color: #fff; margin: 20px 0 10px 0; font-size: 14px; border-bottom: 1px solid #1c2230; padding-bottom: 8px;">Trading Stats</h4>
+        <div class="edit-grid">
             <div class="form-group">
                 <label class="form-label">Total Gain (%)</label>
                 <input type="text" id="edit-gain" class="form-input" placeholder="e.g. +45.2%">
@@ -297,12 +276,12 @@
         </div>
 
         <div class="feed-scroll-area">
-            <!-- Post Composer -->
+            <!-- Main Global Post Composer -->
             <div class="composer-box">
-                <textarea id="post-input" class="composer-textarea" placeholder="Share a market insight or trade thought (max 100 words)..." oninput="updateWordCount()"></textarea>
+                <textarea id="post-input-main" class="composer-textarea" placeholder="Share a market insight or trade thought (max 100 words)..." oninput="updateWordCount('post-input-main', 'word-counter-main')"></textarea>
                 <div class="composer-footer">
-                    <span id="word-counter" class="word-counter">100 words remaining</span>
-                    <button class="btn-post" onclick="submitPost()">Post Message</button>
+                    <span id="word-counter-main" class="word-counter">100 words remaining</span>
+                    <button class="btn-post" onclick="submitPost('post-input-main', 'word-counter-main')">Post Message</button>
                 </div>
             </div>
 
@@ -365,8 +344,8 @@
     let loggedInUser = null;
     let viewedProfileEmail = null;
     let allMembersCache = [];
-    let currentFeedFilter = 'global'; // 'global' or 'following'
-    let currentProfileTab = 'about'; // 'about', 'stats', 'feed'
+    let currentFeedFilter = 'global'; 
+    let currentProfileTab = 'about'; 
 
     // ==========================================
     // LOCAL STORAGE MOCK DATABASE
@@ -435,15 +414,19 @@
                 document.getElementById('nav-profile').style.display = 'block';
             }
 
-            // Ensure current user exists in local cache, update lastSeen
+            // Ensure profile exists in local cache with full schema
             const profilesCache = getStoredProfiles();
             if (!profilesCache[loggedInUser.email]) {
                 profilesCache[loggedInUser.email] = {
                     name: profile.full_name || loggedInUser.email.split('@')[0],
+                    location: '',
+                    experience: '',
                     bio: 'Active Analyst Wire Community Member & Trader.',
+                    tradingStyle: '',
+                    motto: '',
                     followers: [],
                     following: [],
-                    stats: { gain: '+0.0%', drawdown: '-0.0%', winrate: '0%', trades: 0 },
+                    stats: { gain: '', drawdown: '', winrate: '', trades: 0 },
                     lastSeen: Date.now()
                 };
             } else {
@@ -456,15 +439,14 @@
         renderLeftProfile(viewedProfileEmail);
         renderFeed();
         
-        // Ping online status every minute
         setInterval(() => {
             const cache = getStoredProfiles();
             if (cache[loggedInUser.email]) {
                 cache[loggedInUser.email].lastSeen = Date.now();
                 saveStoredProfiles(cache);
-                renderLeftProfile(viewedProfileEmail); // refresh indicator
+                renderLeftProfile(viewedProfileEmail); 
             }
-            renderFeed(); // refresh timestamps
+            renderFeed(); 
         }, 60000);
     }
 
@@ -473,13 +455,11 @@
         const profilesCache = getStoredProfiles();
         
         const memberMap = {};
-        // Add self
         memberMap[loggedInUser.email] = {
             email: loggedInUser.email,
             name: profilesCache[loggedInUser.email]?.name || loggedInUser.email.split('@')[0],
         };
 
-        // Extract everyone from posts
         posts.forEach(p => {
             memberMap[p.email] = { email: p.email, name: profilesCache[p.email]?.name || p.name };
             p.replies.forEach(r => {
@@ -496,13 +476,10 @@
         viewedProfileEmail = email;
         const profilesCache = getStoredProfiles();
         
-        // Default structure if missing
+        // Full schema fallback
         const memberData = profilesCache[email] || {
-            name: email.split('@')[0],
-            bio: 'Member profile.',
-            followers: [], following: [],
-            stats: { gain: 'N/A', drawdown: 'N/A', winrate: 'N/A', trades: 0 },
-            lastSeen: 0
+            name: email.split('@')[0], location: '', experience: '', bio: 'Member profile.', tradingStyle: '', motto: '',
+            followers: [], following: [], stats: { gain: '', drawdown: '', winrate: '', trades: 0 }, lastSeen: 0
         };
 
         const isMe = (email === loggedInUser.email);
@@ -511,7 +488,6 @@
         const followerCount = memberData.followers ? memberData.followers.length : 0;
         const followingCount = memberData.following ? memberData.following.length : 0;
         
-        // Online check (within last 5 minutes)
         const isOnline = (Date.now() - memberData.lastSeen) < (5 * 60 * 1000);
         const onlineClass = isOnline ? 'online' : '';
 
@@ -535,11 +511,42 @@
             `;
         }
 
-        // Format stats colors
-        const gainVal = String(memberData.stats.gain || 'N/A');
+        // Stats UI logic
+        const gainVal = memberData.stats.gain || 'N/A';
         const gainClass = gainVal.includes('+') ? 'val-up' : (gainVal.includes('-') ? 'val-down' : '');
-        const ddVal = String(memberData.stats.drawdown || 'N/A');
+        const ddVal = memberData.stats.drawdown || 'N/A';
         const ddClass = ddVal.includes('-') ? 'val-down' : '';
+
+        // Dynamic Meta Row logic
+        let metaHtml = '';
+        if (memberData.location || memberData.experience) {
+            metaHtml = `<div class="profile-meta-line">`;
+            if (memberData.location) metaHtml += `<span>📍 ${memberData.location}</span>`;
+            if (memberData.location && memberData.experience) metaHtml += `<span class="meta-divider">|</span>`;
+            if (memberData.experience) metaHtml += `<span>Experience: ${memberData.experience}</span>`;
+            metaHtml += `</div>`;
+        }
+
+        // Dynamic About Tab content
+        let aboutHtml = '';
+        if (memberData.bio) aboutHtml += `<div class="about-section-title">Bio</div><div class="about-text">${memberData.bio}</div>`;
+        if (memberData.tradingStyle) aboutHtml += `<div class="about-section-title">Trading Style</div><div class="about-text" style="white-space: pre-line;">${memberData.tradingStyle}</div>`;
+        if (memberData.motto) aboutHtml += `<div class="about-section-title">Motto</div><div class="about-text" style="font-style: italic;">"${memberData.motto}"</div>`;
+        if (!aboutHtml) aboutHtml = `<div class="about-text">No profile information provided yet.</div>`;
+
+        // If you are on your own profile's Feed tab, inject the composer box
+        let privateComposerHtml = '';
+        if (isMe) {
+            privateComposerHtml = `
+                <div class="composer-box" style="margin-bottom: 20px;">
+                    <textarea id="post-input-private" class="composer-textarea" placeholder="Post to your personal feed..." oninput="updateWordCount('post-input-private', 'word-counter-private')"></textarea>
+                    <div class="composer-footer">
+                        <span id="word-counter-private" class="word-counter">100 words remaining</span>
+                        <button class="btn-post" onclick="submitPost('post-input-private', 'word-counter-private')">Post</button>
+                    </div>
+                </div>
+            `;
+        }
 
         container.innerHTML = `
             <div class="profile-banner"></div>
@@ -553,6 +560,7 @@
                 <div style="margin-top: 15px;">
                     <h2 class="profile-name-title">${memberData.name}</h2>
                     <div class="profile-handle">${email}</div>
+                    ${metaHtml}
                     <div class="follow-stats">
                         <span class="follow-stat"><strong>${followingCount}</strong> Following</span>
                         <span class="follow-stat"><strong>${followerCount}</strong> Followers</span>
@@ -566,12 +574,10 @@
                 <div class="p-tab ${currentProfileTab === 'feed' ? 'active' : ''}" onclick="switchProfileTab('feed')">Feed</div>
             </div>
 
-            <!-- ABOUT TAB -->
             <div id="tab-content-about" class="profile-tab-content ${currentProfileTab === 'about' ? 'active' : ''}">
-                <div class="profile-bio">${memberData.bio}</div>
+                ${aboutHtml}
             </div>
 
-            <!-- STATS TAB -->
             <div id="tab-content-stats" class="profile-tab-content ${currentProfileTab === 'stats' ? 'active' : ''}">
                 <div class="stats-grid">
                     <div class="stat-box">
@@ -593,8 +599,8 @@
                 </div>
             </div>
 
-            <!-- PRIVATE FEED TAB -->
-            <div id="tab-content-feed" class="profile-tab-content ${currentProfileTab === 'feed' ? 'active' : ''}">
+            <div id="tab-content-feed" class="profile-tab-content ${currentProfileTab === 'feed' ? 'active' : ''}" style="padding: 15px;">
+                ${privateComposerHtml}
                 <div id="private-feed-stream"></div>
             </div>
 
@@ -613,11 +619,7 @@
         const profilesCache = getStoredProfiles();
         const myProfile = profilesCache[loggedInUser.email];
         
-        // Init arrays if missing
         if (!myProfile.following) myProfile.following = [];
-        if (!profilesCache[targetEmail]) {
-            profilesCache[targetEmail] = { name: targetEmail.split('@')[0], bio: '', followers: [], following: [], stats: {}, lastSeen: 0 };
-        }
         if (!profilesCache[targetEmail].followers) profilesCache[targetEmail].followers = [];
 
         const isFollowing = myProfile.following.includes(targetEmail);
@@ -632,7 +634,7 @@
 
         saveStoredProfiles(profilesCache);
         renderLeftProfile(viewedProfileEmail);
-        if (currentFeedFilter === 'following') renderFeed(); // Update main feed if on following tab
+        if (currentFeedFilter === 'following') renderFeed(); 
     }
 
     function filterMembersList(query) {
@@ -650,10 +652,15 @@
     // ==========================================
     function openEditModal() {
         const profilesCache = getStoredProfiles();
-        const current = profilesCache[loggedInUser.email] || { name: '', bio: '', stats: {} };
+        const current = profilesCache[loggedInUser.email];
         
         document.getElementById('edit-name').value = current.name || '';
+        document.getElementById('edit-location').value = current.location || '';
+        document.getElementById('edit-experience').value = current.experience || '';
         document.getElementById('edit-bio').value = current.bio || '';
+        document.getElementById('edit-trading-style').value = current.tradingStyle || '';
+        document.getElementById('edit-motto').value = current.motto || '';
+
         document.getElementById('edit-gain').value = current.stats?.gain || '';
         document.getElementById('edit-drawdown').value = current.stats?.drawdown || '';
         document.getElementById('edit-winrate').value = current.stats?.winrate || '';
@@ -672,7 +679,11 @@
         profilesCache[loggedInUser.email] = {
             ...profilesCache[loggedInUser.email],
             name: newName,
+            location: document.getElementById('edit-location').value.trim(),
+            experience: document.getElementById('edit-experience').value,
             bio: document.getElementById('edit-bio').value.trim(),
+            tradingStyle: document.getElementById('edit-trading-style').value.trim(),
+            motto: document.getElementById('edit-motto').value.trim(),
             stats: {
                 gain: document.getElementById('edit-gain').value.trim(),
                 drawdown: document.getElementById('edit-drawdown').value.trim(),
@@ -698,18 +709,21 @@
         renderFeed();
     }
 
-    function updateWordCount() {
-        const text = document.getElementById('post-input').value.trim();
+    function updateWordCount(inputId, counterId) {
+        const text = document.getElementById(inputId).value.trim();
         const words = text === '' ? [] : text.split(/\s+/);
         const remaining = 100 - words.length;
         
-        const counter = document.getElementById('word-counter');
-        counter.innerText = `${remaining} words remaining`;
-        counter.style.color = remaining < 0 ? '#f85149' : '#8b949e';
+        const counter = document.getElementById(counterId);
+        if(counter) {
+            counter.innerText = `${remaining} words remaining`;
+            counter.style.color = remaining < 0 ? '#f85149' : '#8b949e';
+        }
     }
 
-    function submitPost() {
-        const text = document.getElementById('post-input').value.trim();
+    function submitPost(inputId, counterId) {
+        const inputElem = document.getElementById(inputId);
+        const text = inputElem.value.trim();
         if (!text) return;
 
         const words = text.split(/\s+/);
@@ -729,11 +743,15 @@
         });
         saveStoredPosts(posts);
 
-        document.getElementById('post-input').value = '';
-        updateWordCount();
+        inputElem.value = '';
+        updateWordCount(inputId, counterId);
         refreshMembersCache();
+        
         renderFeed();
-        if (viewedProfileEmail === loggedInUser.email && currentProfileTab === 'feed') renderPrivateFeed(loggedInUser.email);
+        // If we are looking at our own profile's feed tab, update it immediately
+        if (viewedProfileEmail === loggedInUser.email && currentProfileTab === 'feed') {
+            renderPrivateFeed(loggedInUser.email);
+        }
     }
 
     function submitReply(postId) {
@@ -803,13 +821,11 @@
         let posts = getStoredPosts();
         const profilesCache = getStoredProfiles();
         
-        // 1. Filter by Following
         if (currentFeedFilter === 'following') {
             const myFollowing = profilesCache[loggedInUser.email]?.following || [];
             posts = posts.filter(p => myFollowing.includes(p.email) || p.email === loggedInUser.email);
         }
 
-        // 2. Filter by Search Query
         const query = document.getElementById('feed-search').value.toLowerCase();
         if (query) {
             posts = posts.filter(p => {
