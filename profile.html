@@ -43,64 +43,24 @@
             width: 100%; 
         }
         .nav-links { display: flex; align-items: center; gap: 5px; }
-        .nav-links a { 
-            color: #8b949e; 
-            text-decoration: none; 
-            margin-left: 15px; 
-            font-size: 13px; 
-            font-weight: 500; 
-            cursor: pointer; 
-            transition: color 0.2s; 
-            padding: 6px 12px; 
-            border-radius: 6px; 
-        }
+        .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
         .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
         .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
 
-        .mobile-menu-btn { 
-            display: none; 
-            font-size: 24px; 
-            color: #8b949e; 
-            cursor: pointer; 
-            background: none; 
-            border: none; 
-        }
+        .mobile-menu-btn { display: none; font-size: 24px; color: #8b949e; cursor: pointer; background: none; border: none; }
 
         /* Dropdown Styling */
         .dropdown { position: relative; margin-left: 10px; }
         .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
         .dropbtn:hover { color: #fff; }
-        .dropdown-content { 
-            display: none; 
-            position: absolute; 
-            right: 0; 
-            top: 35px; 
-            background-color: #161b22; 
-            min-width: 160px; 
-            border: 1px solid #30363d; 
-            z-index: 1000; 
-            border-radius: 8px; 
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5); 
-            overflow: hidden; 
-        }
-        .dropdown-content a { 
-            color: #c9d1d9; 
-            padding: 10px 16px; 
-            text-decoration: none; 
-            display: block; 
-            font-size: 13px; 
-            cursor: pointer; 
-            transition: background 0.15s; 
-            margin: 0; 
-            border-radius: 0; 
-            font-family: 'Inter', sans-serif; 
-        }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
+        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; font-family: 'Inter', sans-serif; }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
         /* Two-Column Layout */
         .network-container {
             display: grid;
-            grid-template-columns: 380px 1fr;
+            grid-template-columns: 420px 1fr;
             gap: 25px;
             height: calc(100vh - 55px);
             margin-top: 55px;
@@ -121,255 +81,121 @@
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid #1c2230;
-            background: #161b22;
-        }
-        .search-input {
-            width: 100%;
-            padding: 10px 14px;
-            background: #090b10;
-            border: 1px solid #30363d;
-            color: #fff;
-            border-radius: 8px;
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
+        .sidebar-header { padding: 15px 20px; border-bottom: 1px solid #1c2230; background: #161b22; }
+        .search-input { width: 100%; padding: 10px 14px; background: #090b10; border: 1px solid #30363d; color: #fff; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
         .search-input:focus { border-color: #2962ff; }
 
-        .profile-display-area {
-            padding: 25px 20px;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-        .profile-banner {
-            height: 80px;
-            background: linear-gradient(135deg, #2962ff, #1e4bd8);
-            border-radius: 8px;
-            margin-bottom: -40px;
-        }
-        .profile-avatar-large {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: #161b22;
-            border: 3px solid #0d1117;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: 700;
-            color: #58a6ff;
-            margin-left: 15px;
-            margin-bottom: 15px;
-        }
-        .profile-name-title { font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 4px 0; }
-        .profile-handle { font-size: 12px; color: #8b949e; margin-bottom: 15px; font-family: 'JetBrains Mono', monospace; }
-        .profile-bio { font-size: 13px; color: #c9d1d9; line-height: 1.5; margin-bottom: 20px; word-break: break-word; }
+        .profile-display-area { padding: 0; overflow-y: auto; flex-grow: 1; }
+        .profile-banner { height: 100px; background: linear-gradient(135deg, #1e4bd8, #112a7a); position: relative; }
         
-        .sidebar-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .btn-action {
-            background: #21262d;
-            color: #c9d1d9;
-            border: 1px solid #30363d;
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 12.5px;
-            text-align: center;
-            transition: background 0.2s, color 0.2s;
-        }
+        .avatar-container { position: relative; width: 80px; height: 80px; margin-top: -40px; margin-left: 20px; }
+        .profile-avatar-large { width: 100%; height: 100%; border-radius: 50%; background: #161b22; border: 4px solid #0d1117; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #58a6ff; }
+        .status-dot { position: absolute; bottom: 5px; right: 5px; width: 16px; height: 16px; background-color: #3fb950; border: 3px solid #0d1117; border-radius: 50%; display: none; }
+        .status-dot.online { display: block; box-shadow: 0 0 8px rgba(63, 185, 80, 0.6); }
+
+        .profile-core-info { padding: 15px 20px 0 20px; }
+        .profile-header-row { display: flex; justify-content: space-between; align-items: flex-start; }
+        .profile-name-title { font-size: 20px; font-weight: 700; color: #fff; margin: 0 0 2px 0; }
+        .profile-handle { font-size: 12px; color: #8b949e; font-family: 'JetBrains Mono', monospace; }
+        
+        .follow-stats { display: flex; gap: 15px; margin-top: 12px; font-size: 13px; }
+        .follow-stat { color: #8b949e; }
+        .follow-stat strong { color: #fff; font-weight: 700; }
+
+        .profile-tabs { display: flex; border-bottom: 1px solid #1c2230; margin-top: 20px; }
+        .p-tab { flex: 1; text-align: center; padding: 12px 0; color: #8b949e; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; font-size: 12.5px; }
+        .p-tab:hover { color: #c9d1d9; background: rgba(255,255,255,0.02); }
+        .p-tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+
+        .profile-tab-content { padding: 20px; display: none; }
+        .profile-tab-content.active { display: block; }
+        
+        .profile-bio { font-size: 13.5px; color: #c9d1d9; line-height: 1.6; word-break: break-word; }
+        
+        /* MyFxBook Style Stats */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .stat-box { background: #161b22; border: 1px solid #30363d; padding: 12px; border-radius: 8px; text-align: center; }
+        .stat-label { font-size: 10px; color: #8b949e; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
+        .stat-val { font-size: 16px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .val-up { color: #3fb950; }
+        .val-down { color: #f85149; }
+        
+        .sidebar-actions { padding: 0 20px 20px 20px; display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+        
+        .btn-action { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12.5px; text-align: center; transition: all 0.2s; }
         .btn-action:hover { background: #30363d; color: #fff; }
-        .btn-primary-action {
-            background: #2962ff;
-            color: #fff;
-            border: none;
-            box-shadow: 0 2px 8px rgba(41, 98, 255, 0.3);
-        }
+        .btn-primary-action { background: #2962ff; color: #fff; border: none; box-shadow: 0 2px 8px rgba(41, 98, 255, 0.3); }
         .btn-primary-action:hover { background: #1e4bd8; color: #fff; }
 
         /* Right Panel: Feed Area */
-        .feed-panel {
-            background: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        .feed-header {
-            padding: 15px 25px;
-            border-bottom: 1px solid #1c2230;
-            background: #161b22;
-            font-size: 16px;
-            font-weight: 600;
-            color: #fff;
-        }
-        .feed-scroll-area {
-            overflow-y: auto;
-            flex-grow: 1;
-            padding: 20px 25px;
-        }
+        .feed-panel { background: #0d1117; border: 1px solid #30363d; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .feed-header-area { padding: 15px 25px 0 25px; border-bottom: 1px solid #1c2230; background: #161b22; }
+        
+        .feed-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 15px; }
+        .feed-tabs { display: flex; gap: 10px; }
+        .f-tab { background: transparent; border: none; color: #8b949e; font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
+        .f-tab:hover { color: #fff; }
+        .f-tab.active { background: rgba(41, 98, 255, 0.1); color: #58a6ff; }
+        
+        .feed-search-container { flex-grow: 1; max-width: 300px; }
+        .feed-search-input { width: 100%; padding: 8px 12px; background: #090b10; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-size: 12px; outline: none; }
+        .feed-search-input:focus { border-color: #58a6ff; }
+
+        .feed-scroll-area { overflow-y: auto; flex-grow: 1; padding: 20px 25px; }
         .feed-scroll-area::-webkit-scrollbar, .profile-display-area::-webkit-scrollbar { width: 6px; }
         .feed-scroll-area::-webkit-scrollbar-thumb, .profile-display-area::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 
         /* Post Composer */
-        .composer-box {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 25px;
-        }
-        .composer-textarea {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-family: 'Inter', sans-serif;
-            font-size: 13.5px;
-            resize: none;
-            height: 70px;
-            outline: none;
-        }
-        .composer-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid #21262d;
-            padding-top: 10px;
-            margin-top: 5px;
-        }
+        .composer-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 15px; margin-bottom: 25px; }
+        .composer-textarea { width: 100%; background: transparent; border: none; color: #fff; font-family: 'Inter', sans-serif; font-size: 13.5px; resize: none; height: 70px; outline: none; }
+        .composer-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 10px; margin-top: 5px; }
         .word-counter { font-size: 11px; color: #8b949e; font-family: 'JetBrains Mono', monospace; }
-        .btn-post {
-            background: #2962ff;
-            color: #fff;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 12.5px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+        .btn-post { background: #2962ff; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; font-size: 12.5px; cursor: pointer; transition: background 0.2s; }
         .btn-post:hover { background: #1e4bd8; }
 
         /* Post Card Styling */
-        .post-card {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 10px;
-            padding: 18px;
-            margin-bottom: 15px;
-            transition: border-color 0.2s;
-        }
+        .post-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 18px; margin-bottom: 15px; transition: border-color 0.2s; }
         .post-card:hover { border-color: #4b5563; }
-        .post-meta {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-        .post-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: rgba(41, 98, 255, 0.15);
-            border: 1px solid rgba(41, 98, 255, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            color: #58a6ff;
-            font-size: 14px;
-            cursor: pointer;
-        }
+        .post-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(41, 98, 255, 0.15); border: 1px solid rgba(41, 98, 255, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #58a6ff; font-size: 14px; cursor: pointer; position: relative; }
         .post-author-info { display: flex; flex-direction: column; cursor: pointer; }
         .post-author-name { font-weight: 600; color: #fff; font-size: 13.5px; }
         .post-author-name:hover { color: #58a6ff; text-decoration: underline; }
         .post-timestamp { font-size: 11px; color: #8b949e; }
         
-        .post-body {
-            font-size: 13.5px;
-            color: #d1d4dc;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            word-break: break-word;
-        }
+        .post-body { font-size: 13.5px; color: #d1d4dc; line-height: 1.6; margin-bottom: 15px; word-break: break-word; }
 
         /* Replies Section */
-        .replies-container {
-            margin-top: 12px;
-            padding-left: 20px;
-            border-left: 2px solid #21262d;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .reply-item {
-            background: #0d1117;
-            border: 1px solid #21262d;
-            padding: 10px 14px;
-            border-radius: 8px;
-        }
+        .replies-container { margin-top: 12px; padding-left: 20px; border-left: 2px solid #21262d; display: flex; flex-direction: column; gap: 10px; }
+        .reply-item { background: #0d1117; border: 1px solid #21262d; padding: 10px 14px; border-radius: 8px; }
         .reply-meta { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11.5px; }
         .reply-author { font-weight: 600; color: #58a6ff; cursor: pointer; }
         .reply-text { font-size: 13px; color: #c9d1d9; word-break: break-word; }
 
-        .reply-composer {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-        .reply-input {
-            flex-grow: 1;
-            background: #090b10;
-            border: 1px solid #30363d;
-            color: #fff;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 12px;
-            outline: none;
-        }
+        .reply-composer { display: flex; gap: 8px; margin-top: 12px; }
+        .reply-input { flex-grow: 1; background: #090b10; border: 1px solid #30363d; color: #fff; padding: 8px 12px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 12px; outline: none; }
         .reply-input:focus { border-color: #2962ff; }
-        .btn-reply-submit {
-            background: #21262d;
-            color: #c9d1d9;
-            border: 1px solid #30363d;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 12px;
-            cursor: pointer;
-        }
+        .btn-reply-submit { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
         .btn-reply-submit:hover { background: #30363d; color: #fff; }
 
-        /* Modal Styles for Editing Profile */
+        /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
-        .modal-content { background-color: #0d1117; margin: 10% auto; padding: 30px; border: 1px solid #30363d; width: 90%; max-width: 450px; color: #c9d1d9; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
-        .modal-header { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 20px; }
+        .modal-content { background-color: #0d1117; margin: 5% auto; padding: 30px; border: 1px solid #30363d; width: 90%; max-width: 500px; color: #c9d1d9; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); max-height: 85vh; overflow-y: auto;}
+        .modal-header { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 20px; border-bottom: 1px solid #1c2230; padding-bottom: 10px;}
         .form-group { margin-bottom: 15px; }
         .form-label { font-size: 11px; color: #8b949e; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; display: block; }
         .form-input, .form-textarea { width: 100%; padding: 10px 12px; background: #161b22; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; }
-        .form-textarea { resize: vertical; height: 80px; }
+        .form-textarea { resize: vertical; height: 70px; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
 
         /* --- MOBILE RESPONSIVE --- */
-        @media (max-width: 900px) {
+        @media (max-width: 950px) {
             body { height: auto; overflow: auto; }
             .network-container { grid-template-columns: 1fr; height: auto; overflow: visible; padding: 10px; }
             .sidebar-panel { height: auto; margin-bottom: 20px; }
             .feed-panel { height: auto; }
+            .feed-controls { flex-direction: column; align-items: stretch; }
+            .feed-search-container { max-width: 100%; }
         }
     </style>
 </head>
@@ -406,15 +232,36 @@
 <!-- Edit Profile Modal -->
 <div id="editProfileModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">Edit Profile</div>
+        <div class="modal-header">Edit Profile & Stats</div>
         <div class="form-group">
             <label class="form-label">Display Name</label>
             <input type="text" id="edit-name" class="form-input">
         </div>
         <div class="form-group">
-            <label class="form-label">Bio (Short Intro)</label>
+            <label class="form-label">Bio (Strategy / Focus)</label>
             <textarea id="edit-bio" class="form-textarea" placeholder="Tell the network about your trading focus..."></textarea>
         </div>
+        
+        <h4 style="color: #fff; margin: 20px 0 10px 0; font-size: 14px;">Trading Stats (MyFxBook Style)</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label class="form-label">Total Gain (%)</label>
+                <input type="text" id="edit-gain" class="form-input" placeholder="e.g. +45.2%">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Max Drawdown (%)</label>
+                <input type="text" id="edit-drawdown" class="form-input" placeholder="e.g. -12.4%">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Win Rate (%)</label>
+                <input type="text" id="edit-winrate" class="form-input" placeholder="e.g. 68%">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Total Trades</label>
+                <input type="number" id="edit-trades" class="form-input" placeholder="e.g. 142">
+            </div>
+        </div>
+
         <div class="modal-buttons">
             <button class="btn-action btn-primary-action" style="flex: 1;" onclick="saveProfileChanges()">Save Changes</button>
             <button class="btn-action" style="flex: 1;" onclick="closeEditModal()">Cancel</button>
@@ -427,7 +274,7 @@
     <!-- LEFT SIDEBAR: PROFILE & SEARCH -->
     <div class="sidebar-panel">
         <div class="sidebar-header">
-            <input type="text" id="member-search" class="search-input" placeholder="Search members..." oninput="filterMembers(this.value)">
+            <input type="text" id="member-search" class="search-input" placeholder="Search members by name or email..." oninput="filterMembersList(this.value)">
         </div>
         
         <div class="profile-display-area" id="profile-display-card">
@@ -437,9 +284,19 @@
 
     <!-- RIGHT PANEL: FEED -->
     <div class="feed-panel">
-        <div class="feed-header">Market Network Feed</div>
+        <div class="feed-header-area">
+            <div class="feed-controls">
+                <div class="feed-tabs">
+                    <button id="tab-global" class="f-tab active" onclick="setFeedFilter('global')">Global Feed</button>
+                    <button id="tab-following" class="f-tab" onclick="setFeedFilter('following')">Following</button>
+                </div>
+                <div class="feed-search-container">
+                    <input type="text" id="feed-search" class="feed-search-input" placeholder="Search posts..." oninput="renderFeed()">
+                </div>
+            </div>
+        </div>
+
         <div class="feed-scroll-area">
-            
             <!-- Post Composer -->
             <div class="composer-box">
                 <textarea id="post-input" class="composer-textarea" placeholder="Share a market insight or trade thought (max 100 words)..." oninput="updateWordCount()"></textarea>
@@ -453,7 +310,6 @@
             <div id="posts-stream">
                 <div style="color: #8b949e; text-align: center; padding: 30px;">Loading feed...</div>
             </div>
-
         </div>
     </div>
 
@@ -476,9 +332,18 @@
         return false;
     }
 
-    function toggleNav() {
-        document.getElementById("navLinks").classList.toggle("active-nav");
+    function timeAgo(epoch) {
+        const seconds = Math.floor((Date.now() - epoch) / 1000);
+        if (seconds < 60) return 'Just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        const days = Math.floor(hours / 24);
+        return `${days}d ago`;
     }
+
+    function toggleNav() { document.getElementById("navLinks").classList.toggle("active-nav"); }
 
     function toggleDropdown(event) { 
         if (event) event.stopPropagation();
@@ -500,10 +365,14 @@
     let loggedInUser = null;
     let viewedProfileEmail = null;
     let allMembersCache = [];
+    let currentFeedFilter = 'global'; // 'global' or 'following'
+    let currentProfileTab = 'about'; // 'about', 'stats', 'feed'
 
-    // Local Storage Mock Database Cache
+    // ==========================================
+    // LOCAL STORAGE MOCK DATABASE
+    // ==========================================
     function getStoredPosts() {
-        const posts = localStorage.getItem('analyst_wire_posts');
+        const posts = localStorage.getItem('aw_net_posts');
         if (!posts) {
             const initial = [
                 {
@@ -511,40 +380,36 @@
                     email: 'marketmaker@analystwire.com',
                     name: 'Alex Vance',
                     text: 'Watching Gold closely around the daily key level. Liquidity clusters suggest a test of upper boundaries before any major distribution.',
-                    timestamp: '2 hours ago',
+                    timestamp: Date.now() - (1000 * 60 * 60 * 2), // 2 hours ago
                     replies: [
-                        { id: 'r1', email: 'trader_sarah@gmail.com', name: 'Sarah Jenkins', text: 'Agreed, DXY movement supports this thesis.', timestamp: '1 hour ago' }
+                        { id: 'r1', email: 'trader_sarah@gmail.com', name: 'Sarah Jenkins', text: 'Agreed, DXY movement supports this thesis.', timestamp: Date.now() - (1000 * 60 * 45) }
                     ]
                 }
             ];
-            localStorage.setItem('analyst_wire_posts', JSON.stringify(initial));
+            localStorage.setItem('aw_net_posts', JSON.stringify(initial));
             return initial;
         }
         return JSON.parse(posts);
     }
 
-    function saveStoredPosts(posts) {
-        localStorage.setItem('analyst_wire_posts', JSON.stringify(posts));
-    }
+    function saveStoredPosts(posts) { localStorage.setItem('aw_net_posts', JSON.stringify(posts)); }
 
     function getStoredProfiles() {
-        const profiles = localStorage.getItem('analyst_wire_profiles');
+        const profiles = localStorage.getItem('aw_net_profiles');
         return profiles ? JSON.parse(profiles) : {};
     }
 
-    function saveStoredProfiles(profiles) {
-        localStorage.setItem('analyst_wire_profiles', JSON.stringify(profiles));
-    }
+    function saveStoredProfiles(profiles) { localStorage.setItem('aw_net_profiles', JSON.stringify(profiles)); }
 
     // ==========================================
-    // INITIALIZATION & BOUNCER
+    // INITIALIZATION
     // ==========================================
     async function init() {
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
         
         loggedInUser = session.user;
-        viewedProfileEmail = loggedInUser.email; // Default left pane to your own profile
+        viewedProfileEmail = loggedInUser.email; 
 
         const { data: profile } = await client.from('profiles').select('*').eq('id', loggedInUser.id).single();
         
@@ -552,7 +417,6 @@
             const tagStr = profile.subscription_tag || 'free';
             const isAdmin = profile.is_admin === true;
 
-            // Nav visibility logic
             if (isAdmin) {
                 document.getElementById('nav-admin').style.display = 'block';
                 document.getElementById('nav-upload').style.display = 'block';
@@ -566,30 +430,42 @@
                 document.getElementById('nav-key-levels').style.display = 'block';
                 document.getElementById('nav-profile').style.display = 'block';
             } else {
-                if (userHasAccess(tagStr, 'course') || userHasAccess(tagStr, 'courses')) {
-                    document.getElementById('nav-courses').style.display = 'block';
-                }
-                if (userHasAccess(tagStr, 'newsfeed') || userHasAccess(tagStr, 'squawk')) {
-                    document.getElementById('nav-newsfeed').style.display = 'block';
-                }
+                if (userHasAccess(tagStr, 'course') || userHasAccess(tagStr, 'courses')) document.getElementById('nav-courses').style.display = 'block';
+                if (userHasAccess(tagStr, 'newsfeed') || userHasAccess(tagStr, 'squawk')) document.getElementById('nav-newsfeed').style.display = 'block';
                 document.getElementById('nav-profile').style.display = 'block';
             }
 
-            // Ensure profile exists in local cache with supabase name if not already there
+            // Ensure current user exists in local cache, update lastSeen
             const profilesCache = getStoredProfiles();
             if (!profilesCache[loggedInUser.email]) {
                 profilesCache[loggedInUser.email] = {
                     name: profile.full_name || loggedInUser.email.split('@')[0],
-                    bio: 'Active Analyst Wire Community Member & Trader.'
+                    bio: 'Active Analyst Wire Community Member & Trader.',
+                    followers: [],
+                    following: [],
+                    stats: { gain: '+0.0%', drawdown: '-0.0%', winrate: '0%', trades: 0 },
+                    lastSeen: Date.now()
                 };
-                saveStoredProfiles(profilesCache);
+            } else {
+                profilesCache[loggedInUser.email].lastSeen = Date.now();
             }
+            saveStoredProfiles(profilesCache);
         }
 
-        // Build mock members cache from existing feed posters + logged in user
         refreshMembersCache();
         renderLeftProfile(viewedProfileEmail);
         renderFeed();
+        
+        // Ping online status every minute
+        setInterval(() => {
+            const cache = getStoredProfiles();
+            if (cache[loggedInUser.email]) {
+                cache[loggedInUser.email].lastSeen = Date.now();
+                saveStoredProfiles(cache);
+                renderLeftProfile(viewedProfileEmail); // refresh indicator
+            }
+            renderFeed(); // refresh timestamps
+        }, 60000);
     }
 
     function refreshMembersCache() {
@@ -597,27 +473,19 @@
         const profilesCache = getStoredProfiles();
         
         const memberMap = {};
+        // Add self
         memberMap[loggedInUser.email] = {
             email: loggedInUser.email,
             name: profilesCache[loggedInUser.email]?.name || loggedInUser.email.split('@')[0],
-            bio: profilesCache[loggedInUser.email]?.bio || 'Active member.'
         };
 
+        // Extract everyone from posts
         posts.forEach(p => {
-            memberMap[p.email] = {
-                email: p.email,
-                name: profilesCache[p.email]?.name || p.name,
-                bio: profilesCache[p.email]?.bio || 'Community Trader.'
-            };
+            memberMap[p.email] = { email: p.email, name: profilesCache[p.email]?.name || p.name };
             p.replies.forEach(r => {
-                memberMap[r.email] = {
-                    email: r.email,
-                    name: profilesCache[r.email]?.name || r.name,
-                    bio: profilesCache[r.email]?.bio || 'Community Trader.'
-                };
+                memberMap[r.email] = { email: r.email, name: profilesCache[r.email]?.name || r.name };
             });
         });
-
         allMembersCache = Object.values(memberMap);
     }
 
@@ -627,13 +495,26 @@
     function renderLeftProfile(email) {
         viewedProfileEmail = email;
         const profilesCache = getStoredProfiles();
-        const member = allMembersCache.find(m => m.email === email) || {
-            email: email,
-            name: profilesCache[email]?.name || email.split('@')[0],
-            bio: profilesCache[email]?.bio || 'Member profile.'
+        
+        // Default structure if missing
+        const memberData = profilesCache[email] || {
+            name: email.split('@')[0],
+            bio: 'Member profile.',
+            followers: [], following: [],
+            stats: { gain: 'N/A', drawdown: 'N/A', winrate: 'N/A', trades: 0 },
+            lastSeen: 0
         };
 
         const isMe = (email === loggedInUser.email);
+        const myProfile = profilesCache[loggedInUser.email];
+        const amIFollowing = myProfile.following.includes(email);
+        const followerCount = memberData.followers ? memberData.followers.length : 0;
+        const followingCount = memberData.following ? memberData.following.length : 0;
+        
+        // Online check (within last 5 minutes)
+        const isOnline = (Date.now() - memberData.lastSeen) < (5 * 60 * 1000);
+        const onlineClass = isOnline ? 'online' : '';
+
         const container = document.getElementById('profile-display-card');
 
         let actionsHtml = '';
@@ -646,26 +527,121 @@
         } else {
             actionsHtml = `
                 <div class="sidebar-actions">
-                    <button class="btn-action btn-primary-action" onclick="renderLeftProfile('${loggedInUser.email}')">Back to My Profile</button>
+                    <button class="btn-action ${amIFollowing ? '' : 'btn-primary-action'}" onclick="toggleFollow('${email}')">
+                        ${amIFollowing ? 'Unfollow' : 'Follow'}
+                    </button>
+                    <button class="btn-action" onclick="renderLeftProfile('${loggedInUser.email}')">Back to My Profile</button>
                 </div>
             `;
         }
 
+        // Format stats colors
+        const gainVal = String(memberData.stats.gain || 'N/A');
+        const gainClass = gainVal.includes('+') ? 'val-up' : (gainVal.includes('-') ? 'val-down' : '');
+        const ddVal = String(memberData.stats.drawdown || 'N/A');
+        const ddClass = ddVal.includes('-') ? 'val-down' : '';
+
         container.innerHTML = `
             <div class="profile-banner"></div>
-            <div class="profile-avatar-large">${member.name.charAt(0).toUpperCase()}</div>
-            <div class="profile-name-title">${member.name}</div>
-            <div class="profile-handle">${member.email}</div>
-            <div class="profile-bio">${member.bio}</div>
+            <div class="profile-core-info">
+                <div class="profile-header-row">
+                    <div class="avatar-container">
+                        <div class="profile-avatar-large">${memberData.name.charAt(0).toUpperCase()}</div>
+                        <div class="status-dot ${onlineClass}"></div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <h2 class="profile-name-title">${memberData.name}</h2>
+                    <div class="profile-handle">${email}</div>
+                    <div class="follow-stats">
+                        <span class="follow-stat"><strong>${followingCount}</strong> Following</span>
+                        <span class="follow-stat"><strong>${followerCount}</strong> Followers</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-tabs">
+                <div class="p-tab ${currentProfileTab === 'about' ? 'active' : ''}" onclick="switchProfileTab('about')">About</div>
+                <div class="p-tab ${currentProfileTab === 'stats' ? 'active' : ''}" onclick="switchProfileTab('stats')">Stats</div>
+                <div class="p-tab ${currentProfileTab === 'feed' ? 'active' : ''}" onclick="switchProfileTab('feed')">Feed</div>
+            </div>
+
+            <!-- ABOUT TAB -->
+            <div id="tab-content-about" class="profile-tab-content ${currentProfileTab === 'about' ? 'active' : ''}">
+                <div class="profile-bio">${memberData.bio}</div>
+            </div>
+
+            <!-- STATS TAB -->
+            <div id="tab-content-stats" class="profile-tab-content ${currentProfileTab === 'stats' ? 'active' : ''}">
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Gain</div>
+                        <div class="stat-val ${gainClass}">${gainVal}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Drawdown</div>
+                        <div class="stat-val ${ddClass}">${ddVal}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Win Rate</div>
+                        <div class="stat-val" style="color: #c9d1d9;">${memberData.stats.winrate || 'N/A'}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Trades</div>
+                        <div class="stat-val" style="color: #c9d1d9;">${memberData.stats.trades || 0}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRIVATE FEED TAB -->
+            <div id="tab-content-feed" class="profile-tab-content ${currentProfileTab === 'feed' ? 'active' : ''}">
+                <div id="private-feed-stream"></div>
+            </div>
+
             ${actionsHtml}
         `;
+
+        if (currentProfileTab === 'feed') renderPrivateFeed(email);
     }
 
-    function filterMembers(query) {
+    function switchProfileTab(tab) {
+        currentProfileTab = tab;
+        renderLeftProfile(viewedProfileEmail);
+    }
+
+    function toggleFollow(targetEmail) {
+        const profilesCache = getStoredProfiles();
+        const myProfile = profilesCache[loggedInUser.email];
+        
+        // Init arrays if missing
+        if (!myProfile.following) myProfile.following = [];
+        if (!profilesCache[targetEmail]) {
+            profilesCache[targetEmail] = { name: targetEmail.split('@')[0], bio: '', followers: [], following: [], stats: {}, lastSeen: 0 };
+        }
+        if (!profilesCache[targetEmail].followers) profilesCache[targetEmail].followers = [];
+
+        const isFollowing = myProfile.following.includes(targetEmail);
+
+        if (isFollowing) {
+            myProfile.following = myProfile.following.filter(e => e !== targetEmail);
+            profilesCache[targetEmail].followers = profilesCache[targetEmail].followers.filter(e => e !== loggedInUser.email);
+        } else {
+            myProfile.following.push(targetEmail);
+            profilesCache[targetEmail].followers.push(loggedInUser.email);
+        }
+
+        saveStoredProfiles(profilesCache);
+        renderLeftProfile(viewedProfileEmail);
+        if (currentFeedFilter === 'following') renderFeed(); // Update main feed if on following tab
+    }
+
+    function filterMembersList(query) {
         const q = query.toLowerCase();
         const filtered = allMembersCache.filter(m => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q));
-        if (filtered.length > 0) {
+        if (filtered.length > 0 && query.length > 2) {
             renderLeftProfile(filtered[0].email);
+        } else if (query.length === 0) {
+            renderLeftProfile(loggedInUser.email);
         }
     }
 
@@ -674,24 +650,36 @@
     // ==========================================
     function openEditModal() {
         const profilesCache = getStoredProfiles();
-        const current = profilesCache[loggedInUser.email] || { name: '', bio: '' };
-        document.getElementById('edit-name').value = current.name;
-        document.getElementById('edit-bio').value = current.bio;
+        const current = profilesCache[loggedInUser.email] || { name: '', bio: '', stats: {} };
+        
+        document.getElementById('edit-name').value = current.name || '';
+        document.getElementById('edit-bio').value = current.bio || '';
+        document.getElementById('edit-gain').value = current.stats?.gain || '';
+        document.getElementById('edit-drawdown').value = current.stats?.drawdown || '';
+        document.getElementById('edit-winrate').value = current.stats?.winrate || '';
+        document.getElementById('edit-trades').value = current.stats?.trades || '';
+        
         document.getElementById('editProfileModal').style.display = 'block';
     }
 
-    function closeEditModal() {
-        document.getElementById('editProfileModal').style.display = 'none';
-    }
+    function closeEditModal() { document.getElementById('editProfileModal').style.display = 'none'; }
 
     function saveProfileChanges() {
         const newName = document.getElementById('edit-name').value.trim();
-        const newBio = document.getElementById('edit-bio').value.trim();
-        
         if (!newName) return;
 
         const profilesCache = getStoredProfiles();
-        profilesCache[loggedInUser.email] = { name: newName, bio: newBio };
+        profilesCache[loggedInUser.email] = {
+            ...profilesCache[loggedInUser.email],
+            name: newName,
+            bio: document.getElementById('edit-bio').value.trim(),
+            stats: {
+                gain: document.getElementById('edit-gain').value.trim(),
+                drawdown: document.getElementById('edit-drawdown').value.trim(),
+                winrate: document.getElementById('edit-winrate').value.trim(),
+                trades: parseInt(document.getElementById('edit-trades').value) || 0
+            }
+        };
         saveStoredProfiles(profilesCache);
         
         refreshMembersCache();
@@ -703,6 +691,13 @@
     // ==========================================
     // FEED & POST COMPOSER LOGIC
     // ==========================================
+    function setFeedFilter(filter) {
+        currentFeedFilter = filter;
+        document.getElementById('tab-global').classList.toggle('active', filter === 'global');
+        document.getElementById('tab-following').classList.toggle('active', filter === 'following');
+        renderFeed();
+    }
+
     function updateWordCount() {
         const text = document.getElementById('post-input').value.trim();
         const words = text === '' ? [] : text.split(/\s+/);
@@ -710,11 +705,7 @@
         
         const counter = document.getElementById('word-counter');
         counter.innerText = `${remaining} words remaining`;
-        if (remaining < 0) {
-            counter.style.color = '#f85149';
-        } else {
-            counter.style.color = '#8b949e';
-        }
+        counter.style.color = remaining < 0 ? '#f85149' : '#8b949e';
     }
 
     function submitPost() {
@@ -722,31 +713,27 @@
         if (!text) return;
 
         const words = text.split(/\s+/);
-        if (words.length > 100) {
-            alert('Post exceeds the 100-word limit.');
-            return;
-        }
+        if (words.length > 100) { alert('Post exceeds the 100-word limit.'); return; }
 
         const profilesCache = getStoredProfiles();
         const myName = profilesCache[loggedInUser.email]?.name || loggedInUser.email.split('@')[0];
 
         const posts = getStoredPosts();
-        const newPost = {
+        posts.unshift({
             id: 'p_' + Date.now(),
             email: loggedInUser.email,
             name: myName,
             text: text,
-            timestamp: 'Just now',
+            timestamp: Date.now(),
             replies: []
-        };
-
-        posts.unshift(newPost);
+        });
         saveStoredPosts(posts);
 
         document.getElementById('post-input').value = '';
         updateWordCount();
         refreshMembersCache();
         renderFeed();
+        if (viewedProfileEmail === loggedInUser.email && currentProfileTab === 'feed') renderPrivateFeed(loggedInUser.email);
     }
 
     function submitReply(postId) {
@@ -765,61 +752,90 @@
                 email: loggedInUser.email,
                 name: myName,
                 text: text,
-                timestamp: 'Just now'
+                timestamp: Date.now()
             });
             saveStoredPosts(posts);
             refreshMembersCache();
             renderFeed();
+            if (currentProfileTab === 'feed') renderPrivateFeed(viewedProfileEmail);
         }
+    }
+
+    function buildPostHTML(post, profilesCache) {
+        const authorName = profilesCache[post.email]?.name || post.name;
+        const repliesHtml = post.replies.map(reply => {
+            const replyAuthorName = profilesCache[reply.email]?.name || reply.name;
+            return `
+                <div class="reply-item">
+                    <div class="reply-meta">
+                        <span class="reply-author" onclick="renderLeftProfile('${reply.email}')">${replyAuthorName}</span>
+                        <span class="post-timestamp">${timeAgo(reply.timestamp)}</span>
+                    </div>
+                    <div class="reply-text">${reply.text}</div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="post-card">
+                <div class="post-meta">
+                    <div class="post-avatar" onclick="renderLeftProfile('${post.email}')">${authorName.charAt(0).toUpperCase()}</div>
+                    <div class="post-author-info" onclick="renderLeftProfile('${post.email}')">
+                        <span class="post-author-name">${authorName}</span>
+                        <span class="post-timestamp">${timeAgo(post.timestamp)}</span>
+                    </div>
+                </div>
+                <div class="post-body">${post.text}</div>
+                
+                <div class="replies-container">
+                    ${repliesHtml}
+                    <div class="reply-composer">
+                        <input type="text" id="reply-input-${post.id}" class="reply-input" placeholder="Write a reply...">
+                        <button class="btn-reply-submit" onclick="submitReply('${post.id}')">Reply</button>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     function renderFeed() {
         const stream = document.getElementById('posts-stream');
-        const posts = getStoredPosts();
+        let posts = getStoredPosts();
         const profilesCache = getStoredProfiles();
+        
+        // 1. Filter by Following
+        if (currentFeedFilter === 'following') {
+            const myFollowing = profilesCache[loggedInUser.email]?.following || [];
+            posts = posts.filter(p => myFollowing.includes(p.email) || p.email === loggedInUser.email);
+        }
+
+        // 2. Filter by Search Query
+        const query = document.getElementById('feed-search').value.toLowerCase();
+        if (query) {
+            posts = posts.filter(p => {
+                const name = (profilesCache[p.email]?.name || p.name).toLowerCase();
+                return p.text.toLowerCase().includes(query) || name.includes(query);
+            });
+        }
 
         if (posts.length === 0) {
-            stream.innerHTML = `<div style="color: #8b949e; text-align: center; padding: 30px;">No messages in the feed yet. Be the first to post!</div>`;
+            stream.innerHTML = `<div style="color: #8b949e; text-align: center; padding: 30px;">No posts found for this view.</div>`;
             return;
         }
 
-        stream.innerHTML = posts.map(post => {
-            // Keep names synced with latest profile cache
-            const authorName = profilesCache[post.email]?.name || post.name;
-            const repliesHtml = post.replies.map(reply => {
-                const replyAuthorName = profilesCache[reply.email]?.name || reply.name;
-                return `
-                    <div class="reply-item">
-                        <div class="reply-meta">
-                            <span class="reply-author" onclick="renderLeftProfile('${reply.email}')">${replyAuthorName}</span>
-                            <span class="post-timestamp">${reply.timestamp}</span>
-                        </div>
-                        <div class="reply-text">${reply.text}</div>
-                    </div>
-                `;
-            }).join('');
+        stream.innerHTML = posts.map(p => buildPostHTML(p, profilesCache)).join('');
+    }
 
-            return `
-                <div class="post-card">
-                    <div class="post-meta">
-                        <div class="post-avatar" onclick="renderLeftProfile('${post.email}')">${authorName.charAt(0).toUpperCase()}</div>
-                        <div class="post-author-info" onclick="renderLeftProfile('${post.email}')">
-                            <span class="post-author-name">${authorName}</span>
-                            <span class="post-timestamp">${post.timestamp}</span>
-                        </div>
-                    </div>
-                    <div class="post-body">${post.text}</div>
-                    
-                    <div class="replies-container">
-                        ${repliesHtml}
-                        <div class="reply-composer">
-                            <input type="text" id="reply-input-${post.id}" class="reply-input" placeholder="Write a reply...">
-                            <button class="btn-reply-submit" onclick="submitReply('${post.id}')">Reply</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+    function renderPrivateFeed(email) {
+        const stream = document.getElementById('private-feed-stream');
+        const posts = getStoredPosts().filter(p => p.email === email);
+        const profilesCache = getStoredProfiles();
+
+        if (posts.length === 0) {
+            stream.innerHTML = `<div style="color: #8b949e; text-align: center; padding: 20px 0; font-size: 12px;">This user hasn't posted anything yet.</div>`;
+            return;
+        }
+        stream.innerHTML = posts.map(p => buildPostHTML(p, profilesCache)).join('');
     }
 
     document.getElementById('logoutBtn').addEventListener('click', async () => { 
