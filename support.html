@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="media/favicon.png">
+    <title>Analyst Wire | Support</title>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    
+    <style>
+        /* Modern typography import */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        /* Unified Dark Theme */
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: #090b10; 
+            color: #d1d4dc; 
+            margin: 0; 
+            min-height: 100vh; 
+            font-size: 13px; 
+            overflow-x: hidden;
+        }
+        *, *:before, *:after { box-sizing: border-box; }
+        
+        /* Navigation */
+        .top-nav { 
+            background: #0d1117; 
+            padding: 0 20px; 
+            height: 55px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #1c2230; 
+            z-index: 1001; 
+            position: relative; 
+            width: 100%; 
+        }
+        .nav-links { display: flex; align-items: center; gap: 5px; }
+        .nav-links a { 
+            color: #8b949e; 
+            text-decoration: none; 
+            margin-left: 15px; 
+            font-size: 13px; 
+            font-weight: 500; 
+            cursor: pointer; 
+            transition: color 0.2s; 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+        }
+        .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
+
+        .mobile-menu-btn { 
+            display: none; 
+            font-size: 24px; 
+            color: #8b949e; 
+            cursor: pointer; 
+            background: none; 
+            border: none; 
+        }
+
+        /* Dropdown Styling */
+        .dropdown { position: relative; margin-left: 10px; }
+        .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
+        .dropbtn:hover { color: #fff; }
+        .dropdown-content { 
+            display: none; 
+            position: absolute; 
+            right: 0; 
+            top: 35px; 
+            background-color: #161b22; 
+            min-width: 160px; 
+            border: 1px solid #30363d; 
+            z-index: 1000; 
+            border-radius: 8px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5); 
+            overflow: hidden; 
+        }
+        .dropdown-content a { 
+            color: #c9d1d9; 
+            padding: 10px 16px; 
+            text-decoration: none; 
+            display: block; 
+            font-size: 13px; 
+            cursor: pointer; 
+            transition: background 0.15s; 
+            margin: 0; 
+            border-radius: 0; 
+            font-family: 'Inter', sans-serif; 
+        }
+        .dropdown-content a:hover { background-color: #21262d; color: #fff; }
+
+        /* Support UI Layout */
+        .support-wrapper {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .section-header {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+        .section-subtext {
+            color: #8b949e;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .support-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 30px;
+        }
+
+        /* Form Card */
+        .form-card, .info-card {
+            background: linear-gradient(145deg, #161b22, #0d1117);
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-size: 12px;
+            color: #8b949e;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .support-input, .support-select, .support-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background: #090b10;
+            border: 1px solid #30363d;
+            color: #fff;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .support-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 15px;
+            cursor: pointer;
+        }
+        .support-textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+        .support-input:focus, .support-select:focus, .support-textarea:focus {
+            outline: none;
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+        }
+
+        .btn-primary { 
+            background: #2962ff; 
+            color: white; 
+            border: none; 
+            padding: 14px 24px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s, box-shadow 0.2s; 
+            box-shadow: 0 4px 12px rgba(41, 98, 255, 0.2);
+        }
+        .btn-primary:hover { background: #1e4bd8; box-shadow: 0 4px 15px rgba(41, 98, 255, 0.4); }
+        .btn-primary:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; box-shadow: none; }
+
+        .status-message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+            text-align: center;
+        }
+        .status-success { background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.4); display: block; }
+        .status-error { background: rgba(248, 81, 73, 0.15); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); display: block; }
+
+        /* FAQ Sidebar */
+        .info-card h3 {
+            margin-top: 0;
+            color: #fff;
+            font-size: 16px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        .faq-item {
+            margin-bottom: 20px;
+        }
+        .faq-question {
+            font-weight: 600;
+            color: #c9d1d9;
+            margin-bottom: 6px;
+            font-size: 13.5px;
+        }
+        .faq-answer {
+            color: #8b949e;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .contact-email {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed #30363d;
+            text-align: center;
+        }
+        .contact-email span {
+            display: block;
+            color: #8b949e;
+            margin-bottom: 5px;
+        }
+        .contact-email a {
+            color: #58a6ff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .contact-email a:hover { text-decoration: underline; }
+
+        /* --- MOBILE RESPONSIVE STYLES --- */
+        @media (max-width: 850px) {
+            .mobile-menu-btn { display: block; }
+            
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 55px;
+                left: 0;
+                width: 100%;
+                background: #0d1117;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 20px;
+                border-bottom: 1px solid #1c2230;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            }
+            .nav-links.active-nav { display: flex; }
+            .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
+            
+            .dropdown { margin-left: 0; width: 100%; margin-top: 5px; }
+            .dropbtn { padding-left: 0; }
+            .dropdown-content { position: static; width: 100%; box-shadow: none; border: 1px solid #30363d; margin-top: 5px; }
+
+            .support-grid { grid-template-columns: 1fr; gap: 20px; }
+            .form-card, .info-card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-nav">
+    <div style="height: 50px; display: flex; align-items: center;">
+        <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px; width: auto; object-fit: contain;">
+    </div>
+    
+    <button class="mobile-menu-btn" onclick="toggleNav()">☰</button>
+
+    <div class="nav-links" id="navLinks">
+        <a href="terminal.html" id="nav-dashboard" style="display: none;">Dashboard</a>
+        <a href="/newsfeed" id="nav-newsfeed" style="display: none;">Newsfeed</a>
+        <a href="analysis.html" id="nav-analysis" style="display: none;">Analysis</a>
+        <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
+        <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
+        
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown(event)">⚙️</button>
+            <div id="settingsDropdown" class="dropdown-content">
+                <a href="account.html">Account</a>
+                <a href="support.html" class="active">Support</a>
+                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
+                <a id="logoutBtn" style="color: #f85149; cursor: pointer;">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="support-wrapper">
+    <div class="section-header">Contact Support</div>
+    <div class="section-subtext">Need help with your account, billing, or platform features? Send us a message.</div>
+    
+    <div class="support-grid">
+        
+        <!-- Support Form -->
+        <div class="form-card">
+            <form id="supportForm">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="support-email" class="support-input" disabled placeholder="Loading your email...">
+                    <div style="font-size: 11px; color: #8b949e; margin-top: 6px;">Replies will be sent to your account email.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="support-subject" class="support-select" required>
+                        <option value="" disabled selected>Select a topic...</option>
+                        <option value="Billing & Subscriptions">Billing & Subscriptions</option>
+                        <option value="Technical Issue">Technical Issue</option>
+                        <option value="Account Access">Account Access</option>
+                        <option value="Feature Request">Feature Request</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">How can we help?</label>
+                    <textarea id="support-message" class="support-textarea" placeholder="Please describe your issue in detail..." required></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-primary">Send Message</button>
+                <div id="form-status" class="status-message"></div>
+            </form>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="info-card">
+            <h3>Frequently Asked Questions</h3>
+            
+            <div class="faq-item">
+                <div class="faq-question">How do I cancel or upgrade my plan?</div>
+                <div class="faq-answer">You can manage your active subscriptions, update payment methods, or cancel your plan at any time via the Stripe portal located on your Account page.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">I paid but can't access pro features?</div>
+                <div class="faq-answer">Sometimes webhooks take a few moments to sync. Try logging out and logging back in to refresh your clearance tags.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">How often are key levels updated?</div>
+                <div class="faq-answer">Our Market Trade Radar and Order Flow engines are updated daily before the London open.</div>
+            </div>
+
+            <div class="contact-email">
+                <span>Prefer direct email?</span>
+                <a href="mailto:support@analystwire.com">support@analystwire.com</a>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // HELPER FUNCTION: Safely parse JSON array tags
+    // ==========================================
+    function userHasAccess(userTags, requiredTag) {
+        if (!userTags) return false;
+        try {
+            const parsedArray = JSON.parse(userTags);
+            if (Array.isArray(parsedArray)) {
+                return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+            }
+        } catch (e) {
+            return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
+        }
+        return false;
+    }
+
+    function parseDBArray(val) {
+        if (!val) return [];
+        try {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed)) return parsed.map(v => String(v).trim());
+        } catch (e) {}
+        const cleanedStr = String(val).replace(/[\[\]"']/g, '');
+        return cleanedStr.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    // --- NAVIGATION LOGIC ---
+    function toggleNav() {
+        document.getElementById("navLinks").classList.toggle("active-nav");
+    }
+
+    function toggleDropdown(event) { 
+        if (event) event.stopPropagation();
+        document.getElementById("settingsDropdown").style.display = 
+            document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; 
+    }
+
+    window.onclick = function(event) { 
+        if (!event.target.matches('.dropbtn')) {
+            document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); 
+        }
+    }
+
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    
+    let currentUser = null;
+
+    async function init() {
+        // 1. Session check
+        const { data: { session } } = await client.auth.getSession();
+        if (!session) { window.location.href = 'index.html'; return; }
+        
+        currentUser = session.user;
+        document.getElementById('support-email').value = currentUser.email;
+
+        const { data: profile } = await client.from('profiles').select('*').eq('id', currentUser.id).single();
+        
+        if (profile) {
+            const tagStr = profile.subscription_tag || 'free';
+            const isAdmin = profile.is_admin === true;
+
+            // Strict Menu Visibility Logic
+            if (isAdmin) {
+                document.getElementById('nav-admin').style.display = 'block';
+                document.getElementById('nav-upload').style.display = 'block';
+            }
+            
+            if (isAdmin || userHasAccess(tagStr, 'pro')) {
+                document.getElementById('nav-dashboard').style.display = 'block';
+                document.getElementById('nav-newsfeed').style.display = 'block';
+                document.getElementById('nav-analysis').style.display = 'block';
+                document.getElementById('nav-courses').style.display = 'block';
+                document.getElementById('nav-key-levels').style.display = 'block';
+            } else {
+                if (userHasAccess(tagStr, 'course') || userHasAccess(tagStr, 'courses')) {
+                    document.getElementById('nav-courses').style.display = 'block';
+                }
+                if (userHasAccess(tagStr, 'newsfeed') || userHasAccess(tagStr, 'squawk')) {
+                    document.getElementById('nav-newsfeed').style.display = 'block';
+                }
+            }
+        }
+    }
+
+    // --- FORM SUBMISSION LOGIC ---
+    document.getElementById('supportForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const subject = document.getElementById('support-subject').value;
+        const message = document.getElementById('support-message').value;
+        const submitBtn = document.getElementById('submitBtn');
+        const statusDiv = document.getElementById('form-status');
+        
+        if (!subject || !message) return;
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Sending...';
+        statusDiv.className = 'status-message';
+        
+        try {
+            // NOTE: This assumes you create a table named 'support_tickets' in your Supabase database.
+            const { error } = await client.from('support_tickets').insert([
+                { 
+                    user_id: currentUser.id, 
+                    email: currentUser.email, 
+                    subject: subject, 
+                    message: message,
+                    status: 'Open'
+                }
+            ]);
+
+            if (error) {
+                // If table doesn't exist yet, it will throw an error here.
+                console.error('Support Insert Error:', error);
+                throw error;
+            }
+
+            // Success state
+            statusDiv.innerText = 'Success! Your message has been sent to our support team.';
+            statusDiv.className = 'status-message status-success';
+            document.getElementById('supportForm').reset();
+            document.getElementById('support-email').value = currentUser.email; // reset clears disabled inputs too
+
+        } catch (err) {
+            statusDiv.innerText = 'Failed to send message. Please try emailing us directly.';
+            statusDiv.className = 'status-message status-error';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Send Message';
+        }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => { 
+        await client.auth.signOut(); 
+        window.location.href = 'index.html'; 
+    });
+
+    init();
+</script>
+</body>
+</html>
