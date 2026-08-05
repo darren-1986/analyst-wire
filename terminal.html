@@ -794,6 +794,22 @@
     let mainGrid;
     
     // ==========================================
+    // HELPER FUNCTION: Safely parse JSON array tags
+    // ==========================================
+    function userHasAccess(userTags, requiredTag) {
+        if (!userTags) return false;
+        try {
+            const parsedArray = JSON.parse(userTags);
+            if (Array.isArray(parsedArray)) {
+                return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+            }
+        } catch (e) {
+            return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
+        }
+        return false;
+    }
+
+    // ==========================================
     // MOBILE MENU & SETTINGS TOGGLES
     // ==========================================
     function toggleMobileMenu() {
@@ -1406,22 +1422,22 @@
 
         const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
 
-        if (!profile || profile.subscription_tag === 'free' || !profile.subscription_tag) {
+        const tags = profile?.subscription_tag || '';
+        const isAdmin = profile?.is_admin === true;
+
+        if (!profile || tags === '' || userHasAccess(tags, 'free')) {
             alert("Your subscription is inactive. Redirecting to login.");
             await client.auth.signOut();
             window.location.href = 'index.html';
             return;
         }
 
-        const tag = profile.subscription_tag.toLowerCase();
-        const isAdmin = profile.is_admin === true;
-
         // --- HARD ROUTING (BOUNCER LOGIC) ---
-        if (!isAdmin && !tag.includes('pro')) {
-            if (tag.includes('course') || tag.includes('courses')) {
+        if (!isAdmin && !userHasAccess(tags, 'pro')) {
+            if (userHasAccess(tags, 'course') || userHasAccess(tags, 'courses')) {
                 window.location.href = 'courses.html';
                 return;
-            } else if (tag.includes('newsfeed')) {
+            } else if (userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk')) {
                 window.location.href = '/newsfeed';
                 return;
             } else {
