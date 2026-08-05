@@ -452,8 +452,8 @@
             const statuses = parseDBArray(profile.stripe_status || profile.status || 'ACTIVE');
             const prices = parseDBArray(profile.plan_price || 'N/A');
             const endDates = parseDBArray(profile.current_period_end || 'N/A');
-            // Support for Last Billing Date assuming database column format
-            const startDates = parseDBArray(profile.current_period_start || 'N/A');
+            // Support for Last Billing Date using correct DB column
+            const startDates = parseDBArray(profile.last_payment_date || 'N/A');
             
             tags.forEach((tagItem, index) => {
                 // Fallback to the first item if subsequent arrays don't perfectly align length-wise
