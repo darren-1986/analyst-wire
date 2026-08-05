@@ -106,6 +106,7 @@
         .composer-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 10px; margin-top: 5px; }
         .word-counter { font-size: 11px; color: #8b949e; font-family: 'JetBrains Mono', monospace; }
         .btn-post { background: #2962ff; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; font-size: 12.5px; cursor: pointer; }
+        .btn-post:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; }
 
         /* Post Card Styling */
         .post-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 18px; margin-bottom: 15px; }
@@ -125,6 +126,7 @@
         .reply-composer { display: flex; gap: 8px; margin-top: 12px; }
         .reply-input { flex-grow: 1; background: #090b10; border: 1px solid #30363d; color: #fff; padding: 8px 12px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 12px; outline: none; }
         .btn-reply-submit { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
+        .btn-reply-submit:disabled { background: #30363d; cursor: not-allowed; }
 
         /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
@@ -242,7 +244,7 @@
         </div>
 
         <div class="modal-buttons">
-            <button class="btn-action btn-primary-action" style="flex: 1;" onclick="saveProfileChanges()">Save Changes</button>
+            <button id="saveProfileBtn" class="btn-action btn-primary-action" style="flex: 1;" onclick="saveProfileChanges()">Save Changes</button>
             <button class="btn-action" style="flex: 1;" onclick="closeEditModal()">Cancel</button>
         </div>
     </div>
@@ -281,7 +283,7 @@
                 <textarea id="post-input-main" class="composer-textarea" placeholder="Share a market insight or trade thought (max 100 words)..." oninput="updateWordCount('post-input-main', 'word-counter-main')"></textarea>
                 <div class="composer-footer">
                     <span id="word-counter-main" class="word-counter">100 words remaining</span>
-                    <button class="btn-post" onclick="submitPost('post-input-main', 'word-counter-main')">Post Message</button>
+                    <button id="btn-post-main" class="btn-post" onclick="submitPost('post-input-main', 'word-counter-main', 'global', 'btn-post-main')">Post Message</button>
                 </div>
             </div>
 
@@ -311,7 +313,8 @@
         return false;
     }
 
-    function timeAgo(epoch) {
+    function timeAgo(isoString) {
+        const epoch = new Date(isoString).getTime();
         const seconds = Math.floor((Date.now() - epoch) / 1000);
         if (seconds < 60) return 'Just now';
         const minutes = Math.floor(seconds / 60);
@@ -339,59 +342,38 @@
         }
     }
 
-    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    // ==========================================
+    // DUAL-CLIENT SETUP
+    // ==========================================
+    // 1. Auth Client (Your original DB for logging in)
+    const mainClient = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    
+    // 2. Network Client (Your new Sandbox for social features)
+    const networkClient = supabase.createClient('https://nayucfhbnecwhtzuaiur.supabase.co', 'sb_publishable_yNK-_0-3ZI2ssYfbSvw75g_RXLD_R-A');
     
     let loggedInUser = null;
-    let viewedProfileEmail = null;
-    let allMembersCache = [];
+    let viewedProfileId = null; 
+    
+    // State Caches
+    let profilesCache = {}; 
+    let globalPosts = [];
+    let myFollowingIds = [];
+    
     let currentFeedFilter = 'global'; 
     let currentProfileTab = 'about'; 
-
-    // ==========================================
-    // LOCAL STORAGE MOCK DATABASE
-    // ==========================================
-    function getStoredPosts() {
-        const posts = localStorage.getItem('aw_net_posts');
-        if (!posts) {
-            const initial = [
-                {
-                    id: 'p1',
-                    email: 'marketmaker@analystwire.com',
-                    name: 'Alex Vance',
-                    text: 'Watching Gold closely around the daily key level. Liquidity clusters suggest a test of upper boundaries before any major distribution.',
-                    timestamp: Date.now() - (1000 * 60 * 60 * 2), // 2 hours ago
-                    replies: [
-                        { id: 'r1', email: 'trader_sarah@gmail.com', name: 'Sarah Jenkins', text: 'Agreed, DXY movement supports this thesis.', timestamp: Date.now() - (1000 * 60 * 45) }
-                    ]
-                }
-            ];
-            localStorage.setItem('aw_net_posts', JSON.stringify(initial));
-            return initial;
-        }
-        return JSON.parse(posts);
-    }
-
-    function saveStoredPosts(posts) { localStorage.setItem('aw_net_posts', JSON.stringify(posts)); }
-
-    function getStoredProfiles() {
-        const profiles = localStorage.getItem('aw_net_profiles');
-        return profiles ? JSON.parse(profiles) : {};
-    }
-
-    function saveStoredProfiles(profiles) { localStorage.setItem('aw_net_profiles', JSON.stringify(profiles)); }
 
     // ==========================================
     // INITIALIZATION
     // ==========================================
     async function init() {
-        const { data: { session } } = await client.auth.getSession();
+        const { data: { session } } = await mainClient.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
         
         loggedInUser = session.user;
-        viewedProfileEmail = loggedInUser.email; 
+        viewedProfileId = loggedInUser.id; 
 
-        const { data: profile } = await client.from('profiles').select('*').eq('id', loggedInUser.id).single();
-        
+        // Handle navigation visibility
+        const { data: profile } = await mainClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
         if (profile) {
             const tagStr = profile.subscription_tag || 'free';
             const isAdmin = profile.is_admin === true;
@@ -400,7 +382,6 @@
                 document.getElementById('nav-admin').style.display = 'block';
                 document.getElementById('nav-upload').style.display = 'block';
             }
-            
             if (isAdmin || userHasAccess(tagStr, 'pro')) {
                 document.getElementById('nav-dashboard').style.display = 'block';
                 document.getElementById('nav-newsfeed').style.display = 'block';
@@ -413,82 +394,103 @@
                 if (userHasAccess(tagStr, 'newsfeed') || userHasAccess(tagStr, 'squawk')) document.getElementById('nav-newsfeed').style.display = 'block';
                 document.getElementById('nav-profile').style.display = 'block';
             }
-
-            // Ensure profile exists in local cache with full schema
-            const profilesCache = getStoredProfiles();
-            if (!profilesCache[loggedInUser.email]) {
-                profilesCache[loggedInUser.email] = {
-                    name: profile.full_name || loggedInUser.email.split('@')[0],
-                    location: '',
-                    experience: '',
-                    bio: 'Active Analyst Wire Community Member & Trader.',
-                    tradingStyle: '',
-                    motto: '',
-                    followers: [],
-                    following: [],
-                    stats: { gain: '', drawdown: '', winrate: '', trades: 0 },
-                    lastSeen: Date.now()
-                };
-            } else {
-                profilesCache[loggedInUser.email].lastSeen = Date.now();
-            }
-            saveStoredProfiles(profilesCache);
         }
 
-        refreshMembersCache();
-        renderLeftProfile(viewedProfileEmail);
-        renderFeed();
+        // Initialize User in Sandbox Database
+        const { data: sandboxProfile } = await networkClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
+        if (!sandboxProfile) {
+            await networkClient.from('profiles').insert([{
+                id: loggedInUser.id,
+                email: loggedInUser.email,
+                full_name: profile?.full_name || loggedInUser.email.split('@')[0],
+                bio: 'Active Analyst Wire Community Member & Trader.'
+            }]);
+        } else {
+            // Update last seen
+            await networkClient.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', loggedInUser.id);
+        }
+
+        // Fetch Follows
+        await loadMyFollowing();
         
-        setInterval(() => {
-            const cache = getStoredProfiles();
-            if (cache[loggedInUser.email]) {
-                cache[loggedInUser.email].lastSeen = Date.now();
-                saveStoredProfiles(cache);
-                renderLeftProfile(viewedProfileEmail); 
-            }
-            renderFeed(); 
-        }, 60000);
+        // Load initial data
+        await loadProfile(loggedInUser.id);
+        await loadFeedData();
     }
 
-    function refreshMembersCache() {
-        const posts = getStoredPosts();
-        const profilesCache = getStoredProfiles();
-        
-        const memberMap = {};
-        memberMap[loggedInUser.email] = {
-            email: loggedInUser.email,
-            name: profilesCache[loggedInUser.email]?.name || loggedInUser.email.split('@')[0],
-        };
+    async function loadMyFollowing() {
+        const { data } = await networkClient.from('user_follows').select('following_id').eq('follower_id', loggedInUser.id);
+        if (data) {
+            myFollowingIds = data.map(row => row.following_id);
+        }
+    }
 
-        posts.forEach(p => {
-            memberMap[p.email] = { email: p.email, name: profilesCache[p.email]?.name || p.name };
-            p.replies.forEach(r => {
-                memberMap[r.email] = { email: r.email, name: profilesCache[r.email]?.name || r.name };
+    // ==========================================
+    // DATA FETCHING & RENDERING
+    // ==========================================
+    async function loadFeedData() {
+        // Fetch posts and their replies
+        const { data: posts, error } = await networkClient
+            .from('network_posts')
+            .select(`
+                *,
+                post_replies (*)
+            `)
+            .order('created_at', { ascending: false })
+            .limit(100);
+
+        if (posts) {
+            // Sort replies by oldest first
+            posts.forEach(p => p.post_replies.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)));
+            globalPosts = posts;
+        }
+
+        // Cache missing profiles found in the feed
+        const missingUserIds = new Set();
+        globalPosts.forEach(p => {
+            if(!profilesCache[p.user_id]) missingUserIds.add(p.user_id);
+            p.post_replies.forEach(r => {
+                if(!profilesCache[r.user_id]) missingUserIds.add(r.user_id);
             });
         });
-        allMembersCache = Object.values(memberMap);
+
+        if (missingUserIds.size > 0) {
+            const { data: profiles } = await networkClient.from('profiles').select('*').in('id', Array.from(missingUserIds));
+            if(profiles) {
+                profiles.forEach(p => profilesCache[p.id] = p);
+            }
+        }
+        
+        renderFeed();
     }
 
-    // ==========================================
-    // RENDER LEFT PROFILE SIDEBAR
-    // ==========================================
-    function renderLeftProfile(email) {
-        viewedProfileEmail = email;
-        const profilesCache = getStoredProfiles();
+    async function loadProfile(userId) {
+        viewedProfileId = userId;
         
-        // Full schema fallback
-        const memberData = profilesCache[email] || {
-            name: email.split('@')[0], location: '', experience: '', bio: 'Member profile.', tradingStyle: '', motto: '',
-            followers: [], following: [], stats: { gain: '', drawdown: '', winrate: '', trades: 0 }, lastSeen: 0
-        };
+        // Always fetch fresh to ensure we have up-to-date stats
+        const { data: profile } = await networkClient.from('profiles').select('*').eq('id', userId).single();
+        if (profile) profilesCache[userId] = profile;
 
-        const isMe = (email === loggedInUser.email);
-        const myProfile = profilesCache[loggedInUser.email];
-        const amIFollowing = myProfile.following.includes(email);
-        const followerCount = memberData.followers ? memberData.followers.length : 0;
-        const followingCount = memberData.following ? memberData.following.length : 0;
+        // Fetch counts
+        const { count: followerCount } = await networkClient.from('user_follows').select('*', { count: 'exact', head: true }).eq('following_id', userId);
+        const { count: followingCount } = await networkClient.from('user_follows').select('*', { count: 'exact', head: true }).eq('follower_id', userId);
         
-        const isOnline = (Date.now() - memberData.lastSeen) < (5 * 60 * 1000);
+        if (profilesCache[userId]) {
+            profilesCache[userId].followerCount = followerCount || 0;
+            profilesCache[userId].followingCount = followingCount || 0;
+        }
+
+        renderLeftProfileUI(userId);
+    }
+
+    function renderLeftProfileUI(userId) {
+        const memberData = profilesCache[userId];
+        if (!memberData) return;
+
+        const isMe = (userId === loggedInUser.id);
+        const amIFollowing = myFollowingIds.includes(userId);
+        
+        const isOnline = memberData.last_seen ? (Date.now() - new Date(memberData.last_seen).getTime()) < (5 * 60 * 1000) : false;
         const onlineClass = isOnline ? 'online' : '';
 
         const container = document.getElementById('profile-display-card');
@@ -503,21 +505,21 @@
         } else {
             actionsHtml = `
                 <div class="sidebar-actions">
-                    <button class="btn-action ${amIFollowing ? '' : 'btn-primary-action'}" onclick="toggleFollow('${email}')">
+                    <button id="btn-follow" class="btn-action ${amIFollowing ? '' : 'btn-primary-action'}" onclick="toggleFollow('${userId}')">
                         ${amIFollowing ? 'Unfollow' : 'Follow'}
                     </button>
-                    <button class="btn-action" onclick="renderLeftProfile('${loggedInUser.email}')">Back to My Profile</button>
+                    <button class="btn-action" onclick="loadProfile('${loggedInUser.id}')">Back to My Profile</button>
                 </div>
             `;
         }
 
         // Stats UI logic
-        const gainVal = memberData.stats.gain || 'N/A';
+        const gainVal = memberData.total_gain || 'N/A';
         const gainClass = gainVal.includes('+') ? 'val-up' : (gainVal.includes('-') ? 'val-down' : '');
-        const ddVal = memberData.stats.drawdown || 'N/A';
+        const ddVal = memberData.max_drawdown || 'N/A';
         const ddClass = ddVal.includes('-') ? 'val-down' : '';
 
-        // Dynamic Meta Row logic
+        // Dynamic Meta Row
         let metaHtml = '';
         if (memberData.location || memberData.experience) {
             metaHtml = `<div class="profile-meta-line">`;
@@ -527,43 +529,44 @@
             metaHtml += `</div>`;
         }
 
-        // Dynamic About Tab content
+        // Dynamic About Tab
         let aboutHtml = '';
         if (memberData.bio) aboutHtml += `<div class="about-section-title">Bio</div><div class="about-text">${memberData.bio}</div>`;
-        if (memberData.tradingStyle) aboutHtml += `<div class="about-section-title">Trading Style</div><div class="about-text" style="white-space: pre-line;">${memberData.tradingStyle}</div>`;
+        if (memberData.trading_style) aboutHtml += `<div class="about-section-title">Trading Style</div><div class="about-text" style="white-space: pre-line;">${memberData.trading_style}</div>`;
         if (memberData.motto) aboutHtml += `<div class="about-section-title">Motto</div><div class="about-text" style="font-style: italic;">"${memberData.motto}"</div>`;
         if (!aboutHtml) aboutHtml = `<div class="about-text">No profile information provided yet.</div>`;
 
-        // If you are on your own profile's Feed tab, inject the composer box
         let privateComposerHtml = '';
         if (isMe) {
             privateComposerHtml = `
                 <div class="composer-box" style="margin-bottom: 20px;">
-                    <textarea id="post-input-private" class="composer-textarea" placeholder="Post to your personal feed..." oninput="updateWordCount('post-input-private', 'word-counter-private')"></textarea>
+                    <textarea id="post-input-private" class="composer-textarea" placeholder="Post directly to your personal feed..." oninput="updateWordCount('post-input-private', 'word-counter-private')"></textarea>
                     <div class="composer-footer">
                         <span id="word-counter-private" class="word-counter">100 words remaining</span>
-                        <button class="btn-post" onclick="submitPost('post-input-private', 'word-counter-private')">Post</button>
+                        <button id="btn-post-private" class="btn-post" onclick="submitPost('post-input-private', 'word-counter-private', 'private', 'btn-post-private')">Post</button>
                     </div>
                 </div>
             `;
         }
+
+        const fallbackName = memberData.full_name || 'Member';
 
         container.innerHTML = `
             <div class="profile-banner"></div>
             <div class="profile-core-info">
                 <div class="profile-header-row">
                     <div class="avatar-container">
-                        <div class="profile-avatar-large">${memberData.name.charAt(0).toUpperCase()}</div>
+                        <div class="profile-avatar-large">${fallbackName.charAt(0).toUpperCase()}</div>
                         <div class="status-dot ${onlineClass}"></div>
                     </div>
                 </div>
                 <div style="margin-top: 15px;">
-                    <h2 class="profile-name-title">${memberData.name}</h2>
-                    <div class="profile-handle">${email}</div>
+                    <h2 class="profile-name-title">${fallbackName}</h2>
+                    <div class="profile-handle">${memberData.email}</div>
                     ${metaHtml}
                     <div class="follow-stats">
-                        <span class="follow-stat"><strong>${followingCount}</strong> Following</span>
-                        <span class="follow-stat"><strong>${followerCount}</strong> Followers</span>
+                        <span class="follow-stat"><strong>${memberData.followingCount}</strong> Following</span>
+                        <span class="follow-stat"><strong>${memberData.followerCount}</strong> Followers</span>
                     </div>
                 </div>
             </div>
@@ -590,11 +593,11 @@
                     </div>
                     <div class="stat-box">
                         <div class="stat-label">Win Rate</div>
-                        <div class="stat-val" style="color: #c9d1d9;">${memberData.stats.winrate || 'N/A'}</div>
+                        <div class="stat-val" style="color: #c9d1d9;">${memberData.win_rate || 'N/A'}</div>
                     </div>
                     <div class="stat-box">
                         <div class="stat-label">Trades</div>
-                        <div class="stat-val" style="color: #c9d1d9;">${memberData.stats.trades || 0}</div>
+                        <div class="stat-val" style="color: #c9d1d9;">${memberData.total_trades || 0}</div>
                     </div>
                 </div>
             </div>
@@ -607,96 +610,115 @@
             ${actionsHtml}
         `;
 
-        if (currentProfileTab === 'feed') renderPrivateFeed(email);
+        if (currentProfileTab === 'feed') renderPrivateFeed(userId);
     }
 
     function switchProfileTab(tab) {
         currentProfileTab = tab;
-        renderLeftProfile(viewedProfileEmail);
+        renderLeftProfileUI(viewedProfileId);
     }
 
-    function toggleFollow(targetEmail) {
-        const profilesCache = getStoredProfiles();
-        const myProfile = profilesCache[loggedInUser.email];
-        
-        if (!myProfile.following) myProfile.following = [];
-        if (!profilesCache[targetEmail].followers) profilesCache[targetEmail].followers = [];
+    // ==========================================
+    // USER INTERACTIONS
+    // ==========================================
+    async function toggleFollow(targetId) {
+        const btn = document.getElementById('btn-follow');
+        if(btn) btn.disabled = true;
 
-        const isFollowing = myProfile.following.includes(targetEmail);
+        const isFollowing = myFollowingIds.includes(targetId);
 
         if (isFollowing) {
-            myProfile.following = myProfile.following.filter(e => e !== targetEmail);
-            profilesCache[targetEmail].followers = profilesCache[targetEmail].followers.filter(e => e !== loggedInUser.email);
+            await networkClient.from('user_follows').delete().match({ follower_id: loggedInUser.id, following_id: targetId });
+            myFollowingIds = myFollowingIds.filter(id => id !== targetId);
+            profilesCache[targetId].followerCount = Math.max(0, profilesCache[targetId].followerCount - 1);
         } else {
-            myProfile.following.push(targetEmail);
-            profilesCache[targetEmail].followers.push(loggedInUser.email);
+            await networkClient.from('user_follows').insert([{ follower_id: loggedInUser.id, following_id: targetId }]);
+            myFollowingIds.push(targetId);
+            profilesCache[targetId].followerCount += 1;
         }
 
-        saveStoredProfiles(profilesCache);
-        renderLeftProfile(viewedProfileEmail);
+        renderLeftProfileUI(targetId);
         if (currentFeedFilter === 'following') renderFeed(); 
     }
 
-    function filterMembersList(query) {
-        const q = query.toLowerCase();
-        const filtered = allMembersCache.filter(m => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q));
-        if (filtered.length > 0 && query.length > 2) {
-            renderLeftProfile(filtered[0].email);
-        } else if (query.length === 0) {
-            renderLeftProfile(loggedInUser.email);
+    async function filterMembersList(query) {
+        if (query.length === 0) {
+            loadProfile(loggedInUser.id);
+            return;
+        }
+        if (query.length > 2) {
+            const { data } = await networkClient.from('profiles')
+                .select('*')
+                .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
+                .limit(1);
+                
+            if (data && data.length > 0) {
+                const p = data[0];
+                profilesCache[p.id] = p; // cache it
+                loadProfile(p.id);
+            }
         }
     }
 
-    // ==========================================
-    // PROFILE EDIT MODAL LOGIC
-    // ==========================================
     function openEditModal() {
-        const profilesCache = getStoredProfiles();
-        const current = profilesCache[loggedInUser.email];
+        const current = profilesCache[loggedInUser.id] || {};
         
-        document.getElementById('edit-name').value = current.name || '';
+        document.getElementById('edit-name').value = current.full_name || '';
         document.getElementById('edit-location').value = current.location || '';
         document.getElementById('edit-experience').value = current.experience || '';
         document.getElementById('edit-bio').value = current.bio || '';
-        document.getElementById('edit-trading-style').value = current.tradingStyle || '';
+        document.getElementById('edit-trading-style').value = current.trading_style || '';
         document.getElementById('edit-motto').value = current.motto || '';
 
-        document.getElementById('edit-gain').value = current.stats?.gain || '';
-        document.getElementById('edit-drawdown').value = current.stats?.drawdown || '';
-        document.getElementById('edit-winrate').value = current.stats?.winrate || '';
-        document.getElementById('edit-trades').value = current.stats?.trades || '';
+        document.getElementById('edit-gain').value = current.total_gain || '';
+        document.getElementById('edit-drawdown').value = current.max_drawdown || '';
+        document.getElementById('edit-winrate').value = current.win_rate || '';
+        document.getElementById('edit-trades').value = current.total_trades || '';
         
         document.getElementById('editProfileModal').style.display = 'block';
     }
 
     function closeEditModal() { document.getElementById('editProfileModal').style.display = 'none'; }
 
-    function saveProfileChanges() {
+    async function saveProfileChanges() {
         const newName = document.getElementById('edit-name').value.trim();
-        if (!newName) return;
+        if (!newName) {
+            alert('Display Name is required.');
+            return;
+        }
 
-        const profilesCache = getStoredProfiles();
-        profilesCache[loggedInUser.email] = {
-            ...profilesCache[loggedInUser.email],
-            name: newName,
+        const saveBtn = document.getElementById('saveProfileBtn');
+        saveBtn.disabled = true;
+        saveBtn.innerText = 'Saving...';
+
+        const updates = {
+            full_name: newName,
             location: document.getElementById('edit-location').value.trim(),
             experience: document.getElementById('edit-experience').value,
             bio: document.getElementById('edit-bio').value.trim(),
-            tradingStyle: document.getElementById('edit-trading-style').value.trim(),
+            trading_style: document.getElementById('edit-trading-style').value.trim(),
             motto: document.getElementById('edit-motto').value.trim(),
-            stats: {
-                gain: document.getElementById('edit-gain').value.trim(),
-                drawdown: document.getElementById('edit-drawdown').value.trim(),
-                winrate: document.getElementById('edit-winrate').value.trim(),
-                trades: parseInt(document.getElementById('edit-trades').value) || 0
-            }
+            total_gain: document.getElementById('edit-gain').value.trim(),
+            max_drawdown: document.getElementById('edit-drawdown').value.trim(),
+            win_rate: document.getElementById('edit-winrate').value.trim(),
+            total_trades: parseInt(document.getElementById('edit-trades').value) || 0
         };
-        saveStoredProfiles(profilesCache);
+
+        const { error } = await networkClient.from('profiles').update(updates).eq('id', loggedInUser.id);
         
-        refreshMembersCache();
-        renderLeftProfile(loggedInUser.email);
+        if (!error) {
+            // Update local cache manually
+            profilesCache[loggedInUser.id] = { ...profilesCache[loggedInUser.id], ...updates };
+            loadProfile(loggedInUser.id);
+            // Refresh feed in case name changed
+            await loadFeedData();
+        } else {
+            alert('Error updating profile. Please try again.');
+        }
+
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save Changes';
         closeEditModal();
-        renderFeed();
     }
 
     // ==========================================
@@ -721,7 +743,7 @@
         }
     }
 
-    function submitPost(inputId, counterId) {
+    async function submitPost(inputId, counterId, feedType, btnId) {
         const inputElem = document.getElementById(inputId);
         const text = inputElem.value.trim();
         if (!text) return;
@@ -729,67 +751,77 @@
         const words = text.split(/\s+/);
         if (words.length > 100) { alert('Post exceeds the 100-word limit.'); return; }
 
-        const profilesCache = getStoredProfiles();
-        const myName = profilesCache[loggedInUser.email]?.name || loggedInUser.email.split('@')[0];
+        const btn = document.getElementById(btnId);
+        btn.disabled = true;
 
-        const posts = getStoredPosts();
-        posts.unshift({
-            id: 'p_' + Date.now(),
-            email: loggedInUser.email,
-            name: myName,
-            text: text,
-            timestamp: Date.now(),
-            replies: []
-        });
-        saveStoredPosts(posts);
+        const authorName = profilesCache[loggedInUser.id]?.full_name || loggedInUser.email.split('@')[0];
 
-        inputElem.value = '';
-        updateWordCount(inputId, counterId);
-        refreshMembersCache();
-        
-        renderFeed();
-        // If we are looking at our own profile's feed tab, update it immediately
-        if (viewedProfileEmail === loggedInUser.email && currentProfileTab === 'feed') {
-            renderPrivateFeed(loggedInUser.email);
+        const { error } = await networkClient.from('network_posts').insert([{
+            user_id: loggedInUser.id,
+            user_email: loggedInUser.email,
+            author_name: authorName,
+            post_text: text,
+            feed_type: feedType
+        }]);
+
+        if (error) {
+            if (error.message.includes('Fair usage')) {
+                alert(error.message);
+            } else {
+                alert('Failed to post. Try again later.');
+            }
+        } else {
+            inputElem.value = '';
+            updateWordCount(inputId, counterId);
+            await loadFeedData(); // Re-fetch to get new post and UUID
+            
+            if (viewedProfileId === loggedInUser.id && currentProfileTab === 'feed') {
+                renderPrivateFeed(loggedInUser.id);
+            }
         }
+        btn.disabled = false;
     }
 
-    function submitReply(postId) {
+    async function submitReply(postId) {
         const inputElem = document.getElementById(`reply-input-${postId}`);
+        const btnElem = document.getElementById(`btn-reply-${postId}`);
         const text = inputElem.value.trim();
         if (!text) return;
 
-        const profilesCache = getStoredProfiles();
-        const myName = profilesCache[loggedInUser.email]?.name || loggedInUser.email.split('@')[0];
+        btnElem.disabled = true;
+        const authorName = profilesCache[loggedInUser.id]?.full_name || loggedInUser.email.split('@')[0];
 
-        const posts = getStoredPosts();
-        const post = posts.find(p => p.id === postId);
-        if (post) {
-            post.replies.push({
-                id: 'r_' + Date.now(),
-                email: loggedInUser.email,
-                name: myName,
-                text: text,
-                timestamp: Date.now()
-            });
-            saveStoredPosts(posts);
-            refreshMembersCache();
-            renderFeed();
-            if (currentProfileTab === 'feed') renderPrivateFeed(viewedProfileEmail);
+        const { error } = await networkClient.from('post_replies').insert([{
+            post_id: postId,
+            user_id: loggedInUser.id,
+            user_email: loggedInUser.email,
+            author_name: authorName,
+            reply_text: text
+        }]);
+
+        if (!error) {
+            await loadFeedData();
+            if (currentProfileTab === 'feed') renderPrivateFeed(viewedProfileId);
+        } else {
+            alert('Failed to reply.');
         }
+        btnElem.disabled = false;
     }
 
-    function buildPostHTML(post, profilesCache) {
-        const authorName = profilesCache[post.email]?.name || post.name;
-        const repliesHtml = post.replies.map(reply => {
-            const replyAuthorName = profilesCache[reply.email]?.name || reply.name;
+    function buildPostHTML(post) {
+        const authorProfile = profilesCache[post.user_id] || {};
+        const authorName = authorProfile.full_name || post.author_name;
+        
+        const repliesHtml = post.post_replies.map(reply => {
+            const replyAuthorProfile = profilesCache[reply.user_id] || {};
+            const replyAuthorName = replyAuthorProfile.full_name || reply.author_name;
             return `
                 <div class="reply-item">
                     <div class="reply-meta">
-                        <span class="reply-author" onclick="renderLeftProfile('${reply.email}')">${replyAuthorName}</span>
-                        <span class="post-timestamp">${timeAgo(reply.timestamp)}</span>
+                        <span class="reply-author" onclick="loadProfile('${reply.user_id}')">${replyAuthorName}</span>
+                        <span class="post-timestamp">${timeAgo(reply.created_at)}</span>
                     </div>
-                    <div class="reply-text">${reply.text}</div>
+                    <div class="reply-text">${reply.reply_text}</div>
                 </div>
             `;
         }).join('');
@@ -797,19 +829,19 @@
         return `
             <div class="post-card">
                 <div class="post-meta">
-                    <div class="post-avatar" onclick="renderLeftProfile('${post.email}')">${authorName.charAt(0).toUpperCase()}</div>
-                    <div class="post-author-info" onclick="renderLeftProfile('${post.email}')">
+                    <div class="post-avatar" onclick="loadProfile('${post.user_id}')">${authorName.charAt(0).toUpperCase()}</div>
+                    <div class="post-author-info" onclick="loadProfile('${post.user_id}')">
                         <span class="post-author-name">${authorName}</span>
-                        <span class="post-timestamp">${timeAgo(post.timestamp)}</span>
+                        <span class="post-timestamp">${timeAgo(post.created_at)}</span>
                     </div>
                 </div>
-                <div class="post-body">${post.text}</div>
+                <div class="post-body">${post.post_text}</div>
                 
                 <div class="replies-container">
                     ${repliesHtml}
                     <div class="reply-composer">
                         <input type="text" id="reply-input-${post.id}" class="reply-input" placeholder="Write a reply...">
-                        <button class="btn-reply-submit" onclick="submitReply('${post.id}')">Reply</button>
+                        <button id="btn-reply-${post.id}" class="btn-reply-submit" onclick="submitReply('${post.id}')">Reply</button>
                     </div>
                 </div>
             </div>
@@ -818,44 +850,45 @@
 
     function renderFeed() {
         const stream = document.getElementById('posts-stream');
-        let posts = getStoredPosts();
-        const profilesCache = getStoredProfiles();
+        
+        // Filter out private posts from the main global feed display
+        let postsToDisplay = globalPosts.filter(p => p.feed_type === 'global');
         
         if (currentFeedFilter === 'following') {
-            const myFollowing = profilesCache[loggedInUser.email]?.following || [];
-            posts = posts.filter(p => myFollowing.includes(p.email) || p.email === loggedInUser.email);
+            postsToDisplay = postsToDisplay.filter(p => myFollowingIds.includes(p.user_id) || p.user_id === loggedInUser.id);
         }
 
         const query = document.getElementById('feed-search').value.toLowerCase();
         if (query) {
-            posts = posts.filter(p => {
-                const name = (profilesCache[p.email]?.name || p.name).toLowerCase();
-                return p.text.toLowerCase().includes(query) || name.includes(query);
+            postsToDisplay = postsToDisplay.filter(p => {
+                const name = (profilesCache[p.user_id]?.full_name || p.author_name).toLowerCase();
+                return p.post_text.toLowerCase().includes(query) || name.includes(query);
             });
         }
 
-        if (posts.length === 0) {
+        if (postsToDisplay.length === 0) {
             stream.innerHTML = `<div style="color: #8b949e; text-align: center; padding: 30px;">No posts found for this view.</div>`;
             return;
         }
 
-        stream.innerHTML = posts.map(p => buildPostHTML(p, profilesCache)).join('');
+        stream.innerHTML = postsToDisplay.map(p => buildPostHTML(p)).join('');
     }
 
-    function renderPrivateFeed(email) {
+    function renderPrivateFeed(userId) {
         const stream = document.getElementById('private-feed-stream');
-        const posts = getStoredPosts().filter(p => p.email === email);
-        const profilesCache = getStoredProfiles();
+        
+        // Private feed shows BOTH global and private posts made by that specific user
+        const postsToDisplay = globalPosts.filter(p => p.user_id === userId);
 
-        if (posts.length === 0) {
+        if (postsToDisplay.length === 0) {
             stream.innerHTML = `<div style="color: #8b949e; text-align: center; padding: 20px 0; font-size: 12px;">This user hasn't posted anything yet.</div>`;
             return;
         }
-        stream.innerHTML = posts.map(p => buildPostHTML(p, profilesCache)).join('');
+        stream.innerHTML = postsToDisplay.map(p => buildPostHTML(p)).join('');
     }
 
     document.getElementById('logoutBtn').addEventListener('click', async () => { 
-        await client.auth.signOut(); 
+        await mainClient.auth.signOut(); 
         window.location.href = 'index.html'; 
     });
 
