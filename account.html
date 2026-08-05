@@ -11,7 +11,7 @@
     
     <style>
         /* Modern typography import */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
         /* Unified Dark Theme */
         body { 
@@ -21,6 +21,7 @@
             margin: 0; 
             min-height: 100vh; 
             font-size: 13px; 
+            overflow-x: hidden;
         }
         *, *:before, *:after { box-sizing: border-box; }
         
@@ -92,60 +93,176 @@
         }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
-        /* Account UI */
-        .account-container { 
-            max-width: 600px; 
-            margin: 40px auto; 
-            background: #0d1117; 
-            padding: 30px; 
-            border-radius: 10px; 
-            border: 1px solid #30363d; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+        /* Account UI Container */
+        .account-wrapper {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .info-group { margin-bottom: 15px; }
-        .info-label { font-size: 11px; color: #8b949e; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; letter-spacing: 0.5px; }
-        .info-value { font-size: 14px; color: #fff; background: #161b22; padding: 12px; border-radius: 6px; border: 1px solid #30363d; }
-        
-        .sub-card { margin-bottom: 25px; padding-bottom: 10px; border-bottom: 1px solid #1c2230; }
-        .sub-card:last-of-type { border-bottom: none; margin-bottom: 10px; padding-bottom: 0; }
 
-        .pwd-input { 
-            width: 100%; 
-            padding: 12px; 
-            margin-bottom: 15px; 
-            background: #161b22; 
-            border: 1px solid #30363d; 
-            color: white; 
-            border-radius: 6px; 
-            box-sizing: border-box; 
-            font-family: 'Inter', sans-serif; 
+        .section-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #1c2230;
+            padding-bottom: 10px;
         }
-        .btn-update { 
+
+        /* User Profile Card */
+        .profile-card {
+            background: linear-gradient(145deg, #161b22, #0d1117);
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 35px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .avatar-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(41, 98, 255, 0.1);
+            border: 1px solid rgba(41, 98, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: #58a6ff;
+            flex-shrink: 0;
+        }
+        .profile-info h3 { margin: 0 0 5px 0; font-size: 18px; color: #fff; }
+        .profile-info p { margin: 0; color: #8b949e; font-size: 13px; }
+
+        /* Subscription Cards */
+        .sub-card { 
+            background: #0d1117; 
+            border: 1px solid #30363d; 
+            border-radius: 12px;
+            margin-bottom: 20px; 
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .sub-card:hover {
+            border-color: #4b5563;
+            transform: translateY(-2px);
+        }
+        .sub-card-header {
+            background: #161b22;
+            padding: 15px 20px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .plan-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge { 
+            color: white; 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            font-size: 10px; 
+            font-weight: 700; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-active { background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.4); }
+        .badge-canceled { background: rgba(248, 81, 73, 0.15); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); }
+        .badge-refunded { background: rgba(210, 153, 34, 0.15); color: #d29922; border: 1px solid rgba(210, 153, 34, 0.4); }
+
+        .sub-card-body {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .detail-label {
+            font-size: 11px;
+            color: #8b949e;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .detail-value {
+            font-size: 15px;
+            color: #c9d1d9;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+        }
+
+        /* Buttons & Forms */
+        .btn-primary { 
             background: #2962ff; 
             color: white; 
             border: none; 
             padding: 12px 20px; 
-            border-radius: 6px; 
+            border-radius: 8px; 
             cursor: pointer; 
             width: 100%; 
-            font-weight: 500; 
-            transition: background 0.2s; 
+            font-weight: 600;
+            font-size: 13px;
+            transition: background 0.2s, box-shadow 0.2s; 
+            box-shadow: 0 4px 12px rgba(41, 98, 255, 0.2);
         }
-        .btn-update:hover { background: #1e4bd8; }
-        .btn-secondary { background: #21262d; border: 1px solid #30363d; margin-top: 10px; }
-        .btn-secondary:hover { background: #30363d; }
+        .btn-primary:hover { background: #1e4bd8; box-shadow: 0 4px 15px rgba(41, 98, 255, 0.4); }
         
-        .badge { color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .badge-active { background: #089981; }
-        .badge-canceled { background: #f85149; }
-        .badge-refunded { background: #d29922; }
+        .btn-secondary { 
+            background: #21262d; 
+            color: #c9d1d9;
+            border: 1px solid #30363d; 
+            padding: 12px 20px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-weight: 600;
+            font-size: 13px;
+            transition: background 0.2s; 
+            margin-bottom: 35px;
+        }
+        .btn-secondary:hover { background: #30363d; color: #fff; }
+
+        .security-card {
+            background: #0d1117; 
+            border: 1px solid #30363d; 
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+        .pwd-input { 
+            width: 100%; 
+            padding: 12px 15px; 
+            margin-bottom: 15px; 
+            background: #161b22; 
+            border: 1px solid #30363d; 
+            color: white; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-family: 'Inter', sans-serif; 
+            transition: border-color 0.2s;
+        }
+        .pwd-input:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
 
         /* --- MOBILE RESPONSIVE STYLES --- */
-        @media (max-width: 850px) {
+        @media (max-width: 768px) {
             .mobile-menu-btn { display: block; }
             
-            /* Responsive Nav */
             .nav-links {
                 display: none;
                 position: absolute;
@@ -162,16 +279,12 @@
             .nav-links.active-nav { display: flex; }
             .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
             
-            /* Dropdown adjustments for mobile */
             .dropdown { margin-left: 0; width: 100%; margin-top: 5px; }
             .dropbtn { padding-left: 0; }
             .dropdown-content { position: static; width: 100%; box-shadow: none; border: 1px solid #30363d; margin-top: 5px; }
 
-            /* Account Container Adjustments */
-            .account-container { margin: 20px 15px; padding: 20px; }
-            
-            /* Stack Info Grid on Mobile */
-            .info-grid { grid-template-columns: 1fr; gap: 0px; }
+            .sub-card-body { grid-template-columns: 1fr; gap: 15px; }
+            .profile-card { flex-direction: column; text-align: center; gap: 15px; }
         }
     </style>
 </head>
@@ -203,34 +316,74 @@
     </div>
 </div>
 
-<div class="account-container">
-    <h2 style="margin-top: 0; margin-bottom: 25px;">Subscription Details</h2>
+<div class="account-wrapper">
     
-    <div class="info-grid" style="margin-bottom: 25px;">
-        <div class="info-group">
-            <div class="info-label">Member Name</div>
-            <div class="info-value" id="user-name">Loading...</div>
-        </div>
-        <div class="info-group">
-            <div class="info-label">Account Email</div>
-            <div class="info-value" id="user-email">Loading...</div>
+    <div class="section-header">Member Profile</div>
+    
+    <div class="profile-card">
+        <div class="avatar-circle" id="user-avatar">?</div>
+        <div class="profile-info">
+            <h3 id="user-name">Loading...</h3>
+            <p id="user-email">Loading...</p>
         </div>
     </div>
 
+    <div class="section-header">Active Subscriptions</div>
+    
     <div id="subscriptions-container">
-        <div style="color: #8b949e; text-align: center; padding: 20px;">Loading subscriptions...</div>
+        <div style="color: #8b949e; text-align: center; padding: 20px;">Loading subscription details...</div>
     </div>
 
-    <button class="btn-update btn-secondary" id="manage-sub">Manage Subscription via Stripe</button>
+    <button class="btn-secondary" id="manage-sub">Manage Subscriptions via Stripe</button>
     
-    <h3 style="margin-top: 40px;">Security & Login</h3>
-    <input type="password" id="new-password" class="pwd-input" placeholder="New password">
-    <input type="password" id="confirm-password" class="pwd-input" placeholder="Confirm password">
-    <button class="btn-update" id="updatePwdBtn">Save New Password</button>
-    <p id="pwd-status" style="font-size: 13px; color: #8b949e; text-align: center; margin-top: 10px;"></p>
+    <div class="section-header">Security & Login</div>
+    <div class="security-card">
+        <input type="password" id="new-password" class="pwd-input" placeholder="New Password">
+        <input type="password" id="confirm-password" class="pwd-input" placeholder="Confirm New Password">
+        <button class="btn-primary" id="updatePwdBtn">Update Password</button>
+        <p id="pwd-status" style="font-size: 13px; color: #8b949e; text-align: center; margin-top: 15px; margin-bottom: 0;"></p>
+    </div>
+    
 </div>
 
 <script>
+    // ==========================================
+    // HELPER FUNCTION: Safely parse JSON array tags
+    // ==========================================
+    function userHasAccess(userTags, requiredTag) {
+        if (!userTags) return false;
+        try {
+            const parsedArray = JSON.parse(userTags);
+            if (Array.isArray(parsedArray)) {
+                return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+            }
+        } catch (e) {
+            return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
+        }
+        return false;
+    }
+
+    // ==========================================
+    // HELPER FUNCTION: Safely parse messy DB strings into clean arrays
+    // ==========================================
+    function parseDBArray(val) {
+        if (!val) return [];
+        
+        // If it's literally a valid JSON array string like '["pro", "newsfeed"]'
+        try {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed)) {
+                return parsed.map(v => String(v).trim());
+            }
+        } catch (e) {
+            // Fails silently if not strict JSON, proceeds to manual cleanup
+        }
+
+        // Manual cleanup to strip out stray brackets [ ], quotes ", and spaces
+        const cleanedStr = String(val).replace(/[\[\]"']/g, '');
+        return cleanedStr.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
     // --- NAVIGATION LOGIC ---
     function toggleNav() {
         document.getElementById("navLinks").classList.toggle("active-nav");
@@ -259,90 +412,95 @@
         const { data: profile } = await client.from('profiles').select('*').eq('id', session.user.id).single();
         
         if (profile) {
-            const tag = (profile.subscription_tag || 'free').toLowerCase();
+            const tagStr = profile.subscription_tag || 'free';
             const isAdmin = profile.is_admin === true;
 
-            // Menu Visibility Logic
+            // Strict Menu Visibility Logic using userHasAccess helper
             if (isAdmin) {
                 document.getElementById('nav-admin').style.display = 'block';
                 document.getElementById('nav-upload').style.display = 'block';
             }
             
-            if (isAdmin || tag.includes('pro')) {
+            if (isAdmin || userHasAccess(tagStr, 'pro')) {
                 document.getElementById('nav-dashboard').style.display = 'block';
                 document.getElementById('nav-newsfeed').style.display = 'block';
                 document.getElementById('nav-analysis').style.display = 'block';
                 document.getElementById('nav-courses').style.display = 'block';
                 document.getElementById('nav-key-levels').style.display = 'block';
-            } else if (tag.includes('course')) {
+            } else if (userHasAccess(tagStr, 'course') || userHasAccess(tagStr, 'courses')) {
                 document.getElementById('nav-courses').style.display = 'block';
-            } else if (tag.includes('newsfeed') || tag.includes('squawk')) {
+            } else if (userHasAccess(tagStr, 'newsfeed') || userHasAccess(tagStr, 'squawk')) {
                 document.getElementById('nav-newsfeed').style.display = 'block';
             }
 
-            // Global Profile Data
-            document.getElementById('user-name').innerText = profile.full_name || 'N/A';
+            // Global Profile Data Set
+            const fullName = profile.full_name || 'Valued Member';
+            document.getElementById('user-name').innerText = fullName;
+            document.getElementById('user-avatar').innerText = fullName.charAt(0).toUpperCase();
             
             // Dynamic Subscription Rendering
             const container = document.getElementById('subscriptions-container');
             container.innerHTML = '';
             
-            // Handle multiple subscriptions stored as comma-separated strings
-            const tags = (profile.subscription_tag || 'FREE').split(',').map(s => s.trim());
-            const statuses = (profile.stripe_status || profile.status || 'ACTIVE').split(',').map(s => s.trim());
-            const prices = (profile.plan_price ? String(profile.plan_price) : '').split(',').map(s => s.trim());
-            const dates = (profile.current_period_end ? String(profile.current_period_end) : '').split(',').map(s => s.trim());
+            // Safely parse out arrays using our new helper
+            const tags = parseDBArray(profile.subscription_tag || 'FREE');
+            const statuses = parseDBArray(profile.stripe_status || profile.status || 'ACTIVE');
+            const prices = parseDBArray(profile.plan_price || 'N/A');
+            const dates = parseDBArray(profile.current_period_end || 'N/A');
             
             tags.forEach((tagItem, index) => {
-                // Fallback to the first item if subsequent arrays don't perfectly align
+                // Fallback to the first item if subsequent arrays don't perfectly align length-wise
                 const statusStr = (statuses[index] || statuses[0] || 'ACTIVE').toUpperCase();
                 const priceStr = prices[index] || prices[0] || 'N/A';
                 const dateVal = dates[index] || dates[0] || null;
                 
-                // Set correct badge color
+                // Set correct badge color class
                 let badgeClass = 'badge-active';
                 if (statusStr === 'CANCELED' || statusStr === 'CANCELLED') badgeClass = 'badge-canceled';
                 if (statusStr === 'REFUNDED') badgeClass = 'badge-refunded';
 
-                // Format Price
-                const priceDisplay = (priceStr !== 'N/A' && !priceStr.includes('$')) ? `$${priceStr}/mo` : priceStr;
+                // Format Price (Add dollar sign and /mo if missing, assuming not N/A)
+                let priceDisplay = priceStr;
+                if (priceDisplay !== 'N/A' && !priceDisplay.includes('$')) {
+                    priceDisplay = `$${priceDisplay}/mo`;
+                }
 
-                // Format Date
+                // Format Date safely
                 let dateStr = 'N/A';
                 if (dateVal && dateVal !== 'null' && dateVal !== 'N/A') {
                     const dateNum = Number(dateVal);
+                    // Ensure handling for seconds vs milliseconds timestamp
                     const dateObj = isNaN(dateNum) ? new Date(dateVal) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
                     if (!isNaN(dateObj.getTime())) {
                         dateStr = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                     }
                 }
 
-                // Append Sub Card HTML
+                // Build Sleek Modern Card
                 container.innerHTML += `
                     <div class="sub-card">
-                        <div class="info-grid">
-                            <div class="info-group">
-                                <div class="info-label">Plan Type</div>
-                                <div class="info-value">${tagItem.toUpperCase()}</div>
+                        <div class="sub-card-header">
+                            <span class="plan-title">${tagItem.toUpperCase()} PLAN</span>
+                            <span class="badge ${badgeClass}">${statusStr}</span>
+                        </div>
+                        <div class="sub-card-body">
+                            <div class="detail-item">
+                                <span class="detail-label">Subscription Price</span>
+                                <span class="detail-value">${priceDisplay}</span>
                             </div>
-                            <div class="info-group">
-                                <div class="info-label">Status</div>
-                                <div class="info-value" style="border:none; background: transparent; padding: 8px 0;">
-                                    <span class="badge ${badgeClass}">${statusStr}</span>
-                                </div>
-                            </div>
-                            <div class="info-group">
-                                <div class="info-label">Subscription Price</div>
-                                <div class="info-value">${priceDisplay}</div>
-                            </div>
-                            <div class="info-group">
-                                <div class="info-label">Next Billing Date</div>
-                                <div class="info-value">${dateStr}</div>
+                            <div class="detail-item">
+                                <span class="detail-label">Next Billing Date</span>
+                                <span class="detail-value">${dateStr}</span>
                             </div>
                         </div>
                     </div>
                 `;
             });
+            
+            // Edge case: If tags array was completely empty, show a fallback message
+            if (tags.length === 0) {
+                container.innerHTML = `<div style="color: #8b949e; text-align: center; padding: 20px; border: 1px dashed #30363d; border-radius: 8px;">No active subscriptions found.</div>`;
+            }
         }
     }
 
@@ -361,16 +519,30 @@
         const statusText = document.getElementById('pwd-status');
         
         if (newPwd.length < 6) { 
-            statusText.innerText = 'Password too short'; 
+            statusText.innerText = 'Password too short. Must be at least 6 characters.'; 
+            statusText.style.color = '#f85149';
             return; 
         }
         if (newPwd !== confirmPwd) { 
-            statusText.innerText = 'Passwords do not match'; 
+            statusText.innerText = 'Passwords do not match. Please try again.'; 
+            statusText.style.color = '#f85149';
             return; 
         }
         
+        statusText.innerText = 'Updating...';
+        statusText.style.color = '#8b949e';
+        
         const { error } = await client.auth.updateUser({ password: newPwd });
-        statusText.innerText = error ? 'Error: ' + error.message : 'Password updated!';
+        
+        if (error) {
+            statusText.innerText = 'Error: ' + error.message;
+            statusText.style.color = '#f85149';
+        } else {
+            statusText.innerText = 'Password successfully updated!';
+            statusText.style.color = '#3fb950';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+        }
     });
 
     init();
