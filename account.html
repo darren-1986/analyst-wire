@@ -184,7 +184,8 @@
             padding: 20px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            row-gap: 25px;
+            column-gap: 20px;
         }
         .detail-item {
             display: flex;
@@ -427,10 +428,14 @@
                 document.getElementById('nav-analysis').style.display = 'block';
                 document.getElementById('nav-courses').style.display = 'block';
                 document.getElementById('nav-key-levels').style.display = 'block';
-            } else if (userHasAccess(tagStr, 'course') || userHasAccess(tagStr, 'courses')) {
-                document.getElementById('nav-courses').style.display = 'block';
-            } else if (userHasAccess(tagStr, 'newsfeed') || userHasAccess(tagStr, 'squawk')) {
-                document.getElementById('nav-newsfeed').style.display = 'block';
+            } else {
+                // Independent checks so users with multiple a la carte tags get all appropriate links
+                if (userHasAccess(tagStr, 'course') || userHasAccess(tagStr, 'courses')) {
+                    document.getElementById('nav-courses').style.display = 'block';
+                }
+                if (userHasAccess(tagStr, 'newsfeed') || userHasAccess(tagStr, 'squawk')) {
+                    document.getElementById('nav-newsfeed').style.display = 'block';
+                }
             }
 
             // Global Profile Data Set
@@ -446,13 +451,16 @@
             const tags = parseDBArray(profile.subscription_tag || 'FREE');
             const statuses = parseDBArray(profile.stripe_status || profile.status || 'ACTIVE');
             const prices = parseDBArray(profile.plan_price || 'N/A');
-            const dates = parseDBArray(profile.current_period_end || 'N/A');
+            const endDates = parseDBArray(profile.current_period_end || 'N/A');
+            // Support for Last Billing Date assuming database column format
+            const startDates = parseDBArray(profile.current_period_start || 'N/A');
             
             tags.forEach((tagItem, index) => {
                 // Fallback to the first item if subsequent arrays don't perfectly align length-wise
                 const statusStr = (statuses[index] || statuses[0] || 'ACTIVE').toUpperCase();
                 const priceStr = prices[index] || prices[0] || 'N/A';
-                const dateVal = dates[index] || dates[0] || null;
+                const endDateVal = endDates[index] || endDates[0] || null;
+                const startDateVal = startDates[index] || startDates[0] || null;
                 
                 // Set correct badge color class
                 let badgeClass = 'badge-active';
@@ -465,14 +473,24 @@
                     priceDisplay = `$${priceDisplay}/mo`;
                 }
 
-                // Format Date safely
-                let dateStr = 'N/A';
-                if (dateVal && dateVal !== 'null' && dateVal !== 'N/A') {
-                    const dateNum = Number(dateVal);
+                // Format End Date safely
+                let endDateStr = 'N/A';
+                if (endDateVal && endDateVal !== 'null' && endDateVal !== 'N/A') {
+                    const dateNum = Number(endDateVal);
                     // Ensure handling for seconds vs milliseconds timestamp
-                    const dateObj = isNaN(dateNum) ? new Date(dateVal) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
+                    const dateObj = isNaN(dateNum) ? new Date(endDateVal) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
                     if (!isNaN(dateObj.getTime())) {
-                        dateStr = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                        endDateStr = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    }
+                }
+                
+                // Format Start Date safely
+                let startDateStr = 'N/A';
+                if (startDateVal && startDateVal !== 'null' && startDateVal !== 'N/A') {
+                    const dateNum = Number(startDateVal);
+                    const dateObj = isNaN(dateNum) ? new Date(startDateVal) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
+                    if (!isNaN(dateObj.getTime())) {
+                        startDateStr = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                     }
                 }
 
@@ -489,8 +507,12 @@
                                 <span class="detail-value">${priceDisplay}</span>
                             </div>
                             <div class="detail-item">
+                                <span class="detail-label">Last Billing Date</span>
+                                <span class="detail-value">${startDateStr}</span>
+                            </div>
+                            <div class="detail-item">
                                 <span class="detail-label">Next Billing Date</span>
-                                <span class="detail-value">${dateStr}</span>
+                                <span class="detail-value">${endDateStr}</span>
                             </div>
                         </div>
                     </div>
