@@ -386,6 +386,22 @@ let cachedData = [];
 let biasSortOrder = 0;
 let stateSortOrder = 0;
 
+// ==========================================
+// HELPER FUNCTION: Safely parse JSON array tags
+// ==========================================
+function userHasAccess(userTags, requiredTag) {
+    if (!userTags) return false;
+    try {
+        const parsedArray = JSON.parse(userTags);
+        if (Array.isArray(parsedArray)) {
+            return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+        }
+    } catch (e) {
+        return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
+    }
+    return false;
+}
+
 function formatTimestamp(isoString) {
     if (!isoString) return 'Unknown';
     try {
@@ -441,25 +457,24 @@ async function init() {
     // 2. Fetch Profile
     const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
     
-    if (!profile || profile.subscription_tag === 'free' || !profile.subscription_tag) {
+    const tag = profile?.subscription_tag || '';
+    const isAdmin = profile?.is_admin === true;
+
+    if (!profile || tag === '' || userHasAccess(tag, 'free')) {
         alert("Your subscription is inactive. Redirecting to login.");
         await client.auth.signOut();
         window.location.href = 'index.html';
         return;
     }
 
-    const tag = profile.subscription_tag.toLowerCase();
-    const isAdmin = profile.is_admin === true;
-
     // ==========================================
     // 3. HARD ROUTING (BOUNCER LOGIC)
     // ==========================================
-    // Only Admin and Pro users are allowed on the Key Levels page.
-    if (!isAdmin && !tag.includes('pro')) {
-        if (tag.includes('courses') || tag.includes('course')) {
+    if (!isAdmin && !userHasAccess(tag, 'pro')) {
+        if (userHasAccess(tag, 'course') || userHasAccess(tag, 'courses')) {
             window.location.href = 'courses.html';
             return;
-        } else if (tag.includes('newsfeed') || tag.includes('squawk')) {
+        } else if (userHasAccess(tag, 'newsfeed') || userHasAccess(tag, 'squawk')) {
             window.location.href = '/newsfeed';
             return;
         } else {
@@ -485,7 +500,7 @@ async function init() {
     Object.values(navElements).forEach(el => { if (el) el.style.display = 'none'; });
 
     // Reveal based on strict tier assignment
-    if (isAdmin || tag.includes('pro')) {
+    if (isAdmin || userHasAccess(tag, 'pro')) {
         if (navElements.dashboard) navElements.dashboard.style.display = 'block';
         if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
         if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
