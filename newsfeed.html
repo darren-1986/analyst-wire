@@ -189,6 +189,20 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // --- HELPER FUNCTION: Safely parse JSON array tags ---
+        function userHasAccess(userTags, requiredTag) {
+            if (!userTags) return false;
+            try {
+                const parsedArray = JSON.parse(userTags);
+                if (Array.isArray(parsedArray)) {
+                    return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+                }
+            } catch (e) {
+                return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
+            }
+            return false;
+        }
+
         // --- AUTH & PERMISSION CHECK ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
@@ -200,21 +214,21 @@
             // 2. Fetch Profile
             const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
             
-            if (!profile || profile.subscription_tag === 'free' || !profile.subscription_tag) {
+            const tag = profile?.subscription_tag || '';
+            const isAdmin = profile?.is_admin === true;
+
+            if (!profile || tag === '' || userHasAccess(tag, 'free')) {
                 alert("Your subscription is inactive. Redirecting to login.");
                 await client.auth.signOut();
                 window.location.href = 'index.html';
                 return;
             }
 
-            const tag = profile.subscription_tag.toLowerCase();
-            const isAdmin = profile.is_admin === true;
-
             // ==========================================
             // 3. HARD ROUTING (BOUNCER LOGIC)
             // ==========================================
-            if (!isAdmin && !tag.includes('pro') && !tag.includes('newsfeed') && !tag.includes('squawk')) {
-                if (tag.includes('courses') || tag.includes('course')) {
+            if (!isAdmin && !userHasAccess(tag, 'pro') && !userHasAccess(tag, 'newsfeed') && !userHasAccess(tag, 'squawk')) {
+                if (userHasAccess(tag, 'courses') || userHasAccess(tag, 'course')) {
                     window.location.href = 'courses.html';
                     return;
                 } else {
@@ -240,7 +254,7 @@
             Object.values(navElements).forEach(el => { if (el) el.style.display = 'none'; });
 
             // Reveal items based on tier
-            if (isAdmin || tag.includes('pro')) {
+            if (isAdmin || userHasAccess(tag, 'pro')) {
                 if (navElements.dashboard) navElements.dashboard.style.display = 'block';
                 if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
                 if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
@@ -251,9 +265,14 @@
                     if (navElements.admin) navElements.admin.style.display = 'block';
                     if (navElements.upload) navElements.upload.style.display = 'block';
                 }
-            } else if (tag.includes('newsfeed') || tag.includes('squawk')) {
-                // Newsfeed tier ONLY gets the Newsfeed page link
-                if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
+            } else {
+                // A la carte visibility for non-pro users
+                if ((userHasAccess(tag, 'newsfeed') || userHasAccess(tag, 'squawk')) && navElements.newsfeed) {
+                    navElements.newsfeed.style.display = 'block';
+                }
+                if ((userHasAccess(tag, 'course') || userHasAccess(tag, 'courses')) && navElements.courses) {
+                    navElements.courses.style.display = 'block';
+                }
             }
         }
 
