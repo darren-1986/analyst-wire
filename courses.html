@@ -330,7 +330,7 @@
             lessons: [
                 { title: "Demystifying Bonds", time: 10 },
                 { title: "Decoding Bond Markets", time: 375 },
-                { title: "Bond Market Rule", time: 709 },
+                { title: "Bond Market Rule", time: 1053 },
                 { title: "Anatomy of a Yield Curve", time: 1053 },
                 { title: "Bonds and Yields", time: 1459 },
                 { title: "STIR Markets", time: 1784 }
@@ -459,6 +459,20 @@
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
+    // --- HELPER FUNCTION: Safely parse JSON array tags ---
+    function userHasAccess(userTags, requiredTag) {
+        if (!userTags) return false;
+        try {
+            const parsedArray = JSON.parse(userTags);
+            if (Array.isArray(parsedArray)) {
+                return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+            }
+        } catch (e) {
+            return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
+        }
+        return false;
+    }
+
     async function init() {
         // 1. Session check
         const { data: { session } } = await client.auth.getSession();
@@ -467,22 +481,22 @@
         // 2. Fetch Profile
         const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
         
-        if (!profile || profile.subscription_tag === 'free' || !profile.subscription_tag) {
+        const tags = profile?.subscription_tag || '';
+        const isAdmin = profile?.is_admin === true;
+
+        if (!profile || tags === '' || userHasAccess(tags, 'free')) {
             alert("Your subscription is inactive. Redirecting to login.");
             await client.auth.signOut();
             window.location.href = 'index.html';
             return;
         }
 
-        const tag = profile.subscription_tag.toLowerCase();
-        const isAdmin = profile.is_admin === true;
-
         // ==========================================
         // 3. HARD ROUTING (BOUNCER LOGIC)
         // ==========================================
         // If not an admin, not a pro, AND not a course buyer, they don't belong here
-        if (!isAdmin && !tag.includes('pro') && !tag.includes('course')) {
-            if (tag.includes('newsfeed')) {
+        if (!isAdmin && !userHasAccess(tags, 'pro') && !userHasAccess(tags, 'course')) {
+            if (userHasAccess(tags, 'newsfeed')) {
                 window.location.href = '/newsfeed';
                 return;
             } else {
@@ -508,7 +522,7 @@
         Object.values(navLinks).forEach(link => { if (link) link.style.display = 'none'; });
 
         // Reveal based on strict tier assignment
-        if (isAdmin || tag.includes('pro')) {
+        if (isAdmin || userHasAccess(tags, 'pro')) {
             Object.values(navLinks).forEach(link => { if (link) link.style.display = 'block'; }); // Show all
             
             if (isAdmin) {
@@ -517,10 +531,14 @@
                 if (navAdmin) navAdmin.style.display = 'block';
                 if (navUpload) navUpload.style.display = 'block';
             }
-        } else if (tag.includes('course')) {
-            // Courses tier ONLY gets the Courses link in the header 
-            // (Account dropdown is handled separately via the standard UI)
-            if (navLinks.courses) navLinks.courses.style.display = 'block';
+        } else {
+            // Check individual a la carte tags for non-pro users
+            if (userHasAccess(tags, 'course') && navLinks.courses) {
+                navLinks.courses.style.display = 'block';
+            }
+            if (userHasAccess(tags, 'newsfeed') && navLinks.newsfeed) {
+                navLinks.newsfeed.style.display = 'block';
+            }
         }
     }
     
