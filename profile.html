@@ -32,25 +32,45 @@
         .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
-        .network-container { display: grid; grid-template-columns: 420px 1fr; gap: 25px; height: calc(100vh - 55px); margin-top: 55px; padding: 20px 30px; max-width: 1600px; margin-left: auto; margin-right: auto; box-sizing: border-box; }
+        /* FULL WIDTH LAYOUT */
+        .network-container { 
+            display: grid; 
+            grid-template-columns: 420px 1fr; 
+            gap: 25px; 
+            height: calc(100vh - 55px); 
+            margin-top: 55px; 
+            padding: 20px 2vw; /* Uses viewport width instead of max-width */
+            width: 100%; 
+            box-sizing: border-box; 
+        }
 
-        /* Left Sidebar */
+        /* Left Sidebar & Search Dropdown */
         .sidebar-panel { background: #0d1117; border: 1px solid #30363d; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .sidebar-header { padding: 15px 20px; border-bottom: 1px solid #1c2230; background: #161b22; }
+        .sidebar-header { padding: 15px 20px; border-bottom: 1px solid #1c2230; background: #161b22; position: relative; }
         .search-input { width: 100%; padding: 10px 14px; background: #090b10; border: 1px solid #30363d; color: #fff; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; }
         .search-input:focus { border-color: #2962ff; }
+        
+        .search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #161b22; border: 1px solid #30363d; border-top: none; z-index: 100; max-height: 250px; overflow-y: auto; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        .search-result-item { padding: 12px 20px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid #1c2230; }
+        .search-result-item:hover { background: #21262d; }
+        .search-result-avatar { width: 30px; height: 30px; border-radius: 50%; background: #0d1117; display: flex; align-items: center; justify-content: center; color: #58a6ff; font-weight: bold; overflow: hidden; }
+        .search-result-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .search-result-info { display: flex; flex-direction: column; }
+        .search-result-name { color: #fff; font-weight: 600; font-size: 13px; }
 
         .profile-display-area { padding: 0; overflow-y: auto; flex-grow: 1; }
-        .profile-banner { height: 100px; background: linear-gradient(135deg, #1e4bd8, #112a7a); position: relative; }
+        .profile-banner { height: 100px; position: relative; } /* Color dynamically set via inline style */
         
         .avatar-container { position: relative; width: 80px; height: 80px; margin-top: -40px; margin-left: 20px; }
-        .profile-avatar-large { width: 100%; height: 100%; border-radius: 50%; background: #161b22; border: 4px solid #0d1117; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #58a6ff; }
+        .profile-avatar-large { width: 100%; height: 100%; border-radius: 50%; background: #161b22; border: 4px solid #0d1117; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #58a6ff; overflow: hidden; }
+        .profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
         .status-dot { position: absolute; bottom: 5px; right: 5px; width: 16px; height: 16px; background-color: #3fb950; border: 3px solid #0d1117; border-radius: 50%; display: none; }
         .status-dot.online { display: block; box-shadow: 0 0 8px rgba(63, 185, 80, 0.6); }
 
         .profile-core-info { padding: 15px 20px 0 20px; }
         .profile-header-row { display: flex; justify-content: space-between; align-items: flex-start; }
-        .profile-name-title { font-size: 20px; font-weight: 700; color: #fff; margin: 0 0 2px 0; }
+        .profile-name-title { font-size: 20px; font-weight: 700; color: #fff; margin: 0 0 2px 0; display: flex; align-items: center; gap: 8px;}
+        .admin-badge { background: #f85149; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; letter-spacing: 0.5px;}
         .profile-meta-line { font-size: 12px; color: #8b949e; margin-top: 4px; display: flex; gap: 10px; align-items: center; }
         .meta-divider { color: #30363d; }
         
@@ -68,6 +88,8 @@
         /* About Tab Details */
         .about-section-title { font-size: 11px; color: #8b949e; text-transform: uppercase; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
         .about-text { font-size: 13.5px; color: #c9d1d9; line-height: 1.6; word-break: break-word; margin-bottom: 20px; }
+        .profile-link { display: inline-block; background: rgba(41, 98, 255, 0.1); color: #58a6ff; padding: 6px 12px; border-radius: 6px; text-decoration: none; margin-right: 8px; margin-bottom: 8px; font-weight: 500; font-size: 12.5px; transition: background 0.2s;}
+        .profile-link:hover { background: rgba(41, 98, 255, 0.2); }
         
         /* Stats Tab */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -83,6 +105,8 @@
         .btn-action:hover { background: #30363d; color: #fff; }
         .btn-primary-action { background: #2962ff; color: #fff; border: none; }
         .btn-primary-action:hover { background: #1e4bd8; color: #fff; }
+        .btn-danger-action { background: #21262d; color: #f85149; border: 1px solid rgba(248, 81, 73, 0.4); }
+        .btn-danger-action:hover { background: rgba(248, 81, 73, 0.1); }
 
         /* Right Panel: Feed Area */
         .feed-panel { background: #0d1117; border: 1px solid #30363d; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
@@ -111,7 +135,8 @@
         /* Post Card Styling */
         .post-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 18px; margin-bottom: 15px; }
         .post-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-        .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(41, 98, 255, 0.15); border: 1px solid rgba(41, 98, 255, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #58a6ff; font-size: 14px; cursor: pointer; }
+        .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(41, 98, 255, 0.15); border: 1px solid rgba(41, 98, 255, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #58a6ff; font-size: 14px; cursor: pointer; overflow: hidden; }
+        .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .post-author-info { display: flex; flex-direction: column; cursor: pointer; }
         .post-author-name { font-weight: 600; color: #fff; font-size: 13.5px; }
         .post-timestamp { font-size: 11px; color: #8b949e; }
@@ -119,10 +144,15 @@
 
         /* Replies */
         .replies-container { margin-top: 12px; padding-left: 20px; border-left: 2px solid #21262d; display: flex; flex-direction: column; gap: 10px; }
-        .reply-item { background: #0d1117; border: 1px solid #21262d; padding: 10px 14px; border-radius: 8px; }
+        .reply-item { background: #0d1117; border: 1px solid #21262d; padding: 10px 14px; border-radius: 8px; position: relative;}
         .reply-meta { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11.5px; }
-        .reply-author { font-weight: 600; color: #58a6ff; cursor: pointer; }
+        .reply-author { font-weight: 600; color: #58a6ff; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .reply-author img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
         .reply-text { font-size: 13px; color: #c9d1d9; word-break: break-word; }
+        .like-btn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 4px; margin-top: 6px; padding: 0; transition: color 0.2s;}
+        .like-btn:hover { color: #f85149; }
+        .like-btn.liked { color: #f85149; }
+
         .reply-composer { display: flex; gap: 8px; margin-top: 12px; }
         .reply-input { flex-grow: 1; background: #090b10; border: 1px solid #30363d; color: #fff; padding: 8px 12px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 12px; outline: none; }
         .btn-reply-submit { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
@@ -139,6 +169,18 @@
         .modal-buttons { display: flex; gap: 10px; margin-top: 25px; }
         
         .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        /* Links Form */
+        .link-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .link-row input { flex: 1; }
+        .remove-link-btn { background: #21262d; color: #f85149; border: 1px solid #30363d; border-radius: 6px; cursor: pointer; padding: 10px; }
+
+        /* Media Upload */
+        .avatar-edit-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .avatar-edit-preview { width: 60px; height: 60px; border-radius: 50%; background: #161b22; border: 2px solid #30363d; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 20px; font-weight: bold; color: #58a6ff;}
+        .avatar-edit-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-upload-btn { background: #21262d; padding: 8px 12px; border-radius: 6px; border: 1px solid #30363d; cursor: pointer; font-size: 12px; color: #c9d1d9;}
+        .avatar-delete-btn { background: transparent; border: none; color: #f85149; font-size: 12px; cursor: pointer; padding: 8px;}
 
         @media (max-width: 950px) {
             body { height: auto; overflow: auto; }
@@ -180,11 +222,35 @@
     </div>
 </div>
 
-<!-- Edit Profile Modal with Full Database Schema Readiness -->
+<!-- Edit Profile Modal -->
 <div id="editProfileModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">Edit Profile Information</div>
+        <div class="modal-header">Edit Profile Settings</div>
         
+        <!-- Avatar & Banner Settings -->
+        <div class="form-group">
+            <label class="form-label">Profile Avatar</label>
+            <div class="avatar-edit-wrapper">
+                <div class="avatar-edit-preview" id="edit-avatar-preview">?</div>
+                <input type="file" id="avatar-input" accept="image/*" style="display: none;" onchange="handleAvatarSelect(event)">
+                <button class="avatar-upload-btn" onclick="document.getElementById('avatar-input').click()">Upload Image</button>
+                <button class="avatar-delete-btn" onclick="clearAvatarSelection()">Remove</button>
+            </div>
+        </div>
+        
+        <div class="edit-grid">
+            <div class="form-group">
+                <label class="form-label">Banner Color</label>
+                <input type="color" id="edit-banner-color" style="width: 100%; height: 40px; border: 1px solid #30363d; border-radius: 6px; background: transparent; cursor: pointer;" value="#1e4bd8">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Privacy</label>
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #fff; margin-top: 10px; cursor: pointer;">
+                    <input type="checkbox" id="edit-hide-email"> Hide email from public profile
+                </label>
+            </div>
+        </div>
+
         <div class="edit-grid">
             <div class="form-group">
                 <label class="form-label">Display Name</label>
@@ -211,6 +277,12 @@
         <div class="form-group">
             <label class="form-label">Bio</label>
             <textarea id="edit-bio" class="form-textarea" placeholder="Who are you? What is your background?"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Social / Portfolio Links</label>
+            <div id="links-container"></div>
+            <button class="avatar-upload-btn" onclick="addLinkRow('', '')" style="margin-top: 5px;">+ Add Link</button>
         </div>
 
         <div class="form-group">
@@ -255,7 +327,9 @@
     <!-- LEFT SIDEBAR: PROFILE & SEARCH -->
     <div class="sidebar-panel">
         <div class="sidebar-header">
-            <input type="text" id="member-search" class="search-input" placeholder="Search members by name or email..." oninput="filterMembersList(this.value)">
+            <input type="text" id="member-search" class="search-input" placeholder="Search members by name or email..." oninput="handleSearchInput(this.value)">
+            <!-- Search Results Dropdown -->
+            <div id="search-dropdown" class="search-dropdown"></div>
         </div>
         
         <div class="profile-display-area" id="profile-display-card">
@@ -298,15 +372,13 @@
 
 <script>
     // ==========================================
-    // HELPER FUNCTIONS
+    // HELPER FUNCTIONS & IMAGE COMPRESSION
     // ==========================================
     function userHasAccess(userTags, requiredTag) {
         if (!userTags) return false;
         try {
             const parsedArray = JSON.parse(userTags);
-            if (Array.isArray(parsedArray)) {
-                return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
-            }
+            if (Array.isArray(parsedArray)) return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
         } catch (e) {
             return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
         }
@@ -325,6 +397,30 @@
         return `${days}d ago`;
     }
 
+    // Compresses image strictly client side before uploading to save quota
+    function compressImage(file, callback) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = event => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 300;
+                let scaleSize = 1;
+                if (img.width > MAX_WIDTH) {
+                    scaleSize = MAX_WIDTH / img.width;
+                }
+                canvas.width = img.width * scaleSize;
+                canvas.height = img.height * scaleSize;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                // Compress to 80% quality JPEG
+                canvas.toBlob(callback, 'image/jpeg', 0.8);
+            };
+        };
+    }
+
     function toggleNav() { document.getElementById("navLinks").classList.toggle("active-nav"); }
 
     function toggleDropdown(event) { 
@@ -340,24 +436,26 @@
         if (event.target.classList.contains('modal')) {
             event.target.style.display = "none";
         }
+        if (!event.target.matches('#member-search')) {
+            document.getElementById('search-dropdown').style.display = 'none';
+        }
     }
 
     // ==========================================
     // DUAL-CLIENT SETUP
     // ==========================================
-    // 1. Auth Client (Your original DB for logging in)
     const mainClient = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
-    
-    // 2. Network Client (Your new Sandbox for social features)
     const networkClient = supabase.createClient('https://nayucfhbnecwhtzuaiur.supabase.co', 'sb_publishable_yNK-_0-3ZI2ssYfbSvw75g_RXLD_R-A');
     
     let loggedInUser = null;
     let viewedProfileId = null; 
+    let isAdminGlobal = false;
     
-    // State Caches
     let profilesCache = {}; 
     let globalPosts = [];
     let myFollowingIds = [];
+    let pendingAvatarBlob = null; // Holds the compressed image blob before save
+    let shouldDeleteAvatar = false;
     
     let currentFeedFilter = 'global'; 
     let currentProfileTab = 'about'; 
@@ -376,13 +474,13 @@
         const { data: profile } = await mainClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
         if (profile) {
             const tagStr = profile.subscription_tag || 'free';
-            const isAdmin = profile.is_admin === true;
+            isAdminGlobal = profile.is_admin === true;
 
-            if (isAdmin) {
+            if (isAdminGlobal) {
                 document.getElementById('nav-admin').style.display = 'block';
                 document.getElementById('nav-upload').style.display = 'block';
             }
-            if (isAdmin || userHasAccess(tagStr, 'pro')) {
+            if (isAdminGlobal || userHasAccess(tagStr, 'pro')) {
                 document.getElementById('nav-dashboard').style.display = 'block';
                 document.getElementById('nav-newsfeed').style.display = 'block';
                 document.getElementById('nav-analysis').style.display = 'block';
@@ -406,14 +504,10 @@
                 bio: 'Active Analyst Wire Community Member & Trader.'
             }]);
         } else {
-            // Update last seen
             await networkClient.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', loggedInUser.id);
         }
 
-        // Fetch Follows
         await loadMyFollowing();
-        
-        // Load initial data
         await loadProfile(loggedInUser.id);
         await loadFeedData();
     }
@@ -429,23 +523,25 @@
     // DATA FETCHING & RENDERING
     // ==========================================
     async function loadFeedData() {
-        // Fetch posts and their replies
-        const { data: posts, error } = await networkClient
+        // Fetch posts, replies, and likes nested
+        const { data: posts } = await networkClient
             .from('network_posts')
             .select(`
                 *,
-                post_replies (*)
+                post_replies (
+                    *,
+                    reply_likes (user_id)
+                )
             `)
             .order('created_at', { ascending: false })
             .limit(100);
 
         if (posts) {
-            // Sort replies by oldest first
             posts.forEach(p => p.post_replies.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)));
             globalPosts = posts;
         }
 
-        // Cache missing profiles found in the feed
+        // Cache missing profiles
         const missingUserIds = new Set();
         globalPosts.forEach(p => {
             if(!profilesCache[p.user_id]) missingUserIds.add(p.user_id);
@@ -467,7 +563,10 @@
     async function loadProfile(userId) {
         viewedProfileId = userId;
         
-        // Always fetch fresh to ensure we have up-to-date stats
+        // Clear search UI
+        document.getElementById('member-search').value = '';
+        document.getElementById('search-dropdown').style.display = 'none';
+
         const { data: profile } = await networkClient.from('profiles').select('*').eq('id', userId).single();
         if (profile) profilesCache[userId] = profile;
 
@@ -487,6 +586,12 @@
         const memberData = profilesCache[userId];
         if (!memberData) return;
 
+        // Admin override view check
+        if (memberData.is_hidden && userId !== loggedInUser.id && !isAdminGlobal) {
+            document.getElementById('profile-display-card').innerHTML = `<div style="padding: 30px; text-align: center; color: #8b949e;">This profile is hidden.</div>`;
+            return;
+        }
+
         const isMe = (userId === loggedInUser.id);
         const amIFollowing = myFollowingIds.includes(userId);
         
@@ -503,8 +608,12 @@
                 </div>
             `;
         } else {
-            actionsHtml = `
-                <div class="sidebar-actions">
+            actionsHtml = `<div class="sidebar-actions">`;
+            if (isAdminGlobal) {
+                const hiddenText = memberData.is_hidden ? 'Unhide User Profile' : 'Hide User Profile';
+                actionsHtml += `<button class="btn-action btn-danger-action" onclick="adminToggleHideUser('${userId}', ${!memberData.is_hidden})">${hiddenText}</button>`;
+            }
+            actionsHtml += `
                     <button id="btn-follow" class="btn-action ${amIFollowing ? '' : 'btn-primary-action'}" onclick="toggleFollow('${userId}')">
                         ${amIFollowing ? 'Unfollow' : 'Follow'}
                     </button>
@@ -513,13 +622,11 @@
             `;
         }
 
-        // Stats UI logic
         const gainVal = memberData.total_gain || 'N/A';
         const gainClass = gainVal.includes('+') ? 'val-up' : (gainVal.includes('-') ? 'val-down' : '');
         const ddVal = memberData.max_drawdown || 'N/A';
         const ddClass = ddVal.includes('-') ? 'val-down' : '';
 
-        // Dynamic Meta Row
         let metaHtml = '';
         if (memberData.location || memberData.experience) {
             metaHtml = `<div class="profile-meta-line">`;
@@ -529,9 +636,22 @@
             metaHtml += `</div>`;
         }
 
-        // Dynamic About Tab
+        // About Tab Links
+        let linksHtml = '';
+        if (memberData.social_links && memberData.social_links.length > 0) {
+            linksHtml = `<div class="about-section-title">Links</div><div style="margin-bottom: 20px;">`;
+            memberData.social_links.forEach(l => {
+                if(l.url && l.title) {
+                    let href = l.url.startsWith('http') ? l.url : `https://${l.url}`;
+                    linksHtml += `<a href="${href}" target="_blank" class="profile-link">🔗 ${l.title}</a>`;
+                }
+            });
+            linksHtml += `</div>`;
+        }
+
         let aboutHtml = '';
         if (memberData.bio) aboutHtml += `<div class="about-section-title">Bio</div><div class="about-text">${memberData.bio}</div>`;
+        aboutHtml += linksHtml;
         if (memberData.trading_style) aboutHtml += `<div class="about-section-title">Trading Style</div><div class="about-text" style="white-space: pre-line;">${memberData.trading_style}</div>`;
         if (memberData.motto) aboutHtml += `<div class="about-section-title">Motto</div><div class="about-text" style="font-style: italic;">"${memberData.motto}"</div>`;
         if (!aboutHtml) aboutHtml = `<div class="about-text">No profile information provided yet.</div>`;
@@ -550,19 +670,28 @@
         }
 
         const fallbackName = memberData.full_name || 'Member';
+        const bannerColor = memberData.banner_color || '#1e4bd8';
+        const displayEmail = (!memberData.hide_email || isMe || isAdminGlobal) ? memberData.email : 'Email Hidden';
+        
+        let avatarInner = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${fallbackName.charAt(0).toUpperCase()}</div>`;
+        if (memberData.avatar_url) {
+            avatarInner = `<img src="${memberData.avatar_url}?t=${new Date().getTime()}" alt="avatar">`;
+        }
+
+        const adminBadge = (memberData.is_hidden) ? `<span class="admin-badge">HIDDEN</span>` : '';
 
         container.innerHTML = `
-            <div class="profile-banner"></div>
+            <div class="profile-banner" style="background: ${bannerColor};"></div>
             <div class="profile-core-info">
                 <div class="profile-header-row">
                     <div class="avatar-container">
-                        <div class="profile-avatar-large">${fallbackName.charAt(0).toUpperCase()}</div>
+                        <div class="profile-avatar-large">${avatarInner}</div>
                         <div class="status-dot ${onlineClass}"></div>
                     </div>
                 </div>
                 <div style="margin-top: 15px;">
-                    <h2 class="profile-name-title">${fallbackName}</h2>
-                    <div class="profile-handle">${memberData.email}</div>
+                    <h2 class="profile-name-title">${fallbackName} ${adminBadge}</h2>
+                    <div class="profile-handle">${displayEmail}</div>
                     ${metaHtml}
                     <div class="follow-stats">
                         <span class="follow-stat"><strong>${memberData.followingCount}</strong> Following</span>
@@ -641,55 +770,171 @@
         if (currentFeedFilter === 'following') renderFeed(); 
     }
 
-    async function filterMembersList(query) {
-        if (query.length === 0) {
-            loadProfile(loggedInUser.id);
+    async function adminToggleHideUser(targetId, hideStatus) {
+        if(!isAdminGlobal) return;
+        await networkClient.from('profiles').update({ is_hidden: hideStatus }).eq('id', targetId);
+        profilesCache[targetId].is_hidden = hideStatus;
+        renderLeftProfileUI(targetId);
+        await loadFeedData(); // Re-render feed to hide their posts
+    }
+
+    // SEARCH WITH DROPDOWN
+    async function handleSearchInput(query) {
+        const dd = document.getElementById('search-dropdown');
+        if (query.length < 2) {
+            dd.style.display = 'none';
             return;
         }
-        if (query.length > 2) {
-            const { data } = await networkClient.from('profiles')
-                .select('*')
-                .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
-                .limit(1);
-                
-            if (data && data.length > 0) {
-                const p = data[0];
-                profilesCache[p.id] = p; // cache it
-                loadProfile(p.id);
+        
+        const { data } = await networkClient.from('profiles')
+            .select('id, full_name, email, avatar_url, is_hidden')
+            .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
+            .limit(10);
+            
+        if (data && data.length > 0) {
+            // Filter out hidden profiles unless admin
+            const results = data.filter(p => !p.is_hidden || isAdminGlobal);
+            if(results.length === 0) {
+                dd.innerHTML = `<div style="padding: 12px 20px; color: #8b949e; font-size: 12px;">No members found.</div>`;
+            } else {
+                dd.innerHTML = results.map(p => {
+                    const fallback = p.full_name ? p.full_name.charAt(0).toUpperCase() : '?';
+                    let av = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${fallback}</div>`;
+                    if (p.avatar_url) av = `<img src="${p.avatar_url}" alt="avatar">`;
+                    return `
+                        <div class="search-result-item" onclick="loadProfile('${p.id}')">
+                            <div class="search-result-avatar">${av}</div>
+                            <div class="search-result-info">
+                                <span class="search-result-name">${p.full_name || 'Member'}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
+            dd.style.display = 'block';
+        } else {
+            dd.innerHTML = `<div style="padding: 12px 20px; color: #8b949e; font-size: 12px;">No members found.</div>`;
+            dd.style.display = 'block';
         }
     }
 
+    // ==========================================
+    // PROFILE EDIT MODAL LOGIC
+    // ==========================================
     function openEditModal() {
         const current = profilesCache[loggedInUser.id] || {};
         
+        // Reset Avatar vars
+        pendingAvatarBlob = null;
+        shouldDeleteAvatar = false;
+
         document.getElementById('edit-name').value = current.full_name || '';
         document.getElementById('edit-location').value = current.location || '';
         document.getElementById('edit-experience').value = current.experience || '';
         document.getElementById('edit-bio').value = current.bio || '';
         document.getElementById('edit-trading-style').value = current.trading_style || '';
         document.getElementById('edit-motto').value = current.motto || '';
+        document.getElementById('edit-hide-email').checked = current.hide_email === true;
+        document.getElementById('edit-banner-color').value = current.banner_color || '#1e4bd8';
 
         document.getElementById('edit-gain').value = current.total_gain || '';
         document.getElementById('edit-drawdown').value = current.max_drawdown || '';
         document.getElementById('edit-winrate').value = current.win_rate || '';
         document.getElementById('edit-trades').value = current.total_trades || '';
         
+        // Render Avatar Preview
+        const preview = document.getElementById('edit-avatar-preview');
+        const fallback = (current.full_name || loggedInUser.email).charAt(0).toUpperCase();
+        if (current.avatar_url) {
+            preview.innerHTML = `<img src="${current.avatar_url}?t=${new Date().getTime()}">`;
+        } else {
+            preview.innerHTML = fallback;
+        }
+
+        // Render Links
+        const linksContainer = document.getElementById('links-container');
+        linksContainer.innerHTML = '';
+        if (current.social_links && current.social_links.length > 0) {
+            current.social_links.forEach(l => addLinkRow(l.title, l.url));
+        } else {
+            addLinkRow('', ''); // default empty row
+        }
+        
         document.getElementById('editProfileModal').style.display = 'block';
     }
 
     function closeEditModal() { document.getElementById('editProfileModal').style.display = 'none'; }
 
+    // Links Array Handlers
+    function addLinkRow(title, url) {
+        const container = document.getElementById('links-container');
+        const row = document.createElement('div');
+        row.className = 'link-row';
+        row.innerHTML = `
+            <input type="text" class="form-input link-title-input" placeholder="Title (e.g. MyFxBook)" value="${title}">
+            <input type="text" class="form-input link-url-input" placeholder="URL (e.g. myfxbook.com/...)" value="${url}">
+            <button class="remove-link-btn" onclick="this.parentElement.remove()">X</button>
+        `;
+        container.appendChild(row);
+    }
+    
+    function getLinksData() {
+        const rows = document.querySelectorAll('.link-row');
+        let links = [];
+        rows.forEach(r => {
+            const title = r.querySelector('.link-title-input').value.trim();
+            const url = r.querySelector('.link-url-input').value.trim();
+            if(title || url) links.push({title, url});
+        });
+        return links;
+    }
+
+    // Avatar Selection
+    function handleAvatarSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        shouldDeleteAvatar = false;
+        
+        compressImage(file, (blob) => {
+            pendingAvatarBlob = blob;
+            const url = URL.createObjectURL(blob);
+            document.getElementById('edit-avatar-preview').innerHTML = `<img src="${url}">`;
+        });
+    }
+
+    function clearAvatarSelection() {
+        pendingAvatarBlob = null;
+        shouldDeleteAvatar = true;
+        const current = profilesCache[loggedInUser.id] || {};
+        const fallback = (current.full_name || loggedInUser.email).charAt(0).toUpperCase();
+        document.getElementById('edit-avatar-preview').innerHTML = fallback;
+    }
+
     async function saveProfileChanges() {
         const newName = document.getElementById('edit-name').value.trim();
-        if (!newName) {
-            alert('Display Name is required.');
-            return;
-        }
+        if (!newName) { alert('Display Name is required.'); return; }
 
         const saveBtn = document.getElementById('saveProfileBtn');
         saveBtn.disabled = true;
         saveBtn.innerText = 'Saving...';
+
+        let finalAvatarUrl = profilesCache[loggedInUser.id]?.avatar_url;
+
+        // Handle Avatar Deletion/Upload
+        if (shouldDeleteAvatar && finalAvatarUrl) {
+            const fileName = finalAvatarUrl.split('/').pop().split('?')[0]; // Extract filename
+            await networkClient.storage.from('avatars').remove([fileName]);
+            finalAvatarUrl = null;
+        } else if (pendingAvatarBlob) {
+            const fileName = `${loggedInUser.id}.jpg`;
+            const { data, error } = await networkClient.storage.from('avatars').upload(fileName, pendingAvatarBlob, { upsert: true, contentType: 'image/jpeg' });
+            if (!error) {
+                const { data: publicUrlData } = networkClient.storage.from('avatars').getPublicUrl(fileName);
+                finalAvatarUrl = publicUrlData.publicUrl;
+            } else {
+                console.error("Avatar upload failed:", error);
+            }
+        }
 
         const updates = {
             full_name: newName,
@@ -698,6 +943,10 @@
             bio: document.getElementById('edit-bio').value.trim(),
             trading_style: document.getElementById('edit-trading-style').value.trim(),
             motto: document.getElementById('edit-motto').value.trim(),
+            hide_email: document.getElementById('edit-hide-email').checked,
+            banner_color: document.getElementById('edit-banner-color').value,
+            avatar_url: finalAvatarUrl,
+            social_links: getLinksData(),
             total_gain: document.getElementById('edit-gain').value.trim(),
             max_drawdown: document.getElementById('edit-drawdown').value.trim(),
             win_rate: document.getElementById('edit-winrate').value.trim(),
@@ -707,10 +956,8 @@
         const { error } = await networkClient.from('profiles').update(updates).eq('id', loggedInUser.id);
         
         if (!error) {
-            // Update local cache manually
             profilesCache[loggedInUser.id] = { ...profilesCache[loggedInUser.id], ...updates };
             loadProfile(loggedInUser.id);
-            // Refresh feed in case name changed
             await loadFeedData();
         } else {
             alert('Error updating profile. Please try again.');
@@ -722,7 +969,7 @@
     }
 
     // ==========================================
-    // FEED & POST COMPOSER LOGIC
+    // FEED, POSTS & LIKES LOGIC
     // ==========================================
     function setFeedFilter(filter) {
         currentFeedFilter = filter;
@@ -773,7 +1020,7 @@
         } else {
             inputElem.value = '';
             updateWordCount(inputId, counterId);
-            await loadFeedData(); // Re-fetch to get new post and UUID
+            await loadFeedData(); 
             
             if (viewedProfileId === loggedInUser.id && currentProfileTab === 'feed') {
                 renderPrivateFeed(loggedInUser.id);
@@ -808,20 +1055,51 @@
         btnElem.disabled = false;
     }
 
+    async function toggleReplyLike(replyId, currentLikedStatus) {
+        if (currentLikedStatus) {
+            await networkClient.from('reply_likes').delete().match({ reply_id: replyId, user_id: loggedInUser.id });
+        } else {
+            await networkClient.from('reply_likes').insert([{ reply_id: replyId, user_id: loggedInUser.id }]);
+        }
+        // Optimistic UI update could go here, but re-fetching ensures truth
+        await loadFeedData();
+        if (currentProfileTab === 'feed') renderPrivateFeed(viewedProfileId);
+    }
+
     function buildPostHTML(post) {
         const authorProfile = profilesCache[post.user_id] || {};
+        
+        // Hide post if author is hidden and viewing user isn't admin
+        if (authorProfile.is_hidden && !isAdminGlobal && post.user_id !== loggedInUser.id) return '';
+
         const authorName = authorProfile.full_name || post.author_name;
+        
+        let postAv = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${authorName.charAt(0).toUpperCase()}</div>`;
+        if (authorProfile.avatar_url) postAv = `<img src="${authorProfile.avatar_url}">`;
         
         const repliesHtml = post.post_replies.map(reply => {
             const replyAuthorProfile = profilesCache[reply.user_id] || {};
+            // Hide reply if author hidden
+            if (replyAuthorProfile.is_hidden && !isAdminGlobal && reply.user_id !== loggedInUser.id) return '';
+
             const replyAuthorName = replyAuthorProfile.full_name || reply.author_name;
+            
+            let repAv = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#0d1117; color:#58a6ff;">${replyAuthorName.charAt(0).toUpperCase()}</div>`;
+            if (replyAuthorProfile.avatar_url) repAv = `<img src="${replyAuthorProfile.avatar_url}">`;
+            
+            const likesCount = reply.reply_likes ? reply.reply_likes.length : 0;
+            const iLiked = reply.reply_likes ? reply.reply_likes.some(l => l.user_id === loggedInUser.id) : false;
+            const heartIcon = iLiked ? '❤️' : '🤍';
+            const likeClass = iLiked ? 'liked' : '';
+
             return `
                 <div class="reply-item">
                     <div class="reply-meta">
-                        <span class="reply-author" onclick="loadProfile('${reply.user_id}')">${replyAuthorName}</span>
+                        <span class="reply-author" onclick="loadProfile('${reply.user_id}')">${repAv} ${replyAuthorName}</span>
                         <span class="post-timestamp">${timeAgo(reply.created_at)}</span>
                     </div>
                     <div class="reply-text">${reply.reply_text}</div>
+                    <button class="like-btn ${likeClass}" onclick="toggleReplyLike('${reply.id}', ${iLiked})">${heartIcon} ${likesCount}</button>
                 </div>
             `;
         }).join('');
@@ -829,7 +1107,7 @@
         return `
             <div class="post-card">
                 <div class="post-meta">
-                    <div class="post-avatar" onclick="loadProfile('${post.user_id}')">${authorName.charAt(0).toUpperCase()}</div>
+                    <div class="post-avatar" onclick="loadProfile('${post.user_id}')">${postAv}</div>
                     <div class="post-author-info" onclick="loadProfile('${post.user_id}')">
                         <span class="post-author-name">${authorName}</span>
                         <span class="post-timestamp">${timeAgo(post.created_at)}</span>
@@ -851,7 +1129,6 @@
     function renderFeed() {
         const stream = document.getElementById('posts-stream');
         
-        // Filter out private posts from the main global feed display
         let postsToDisplay = globalPosts.filter(p => p.feed_type === 'global');
         
         if (currentFeedFilter === 'following') {
@@ -866,25 +1143,28 @@
             });
         }
 
-        if (postsToDisplay.length === 0) {
+        // Generate HTML, filter out empty strings (hidden posts)
+        const outputHtml = postsToDisplay.map(p => buildPostHTML(p)).filter(html => html !== '').join('');
+
+        if (outputHtml === '') {
             stream.innerHTML = `<div style="color: #8b949e; text-align: center; padding: 30px;">No posts found for this view.</div>`;
             return;
         }
 
-        stream.innerHTML = postsToDisplay.map(p => buildPostHTML(p)).join('');
+        stream.innerHTML = outputHtml;
     }
 
     function renderPrivateFeed(userId) {
         const stream = document.getElementById('private-feed-stream');
-        
-        // Private feed shows BOTH global and private posts made by that specific user
         const postsToDisplay = globalPosts.filter(p => p.user_id === userId);
+        
+        const outputHtml = postsToDisplay.map(p => buildPostHTML(p)).filter(html => html !== '').join('');
 
-        if (postsToDisplay.length === 0) {
+        if (outputHtml === '') {
             stream.innerHTML = `<div style="color: #8b949e; text-align: center; padding: 20px 0; font-size: 12px;">This user hasn't posted anything yet.</div>`;
             return;
         }
-        stream.innerHTML = postsToDisplay.map(p => buildPostHTML(p)).join('');
+        stream.innerHTML = outputHtml;
     }
 
     document.getElementById('logoutBtn').addEventListener('click', async () => { 
