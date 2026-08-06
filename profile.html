@@ -52,13 +52,15 @@
         }
         *, *:before, *:after { box-sizing: border-box; }
         
-        /* HARDCODED DARK THEME FOR TOP NAV */
+        /* HARDCODED DARK THEME FOR TOP NAV WITH MOBILE BURGER SUPPORT */
         .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1001; position: fixed; top: 0; left: 0; width: 100%; }
         .nav-links { display: flex; align-items: center; gap: 5px; }
         .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s, background 0.2s; padding: 6px 12px; border-radius: 6px; }
         .nav-links a:hover { color: #ffffff; background: rgba(128,128,128,0.1); }
         .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
+        
         .mobile-menu-btn { display: none; font-size: 24px; color: #8b949e; cursor: pointer; background: none; border: none; }
+        
         .dropdown { position: relative; margin-left: 10px; }
         .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
         .dropbtn:hover { color: #ffffff; }
@@ -226,13 +228,21 @@
         .avatar-upload-btn { background: var(--btn-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer; font-size: 12px; color: var(--text-secondary);}
         .avatar-delete-btn { background: transparent; border: none; color: #f85149; font-size: 12px; cursor: pointer; padding: 8px;}
 
+        /* MOBILE RESPONSIVE BURGER STYLING */
         @media (max-width: 950px) {
             body { height: auto; overflow: auto; }
-            .network-container { grid-template-columns: 1fr; height: auto; overflow: visible; padding: 10px; }
+            .network-container { grid-template-columns: 1fr; height: auto; overflow: visible; padding: 10px; margin-top: 55px; }
             .sidebar-panel { height: auto; margin-bottom: 20px; }
             .feed-panel { height: auto; }
             .feed-controls { flex-direction: column; align-items: stretch; }
             .feed-filter-search { max-width: 100%; flex-direction: column;}
+            
+            .mobile-menu-btn { display: block; }
+            .nav-links { display: none; flex-direction: column; position: absolute; top: 55px; left: 0; width: 100%; background: #0d1117; border-bottom: 1px solid #1c2230; padding: 15px 20px; gap: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 1002; }
+            .nav-links.active-nav { display: flex; }
+            .nav-links a { margin-left: 0; width: 100%; text-align: left; }
+            .dropdown { margin-left: 0; width: 100%; }
+            .dropdown-content { position: static; width: 100%; box-shadow: none; border: none; background: transparent; }
         }
     </style>
 </head>
@@ -276,9 +286,7 @@
             <button id="theme-toggle" class="btn-action" style="position: absolute; right: 20px; top: 12px; padding: 6px 10px; background: var(--bg-card);" onclick="toggleTheme()" title="Toggle Theme">☀️</button>
         </div>
         
-        <div class="profile-display-area" id="profile-display-card">
-            <!-- Dynamically populated profile card -->
-        </div>
+        <div class="profile-display-area" id="profile-display-card"></div>
     </div>
 
     <!-- RIGHT PANEL: FEED -->
@@ -309,7 +317,6 @@
         </div>
 
         <div class="feed-scroll-area">
-            <!-- Composer -->
             <div class="composer-box">
                 <textarea id="post-input-main" class="composer-textarea" placeholder="Share a market insight or trade thought (max 100 words)..." oninput="updateWordCount('post-input-main', 'word-counter-main')"></textarea>
                 <div class="composer-footer">
@@ -330,7 +337,6 @@
                 </div>
             </div>
 
-            <!-- Posts Stream -->
             <div id="posts-stream">
                 <div style="color: var(--text-muted); text-align: center; padding: 30px;">Loading feed...</div>
             </div>
@@ -372,7 +378,7 @@
 
         <div class="edit-grid">
             <div class="form-group">
-                <label class="form-label">Display Name</label>
+                <label class="form-label">Display Name <span id="name-lock-notice" style="font-size: 10px; color: var(--accent-blue); font-weight: normal;"></span></label>
                 <input type="text" id="edit-name" class="form-input">
             </div>
             <div class="form-group">
@@ -442,6 +448,18 @@
 </div>
 
 <script>
+    // Profanity Filter Helper (censors extreme slurs/profanity while leaving expressions like WTF alone)
+    function sanitizeText(text) {
+        if (!text) return '';
+        const bannedWords = ['fuck', 'shit', 'cunt', 'dick', 'cock', 'asshole', 'bitch', 'bastard', 'motherfucker'];
+        let cleanText = text;
+        bannedWords.forEach(word => {
+            const regex = new RegExp(`\\b${word}\\b`, 'gi');
+            cleanText = cleanText.replace(regex, '***');
+        });
+        return cleanText;
+    }
+
     function initTheme() {
         const wrapper = document.getElementById('network-theme-wrapper');
         const modal = document.getElementById('editProfileModal');
@@ -895,7 +913,27 @@
         pendingAvatarBlob = null;
         shouldDeleteAvatar = false;
 
-        document.getElementById('edit-name').value = current.full_name || '';
+        const nameInput = document.getElementById('edit-name');
+        nameInput.value = current.full_name || '';
+        
+        // 7-day name change check
+        const nameNotice = document.getElementById('name-lock-notice');
+        if (current.name_last_updated_at) {
+            const lastUpdated = new Date(current.name_last_updated_at).getTime();
+            const daysSince = (Date.now() - lastUpdated) / (1000 * 60 * 60 * 24);
+            if (daysSince < 7 && !isAdminGlobal) {
+                const daysLeft = Math.ceil(7 - daysSince);
+                nameInput.disabled = true;
+                nameNotice.innerText = `(Locked: can change in ${daysLeft} days)`;
+            } else {
+                nameInput.disabled = false;
+                nameNotice.innerText = `(Can be updated once every 7 days)`;
+            }
+        } else {
+            nameInput.disabled = false;
+            nameNotice.innerText = `(Can be updated once every 7 days)`;
+        }
+
         document.getElementById('edit-location').value = current.location || '';
         document.getElementById('edit-experience').value = current.experience || '';
         document.getElementById('edit-bio').value = current.bio || '';
@@ -1027,7 +1065,8 @@
     }
 
     async function saveProfileChanges() {
-        const newName = document.getElementById('edit-name').value.trim();
+        const nameInput = document.getElementById('edit-name');
+        const newName = nameInput.value.trim();
         if (!newName) { alert('Display Name is required.'); return; }
 
         const saveBtn = document.getElementById('saveProfileBtn');
@@ -1055,7 +1094,6 @@
         }
 
         const updates = {
-            full_name: newName,
             location: document.getElementById('edit-location').value.trim(),
             experience: document.getElementById('edit-experience').value,
             bio: document.getElementById('edit-bio').value.trim(),
@@ -1070,6 +1108,13 @@
             win_rate: document.getElementById('edit-winrate').value.trim(),
             total_trades: parseInt(document.getElementById('edit-trades').value) || 0
         };
+
+        // Check if name changed and update timestamp if allowed
+        const oldName = profilesCache[loggedInUser.id]?.full_name;
+        if (newName !== oldName && !nameInput.disabled) {
+            updates.full_name = newName;
+            updates.name_last_updated_at = new Date().toISOString();
+        }
 
         const { error } = await networkClient.from('profiles').update(updates).eq('id', loggedInUser.id);
         
@@ -1107,10 +1152,10 @@
 
     async function submitPost(inputId, counterId, feedType, btnId, categoryId = null) {
         const inputElem = document.getElementById(inputId);
-        const text = inputElem.value.trim();
-        if (!text) return;
+        const rawText = inputElem.value.trim();
+        if (!rawText) return;
 
-        const words = text.split(/\s+/);
+        const words = rawText.split(/\s+/);
         if (words.length > 100) { alert('Post exceeds the 100-word limit.'); return; }
 
         const btn = document.getElementById(btnId);
@@ -1122,13 +1167,15 @@
             if (catElem) categoryVal = catElem.value;
         }
 
+        // Apply profanity filter to post content
+        const sanitizedPostText = sanitizeText(rawText);
         const authorName = profilesCache[loggedInUser.id]?.full_name || loggedInUser.email.split('@')[0];
 
         const { error } = await networkClient.from('network_posts').insert([{
             user_id: loggedInUser.id,
             user_email: loggedInUser.email,
             author_name: authorName,
-            post_text: text,
+            post_text: sanitizedPostText,
             feed_type: feedType,
             category: categoryVal
         }]);
@@ -1162,10 +1209,11 @@
     async function submitReply(postId) {
         const inputElem = document.getElementById(`reply-input-${postId}`);
         const btnElem = document.getElementById(`btn-reply-${postId}`);
-        const text = inputElem.value.trim();
-        if (!text) return;
+        const rawText = inputElem.value.trim();
+        if (!rawText) return;
 
         btnElem.disabled = true;
+        const sanitizedReplyText = sanitizeText(rawText);
         const authorName = profilesCache[loggedInUser.id]?.full_name || loggedInUser.email.split('@')[0];
 
         const { error } = await networkClient.from('post_replies').insert([{
@@ -1173,7 +1221,7 @@
             user_id: loggedInUser.id,
             user_email: loggedInUser.email,
             author_name: authorName,
-            reply_text: text
+            reply_text: sanitizedReplyText
         }]);
 
         if (!error) {
@@ -1221,7 +1269,6 @@
         const canDeletePost = isAdminGlobal || post.user_id === loggedInUser.id;
         const deletePostBtnHtml = canDeletePost ? `<button class="delete-post-btn" onclick="deletePost('${post.id}')" title="Delete Post">🗑️ Delete</button>` : '';
 
-        // Category Badge logic
         const catBadge = (post.category && post.category !== 'General') 
             ? `<span class="cat-badge">${post.category}</span>`
             : '';
@@ -1290,13 +1337,11 @@
             postsToDisplay = postsToDisplay.filter(p => myFollowingIds.includes(p.user_id) || p.user_id === loggedInUser.id);
         }
 
-        // Apply Category Filter
         const catFilter = document.getElementById('feed-category-filter').value;
         if (catFilter !== 'All') {
             postsToDisplay = postsToDisplay.filter(p => (p.category || 'General') === catFilter);
         }
 
-        // Apply Search Filter (searches both post content and author name)
         const query = document.getElementById('feed-search').value.toLowerCase();
         if (query) {
             postsToDisplay = postsToDisplay.filter(p => {
