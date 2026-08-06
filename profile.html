@@ -12,8 +12,8 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-        /* Theme Variables */
-        :root {
+        /* Theme Variables - Scoped only for the network container */
+        .network-theme {
             --bg-main: #090b10;
             --bg-panel: #0d1117;
             --bg-card: #161b22;
@@ -29,7 +29,7 @@
             --input-bg: #090b10;
         }
 
-        .light-mode {
+        .network-theme.light-mode {
             --bg-main: #f3f4f6;
             --bg-panel: #ffffff;
             --bg-card: #f9fafb;
@@ -47,26 +47,26 @@
 
         body { 
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: var(--bg-main); color: var(--text-secondary); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; 
-            transition: background 0.3s, color 0.3s;
+            background: #090b10; /* Body background stays dark behind the top nav */
+            margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; 
         }
         *, *:before, *:after { box-sizing: border-box; }
         
-        .top-nav { background: var(--bg-panel); padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); z-index: 1001; position: fixed; top: 0; left: 0; width: 100%; transition: background 0.3s; }
+        /* HARDCODED DARK THEME FOR TOP NAV - unaffected by light mode */
+        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1001; position: fixed; top: 0; left: 0; width: 100%; }
         .nav-links { display: flex; align-items: center; gap: 5px; }
-        .nav-links a { color: var(--text-muted); text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s, background 0.2s; padding: 6px 12px; border-radius: 6px; }
-        .nav-links a:hover { color: var(--text-primary); background: rgba(128,128,128,0.1); }
-        .nav-links a.active { color: var(--accent-blue); font-weight: 600; background: rgba(41, 98, 255, 0.1); }
-
-        .mobile-menu-btn { display: none; font-size: 24px; color: var(--text-muted); cursor: pointer; background: none; border: none; }
+        .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s, background 0.2s; padding: 6px 12px; border-radius: 6px; }
+        .nav-links a:hover { color: #ffffff; background: rgba(128,128,128,0.1); }
+        .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
+        .mobile-menu-btn { display: none; font-size: 24px; color: #8b949e; cursor: pointer; background: none; border: none; }
         .dropdown { position: relative; margin-left: 10px; }
-        .dropbtn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
-        .dropbtn:hover { color: var(--text-primary); }
-        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: var(--bg-card); min-width: 160px; border: 1px solid var(--border-color); z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); overflow: hidden; }
-        .dropdown-content a { color: var(--text-secondary); padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s;}
-        .dropdown-content a:hover { background-color: var(--btn-hover); color: var(--text-primary); }
+        .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
+        .dropbtn:hover { color: #ffffff; }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
+        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s;}
+        .dropdown-content a:hover { background-color: #30363d; color: #ffffff; }
 
-        /* FULL WIDTH LAYOUT */
+        /* FULL WIDTH LAYOUT - Dynamic Theme Applied Here */
         .network-container { 
             display: grid; 
             grid-template-columns: 420px 1fr; 
@@ -76,12 +76,15 @@
             padding: 20px 2vw; 
             width: 100%; 
             box-sizing: border-box; 
+            background: var(--bg-main);
+            color: var(--text-secondary);
+            transition: background 0.3s, color 0.3s;
         }
 
         /* Left Sidebar & Search Dropdown */
-        .sidebar-panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: background 0.3s; }
-        .sidebar-header { padding: 15px 20px; border-bottom: 1px solid var(--border-light); background: var(--bg-card); position: relative; transition: background 0.3s;}
-        .search-input { width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: background 0.3s, color 0.3s;}
+        .sidebar-panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: background 0.3s, border-color 0.3s; }
+        .sidebar-header { padding: 15px 20px; border-bottom: 1px solid var(--border-light); background: var(--bg-card); position: relative; transition: background 0.3s, border-color 0.3s;}
+        .search-input { width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: background 0.3s, color 0.3s, border-color 0.3s;}
         .search-input:focus { border-color: var(--accent-blue); }
         
         .search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border-color); border-top: none; z-index: 100; max-height: 250px; overflow-y: auto; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
@@ -119,15 +122,13 @@
         .profile-tab-content { padding: 20px; display: none; }
         .profile-tab-content.active { display: block; }
         
-        /* About Tab Details */
         .about-section-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
         .about-text { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; word-break: break-word; margin-bottom: 20px; }
         .profile-link { display: inline-block; background: rgba(41, 98, 255, 0.1); color: var(--accent-blue); padding: 6px 12px; border-radius: 6px; text-decoration: none; margin-right: 8px; margin-bottom: 8px; font-weight: 500; font-size: 12.5px; transition: background 0.2s;}
         .profile-link:hover { background: rgba(41, 98, 255, 0.2); }
         
-        /* Stats Tab */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .stat-box { background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; text-align: center; transition: background 0.3s;}
+        .stat-box { background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; text-align: center; transition: background 0.3s, border-color 0.3s;}
         .stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
         .stat-val { font-size: 16px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
         .val-up { color: #3fb950; }
@@ -143,8 +144,8 @@
         .btn-danger-action:hover { background: rgba(248, 81, 73, 0.1); }
 
         /* Right Panel: Feed Area */
-        .feed-panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: background 0.3s;}
-        .feed-header-area { padding: 15px 25px 0 25px; border-bottom: 1px solid var(--border-light); background: var(--bg-card); transition: background 0.3s;}
+        .feed-panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: background 0.3s, border-color 0.3s;}
+        .feed-header-area { padding: 15px 25px 0 25px; border-bottom: 1px solid var(--border-light); background: var(--bg-card); transition: background 0.3s, border-color 0.3s;}
         
         .feed-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 15px; }
         .feed-tabs { display: flex; gap: 10px; }
@@ -152,22 +153,20 @@
         .f-tab.active { background: rgba(41, 98, 255, 0.1); color: var(--accent-blue); }
         
         .feed-search-container { flex-grow: 1; max-width: 300px; }
-        .feed-search-input { width: 100%; padding: 8px 12px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 12px; outline: none; transition: background 0.3s, color 0.3s;}
+        .feed-search-input { width: 100%; padding: 8px 12px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 12px; outline: none; transition: background 0.3s, color 0.3s, border-color 0.3s;}
 
         .feed-scroll-area { overflow-y: auto; flex-grow: 1; padding: 20px 25px; }
         .feed-scroll-area::-webkit-scrollbar, .profile-display-area::-webkit-scrollbar { width: 6px; }
         .feed-scroll-area::-webkit-scrollbar-thumb, .profile-display-area::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
-        /* Post Composer */
-        .composer-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; margin-bottom: 25px; transition: background 0.3s;}
+        .composer-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; margin-bottom: 25px; transition: background 0.3s, border-color 0.3s;}
         .composer-textarea { width: 100%; background: transparent; border: none; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 13.5px; resize: none; height: 70px; outline: none; }
         .composer-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-light); padding-top: 10px; margin-top: 5px; }
         .word-counter { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
         .btn-post { background: var(--accent-blue); color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; font-size: 12.5px; cursor: pointer; }
         .btn-post:disabled { background: var(--btn-bg); color: var(--text-muted); cursor: not-allowed; }
 
-        /* Post Card Styling */
-        .post-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; margin-bottom: 15px; transition: background 0.3s; position: relative;}
+        .post-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; margin-bottom: 15px; transition: background 0.3s, border-color 0.3s; position: relative;}
         .post-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
         .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(41, 98, 255, 0.15); border: 1px solid rgba(41, 98, 255, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--accent-blue); font-size: 14px; cursor: pointer; overflow: hidden; }
         .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -179,9 +178,8 @@
         .delete-post-btn { position: absolute; top: 15px; right: 18px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; }
         .delete-post-btn:hover { color: #f85149; }
 
-        /* Replies */
         .replies-container { margin-top: 12px; padding-left: 20px; border-left: 2px solid var(--border-light); display: flex; flex-direction: column; gap: 10px; }
-        .reply-item { background: var(--bg-panel); border: 1px solid var(--border-light); padding: 10px 14px; border-radius: 8px; position: relative; transition: background 0.3s;}
+        .reply-item { background: var(--bg-panel); border: 1px solid var(--border-light); padding: 10px 14px; border-radius: 8px; position: relative; transition: background 0.3s, border-color 0.3s;}
         .reply-meta { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11.5px; }
         .reply-author { font-weight: 600; color: var(--accent-blue); cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .reply-author img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
@@ -199,7 +197,7 @@
         .btn-reply-submit { background: var(--btn-bg); color: var(--text-secondary); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
         .btn-reply-submit:disabled { background: var(--btn-hover); cursor: not-allowed; }
 
-        /* Modal Styles */
+        /* Modal Styles - Scoped to Network Theme Variables */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
         .modal-content { background-color: var(--bg-panel); margin: 2% auto; padding: 30px; border: 1px solid var(--border-color); width: 90%; max-width: 600px; color: var(--text-secondary); border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; transition: background 0.3s;}
         .modal-header { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;}
@@ -214,14 +212,12 @@
         /* Pro Feature Gates */
         .pro-locked-container { opacity: 0.4; pointer-events: none; position: relative; }
         .pro-notice-box { background: rgba(41, 98, 255, 0.08); border: 1px solid rgba(41, 98, 255, 0.3); padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text-primary); }
-        .pro-notice-box span { color: var(--accent-blue); font-weight: 600; cursor: pointer; }
+        .pro-notice-box strong { color: var(--accent-blue); font-weight: 600; }
 
-        /* Links Form */
         .link-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
         .link-row input { flex: 1; }
         .remove-link-btn { background: var(--btn-bg); color: #f85149; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; padding: 10px; }
 
-        /* Media Upload */
         .avatar-edit-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
         .avatar-edit-preview { width: 60px; height: 60px; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 20px; font-weight: bold; color: var(--accent-blue);}
         .avatar-edit-preview img { width: 100%; height: 100%; object-fit: cover; }
@@ -255,9 +251,6 @@
         <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
         <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
         
-        <!-- Theme Toggle -->
-        <button id="theme-toggle" class="dropbtn" onclick="toggleTheme()" title="Toggle Theme">☀️</button>
-
         <div class="dropdown">
             <button class="dropbtn" onclick="toggleDropdown(event)">⚙️</button>
             <div id="settingsDropdown" class="dropdown-content">
@@ -271,19 +264,64 @@
     </div>
 </div>
 
-<!-- Edit Profile Modal -->
-<div id="editProfileModal" class="modal">
+<div class="network-container network-theme" id="network-theme-wrapper">
+    
+    <!-- LEFT SIDEBAR: PROFILE & SEARCH -->
+    <div class="sidebar-panel">
+        <div class="sidebar-header">
+            <input type="text" id="member-search" class="search-input" placeholder="Search members by name or email..." oninput="handleSearchInput(this.value)">
+            <div id="search-dropdown" class="search-dropdown"></div>
+            <!-- Move Theme Toggle inside sidebar to logically decouple from topnav -->
+            <button id="theme-toggle" class="btn-action" style="position: absolute; right: 20px; top: 12px; padding: 6px 10px; background: var(--bg-card);" onclick="toggleTheme()" title="Toggle Theme">☀️</button>
+        </div>
+        
+        <div class="profile-display-area" id="profile-display-card">
+            <!-- Dynamically populated profile card -->
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: FEED -->
+    <div class="feed-panel">
+        <div class="feed-header-area">
+            <div class="feed-controls">
+                <div class="feed-tabs">
+                    <button id="tab-global" class="f-tab active" onclick="setFeedFilter('global')">Global Feed</button>
+                    <button id="tab-following" class="f-tab" onclick="setFeedFilter('following')">Following</button>
+                </div>
+                <div class="feed-search-container">
+                    <input type="text" id="feed-search" class="feed-search-input" placeholder="Search posts..." oninput="renderFeed()">
+                </div>
+            </div>
+        </div>
+
+        <div class="feed-scroll-area">
+            <div class="composer-box">
+                <textarea id="post-input-main" class="composer-textarea" placeholder="Share a market insight or trade thought (max 100 words)..." oninput="updateWordCount('post-input-main', 'word-counter-main')"></textarea>
+                <div class="composer-footer">
+                    <span id="word-counter-main" class="word-counter">100 words remaining</span>
+                    <button id="btn-post-main" class="btn-post" onclick="submitPost('post-input-main', 'word-counter-main', 'global', 'btn-post-main')">Post Message</button>
+                </div>
+            </div>
+
+            <div id="posts-stream">
+                <div style="color: var(--text-muted); text-align: center; padding: 30px;">Loading feed...</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Edit Profile Modal (Includes network-theme class for consistent styling) -->
+<div id="editProfileModal" class="modal network-theme">
     <div class="modal-content">
         <div class="modal-header">Edit Profile Settings</div>
         
-        <!-- PRO NOTICE BOX FOR NON-PRO USERS -->
         <div id="pro-notice-banner" class="pro-notice-box" style="display: none;">
-            <div>🔒 Custom avatar uploads and portfolio URLs are <strong>Pro Membership</strong> features.</div>
+            <div>🔒 Custom avatars and portfolio links require a <strong>Pro Membership</strong>.</div>
         </div>
 
-        <!-- Avatar & Banner Settings -->
         <div class="form-group" id="avatar-section-wrapper">
-            <label class="form-label">Profile Avatar</label>
+            <label class="form-label">Profile Avatar (Min 150x150)</label>
             <div class="avatar-edit-wrapper">
                 <div class="avatar-edit-preview" id="edit-avatar-preview">?</div>
                 <input type="file" id="avatar-input" accept="image/*" style="display: none;" onchange="handleAvatarSelect(event)">
@@ -376,70 +414,30 @@
     </div>
 </div>
 
-<div class="network-container">
-    
-    <!-- LEFT SIDEBAR: PROFILE & SEARCH -->
-    <div class="sidebar-panel">
-        <div class="sidebar-header">
-            <input type="text" id="member-search" class="search-input" placeholder="Search members by name or email..." oninput="handleSearchInput(this.value)">
-            <!-- Search Results Dropdown -->
-            <div id="search-dropdown" class="search-dropdown"></div>
-        </div>
-        
-        <div class="profile-display-area" id="profile-display-card">
-            <!-- Dynamically populated profile card -->
-        </div>
-    </div>
-
-    <!-- RIGHT PANEL: FEED -->
-    <div class="feed-panel">
-        <div class="feed-header-area">
-            <div class="feed-controls">
-                <div class="feed-tabs">
-                    <button id="tab-global" class="f-tab active" onclick="setFeedFilter('global')">Global Feed</button>
-                    <button id="tab-following" class="f-tab" onclick="setFeedFilter('following')">Following</button>
-                </div>
-                <div class="feed-search-container">
-                    <input type="text" id="feed-search" class="feed-search-input" placeholder="Search posts..." oninput="renderFeed()">
-                </div>
-            </div>
-        </div>
-
-        <div class="feed-scroll-area">
-            <!-- Main Global Post Composer -->
-            <div class="composer-box">
-                <textarea id="post-input-main" class="composer-textarea" placeholder="Share a market insight or trade thought (max 100 words)..." oninput="updateWordCount('post-input-main', 'word-counter-main')"></textarea>
-                <div class="composer-footer">
-                    <span id="word-counter-main" class="word-counter">100 words remaining</span>
-                    <button id="btn-post-main" class="btn-post" onclick="submitPost('post-input-main', 'word-counter-main', 'global', 'btn-post-main')">Post Message</button>
-                </div>
-            </div>
-
-            <!-- Feed Posts Stream -->
-            <div id="posts-stream">
-                <div style="color: var(--text-muted); text-align: center; padding: 30px;">Loading feed...</div>
-            </div>
-        </div>
-    </div>
-
-</div>
-
 <script>
     // ==========================================
     // THEME & HELPER FUNCTIONS
     // ==========================================
     function initTheme() {
+        const wrapper = document.getElementById('network-theme-wrapper');
+        const modal = document.getElementById('editProfileModal');
         if (localStorage.getItem('theme') === 'light') {
-            document.body.classList.add('light-mode');
+            wrapper.classList.add('light-mode');
+            modal.classList.add('light-mode');
             document.getElementById('theme-toggle').innerText = '🌙';
         }
     }
 
     function toggleTheme() {
-        const isLight = document.body.classList.toggle('light-mode');
+        const wrapper = document.getElementById('network-theme-wrapper');
+        const modal = document.getElementById('editProfileModal');
+        const isLight = wrapper.classList.toggle('light-mode');
+        modal.classList.toggle('light-mode');
         document.getElementById('theme-toggle').innerText = isLight ? '🌙' : '☀️';
         localStorage.setItem('theme', isLight ? 'light' : 'dark');
     }
+    
+    // Initialize Theme immediately
     initTheme();
 
     function userHasAccess(userTags, requiredTag) {
@@ -463,28 +461,6 @@
         if (hours < 24) return `${hours}h ago`;
         const days = Math.floor(hours / 24);
         return `${days}d ago`;
-    }
-
-    function compressImage(file, callback) {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = event => {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 300;
-                let scaleSize = 1;
-                if (img.width > MAX_WIDTH) {
-                    scaleSize = MAX_WIDTH / img.width;
-                }
-                canvas.width = img.width * scaleSize;
-                canvas.height = img.height * scaleSize;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                canvas.toBlob(callback, 'image/jpeg', 0.8);
-            };
-        };
     }
 
     function toggleNav() { document.getElementById("navLinks").classList.toggle("active-nav"); }
@@ -536,7 +512,6 @@
         loggedInUser = session.user;
         viewedProfileId = loggedInUser.id; 
 
-        // Handle navigation & Pro/Admin tags visibility
         const { data: profile } = await mainClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
         if (profile) {
             const tagStr = profile.subscription_tag || 'free';
@@ -561,7 +536,6 @@
             }
         }
 
-        // Initialize User in Sandbox Database
         const { data: sandboxProfile } = await networkClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
         if (!sandboxProfile) {
             await networkClient.from('profiles').insert([{
@@ -578,7 +552,6 @@
         await loadProfile(loggedInUser.id);
         await loadFeedData();
 
-        // Ping Online Status every 60s
         setInterval(async () => {
             const nowIso = new Date().toISOString();
             await networkClient.from('profiles').update({ last_seen: nowIso }).eq('id', loggedInUser.id);
@@ -595,7 +568,7 @@
     }
 
     // ==========================================
-    // DATA FETCHING & RENDERING
+    // DATA FETCHING & 30 DAY CLEANUP LOGIC
     // ==========================================
     async function loadFeedData() {
         const { data: posts } = await networkClient
@@ -612,7 +585,18 @@
 
         if (posts) {
             posts.forEach(p => p.post_replies.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)));
-            globalPosts = posts;
+            
+            // Generate 30 days ago threshold
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            // Filter out global posts older than 30 days
+            globalPosts = posts.filter(p => {
+                if (p.feed_type === 'global') {
+                    return new Date(p.created_at) >= thirtyDaysAgo;
+                }
+                return true; // Keep personal feed posts regardless of age
+            });
         }
 
         const missingUserIds = new Set();
@@ -907,14 +891,12 @@
         document.getElementById('edit-winrate').value = current.win_rate || '';
         document.getElementById('edit-trades').value = current.total_trades || '';
         
-        // Handle Pro Membership Gating for Avatar & URLs
         const noticeBanner = document.getElementById('pro-notice-banner');
         const avatarWrapper = document.getElementById('avatar-section-wrapper');
         const linksWrapper = document.getElementById('links-section-wrapper');
 
         if (!isProOrAdminGlobal) {
             noticeBanner.style.display = 'flex';
-            noticeBanner.innerHTML = `<div>🔒 Custom avatars and portfolio links require a <strong>Pro Membership</strong>.</div>`;
             avatarWrapper.classList.add('pro-locked-container');
             linksWrapper.classList.add('pro-locked-container');
         } else {
@@ -945,7 +927,7 @@
     function closeEditModal() { document.getElementById('editProfileModal').style.display = 'none'; }
 
     function addLinkRow(title, url) {
-        if (!isProOrAdminGlobal) return; // Block adding rows if not pro
+        if (!isProOrAdminGlobal) return;
         const container = document.getElementById('links-container');
         const row = document.createElement('div');
         row.className = 'link-row';
@@ -971,17 +953,53 @@
         return links;
     }
 
+    // Exact Constraints Image Validation & Compression
     function handleAvatarSelect(e) {
         if (!isProOrAdminGlobal) return;
         const file = e.target.files[0];
         if (!file) return;
         shouldDeleteAvatar = false;
         
-        compressImage(file, (blob) => {
-            pendingAvatarBlob = blob;
-            const url = URL.createObjectURL(blob);
-            document.getElementById('edit-avatar-preview').innerHTML = `<img src="${url}">`;
-        });
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                // Dimension Validation
+                if (img.width < 150 || img.height < 150) {
+                    alert('Image is too small. Minimum dimensions must be 150x150 pixels.');
+                    document.getElementById('avatar-input').value = '';
+                    return;
+                }
+
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 300;
+                let scaleSize = 1;
+                if (img.width > MAX_WIDTH) {
+                    scaleSize = MAX_WIDTH / img.width;
+                }
+                
+                canvas.width = img.width * scaleSize;
+                canvas.height = img.height * scaleSize;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                // Compression & File Size validation
+                canvas.toBlob((blob) => {
+                    const kbSize = blob.size / 1024;
+                    if (kbSize > 200) {
+                        alert(`Compressed image is ${kbSize.toFixed(1)} KB, which exceeds the 200 KB limit. Please try a simpler image.`);
+                        return;
+                    }
+
+                    pendingAvatarBlob = blob;
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('edit-avatar-preview').innerHTML = `<img src="${url}">`;
+                }, 'image/jpeg', 0.75); // Using 75% quality to assist compression
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
     }
 
     function clearAvatarSelection() {
@@ -1016,7 +1034,7 @@
                     finalAvatarUrl = publicUrlData.publicUrl;
                 } else {
                     console.error("Avatar upload failed:", error);
-                    alert("Avatar upload failed: Make sure your bucket is public and named 'avatars'.");
+                    alert("Avatar upload failed: Make sure your bucket is public, named 'avatars', and respects RLS policies.");
                 }
             }
         }
@@ -1117,7 +1135,8 @@
             await loadFeedData();
             if (currentProfileTab === 'feed') renderPrivateFeed(viewedProfileId);
         } else {
-            alert('Failed to delete post.');
+            console.error(error);
+            alert('Failed to delete post. Please ensure RLS policies allow deletion.');
         }
     }
 
@@ -1154,7 +1173,8 @@
             await loadFeedData();
             if (currentProfileTab === 'feed') renderPrivateFeed(viewedProfileId);
         } else {
-            alert('Failed to delete reply.');
+            console.error(error);
+            alert('Failed to delete reply. Please ensure RLS policies allow deletion.');
         }
     }
 
@@ -1179,7 +1199,6 @@
         let postAv = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${authorName.charAt(0).toUpperCase()}</div>`;
         if (authorProfile.avatar_url) postAv = `<img src="${authorProfile.avatar_url}">`;
         
-        // Post deletion permission check (Admin or Author)
         const canDeletePost = isAdminGlobal || post.user_id === loggedInUser.id;
         const deletePostBtnHtml = canDeletePost ? `<button class="delete-post-btn" onclick="deletePost('${post.id}')" title="Delete Post">🗑️ Delete</button>` : '';
 
@@ -1197,7 +1216,6 @@
             const heartIcon = iLiked ? '❤️' : '🤍';
             const likeClass = iLiked ? 'liked' : '';
 
-            // Reply deletion permission check (Admin or Author)
             const canDeleteReply = isAdminGlobal || reply.user_id === loggedInUser.id;
             const deleteReplyBtnHtml = canDeleteReply ? `<button class="delete-reply-btn" onclick="deleteReply('${reply.id}')">Delete</button>` : '';
 
