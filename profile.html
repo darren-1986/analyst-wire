@@ -47,12 +47,12 @@
 
         body { 
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: #090b10; /* Body background stays dark behind the top nav */
+            background: #090b10; 
             margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; 
         }
         *, *:before, *:after { box-sizing: border-box; }
         
-        /* HARDCODED DARK THEME FOR TOP NAV - unaffected by light mode */
+        /* HARDCODED DARK THEME FOR TOP NAV */
         .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1001; position: fixed; top: 0; left: 0; width: 100%; }
         .nav-links { display: flex; align-items: center; gap: 5px; }
         .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s, background 0.2s; padding: 6px 12px; border-radius: 6px; }
@@ -66,7 +66,7 @@
         .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s;}
         .dropdown-content a:hover { background-color: #30363d; color: #ffffff; }
 
-        /* FULL WIDTH LAYOUT - Dynamic Theme Applied Here */
+        /* FULL WIDTH LAYOUT */
         .network-container { 
             display: grid; 
             grid-template-columns: 420px 1fr; 
@@ -145,14 +145,15 @@
 
         /* Right Panel: Feed Area */
         .feed-panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: background 0.3s, border-color 0.3s;}
-        .feed-header-area { padding: 15px 25px 0 25px; border-bottom: 1px solid var(--border-light); background: var(--bg-card); transition: background 0.3s, border-color 0.3s;}
+        .feed-header-area { padding: 15px 25px 15px 25px; border-bottom: 1px solid var(--border-light); background: var(--bg-card); transition: background 0.3s, border-color 0.3s;}
         
-        .feed-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 15px; }
+        .feed-controls { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
         .feed-tabs { display: flex; gap: 10px; }
         .f-tab { background: transparent; border: none; color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 12px; border-radius: 6px; }
         .f-tab.active { background: rgba(41, 98, 255, 0.1); color: var(--accent-blue); }
         
-        .feed-search-container { flex-grow: 1; max-width: 300px; }
+        .feed-filter-search { display: flex; gap: 10px; flex-grow: 1; max-width: 450px; }
+        .feed-search-container { flex-grow: 1; }
         .feed-search-input { width: 100%; padding: 8px 12px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 12px; outline: none; transition: background 0.3s, color 0.3s, border-color 0.3s;}
 
         .feed-scroll-area { overflow-y: auto; flex-grow: 1; padding: 20px 25px; }
@@ -171,7 +172,10 @@
         .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(41, 98, 255, 0.15); border: 1px solid rgba(41, 98, 255, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--accent-blue); font-size: 14px; cursor: pointer; overflow: hidden; }
         .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .post-author-info { display: flex; flex-direction: column; cursor: pointer; }
-        .post-author-name { font-weight: 600; color: var(--text-primary); font-size: 13.5px; }
+        .post-author-name { font-weight: 600; color: var(--text-primary); font-size: 13.5px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;}
+        
+        .cat-badge { font-size: 10px; background: rgba(41, 98, 255, 0.1); color: var(--accent-blue); padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase;}
+
         .post-timestamp { font-size: 11px; color: var(--text-muted); }
         .post-body { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 15px; word-break: break-word; }
 
@@ -197,27 +201,25 @@
         .btn-reply-submit { background: var(--btn-bg); color: var(--text-secondary); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
         .btn-reply-submit:disabled { background: var(--btn-hover); cursor: not-allowed; }
 
-        /* Modal Styles - Scoped to Network Theme Variables */
+        /* Form Variables */
+        .form-input, .form-textarea, .form-select { width: 100%; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: border-color 0.3s;}
+        .form-select:focus { border-color: var(--accent-blue); }
+
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
         .modal-content { background-color: var(--bg-panel); margin: 2% auto; padding: 30px; border: 1px solid var(--border-color); width: 90%; max-width: 600px; color: var(--text-secondary); border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; transition: background 0.3s;}
         .modal-header { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;}
         .form-group { margin-bottom: 15px; }
         .form-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 6px; display: block; }
-        .form-input, .form-textarea, .form-select { width: 100%; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; }
         .form-textarea { resize: vertical; height: 70px; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 25px; }
         
         .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
-        /* Pro Feature Gates */
         .pro-locked-container { opacity: 0.4; pointer-events: none; position: relative; }
         .pro-notice-box { background: rgba(41, 98, 255, 0.08); border: 1px solid rgba(41, 98, 255, 0.3); padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text-primary); }
         .pro-notice-box strong { color: var(--accent-blue); font-weight: 600; }
-
         .link-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
         .link-row input { flex: 1; }
         .remove-link-btn { background: var(--btn-bg); color: #f85149; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; padding: 10px; }
-
         .avatar-edit-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
         .avatar-edit-preview { width: 60px; height: 60px; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 20px; font-weight: bold; color: var(--accent-blue);}
         .avatar-edit-preview img { width: 100%; height: 100%; object-fit: cover; }
@@ -230,7 +232,7 @@
             .sidebar-panel { height: auto; margin-bottom: 20px; }
             .feed-panel { height: auto; }
             .feed-controls { flex-direction: column; align-items: stretch; }
-            .feed-search-container { max-width: 100%; }
+            .feed-filter-search { max-width: 100%; flex-direction: column;}
         }
     </style>
 </head>
@@ -271,7 +273,6 @@
         <div class="sidebar-header">
             <input type="text" id="member-search" class="search-input" placeholder="Search members by name or email..." oninput="handleSearchInput(this.value)">
             <div id="search-dropdown" class="search-dropdown"></div>
-            <!-- Move Theme Toggle inside sidebar to logically decouple from topnav -->
             <button id="theme-toggle" class="btn-action" style="position: absolute; right: 20px; top: 12px; padding: 6px 10px; background: var(--bg-card);" onclick="toggleTheme()" title="Toggle Theme">☀️</button>
         </div>
         
@@ -288,30 +289,56 @@
                     <button id="tab-global" class="f-tab active" onclick="setFeedFilter('global')">Global Feed</button>
                     <button id="tab-following" class="f-tab" onclick="setFeedFilter('following')">Following</button>
                 </div>
-                <div class="feed-search-container">
-                    <input type="text" id="feed-search" class="feed-search-input" placeholder="Search posts..." oninput="renderFeed()">
+                <div class="feed-filter-search">
+                    <select id="feed-category-filter" class="form-select" style="width: auto; padding: 8px; font-size: 12px;" onchange="renderFeed()">
+                        <option value="All">All Categories</option>
+                        <option value="General">General</option>
+                        <option value="Trade Idea">💡 Trade Idea</option>
+                        <option value="Macro Analysis">🌍 Macro Analysis</option>
+                        <option value="Technical Analysis">📈 Technical Analysis</option>
+                        <option value="Fundamental Analysis">📊 Fundamental Analysis</option>
+                        <option value="Risk Management">🛡️ Risk Management</option>
+                        <option value="Market News">📰 Market News</option>
+                        <option value="Educational">📚 Educational</option>
+                    </select>
+                    <div class="feed-search-container">
+                        <input type="text" id="feed-search" class="feed-search-input" placeholder="Search keywords or members..." oninput="renderFeed()">
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="feed-scroll-area">
+            <!-- Composer -->
             <div class="composer-box">
                 <textarea id="post-input-main" class="composer-textarea" placeholder="Share a market insight or trade thought (max 100 words)..." oninput="updateWordCount('post-input-main', 'word-counter-main')"></textarea>
                 <div class="composer-footer">
                     <span id="word-counter-main" class="word-counter">100 words remaining</span>
-                    <button id="btn-post-main" class="btn-post" onclick="submitPost('post-input-main', 'word-counter-main', 'global', 'btn-post-main')">Post Message</button>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <select id="post-category-main" class="form-select" style="width: 160px; padding: 8px; font-size: 12px;">
+                            <option value="General">General</option>
+                            <option value="Trade Idea">💡 Trade Idea</option>
+                            <option value="Macro Analysis">🌍 Macro Analysis</option>
+                            <option value="Technical Analysis">📈 Technical Analysis</option>
+                            <option value="Fundamental Analysis">📊 Fundamental Analysis</option>
+                            <option value="Risk Management">🛡️ Risk Management</option>
+                            <option value="Market News">📰 Market News</option>
+                            <option value="Educational">📚 Educational</option>
+                        </select>
+                        <button id="btn-post-main" class="btn-post" onclick="submitPost('post-input-main', 'word-counter-main', 'global', 'btn-post-main', 'post-category-main')">Post Message</button>
+                    </div>
                 </div>
             </div>
 
+            <!-- Posts Stream -->
             <div id="posts-stream">
                 <div style="color: var(--text-muted); text-align: center; padding: 30px;">Loading feed...</div>
             </div>
         </div>
     </div>
-
 </div>
 
-<!-- Edit Profile Modal (Includes network-theme class for consistent styling) -->
+<!-- Edit Profile Modal -->
 <div id="editProfileModal" class="modal network-theme">
     <div class="modal-content">
         <div class="modal-header">Edit Profile Settings</div>
@@ -415,9 +442,6 @@
 </div>
 
 <script>
-    // ==========================================
-    // THEME & HELPER FUNCTIONS
-    // ==========================================
     function initTheme() {
         const wrapper = document.getElementById('network-theme-wrapper');
         const modal = document.getElementById('editProfileModal');
@@ -437,7 +461,6 @@
         localStorage.setItem('theme', isLight ? 'light' : 'dark');
     }
     
-    // Initialize Theme immediately
     initTheme();
 
     function userHasAccess(userTags, requiredTag) {
@@ -482,9 +505,6 @@
         }
     }
 
-    // ==========================================
-    // DUAL-CLIENT SETUP
-    // ==========================================
     const mainClient = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
     const networkClient = supabase.createClient('https://nayucfhbnecwhtzuaiur.supabase.co', 'sb_publishable_yNK-_0-3ZI2ssYfbSvw75g_RXLD_R-A');
     
@@ -502,9 +522,6 @@
     let currentFeedFilter = 'global'; 
     let currentProfileTab = 'about'; 
 
-    // ==========================================
-    // INITIALIZATION
-    // ==========================================
     async function init() {
         const { data: { session } } = await mainClient.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
@@ -567,9 +584,6 @@
         }
     }
 
-    // ==========================================
-    // DATA FETCHING & 30 DAY CLEANUP LOGIC
-    // ==========================================
     async function loadFeedData() {
         const { data: posts } = await networkClient
             .from('network_posts')
@@ -586,16 +600,14 @@
         if (posts) {
             posts.forEach(p => p.post_replies.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)));
             
-            // Generate 30 days ago threshold
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-            // Filter out global posts older than 30 days
             globalPosts = posts.filter(p => {
                 if (p.feed_type === 'global') {
                     return new Date(p.created_at) >= thirtyDaysAgo;
                 }
-                return true; // Keep personal feed posts regardless of age
+                return true; 
             });
         }
 
@@ -715,7 +727,19 @@
                     <textarea id="post-input-private" class="composer-textarea" placeholder="Post directly to your personal feed..." oninput="updateWordCount('post-input-private', 'word-counter-private')"></textarea>
                     <div class="composer-footer">
                         <span id="word-counter-private" class="word-counter">100 words remaining</span>
-                        <button id="btn-post-private" class="btn-post" onclick="submitPost('post-input-private', 'word-counter-private', 'private', 'btn-post-private')">Post</button>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <select id="post-category-private" class="form-select" style="width: 160px; padding: 8px; font-size: 12px;">
+                                <option value="General">General</option>
+                                <option value="Trade Idea">💡 Trade Idea</option>
+                                <option value="Macro Analysis">🌍 Macro Analysis</option>
+                                <option value="Technical Analysis">📈 Technical Analysis</option>
+                                <option value="Fundamental Analysis">📊 Fundamental Analysis</option>
+                                <option value="Risk Management">🛡️ Risk Management</option>
+                                <option value="Market News">📰 Market News</option>
+                                <option value="Educational">📚 Educational</option>
+                            </select>
+                            <button id="btn-post-private" class="btn-post" onclick="submitPost('post-input-private', 'word-counter-private', 'private', 'btn-post-private', 'post-category-private')">Post</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -799,9 +823,6 @@
         renderLeftProfileUI(viewedProfileId);
     }
 
-    // ==========================================
-    // USER INTERACTIONS
-    // ==========================================
     async function toggleFollow(targetId) {
         const btn = document.getElementById('btn-follow');
         if(btn) btn.disabled = true;
@@ -868,9 +889,6 @@
         }
     }
 
-    // ==========================================
-    // PROFILE EDIT MODAL & PRO FEATURES GATE
-    // ==========================================
     function openEditModal() {
         const current = profilesCache[loggedInUser.id] || {};
         
@@ -953,7 +971,6 @@
         return links;
     }
 
-    // Exact Constraints Image Validation & Compression
     function handleAvatarSelect(e) {
         if (!isProOrAdminGlobal) return;
         const file = e.target.files[0];
@@ -964,7 +981,6 @@
         reader.onload = (event) => {
             const img = new Image();
             img.onload = () => {
-                // Dimension Validation
                 if (img.width < 150 || img.height < 150) {
                     alert('Image is too small. Minimum dimensions must be 150x150 pixels.');
                     document.getElementById('avatar-input').value = '';
@@ -984,7 +1000,6 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 
-                // Compression & File Size validation
                 canvas.toBlob((blob) => {
                     const kbSize = blob.size / 1024;
                     if (kbSize > 200) {
@@ -995,7 +1010,7 @@
                     pendingAvatarBlob = blob;
                     const url = URL.createObjectURL(blob);
                     document.getElementById('edit-avatar-preview').innerHTML = `<img src="${url}">`;
-                }, 'image/jpeg', 0.75); // Using 75% quality to assist compression
+                }, 'image/jpeg', 0.75); 
             };
             img.src = event.target.result;
         };
@@ -1071,9 +1086,6 @@
         closeEditModal();
     }
 
-    // ==========================================
-    // FEED, POSTS, LIKES & DELETION LOGIC
-    // ==========================================
     function setFeedFilter(filter) {
         currentFeedFilter = filter;
         document.getElementById('tab-global').classList.toggle('active', filter === 'global');
@@ -1093,7 +1105,7 @@
         }
     }
 
-    async function submitPost(inputId, counterId, feedType, btnId) {
+    async function submitPost(inputId, counterId, feedType, btnId, categoryId = null) {
         const inputElem = document.getElementById(inputId);
         const text = inputElem.value.trim();
         if (!text) return;
@@ -1104,6 +1116,12 @@
         const btn = document.getElementById(btnId);
         btn.disabled = true;
 
+        let categoryVal = 'General';
+        if (categoryId) {
+            const catElem = document.getElementById(categoryId);
+            if (catElem) categoryVal = catElem.value;
+        }
+
         const authorName = profilesCache[loggedInUser.id]?.full_name || loggedInUser.email.split('@')[0];
 
         const { error } = await networkClient.from('network_posts').insert([{
@@ -1111,7 +1129,8 @@
             user_email: loggedInUser.email,
             author_name: authorName,
             post_text: text,
-            feed_type: feedType
+            feed_type: feedType,
+            category: categoryVal
         }]);
 
         if (error) {
@@ -1202,6 +1221,11 @@
         const canDeletePost = isAdminGlobal || post.user_id === loggedInUser.id;
         const deletePostBtnHtml = canDeletePost ? `<button class="delete-post-btn" onclick="deletePost('${post.id}')" title="Delete Post">🗑️ Delete</button>` : '';
 
+        // Category Badge logic
+        const catBadge = (post.category && post.category !== 'General') 
+            ? `<span class="cat-badge">${post.category}</span>`
+            : '';
+
         const repliesHtml = post.post_replies.map(reply => {
             const replyAuthorProfile = profilesCache[reply.user_id] || {};
             if (replyAuthorProfile.is_hidden && !isAdminGlobal && reply.user_id !== loggedInUser.id) return '';
@@ -1240,7 +1264,7 @@
                 <div class="post-meta">
                     <div class="post-avatar" onclick="loadProfile('${post.user_id}')">${postAv}</div>
                     <div class="post-author-info" onclick="loadProfile('${post.user_id}')">
-                        <span class="post-author-name">${authorName}</span>
+                        <span class="post-author-name">${authorName} ${catBadge}</span>
                         <span class="post-timestamp">${timeAgo(post.created_at)}</span>
                     </div>
                 </div>
@@ -1266,11 +1290,19 @@
             postsToDisplay = postsToDisplay.filter(p => myFollowingIds.includes(p.user_id) || p.user_id === loggedInUser.id);
         }
 
+        // Apply Category Filter
+        const catFilter = document.getElementById('feed-category-filter').value;
+        if (catFilter !== 'All') {
+            postsToDisplay = postsToDisplay.filter(p => (p.category || 'General') === catFilter);
+        }
+
+        // Apply Search Filter (searches both post content and author name)
         const query = document.getElementById('feed-search').value.toLowerCase();
         if (query) {
             postsToDisplay = postsToDisplay.filter(p => {
                 const name = (profilesCache[p.user_id]?.full_name || p.author_name).toLowerCase();
-                return p.post_text.toLowerCase().includes(query) || name.includes(query);
+                const text = (p.post_text || '').toLowerCase();
+                return text.includes(query) || name.includes(query);
             });
         }
 
