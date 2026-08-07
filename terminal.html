@@ -1,1507 +1,2932 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <link rel="icon" type="image/png" href="media/favicon.png">
+
     <title>Analyst Wire | Dashboard</title>
+
     
+
     <!-- Supabase -->
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+
     
+
     <!-- Gridstack.js CSS & JS -->
+
     <link href="https://cdn.jsdelivr.net/npm/gridstack@10.0.1/dist/gridstack.min.css" rel="stylesheet"/>
+
     <script src="https://cdn.jsdelivr.net/npm/gridstack@10.0.1/dist/gridstack-all.js"></script>
 
+
+
     <!-- TRADINGVIEW WIDGET SCRIPTS -->
+
     <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-market-data.js"></script>
+
     <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-technical-analysis.js"></script>
+
     <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-forex-table.js"></script>
 
+
+
     <style>
+
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
+
+
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #090b10; color: #d1d4dc; margin: 0; height: 100vh; width: 100vw; display: flex; flex-direction: row; overflow: hidden; font-size: 13px; position: relative; }
+
         *, *:before, *:after { box-sizing: border-box; }
+
         
+
         /* MOBILE TOPBAR */
+
         .mobile-topbar { display: none; height: 60px; background: #0d1117; border-bottom: 1px solid #1c2230; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 2001; flex-shrink: 0; }
+
         .mobile-logo-btn { height: 32px; cursor: pointer; }
+
         .mobile-menu-icon { fill: #c9d1d9; width: 24px; height: 24px; cursor: pointer; }
 
+
+
         /* SIDEBAR */
+
         .sidebar { background: #0d1117; width: 220px; border-right: 1px solid #1c2230; display: flex; flex-direction: column; transition: width 0.3s ease; z-index: 1000; flex-shrink: 0; position: relative; }
+
         .sidebar.collapsed { width: 65px; }
+
         .sidebar-header { height: 60px; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid #1c2230; position: relative; overflow: hidden; }
+
         .logo-img { height: 35px; transition: 0.3s ease; object-fit: cover; object-position: left; width: 150px; }
+
         .sidebar.collapsed .logo-img { width: 35px; } 
+
         .collapse-btn { position: absolute; right: -12px; top: 18px; background: #2962ff; color: white; border: none; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1001; box-shadow: 0 2px 5px rgba(0,0,0,0.5); font-size: 10px; font-weight: bold; }
+
         
+
         .nav-links { display: flex; flex-direction: column; padding: 15px 0; flex-grow: 1; overflow-y: auto; overflow-x: hidden; }
+
         .nav-links::-webkit-scrollbar { width: 4px; }
+
         .nav-links::-webkit-scrollbar-thumb { background: #30363d; }
+
         .nav-link { display: flex; align-items: center; padding: 12px 20px; color: #8b949e; text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s, background 0.2s; white-space: nowrap; cursor: pointer; border-left: 3px solid transparent; }
+
         .nav-link:hover { color: #fff; background: rgba(255,255,255,0.03); }
+
         .nav-link.active { color: #2962ff; background: rgba(41, 98, 255, 0.08); border-left-color: #2962ff; }
+
         .nav-link.action-btn { color: #58a6ff; font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid #1c2230; padding-bottom: 15px; }
+
         .nav-link.action-btn:hover { background: rgba(88, 166, 255, 0.1); }
+
         .nav-icon { width: 20px; height: 20px; margin-right: 15px; fill: currentColor; flex-shrink: 0; }
+
         .nav-text { transition: opacity 0.2s; opacity: 1; }
+
         .sidebar.collapsed .nav-text { opacity: 0; pointer-events: none; }
+
         
+
         .settings-accordion { display: none; background: #05070a; flex-direction: column; border-top: 1px solid #1c2230; border-bottom: 1px solid #1c2230; }
+
         .settings-accordion.open { display: flex; }
+
         .sidebar.collapsed .settings-accordion { position: absolute; left: 65px; width: 180px; background: #161b22; border: 1px solid #30363d; border-radius: 0 8px 8px 0; box-shadow: 4px 4px 15px rgba(0,0,0,0.5); top: auto; bottom: 0; display: none; z-index: 1000; }
+
         .sidebar.collapsed .nav-link-settings:hover + .settings-accordion, .sidebar.collapsed .settings-accordion:hover { display: flex; } 
+
         .sub-link { padding: 10px 20px 10px 55px; color: #c9d1d9; text-decoration: none; font-size: 12px; display: block; transition: 0.15s; cursor: pointer; }
+
         .sidebar.collapsed .sub-link { padding: 10px 20px; }
+
         .sub-link:hover { background: #21262d; color: #fff; }
+
         .sub-link.danger { color: #f85149; }
+
+
 
         .main-content { flex-grow: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #05070a; }
 
+
+
         /* WIDGET LIBRARY DOCK */
+
         #dock-wrapper { background: #0d1117; border-bottom: 2px solid #30363d; padding: 15px 20px; flex-shrink: 0; display: none; max-height: 180px; overflow-y: auto; overflow-x: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+
         #dock-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
+
         #dock-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+
         #dock-wrapper::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
 
+
+
         .dock-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
         .dock-title { font-size: 10px; color: #8b949e; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+
         .close-dock-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #c9d1d9; cursor: pointer; font-size: 10px; padding: 4px 10px; font-weight: 600; text-transform: uppercase; transition: 0.2s; }
+
         .close-dock-btn:hover { background: rgba(248,81,73,0.1); color: #ff7b72; border-color: rgba(248,81,73,0.3); }
 
+
+
         #dock-container { display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px dashed #30363d; min-height: 64px; }
+
         
+
         #dock-container .grid-stack-item { position: relative !important; display: block !important; width: max-content !important; height: 42px !important; min-width: 160px; top: auto !important; left: auto !important; margin: 0 !important; transform: none !important; }
+
         #dock-container .grid-stack-item-content { position: relative !important; inset: auto !important; width: 100% !important; height: 100% !important; background: #161b22; border: 1px solid #30363d; border-radius: 6px; transition: background 0.2s, border-color 0.2s; overflow: visible !important; }
+
         #dock-container .grid-stack-item-content:hover { background: #21262d; border-color: #8b949e; }
+
         
+
         #dock-container .panel { background: transparent; border: none; box-shadow: none; height: 100%; display: flex; align-items: center; justify-content: center; }
+
         #dock-container .panel-controls { display: flex !important; margin-left: auto; }
+
         #dock-container .panel-header { background: transparent; border: none; padding: 0 12px; height: 100%; min-height: 100%; pointer-events: auto; cursor: default; touch-action: pan-x pan-y !important; }
+
         #dock-container .panel-content { display: none !important; }
+
         #dock-container .ui-resizable-handle { display: none !important; }
 
+
+
         /* DASHBOARD AREA */
+
         .dashboard-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 5px; display: block; }
+
         #main-grid { min-height: calc(100vh - 10px) !important; background: transparent; border-radius: 10px; margin: 0; }
+
         
+
         .grid-stack-item-content { display: flex; flex-direction: column; }
+
         .panel { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; width: 100%; height: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
         
+
         /* STANDARDIZED HEADER HEIGHT */
+
         .panel-header { 
+
             background: #161b22; 
+
             padding: 0 12px; 
+
             height: 42px; 
+
             min-height: 42px;
+
             font-size: 11px; 
+
             font-weight: 600; 
+
             text-transform: uppercase; 
+
             letter-spacing: 0.5px; 
+
             border-bottom: 1px solid #30363d; 
+
             color: #8b949e; 
+
             user-select: none; 
+
             cursor: grab; 
+
             touch-action: none; 
+
             display: flex; 
+
             justify-content: space-between; 
+
             align-items: center; 
+
             flex-wrap: nowrap; 
+
             gap: 10px; 
+
         }
+
         .panel-header:active { cursor: grabbing; }
 
+
+
         .panel-title-wrapper { display: flex; align-items: center; min-width: 0; flex: 1 1 auto; gap: 8px; }
+
         .panel-title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
 
+
+
         /* COMPACT WIDGET STYLES */
+
         .short-text { display: none; font-size: 13px; font-weight: 700; color: #c9d1d9; }
+
         .compact-widget .full-text { display: none; }
+
         .compact-widget .short-text { display: inline; }
+
         
+
         [data-in-dock="true"] .compact-widget .full-text { display: inline !important; }
+
         [data-in-dock="true"] .compact-widget .short-text { display: none !important; }
+
         
+
         .widget-asset-selector { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px; padding: 2px 6px; font-size: 10px; cursor: pointer; outline: none; flex: 0 1 auto; min-width: 40px; max-width: 95px; text-overflow: ellipsis; white-space: nowrap; }
+
         .widget-asset-selector:focus { border-color: #58a6ff; }
+
         
+
         .panel-controls { display: flex; align-items: center; gap: 5px; cursor: default; flex: 0 0 auto; background: #161b22; }
+
         
+
         .panel-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8b949e; border-radius: 4px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; transition: 0.15s; font-family: monospace; flex-shrink: 0; padding: 0; }
+
         .panel-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
         
+
         /* SETTINGS MENU SYSTEM */
+
         .settings-container { position: relative; display: flex; }
+
         .widget-settings-menu { 
+
             display: none; position: absolute; top: 26px; right: 0;
+
             background: #161b22; border: 1px solid #30363d; border-radius: 4px; padding: 8px;
+
             box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1000;
+
             flex-direction: column; gap: 8px; width: 140px; 
+
         }
+
         .widget-settings-menu.open { display: flex; }
+
         .settings-toggle-btn.active { background: rgba(88, 166, 255, 0.15); color: #58a6ff; border-color: rgba(88, 166, 255, 0.3); }
+
         .menu-row { display: flex; align-items: center; justify-content: space-between; gap: 5px; }
+
         .menu-label { font-size: 10px; color: #8b949e; text-transform: uppercase; font-weight: 600;}
 
+
+
         .add-btn { color: #2ea043; border-color: rgba(46,160,67,0.3); margin-left: 4px; }
+
         .add-btn:hover { background: rgba(46,160,67,0.2); color: #4ade80; border-color: rgba(74,222,128,0.5); }
+
         .close-btn { color: #f85149; border-color: rgba(248,81,73,0.3); margin-left: 4px; }
+
         .close-btn:hover { background: rgba(248,81,73,0.2); color: #ff7b72; border-color: rgba(255,123,114,0.5); }
+
         
+
         [data-in-dock="true"] .close-btn { display: none !important; }
+
         [data-in-dock="true"] .add-btn { display: flex !important; }
+
         [data-in-dock="true"] .settings-container { display: none !important; }
+
         [data-in-dock="false"] .add-btn { display: none !important; }
+
         [data-in-dock="false"] .close-btn { display: flex !important; }
 
+
+
         .zoom-label, .h-label { font-size: 9px; width: 40px; text-align: center; color: #c9d1d9; font-family: monospace; }
+
         
+
         /* Mobile Specific Overrides */
+
         .mobile-only { display: none; }
+
         .mobile-arrow { display: none !important; }
 
+
+
         @media (max-width: 768px) {
+
             body { flex-direction: column; overflow: auto !important; height: auto !important; }
+
             .mobile-topbar { display: flex; }
+
             .sidebar { position: absolute; top: 60px; left: 0; width: 100%; height: auto; z-index: 2000; display: flex; flex-direction: column; transform: translateY(-150%); transition: transform 0.3s ease; opacity: 0; pointer-events: none; border-bottom: 1px solid #1c2230; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
             .sidebar.mobile-open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+
             .sidebar-header { display: none; }
+
             .nav-links { max-height: calc(100vh - 120px); }
+
             
+
             /* Dock scrolling fix */
+
             #dock-wrapper { overflow-x: auto !important; overflow-y: hidden !important; padding: 10px 5px !important; -webkit-overflow-scrolling: touch; }
+
             #dock-container { flex-wrap: nowrap !important; width: max-content !important; min-width: 100%; gap: 10px; padding: 5px; }
+
             #dock-container .grid-stack-item { flex: 0 0 auto; width: max-content !important; }
+
             
+
             /* FULL NATIVE MOBILE STACK */
+
             .main-content { overflow: visible !important; height: auto !important; flex-grow: unset !important; }
+
             .dashboard-area { padding: 0 !important; overflow: visible !important; height: auto !important; }
+
             
+
             /* Added padding-bottom and uniform gap */
+
             #main-grid.grid-stack { position: relative !important; height: auto !important; min-height: unset !important; display: flex !important; flex-direction: column !important; gap: 12px !important; margin: 0 !important; padding-bottom: 20px !important; }
+
             
+
             /* Strictly tied widget container height to inline variable to fix random gaps */
+
             #main-grid .grid-stack-item { position: relative !important; width: 100% !important; left: 0 !important; top: auto !important; height: var(--mobile-h, 350px) !important; min-height: unset !important; padding: 0 !important; margin: 0 !important; transform: none !important; display: block !important; }
+
             #main-grid .grid-stack-item-content { position: relative !important; inset: auto !important; width: 100% !important; height: 100% !important; }
+
             #main-grid .panel { border-radius: 0 !important; border-left: none !important; border-right: none !important; height: 100% !important; }
+
             #main-grid .ui-resizable-handle { display: none !important; }
+
             
+
             .mobile-only { display: flex; }
+
             [data-in-dock="false"] .mobile-arrow { display: flex !important; color: #58a6ff; border-color: rgba(88, 166, 255, 0.3); }
+
             [data-in-dock="false"] .mobile-arrow:hover { background: rgba(88, 166, 255, 0.1); }
+
         }
+
+
 
         .panel-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
+
         .adaptive-wrapper { transform-origin: top left; width: 100%; height: 100%; overflow: visible !important; }
+
         body.is-dragging iframe, body.is-dragging .adaptive-wrapper { pointer-events: none !important; }
+
         
+
         .ui-resizable-handle { z-index: 9999 !important; width: 15px !important; height: 15px !important; bottom: 2px !important; right: 2px !important; background: radial-gradient(circle at 100% 100%, rgba(255,255,255,0.2) 20%, transparent 40%); }
+
         .panel-content::-webkit-scrollbar { width: 6px; }
+
         .panel-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
+
         .panel-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 
+
+
         /* Widget specific visual styles */
+
         #hot-asset-table td { padding: 8px 10px; border-bottom: 1px solid #1c2230; font-size: 10px; vertical-align: middle; }
+
         #hot-asset-table tbody tr:hover { background-color: rgba(255,255,255,0.03); }
+
         .bias-strong-up { color: #2ea043; font-weight: 600; }
+
         .bias-medium-up { color: #a6e22e; font-weight: 500; }
+
         .bias-neutral { color: #d29922; font-weight: 600; }
+
         .bias-medium-down { color: #f0883e; font-weight: 500; }
+
         .bias-strong-down { color: #f85149; font-weight: 600; }
+
         .state-badge { padding: 2px 5px; border-radius: 10px; font-size: 8px; font-weight: 600; text-transform: uppercase; display: inline-block; }
+
         .trending { background: rgba(41, 98, 255, 0.1); color: #58a6ff; border: 1px solid rgba(41, 98, 255, 0.2); }
+
         .consolidated { background: rgba(139, 148, 158, 0.1); color: #8b949e; border: 1px solid rgba(139, 148, 158, 0.2); }
+
         .expand-toggle-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; cursor: pointer; padding: 2px 5px; border-radius: 4px; font-size: 8.5px; font-weight: 600; text-transform: uppercase; }
+
         .ticker-flex { display: flex; align-items: center; gap: 6px; }
+
         .ticker-text { font-weight: 600; color: #fff; }
+
         .drawer-row { display: none; background: #05070a !important; border-bottom: 1px solid #1c2230; }
+
         .drawer-row td { padding: 0; border-bottom: none; }
+
         .drawer-container { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-left: 3px solid #2962ff; }
+
         .drawer-section-title { color: #8b949e; font-size: 8.5px; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; display: block; }
+
         .drawer-analysis-text { margin: 0; font-size: 9.5px; color: #c9d1d9; line-height: 1.4; }
+
         .lollipop-system { display: flex; align-items: center; gap: 6px; }
+
         .lollipop-indicator-dot { width: 6px; height: 6px; border-radius: 50%; }
+
         .lollipop-badge { padding: 2px 4px; border-radius: 4px; font-weight: 600; font-size: 8px; text-transform: uppercase; display: inline-block; }
+
         .lolli-upper { color: #2ea043; } .lolli-upper .lollipop-indicator-dot { background: #2ea043; box-shadow: 0 0 6px rgba(46, 160, 67, 0.4); } .lolli-upper .lollipop-badge { background: rgba(46, 160, 67, 0.1); border: 1px solid rgba(46, 160, 67, 0.3); }
+
         .lolli-lower { color: #f85149; } .lolli-lower .lollipop-indicator-dot { background: #f85149; box-shadow: 0 0 6px rgba(248, 81, 73, 0.4); } .lolli-lower .lollipop-badge { background: rgba(248, 81, 73, 0.1); border: 1px solid rgba(248, 81, 73, 0.3); }
+
         .lolli-range { color: #d29922; } .lolli-range .lollipop-indicator-dot { background: #d29922; box-shadow: 0 0 6px rgba(210, 153, 34, 0.4); } .lolli-range .lollipop-badge { background: rgba(210, 153, 34, 0.1); border: 1px solid rgba(210, 153, 34, 0.3); }
+
         .embedded-chart-frame { position: relative; height: 160px; background: #0d1117; border: 1px solid #30363d; border-radius: 4px; overflow: hidden; }
+
         .embedded-chart-frame iframe { position: absolute; top: 0; left: 0; width: 166.66%; height: 166.66%; transform: scale(0.6); transform-origin: top left; border: none; }
+
     </style>
+
 </head>
+
 <body>
 
+
+
 <!-- MOBILE TOPBAR -->
+
 <div class="mobile-topbar">
+
     <img src="assets/logo.png" alt="Analyst Wire" class="mobile-logo-btn" onclick="toggleMobileMenu()">
+
     <svg class="mobile-menu-icon" onclick="toggleMobileMenu()" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+
 </div>
+
+
 
 <!-- LEFT SIDEBAR / MOBILE MENU -->
+
 <nav id="sidebar" class="sidebar">
+
     <div class="sidebar-header">
+
         <img src="assets/logo.png" alt="Analyst Wire" class="logo-img">
+
         <button class="collapse-btn" onclick="toggleSidebar()" id="sidebar-toggle-btn">&lt;&lt;</button>
+
     </div>
+
     <div class="nav-links">
+
         <a class="nav-link action-btn" onclick="toggleDock(); toggleMobileMenu();">
+
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+
             <span class="nav-text">Widget Library</span>
+
         </a>
+
         <a href="terminal.html" class="nav-link active">
+
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+
             <span class="nav-text">Dashboard</span>
+
         </a>
+
         <a href="/newsfeed" class="nav-link">
+
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+
             <span class="nav-text">Newsfeed</span>
+
         </a>
+
         <a id="nav-key-levels" href="key-levels.html" class="nav-link" style="display: none;">
+
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M2 17h20v2H2v-2zm0-5h20v2H2v-2zm0-5h20v2H2V7z"/></svg>
+
             <span class="nav-text">Key Levels</span>
+
         </a>
+
         <a href="analysis.html" class="nav-link">
+
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+
             <span class="nav-text">Analysis</span>
+
         </a>
+
         <a href="macro-matrix.html" class="nav-link">
+
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+
             <span class="nav-text">Macro Matrix</span>
+
         </a>
+
         <a id="nav-courses" href="courses.html" class="nav-link" style="display: none;">
+
             <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2.12-1.15V17h2V7.4L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72l5 2.73 5-2.73v3.72z"/></svg>
+
             <span class="nav-text">Courses</span>
+
         </a>
+
         <div style="margin-top: auto;">
+
             <a class="nav-link nav-link-settings" onclick="toggleSettingsMenu()">
+
                 <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+
                 <span class="nav-text">Settings</span>
+
             </a>
+
             <div id="settings-accordion" class="settings-accordion">
+
                 <a href="account.html" class="sub-link">Account</a>
+
                 <a id="nav-admin" style="display: none;" href="admin.html" class="sub-link">Admin</a>
+
                 <a id="nav-upload" style="display: none;" href="admin_upload.html" class="sub-link">Upload Data</a>
+
                 <a onclick="resetLayout()" class="sub-link" style="color: #d29922;">Reset Layout</a>
+
                 <a id="logoutBtn" class="sub-link danger">Logout</a>
+
             </div>
+
         </div>
+
     </div>
+
 </nav>
 
+
+
 <!-- MAIN WORKSPACE -->
+
 <div class="main-content">
+
     <div id="dock-wrapper">
+
         <div class="dock-header">
+
             <div class="dock-title">Widget Library</div>
+
             <button class="close-dock-btn" onclick="toggleDock()">Hide Library ▲</button>
+
         </div>
+
         <!-- Dock is now a standard flex container to prevent truncation issues -->
+
         <div id="dock-container">
+
             
+
             <!-- NEWSFEED -->
+
             <div class="grid-stack-item" gs-id="newsfeed" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
+
                 <div class="grid-stack-item-content">
+
                     <div class="panel">
+
                         <div class="panel-header" title="Newsfeed Latest">
+
                             <div class="panel-title-wrapper">
+
                                 <span class="panel-title-text"><span class="full-text">Newsfeed Latest</span><span class="short-text">N</span></span>
+
                             </div>
+
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+
                                 <div class="settings-container">
+
                                     <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+
                                     <div class="widget-settings-menu">
+
                                         <div class="menu-row">
+
                                             <span class="menu-label">Zoom</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+
                                             <span class="zoom-label">100%</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+
                                         </div>
+
                                         <div class="menu-row mobile-only">
+
                                             <span class="menu-label">Height</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+
                                             <span class="h-label">Auto</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+
                                         </div>
+
                                     </div>
+
                                 </div>
+
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+
                             </div>
+
                         </div>
+
                         <div class="panel-content">
+
                             <div class="adaptive-wrapper">
+
                                 <iframe src="https://analyst-wire.pages.dev/dashboard-newsfeed" style="width: 100%; height: 100%; border: none;"></iframe>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
 
-            <!-- GLOBAL FEED (NEW WIDGET) -->
-            <div class="grid-stack-item" gs-id="global-feed" gs-w="2" gs-h="1" data-default-w="7" data-default-h="6" data-in-dock="true" data-zoom="1.0">
-                <div class="grid-stack-item-content">
-                    <div class="panel">
-                        <div class="panel-header" title="Network Feed">
-                            <div class="panel-title-wrapper">
-                                <span class="panel-title-text"><span class="full-text">Network Feed</span><span class="short-text">NF</span></span>
-                            </div>
-                            <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
-                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
-                                <div class="settings-container">
-                                    <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
-                                    <div class="widget-settings-menu">
-                                        <div class="menu-row">
-                                            <span class="menu-label">Zoom</span>
-                                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
-                                            <span class="zoom-label">100%</span>
-                                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
-                                        </div>
-                                        <div class="menu-row mobile-only">
-                                            <span class="menu-label">Height</span>
-                                            <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
-                                            <span class="h-label">Auto</span>
-                                            <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
-                                <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
-                            </div>
-                        </div>
-                        <div class="panel-content">
-                            <div class="adaptive-wrapper">
-                                <iframe src="network-widget.html" style="width: 100%; height: 100%; border: none;"></iframe>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
             
+
             <!-- BRIEFING -->
+
             <div class="grid-stack-item" gs-id="briefing" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
+
                 <div class="grid-stack-item-content">
+
                     <div class="panel">
+
                         <div class="panel-header" title="Latest Briefing">
+
                             <div class="panel-title-wrapper">
+
                                 <span class="panel-title-text"><span class="full-text">Latest Briefing</span><span class="short-text">L</span></span>
+
                             </div>
+
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+
                                 <div class="settings-container">
+
                                     <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+
                                     <div class="widget-settings-menu">
+
                                         <div class="menu-row">
+
                                             <span class="menu-label">Zoom</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+
                                             <span class="zoom-label">100%</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+
                                         </div>
+
                                         <div class="menu-row mobile-only">
+
                                             <span class="menu-label">Height</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+
                                             <span class="h-label">Auto</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+
                                         </div>
+
                                     </div>
+
                                 </div>
+
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+
                             </div>
+
                         </div>
+
                         <div class="panel-content">
+
                             <div class="adaptive-wrapper">
+
                                 <iframe src="https://analyst-wire.pages.dev/dashboard-newsfeed-reports" style="width: 100%; height: 100%; border: none;"></iframe>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
+
 
             <!-- ECONOMIC CALENDAR -->
+
             <div class="grid-stack-item" gs-id="calendar" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
+
                 <div class="grid-stack-item-content">
+
                     <div class="panel">
+
                         <div class="panel-header" title="Economic Calendar">
+
                             <div class="panel-title-wrapper">
+
                                 <span class="panel-title-text"><span class="full-text">Economic Calendar</span><span class="short-text">E</span></span>
+
                             </div>
+
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+
                                 <div class="settings-container">
+
                                     <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+
                                     <div class="widget-settings-menu">
+
                                         <div class="menu-row">
+
                                             <span class="menu-label">Zoom</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+
                                             <span class="zoom-label">100%</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+
                                         </div>
+
                                         <div class="menu-row mobile-only">
+
                                             <span class="menu-label">Height</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+
                                             <span class="h-label">Auto</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+
                                         </div>
+
                                     </div>
+
                                 </div>
+
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+
                             </div>
+
                         </div>
+
                         <div class="panel-content">
+
                             <div class="adaptive-wrapper" style="padding: 15px;">
+
                                 <!-- Rendered dynamically -->
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
             
+
             <!-- HOT ASSET RADAR -->
+
             <div class="grid-stack-item" gs-id="radar" gs-w="2" gs-h="1" data-default-w="3" data-default-h="7" data-in-dock="true" data-zoom="1.0">
+
                 <div class="grid-stack-item-content">
+
                     <div class="panel">
+
                         <div class="panel-header" title="Hot Asset Radar">
+
                             <div class="panel-title-wrapper">
+
                                 <span class="panel-title-text"><span class="full-text">Hot Asset Radar</span><span class="short-text">H</span></span>
+
                             </div>
+
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+
                                 <div class="settings-container">
+
                                     <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+
                                     <div class="widget-settings-menu">
+
                                         <div class="menu-row">
+
                                             <span class="menu-label">Zoom</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+
                                             <span class="zoom-label">100%</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+
                                         </div>
+
                                         <div class="menu-row mobile-only">
+
                                             <span class="menu-label">Height</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+
                                             <span class="h-label">Auto</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+
                                         </div>
+
                                     </div>
+
                                 </div>
+
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+
                             </div>
+
                         </div>
+
                         <div class="panel-content" style="padding: 0;">
+
                             <div class="adaptive-wrapper">
+
                                 <table id="hot-asset-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+
                                     <thead>
+
                                         <tr>
+
                                             <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Ticker</th>
+
                                             <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Bias</th>
+
                                             <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">State</th>
+
                                             <th style="padding: 8px 10px; background: #161b22; color: #8b949e; font-size: 9px; text-transform: uppercase; border-bottom: 1px solid #30363d;">Action</th>
+
                                         </tr>
+
                                     </thead>
+
                                     <tbody id="hot-radar-body">
+
                                         <tr><td colspan="4" style="text-align: center; color: #8b949e; padding: 30px; font-size: 11px;">Scanning radar arrays for conviction signals...</td></tr>
+
                                     </tbody>
+
                                 </table>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
+
 
             <!-- FOREX HOURS -->
+
             <div class="grid-stack-item" gs-id="forex-hours" gs-w="2" gs-h="1" data-default-w="2" data-default-h="7" data-in-dock="true" data-zoom="1.0">
+
                 <div class="grid-stack-item-content">
+
                     <div class="panel">
+
                         <div class="panel-header" title="Forex Market Hours">
+
                             <div class="panel-title-wrapper">
+
                                 <span class="panel-title-text"><span class="full-text">Forex Market Hours</span><span class="short-text">F</span></span>
+
                             </div>
+
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+
                                 <div class="settings-container">
+
                                     <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+
                                     <div class="widget-settings-menu">
+
                                         <div class="menu-row">
+
                                             <span class="menu-label">Zoom</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+
                                             <span class="zoom-label">100%</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+
                                         </div>
+
                                         <div class="menu-row mobile-only">
+
                                             <span class="menu-label">Height</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+
                                             <span class="h-label">Auto</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+
                                         </div>
+
                                     </div>
+
                                 </div>
+
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+
                             </div>
+
                         </div>
+
                         <div class="panel-content">
+
                             <div class="adaptive-wrapper">
+
                                 <div class="market-sessions-widget">
+
                                     <div class="msw-header">
+
                                         <div id="msw-hot-alert" class="msw-hot-alert" style="display:none;" title="HOT MARKET: Multiple sessions are open.">HOT MARKET</div>
+
                                         <span id="msw-user-time" class="msw-local-clock">00:00:00</span>
+
                                     </div>
+
                                     <div id="msw-sessions-container"></div>
+
                                 </div>
+
                             </div>
+
                             <style>
+
                                 .market-sessions-widget { box-sizing: border-box; width: 100%; min-height: 100%; background-color: #0A0A0A; padding: 12px; color: #f8fafc; font-family: sans-serif; }
+
                                 .msw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
                                 .msw-hot-alert { font-size: 9px; font-weight: 800; color: #f43f5e; background: rgba(244, 63, 94, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(244, 63, 94, 0.3); animation: pulse 1.5s infinite; cursor: help; }
+
                                 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
                                 .msw-local-clock { font-family: monospace; font-size: 11px; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #10b981; }
+
                                 .msw-session-row { display: grid; grid-template-columns: 1fr 60px auto; align-items: center; gap: 8px; margin-bottom: 10px; }
+
                                 .msw-session-name { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; }
+
                                 .msw-status-dot { height: 6px; width: 6px; border-radius: 50%; background: #475569; }
+
                                 .msw-status-dot.open { background: #10b981; }
+
                                 .msw-session-status-text { font-size: 9px; font-weight: bold; font-family: monospace; text-align: left; }
+
                                 .msw-session-status-text.open { color: #10b981; }
+
                                 .msw-session-status-text.closed { color: #f97316; }
+
                                 .msw-zone-time { font-size: 9px; color: #64748b; font-family: monospace; display: block; margin-top: 1px; }
+
                                 .msw-countdown-text { font-size: 9px; color: #94a3b8; font-family: monospace; text-align: right; min-width: 80px; }
+
                             </style>
+
                             <script>
+
                             (function() {
+
                                 // Updated to target exact user filters: Gold, Australia (Sydney), and USA (New York)
+
                                 const SESSIONS = [
+
                                     { name: 'Sydney', zone: 'Australia/Sydney', open: 8, close: 16 },
+
                                     { name: 'New York', zone: 'America/New_York', open: 8, close: 16 }
+
                                 ];
+
                                 function tick() {
+
                                     const now = new Date();
+
                                     const timeEl = document.getElementById('msw-user-time');
+
                                     if(timeEl) timeEl.innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+
                                     let openCount = 0;
+
                                     SESSIONS.forEach(s => {
+
                                         const formatter = new Intl.DateTimeFormat('en-US', { timeZone: s.zone, hour: '2-digit', minute: '2-digit', weekday: 'long', hour12: false });
+
                                         const parts = formatter.formatToParts(now);
+
                                         const h = parseInt(parts.find(p => p.type === 'hour').value);
+
                                         const m = parseInt(parts.find(p => p.type === 'minute').value);
+
                                         const day = parts.find(p => p.type === 'weekday').value;
+
                                         const timeDecimal = h + (m / 60);
+
                                         const isWeekend = (day === 'Saturday' || day === 'Sunday');
+
                                         const isOpen = !isWeekend && (timeDecimal >= s.open && timeDecimal < s.close);
+
                                         if(isOpen) openCount++;
+
                                         const timeRow = document.getElementById('time-'+s.name);
+
                                         if(timeRow){
+
                                             timeRow.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+
                                             document.getElementById('dot-'+s.name).className = `msw-status-dot ${isOpen ? 'open' : ''}`;
+
                                             document.getElementById('stat-'+s.name).innerText = isOpen ? 'OPEN' : 'CLOSED';
+
                                             document.getElementById('stat-'+s.name).className = `msw-session-status-text ${isOpen ? 'open' : 'closed'}`;
+
                                             let output = "";
+
                                             if (isOpen) {
+
                                                 let minsLeft = (s.close - timeDecimal) * 60;
+
                                                 output = `${Math.floor(minsLeft/60)}h ${Math.round(minsLeft%60)}m left`;
+
                                             } else {
+
                                                 let hoursUntil = (s.open - timeDecimal);
+
                                                 if (isWeekend || hoursUntil < 0) {
+
                                                     let daysToAdd = (day === 'Friday') ? 3 : (day === 'Saturday') ? 2 : 1;
+
                                                     hoursUntil = (24 - timeDecimal) + ((daysToAdd - 1) * 24) + s.open;
+
                                                 }
+
                                                 output = `${Math.floor(hoursUntil)}h ${Math.round((hoursUntil%1)*60)}m`;
+
                                             }
+
                                             document.getElementById('count-'+s.name).innerText = output;
+
                                         }
+
                                     });
+
                                     const hotAlert = document.getElementById('msw-hot-alert');
+
                                     if(hotAlert) hotAlert.style.display = (openCount > 1) ? 'block' : 'none';
+
                                 }
+
                                 const container = document.getElementById('msw-sessions-container');
+
                                 if(container){
+
                                     container.innerHTML = '';
+
                                     SESSIONS.forEach(s => {
+
                                         container.insertAdjacentHTML('beforeend', `<div class="msw-session-row"><div class="msw-session-name"><span class="msw-status-dot" id="dot-${s.name}"></span><span>${s.name}<small class="msw-zone-time" id="time-${s.name}"></small></span></div><span class="msw-session-status-text" id="stat-${s.name}"></span><div class="msw-countdown-text" id="count-${s.name}"></div></div>`);
+
                                     });
+
                                     setInterval(tick, 1000);
+
                                     tick();
+
                                 }
+
                             })();
+
                             </script>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
+
 
             <!-- BLOOMBERG TV -->
+
             <div class="grid-stack-item" gs-id="bloomberg" gs-w="2" gs-h="1" data-default-w="5" data-default-h="5" data-in-dock="true" data-zoom="1.0">
+
                 <div class="grid-stack-item-content">
+
                     <div class="panel">
+
                         <div class="panel-header" title="Bloomberg TV">
+
                             <div class="panel-title-wrapper">
+
                                 <span class="panel-title-text"><span class="full-text">Bloomberg TV</span><span class="short-text">B</span></span>
+
                             </div>
+
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+
                                 <div class="settings-container">
+
                                     <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+
                                     <div class="widget-settings-menu">
+
                                         <div class="menu-row">
+
                                             <span class="menu-label">Zoom</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+
                                             <span class="zoom-label">100%</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+
                                         </div>
+
                                         <div class="menu-row mobile-only">
+
                                             <span class="menu-label">Height</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+
                                             <span class="h-label">Auto</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+
                                         </div>
+
                                     </div>
+
                                 </div>
+
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+
                             </div>
+
                         </div>
+
                         <div class="panel-content">
+
                             <div class="adaptive-wrapper">
+
                                 <iframe style="width: 100%; height: 100%; border: none;" src="https://www.youtube.com/embed/QB5BNdBFujE?si=8-fZ9o8d4el45vm_" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
+
 
             <!-- FOREX HEATMAP -->
+
             <div class="grid-stack-item" gs-id="forex-heatmap" gs-w="2" gs-h="1" data-default-w="6" data-default-h="5" data-in-dock="true" data-zoom="1.0">
+
                 <div class="grid-stack-item-content">
+
                     <div class="panel">
+
                         <div class="panel-header" title="Forex Heatmap">
+
                             <div class="panel-title-wrapper">
+
                                 <span class="panel-title-text"><span class="full-text">Forex Heatmap</span><span class="short-text">F</span></span>
+
                             </div>
+
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+
                                 <div class="settings-container">
+
                                     <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+
                                     <div class="widget-settings-menu">
+
                                         <div class="menu-row">
+
                                             <span class="menu-label">Zoom</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+
                                             <span class="zoom-label">100%</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+
                                         </div>
+
                                         <div class="menu-row mobile-only">
+
                                             <span class="menu-label">Height</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+
                                             <span class="h-label">Auto</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+
                                         </div>
+
                                     </div>
+
                                 </div>
+
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+
                             </div>
+
                         </div>
+
                         <div class="panel-content">
+
                             <div class="adaptive-wrapper">
+
                                 <!-- Rendered dynamically -->
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
+
 
             <!-- TV MARKET DATA -->
+
             <div class="grid-stack-item" gs-id="tv-market-data" gs-w="2" gs-h="1" data-default-w="6" data-default-h="6" data-in-dock="true" data-zoom="1.0">
+
                 <div class="grid-stack-item-content">
+
                     <div class="panel">
+
                         <div class="panel-header" title="Market Data">
+
                             <div class="panel-title-wrapper">
+
                                 <span class="panel-title-text"><span class="full-text">Market Data</span><span class="short-text">M</span></span>
+
                             </div>
+
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+
                                 <div class="settings-container">
+
                                     <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+
                                     <div class="widget-settings-menu">
+
                                         <div class="menu-row">
+
                                             <span class="menu-label">Zoom</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+
                                             <span class="zoom-label">100%</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+
                                         </div>
+
                                         <div class="menu-row mobile-only">
+
                                             <span class="menu-label">Height</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+
                                             <span class="h-label">Auto</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+
                                         </div>
+
                                     </div>
+
                                 </div>
+
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+
                             </div>
+
                         </div>
+
                         <div class="panel-content">
+
                             <div class="adaptive-wrapper">
+
                                 <!-- Rendered dynamically -->
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
+
 
             <!-- TV TECHNICAL ANALYSIS -->
+
             <div class="grid-stack-item" gs-id="tv-technical-analysis" gs-w="3" gs-h="1" data-default-w="4" data-default-h="6" data-in-dock="true" data-zoom="1.0">
+
                 <div class="grid-stack-item-content">
+
                     <div class="panel">
+
                         <div class="panel-header" title="Tech Analysis">
+
                             <div class="panel-title-wrapper">
+
                                 <span class="panel-title-text"><span class="full-text">Tech Analysis</span><span class="short-text">T</span></span>
+
                                 <select class="widget-asset-selector" onchange="updateTAWidget(this)" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+
                                     <optgroup label="Forex">
+
                                         <option value="OANDA:EURUSD">EUR/USD</option>
+
                                         <option value="OANDA:GBPUSD">GBP/USD</option>
+
                                         <option value="OANDA:AUDUSD">AUD/USD</option>
+
                                         <option value="OANDA:NZDUSD">NZD/USD</option>
+
                                         <option value="OANDA:AUDNZD">AUD/NZD</option>
+
                                         <option value="OANDA:USDJPY">USD/JPY</option>
+
                                         <option value="OANDA:EURJPY">EUR/JPY</option>
+
                                         <option value="OANDA:USDCHF">USD/CHF</option>
+
                                         <option value="OANDA:EURCHF">EUR/CHF</option>
+
                                     </optgroup>
+
                                     <optgroup label="Commodities">
+
                                         <option value="OANDA:XAUUSD" selected>XAU/USD (Gold)</option>
+
                                         <option value="OANDA:XAGUSD">XAG/USD (Silver)</option>
+
                                         <option value="OANDA:XPTUSD">XPT/USD (Platinum)</option>
+
                                         <option value="OANDA:XCUUSD">XCU/USD (Copper)</option>
+
                                         <option value="OANDA:BCOUSD">BCO/USD (Brent)</option>
+
                                     </optgroup>
+
                                 </select>
+
                             </div>
+
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+
                                 <div class="settings-container">
+
                                     <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+
                                     <div class="widget-settings-menu">
+
                                         <div class="menu-row">
+
                                             <span class="menu-label">Zoom</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+
                                             <span class="zoom-label">100%</span>
+
                                             <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+
                                         </div>
+
                                         <div class="menu-row mobile-only">
+
                                             <span class="menu-label">Height</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+
                                             <span class="h-label">Auto</span>
+
                                             <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+
                                         </div>
+
                                     </div>
+
                                 </div>
+
                                 <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+
                             </div>
+
                         </div>
+
                         <div class="panel-content">
+
                             <div class="adaptive-wrapper">
+
                                 <!-- Rendered dynamically -->
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
             
+
         </div>
+
     </div>
 
+
+
     <!-- MAIN DASHBOARD AREA -->
+
     <div class="dashboard-area">
+
         <div id="main-grid" class="grid-stack"></div>
+
     </div>
+
+
 
 </div>
 
+
+
 <script>
+
     let mainGrid;
+
     
-    // ==========================================
-    // HELPER FUNCTION: Safely parse JSON array tags
-    // ==========================================
-    function userHasAccess(userTags, requiredTag) {
-        if (!userTags) return false;
-        try {
-            const parsedArray = JSON.parse(userTags);
-            if (Array.isArray(parsedArray)) {
-                return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
-            }
-        } catch (e) {
-            return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
-        }
-        return false;
-    }
 
     // ==========================================
-    // MOBILE MENU & SETTINGS TOGGLES
+
+    // HELPER FUNCTION: Safely parse JSON array tags
+
     // ==========================================
-    function toggleMobileMenu() {
-        document.getElementById('sidebar').classList.toggle('mobile-open');
+
+    function userHasAccess(userTags, requiredTag) {
+
+        if (!userTags) return false;
+
+        try {
+
+            const parsedArray = JSON.parse(userTags);
+
+            if (Array.isArray(parsedArray)) {
+
+                return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+
+            }
+
+        } catch (e) {
+
+            return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
+
+        }
+
+        return false;
+
     }
+
+
+
+    // ==========================================
+
+    // MOBILE MENU & SETTINGS TOGGLES
+
+    // ==========================================
+
+    function toggleMobileMenu() {
+
+        document.getElementById('sidebar').classList.toggle('mobile-open');
+
+    }
+
+
 
     function toggleWidgetSettings(btn) {
+
         document.querySelectorAll('.widget-settings-menu.open').forEach(menu => {
+
             if (menu !== btn.nextElementSibling) {
+
                 menu.classList.remove('open');
+
                 menu.previousElementSibling.classList.remove('active');
+
             }
+
         });
+
         
+
         const menu = btn.nextElementSibling;
+
         if(menu && menu.classList.contains('widget-settings-menu')) {
+
             const isOpen = menu.classList.toggle('open');
+
             btn.classList.toggle('active');
+
             
+
             // Populate Labels dynamically upon open
+
             if (isOpen) {
+
                 const el = btn.closest('.grid-stack-item');
+
                 const currentZoom = parseFloat(el.getAttribute('data-zoom')) || 1.0;
+
                 const zoomLabel = el.querySelector('.zoom-label');
+
                 if (zoomLabel) zoomLabel.innerText = Math.round(currentZoom * 100) + '%';
+
                 
+
                 const hLabel = el.querySelector('.h-label');
+
                 if (hLabel) {
+
                     if (window.innerWidth <= 768) {
+
                         hLabel.innerText = (el.getAttribute('data-mobile-h') || 350) + 'px';
+
                     } else {
+
                         const node = el.gridstackNode;
+
                         hLabel.innerText = node ? node.h : (el.getAttribute('data-default-h') || 4);
+
                     }
+
                 }
+
             }
+
         }
+
     }
+
+
 
     document.addEventListener('click', (event) => {
+
         if (!event.target.closest('.settings-container')) {
+
             document.querySelectorAll('.widget-settings-menu.open').forEach(menu => {
+
                 menu.classList.remove('open');
+
                 menu.previousElementSibling.classList.remove('active');
+
             });
+
         }
+
     });
 
+
+
     // ==========================================
+
     // TRADINGVIEW RE-RENDER ENGINE
+
     // ==========================================
+
     const marketDataSymbols = [
+
         {"sectionName":"Indices","symbols":["FOREXCOM:SPXUSD","FOREXCOM:NSXUSD","FOREXCOM:DJI","INDEX:NKY","INDEX:DEU40","FOREXCOM:UKXGBP"]},
+
         {"sectionName":"Futures","symbols":["BMFBOVESPA:ISP1!","BMFBOVESPA:EUR1!","CMCMARKETS:GOLD","TVC:USOIL","BMFBOVESPA:CCM1!"]},
+
         {"sectionName":"Bonds","symbols":["EUREX:FGBL1!","EUREX:FBTP1!","EUREX:FGBM1!"]},
+
         {"sectionName":"Forex","symbols":["FX:EURUSD","FX:GBPUSD","FX:USDJPY","FX:USDCHF","FX:AUDUSD","FX:USDCAD","OANDA:USDCHF","OANDA:AUDNZD","OANDA:USDNOK","OANDA:EURNOK","OANDA:EURGBP","OANDA:NZDUSD"]},
+
         {"sectionName":"Commodities","symbols":["OANDA:XAUUSD","OANDA:XAGUSD","OANDA:XPTUSD","OANDA:XCUUSD","OANDA:BCOUSD","TVC:USOIL"]}
+
     ];
 
+
+
     function refreshTradingViewWidgets(panelEl) {
+
         const gsId = panelEl.getAttribute('gs-id');
+
         const wrapper = panelEl.querySelector('.panel-content .adaptive-wrapper');
+
         if (!wrapper) return;
 
+
+
         if (gsId === 'tv-technical-analysis') {
+
             const taSelect = panelEl.querySelector('.widget-asset-selector');
+
             const symbol = taSelect ? taSelect.value : 'OANDA:XAUUSD';
+
             wrapper.innerHTML = '';
+
             const tv = document.createElement('tv-technical-analysis');
+
             tv.setAttribute('symbol', symbol);
+
             tv.setAttribute('theme', 'dark'); 
+
             tv.setAttribute('hide-logo-and-name', 'true');
+
             tv.setAttribute('hide-intervals', 'true');
+
             tv.style.width = '100%';
+
             tv.style.height = '100%';
+
             wrapper.appendChild(tv);
+
         } 
+
         else if (gsId === 'tv-market-data') {
+
             wrapper.innerHTML = '';
+
             const tv = document.createElement('tv-market-data');
+
             tv.setAttribute('theme', 'dark');
+
             tv.setAttribute('view', 'performance');
+
             tv.setAttribute('heatmap', 'true');
+
             tv.setAttribute('symbol-sectors', JSON.stringify(marketDataSymbols));
+
             tv.style.width = '100%';
+
             tv.style.height = '100%';
+
             wrapper.appendChild(tv);
+
         }
+
         else if (gsId === 'forex-heatmap') {
+
             wrapper.innerHTML = '';
+
             const tv = document.createElement('tv-forex-table');
+
             tv.setAttribute('theme', 'dark');
+
             tv.setAttribute('currencies', 'EUR,USD,JPY,GBP,CHF,AUD,CAD,NZD,NOK,MXN');
+
             tv.style.width = '100%';
+
             tv.style.height = '100%';
+
             wrapper.appendChild(tv);
+
         }
+
         else if (gsId === 'calendar') {
+
             wrapper.innerHTML = '';
+
             const container = document.createElement('div');
+
             container.className = 'tradingview-widget-container';
+
             container.style.cssText = 'height: 100%; width: 100%;';
+
             const widget = document.createElement('div');
+
             widget.className = 'tradingview-widget-container__widget';
+
             widget.style.cssText = 'height: 100%; width: 100%;';
+
             container.appendChild(widget);
+
             
+
             const script = document.createElement('script');
+
             script.type = 'text/javascript';
+
             script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js';
+
             script.async = true;
+
             script.innerHTML = JSON.stringify({
+
                 "colorTheme": "dark", "isTransparent": true, "locale": "en",
+
                 "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
+
                 "importanceFilter": "-1,0,1", "width": "100%", "height": "100%"
+
             });
+
             container.appendChild(script);
+
             wrapper.appendChild(container);
+
         }
+
     }
+
+
 
     function updateTAWidget(selectElement) {
+
         const panelItem = selectElement.closest('.grid-stack-item');
+
         if (panelItem) refreshTradingViewWidgets(panelItem);
+
     }
+
+
 
     function toggleSidebar() {
+
         const sidebar = document.getElementById('sidebar');
+
         const btn = document.getElementById('sidebar-toggle-btn');
+
         sidebar.classList.toggle('collapsed');
+
         if (sidebar.classList.contains('collapsed')) {
+
             btn.innerHTML = '&gt;&gt;';
+
             document.getElementById('settings-accordion').classList.remove('open');
+
         } else {
+
             btn.innerHTML = '&lt;&lt;';
+
         }
+
     }
+
+
 
     function toggleSettingsMenu() {
+
         const sidebar = document.getElementById('sidebar');
+
         if(sidebar.classList.contains('collapsed')) {
+
             toggleSidebar(); 
+
             setTimeout(() => { document.getElementById('settings-accordion').classList.toggle('open'); }, 300);
+
         } else {
+
             document.getElementById('settings-accordion').classList.toggle('open');
+
         }
+
     }
+
+
 
     function toggleDock() {
+
         const dock = document.getElementById('dock-wrapper');
+
         dock.style.display = (dock.style.display === 'block') ? 'none' : 'block';
+
     }
+
+
 
     function resetLayout() {
+
         Object.keys(localStorage).forEach(key => {
+
             if(key.startsWith('analystWireLayout')) localStorage.removeItem(key);
+
         });
+
         window.location.reload();
+
     }
+
+
 
     function adjustZoom(btn, delta) {
+
         const el = btn.closest('.grid-stack-item');
+
         let currentZoom = parseFloat(el.getAttribute('data-zoom')) || 1.0;
+
         currentZoom += delta;
+
         currentZoom = Math.max(0.5, Math.min(currentZoom, 2.0)); 
+
         el.setAttribute('data-zoom', currentZoom.toFixed(1));
+
         const label = el.querySelector('.zoom-label');
+
         if (label) label.innerText = Math.round(currentZoom * 100) + '%';
+
         forceUpdateZoom(el);
+
         saveLayoutState();
+
     }
+
+
 
     function forceUpdateZoom(panelItem) {
+
         const target = panelItem.querySelector('.panel-content');
+
         const wrapper = panelItem.querySelector('.adaptive-wrapper');
+
         if (!wrapper || !target) return;
+
         const width = target.clientWidth;
+
         let baseScale = width < 480 ? Math.max(width / 480, 0.4) : 1;
+
         let zoomMult = parseFloat(panelItem.getAttribute('data-zoom')) || 1.0;
+
         let finalScale = baseScale * zoomMult;
+
         wrapper.style.transform = `scale(${finalScale})`;
+
         wrapper.style.width = `${100 / finalScale}%`;
+
         wrapper.style.height = `${100 / finalScale}%`;
+
     }
+
+
 
     function adjustHeight(btn, delta) {
+
         const el = btn.closest('.grid-stack-item');
+
         if (window.innerWidth <= 768) {
+
             // Strictly push mobile inline CSS heights in 50px increments
+
             let currentH = parseInt(el.getAttribute('data-mobile-h')) || 350;
+
             let newH = Math.max(150, currentH + (delta * 50)); 
+
             el.setAttribute('data-mobile-h', newH);
+
             el.style.setProperty('--mobile-h', `${newH}px`);
+
             const label = el.querySelector('.h-label');
+
             if (label) label.innerText = `${newH}px`;
+
         } else {
+
             // Native GridStack desktop block height modification
+
             const node = el.gridstackNode;
+
             if (!node) return;
+
             let currentH = node.h || parseInt(el.getAttribute('data-default-h')) || 4;
+
             let newH = Math.max(2, currentH + delta);
+
             mainGrid.update(el, { h: newH });
+
             const label = el.querySelector('.h-label');
+
             if (label) label.innerText = newH;
+
         }
+
         saveLayoutState();
+
     }
+
+
 
     function moveWidget(btn, direction) {
+
         const el = btn.closest('.grid-stack-item');
+
         if (window.innerWidth <= 768) {
+
             const container = document.getElementById('main-grid');
+
             const items = Array.from(container.children);
+
             const index = items.indexOf(el);
+
             if (direction === -1 && index > 0) {
+
                 container.insertBefore(el, items[index - 1]);
+
             } else if (direction === 1 && index < items.length - 1) {
+
                 container.insertBefore(items[index + 1], el);
+
             }
+
             saveLayoutState();
+
         } else {
+
             const node = el.gridstackNode;
+
             if(!node) return;
+
             const nodes = mainGrid.engine.nodes.slice().sort((a,b) => a.y - b.y);
+
             const currentIndex = nodes.findIndex(n => n.el === el);
+
             if (direction === -1 && currentIndex > 0) {
+
                 const targetNode = nodes[currentIndex - 1];
+
                 const tempY = targetNode.y;
+
                 mainGrid.update(targetNode.el, { y: node.y });
+
                 mainGrid.update(el, { y: tempY });
+
             } else if (direction === 1 && currentIndex < nodes.length - 1) {
+
                 const targetNode = nodes[currentIndex + 1];
+
                 const tempY = targetNode.y;
+
                 mainGrid.update(targetNode.el, { y: node.y });
+
                 mainGrid.update(el, { y: tempY });
+
             }
+
             saveLayoutState();
+
         }
+
     }
+
+
 
     function moveToDashboard(btn) {
+
         const el = btn.closest('.grid-stack-item');
+
         el.parentNode.removeChild(el);
+
         el.setAttribute('data-in-dock', 'false');
+
         
+
         // Setup initial locked mobile height natively if it hasn't been set yet
+
         if (!el.hasAttribute('data-mobile-h')) {
+
             el.setAttribute('data-mobile-h', 350);
+
             el.style.setProperty('--mobile-h', '350px');
+
         }
+
         
+
         const mainContainer = document.getElementById('main-grid');
+
         mainContainer.appendChild(el);
+
         
+
         if (window.innerWidth > 768) {
+
             mainGrid.makeWidget(el);
+
             let defaultW = parseInt(el.getAttribute('data-default-w')) || 4;
+
             let defaultH = parseInt(el.getAttribute('data-default-h')) || 4;
+
             mainGrid.update(el, {w: defaultW, h: defaultH, autoPosition: true});
+
         }
+
         saveLayoutState();
+
         refreshTradingViewWidgets(el);
+
     }
+
+
 
     function returnToDock(btn) {
+
         const el = btn.closest('.grid-stack-item');
+
         if (window.innerWidth > 768) {
+
             mainGrid.removeWidget(el, false, false);
+
         } else {
+
             el.parentNode.removeChild(el);
+
         }
+
         el.setAttribute('data-in-dock', 'true');
+
         el.setAttribute('data-zoom', '1.0');
+
         el.removeAttribute('style'); // Clear desktop coordinate positioning overrides
+
         
+
         const menu = el.querySelector('.widget-settings-menu');
+
         const toggleBtn = el.querySelector('.settings-toggle-btn');
+
         if (menu && toggleBtn) {
+
             menu.classList.remove('open');
+
             toggleBtn.classList.remove('active');
+
         }
+
         const label = el.querySelector('.zoom-label');
+
         if (label) label.innerText = '100%';
 
+
+
         document.getElementById('dock-container').appendChild(el);
+
         saveLayoutState();
+
         refreshTradingViewWidgets(el);
+
     }
+
+
 
     window.onload = function() {
+
         const savedLayout = localStorage.getItem('analystWireLayoutV20');
+
         
+
         mainGrid = GridStack.init({
+
             cellHeight: '60px', margin: 5, handle: '.panel-header', animate: true, 
+
             alwaysShowResizeHandle: true, acceptWidgets: false, float: true, minRow: 1
+
         }, '#main-grid');
 
+
+
         mainGrid.on('dragstart resizestart', function() { document.body.classList.add('is-dragging'); });
+
         mainGrid.on('dragstop resizestop', function() { document.body.classList.remove('is-dragging'); });
+
         mainGrid.on('change', saveLayoutState);
+
         mainGrid.on('removed', saveLayoutState);
 
+
+
         if (savedLayout) {
+
             try {
+
                 const parsed = JSON.parse(savedLayout);
+
                 parsed.forEach(item => {
+
                     if (item.id) {
+
                         const el = document.querySelector(`[gs-id="${item.id}"]`);
+
                         if (el) {
+
                             const savedZoom = item.zoom || '1.0';
+
                             el.setAttribute('data-zoom', savedZoom);
+
                             const label = el.querySelector('.zoom-label');
+
                             if (label) label.innerText = Math.round(parseFloat(savedZoom) * 100) + '%';
+
                             
+
                             if (item.grid === 'main') {
+
                                 el.setAttribute('data-in-dock', 'false');
+
                                 document.getElementById('main-grid').appendChild(el);
+
                                 
+
                                 // Restore desktop attributes natively so they aren't lost on mobile re-saves
+
                                 if (item.x !== undefined) el.setAttribute('gs-x', item.x);
+
                                 if (item.w !== undefined) el.setAttribute('gs-w', item.w);
+
                                 if (item.h !== undefined) el.setAttribute('gs-h', item.h);
+
                                 
+
                                 const savedMobileH = item.mobileH || 350;
+
                                 el.setAttribute('data-mobile-h', savedMobileH);
+
                                 el.style.setProperty('--mobile-h', `${savedMobileH}px`);
 
+
+
                                 if (window.innerWidth > 768) {
+
                                     mainGrid.makeWidget(el);
+
                                     mainGrid.update(el, {x: item.x, y: item.y, w: item.w, h: item.h});
+
                                 }
+
                             } else {
+
                                 el.setAttribute('data-in-dock', 'true');
+
                                 document.getElementById('dock-container').appendChild(el);
+
                             }
+
                         }
+
                     }
+
                 });
+
             } catch (e) { console.error("Layout parse failed", e); }
+
         }
+
+
 
         const panelObserver = new ResizeObserver(entries => {
+
             for (let entry of entries) {
+
                 const width = entry.contentRect.width;
+
                 const targetPanel = entry.target; 
+
                 const panelItem = targetPanel.closest('.grid-stack-item'); 
+
                 
+
                 const isInDock = panelItem && panelItem.getAttribute('data-in-dock') === 'true';
+
                 if (width < 260 && !isInDock) {
+
                     targetPanel.classList.add('compact-widget');
+
                 } else {
+
                     targetPanel.classList.remove('compact-widget');
+
                 }
+
+
 
                 const wrapper = targetPanel.querySelector('.adaptive-wrapper');
+
                 if (wrapper && width > 0) {
+
                     let baseScale = width < 480 ? Math.max(width / 480, 0.4) : 1;
+
                     let zoomMult = parseFloat(panelItem.getAttribute('data-zoom')) || 1.0;
+
                     let finalScale = baseScale * zoomMult;
+
                     wrapper.style.transform = `scale(${finalScale})`;
+
                     wrapper.style.width = `${100 / finalScale}%`;
+
                     wrapper.style.height = `${100 / finalScale}%`;
+
                 }
+
             }
+
         });
+
+
 
         document.querySelectorAll('.panel').forEach(panel => { panelObserver.observe(panel); });
+
         document.querySelectorAll('.grid-stack-item').forEach(el => { refreshTradingViewWidgets(el); });
+
         
+
         init();
+
     };
 
+
+
     function saveLayoutState() {
+
         const dockItems = Array.from(document.getElementById('dock-container').children).map(el => ({
+
             id: el.getAttribute('gs-id'), grid: 'dock', zoom: el.getAttribute('data-zoom') || '1.0', mobileH: el.getAttribute('data-mobile-h') || 350
+
         }));
+
         
+
         let mainItems = [];
+
         if (window.innerWidth <= 768) {
+
             // Read background gs attributes so you don't corrupt the desktop layout cache when editing on phone
+
             mainItems = Array.from(document.getElementById('main-grid').children).map((el, idx) => ({
+
                 id: el.getAttribute('gs-id'), 
+
                 grid: 'main', 
+
                 x: parseInt(el.getAttribute('gs-x')) || 0, 
+
                 y: idx, 
+
                 w: parseInt(el.getAttribute('gs-w')) || parseInt(el.getAttribute('data-default-w')) || 4, 
+
                 h: parseInt(el.getAttribute('gs-h')) || parseInt(el.getAttribute('data-default-h')) || 4, 
+
                 zoom: el.getAttribute('data-zoom') || '1.0', 
+
                 mobileH: el.getAttribute('data-mobile-h') || 350
+
             }));
+
         } else {
+
             mainItems = mainGrid.engine.nodes.map(n => ({
+
                 id: n.id, grid: 'main', x: n.x, y: n.y, w: n.w, h: n.h, zoom: n.el.getAttribute('data-zoom') || '1.0', mobileH: n.el.getAttribute('data-mobile-h') || 350
+
             }));
+
         }
+
         
+
         localStorage.setItem('analystWireLayoutV20', JSON.stringify([...dockItems, ...mainItems]));
+
     }
+
+
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+
     const tvSymbolMap = { 'S&P500': 'SPY', 'NASDAQ': 'QQQ', 'DOW': 'DIA', 'WTI': 'USOIL', 'COPPER': 'HG1!', 'COCOA': 'CC1!', 'COFFEE': 'KC1!', 'CORN': 'ZC1!', 'WHEAT': 'ZW1!', 'SOYBEANS': 'ZS1!', 'COTTONSUGAR': 'CT1!' };
+
     const categoryMap = { 'EUR/USD': 'Forex', 'GBP/USD': 'Forex', 'AUD/USD': 'Forex', 'NZD/USD': 'Forex', 'AUD/NZD': 'Forex', 'EUR/CHF': 'Forex', 'USD/CHF': 'Forex', 'USD/CAD': 'Forex', 'USD/NOK': 'Forex', 'USD/MXN': 'Forex', 'USD/JPY': 'Forex', 'EUR/JPY': 'Forex', 'GBP/JPY': 'Forex', 'AUD/JPY': 'Forex', 'NZD/JPY': 'Forex', 'CAD/JPY': 'Forex', 'EUR/GBP': 'Forex', 'EUR/AUD': 'Forex', 'EUR/NZD': 'Forex', 'GBP/AUD': 'Forex', 'GBP/NZD': 'Forex', 'DXY': 'Forex', 'XAU/USD': 'Commodities', 'XAG/USD': 'Commodities', 'WTI': 'Commodities', 'COPPER': 'Commodities', 'COCOA': 'Commodities', 'COFFEE': 'Commodities', 'COTTONSUGAR': 'Commodities', 'CORN': 'Commodities', 'SOYBEANS': 'Commodities', 'WHEAT': 'Commodities', 'AAPL': 'Equities', 'AMZN': 'Equities', 'GOOG': 'Equities', 'MSFT': 'Equities', 'TSLA': 'Equities', 'META': 'Equities', 'V': 'Equities', 'JPM': 'Equities', 'KO': 'Equities', 'MCD': 'Equities', 'AMD': 'Equities', 'BABA': 'Equities', 'JNJ': 'Equities', 'NVDA': 'Equities', 'S&P500': 'Indices', 'NASDAQ': 'Indices', 'DOW': 'Indices', 'RUSSEL': 'Indices', 'FTSE': 'Indices', 'NIKKEI': 'Indices', 'HANG': 'Indices', 'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto' };
 
+
+
     function toggleRadarDrawer(index, ticker) {
+
         const row = document.getElementById(`radar-drawer-${index}`);
+
         const btn = document.getElementById(`radar-btn-${index}`);
+
         const container = document.getElementById(`radar-chart-${index}`);
+
         if (row.style.display === "table-row") {
+
             row.style.display = "none";
+
             btn.innerText = "Expand ▼";
+
             container.innerHTML = "";
+
         } else {
+
             row.style.display = "table-row";
+
             btn.innerText = "Close ▲";
+
             let cleanSymbol = tvSymbolMap[ticker] || ticker.replace('/', '');
+
             container.innerHTML = `<iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=${encodeURIComponent(cleanSymbol)}&interval=D&theme=dark&style=1&timezone=Etc%2FUTC&studies=%5B%5D&hide_side_toolbar=true&hide_top_toolbar=true&hide_legend=true&allow_symbol_change=false&save_image=false"></iframe>`;
+
         }
+
     }
+
+
 
     function getAssetVolatilityMetrics(r) {
+
         const assetClass = categoryMap[r.ticker] || 'Forex';
+
         const s1Num = parseFloat(r.s1) || 0;
+
         const r1Num = parseFloat(r.r1) || 0;
+
         const rawDiff = Math.abs(r1Num - s1Num);
+
         let isTrending = false;
+
         if (assetClass === 'Indices' || assetClass === 'Crypto') isTrending = rawDiff > 80.00;
+
         else if (r.ticker === 'XAU/USD') isTrending = rawDiff > 15.00;
+
         else if (assetClass === 'Commodities') isTrending = rawDiff > 3.00;
+
         else if (r.ticker.includes('JPY')) isTrending = (rawDiff * 100) > 90.0;
+
         else if (r.ticker === 'USD/NOK' || r.ticker === 'USD/MXN') isTrending = rawDiff > 0.1500;
+
         else isTrending = (rawDiff * 10000) > 75.0;
+
         return { isTrending };
+
     }
+
+
 
     async function loadHotAssets() {
+
         const d = new Date();
+
         if (d.getDay() === 0) d.setDate(d.getDate() - 2);
+
         else if (d.getDay() === 6) d.setDate(d.getDate() - 1);
+
         const dateStr = d.toISOString().split('T')[0];
 
+
+
         const y = new Date(d);
+
         y.setDate(y.getDate() - 1);
+
         if (y.getDay() === 0) y.setDate(y.getDate() - 2);
+
         else if (y.getDay() === 6) y.setDate(y.getDate() - 1);
+
         const yesterdayStr = y.toISOString().split('T')[0];
 
+
+
         const [todayRes, yesterdayRes] = await Promise.all([
+
             client.from('key_levels').select('id, trade_date, ticker, s1, s2, r1, r2, bias, bull_bear_line, lollipop, analysis').eq('trade_date', dateStr),
+
             client.from('key_levels').select('id, trade_date, ticker, s1, s2, r1, r2, bias, bull_bear_line, lollipop, analysis').eq('trade_date', yesterdayStr)
+
         ]);
 
+
+
         if (todayRes.error) return;
+
         let todayData = todayRes.data || [];
+
         const yesterdayData = yesterdayRes.data || [];
 
+
+
         // Apply Gold filter rule here based on saved preferences
+
         todayData = todayData.filter(row => row.ticker === 'XAU/USD' || row.ticker.includes('AUD') || row.ticker.includes('USD'));
 
+
+
         let radarData = todayData.map(todayRow => {
+
             let score = 0;
+
             if (todayRow.bias === 'Strong Bullish') score += 3;
+
             else if (todayRow.bias === 'Medium Bullish') score += 1;
+
             else if (todayRow.bias === 'Strong Bearish') score -= 3;
+
             else if (todayRow.bias === 'Medium Bearish') score -= 1;
 
+
+
             const metrics = getAssetVolatilityMetrics(todayRow);
+
             if (metrics.isTrending) {
+
                 if (score > 0) score += 2; else if (score < 0) score -= 2;
+
             }
+
+
 
             const lolli = (todayRow.lollipop || '').toUpperCase();
+
             if (lolli.includes('UPPER') || lolli.includes('BREAK OUT')) score += 2;
+
             else if (lolli.includes('LOWER') || lolli.includes('BREAK DOWN')) score -= 2;
 
+
+
             const yRow = yesterdayData.find(y => y.ticker === todayRow.ticker);
+
             if (yRow) {
+
                 const bbDelta = parseFloat(todayRow.bull_bear_line) - parseFloat(yRow.bull_bear_line);
+
                 todayRow.value_migration = bbDelta > 0 ? "Upward" : (bbDelta < 0 ? "Downward" : "Flat");
 
+
+
                 const todayRange = Math.abs(parseFloat(todayRow.r1) - parseFloat(todayRow.s1));
+
                 const yRange = Math.abs(parseFloat(yRow.r1) - parseFloat(yRow.s1));
+
                 todayRow.vol_velocity = todayRange > yRange ? "Expanding" : "Compressing";
 
+
+
                 if (parseFloat(todayRow.s1) >= parseFloat(yRow.r1)) todayRow.structural_shift = "Bullish Floor Flip";
+
                 else if (parseFloat(todayRow.r1) <= parseFloat(yRow.s1)) todayRow.structural_shift = "Bearish Ceiling Flip";
+
                 else todayRow.structural_shift = "Maintaining Range";
 
+
+
                 if (todayRow.value_migration === "Upward") score += 1;
+
                 else if (todayRow.value_migration === "Downward") score -= 1;
 
+
+
                 if (todayRow.structural_shift === "Bullish Floor Flip") score += 2;
+
                 else if (todayRow.structural_shift === "Bearish Ceiling Flip") score -= 2;
 
+
+
                 if (todayRow.vol_velocity === "Expanding") {
+
                     if (score > 0) score += 1; else if (score < 0) score -= 1;
+
                 }
+
             } else {
+
                 todayRow.value_migration = "N/A";
+
                 todayRow.vol_velocity = "N/A";
+
                 todayRow.structural_shift = "N/A";
+
             }
+
+
 
             todayRow.convictionScore = score;
+
             todayRow.isTopWinner = false;
+
             todayRow.isTopLoser = false;
+
             return todayRow;
+
         });
 
+
+
         const sorted = [...radarData].sort((a,b) => b.convictionScore - a.convictionScore);
+
         const hotAssets = [];
+
         let w = 0;
+
         for (let i = 0; i < sorted.length; i++) {
+
             if (sorted[i].convictionScore >= 7 && w < 2) { 
+
                 sorted[i].isTopWinner = true; hotAssets.push(sorted[i]); w++; 
+
             }
+
         }
+
         let l = 0;
+
         for (let i = sorted.length - 1; i >= 0; i--) {
+
             if (sorted[i].convictionScore <= -7 && l < 2) { 
+
                 sorted[i].isTopLoser = true; hotAssets.push(sorted[i]); l++; 
+
             }
+
         }
+
         renderHotRadar(hotAssets);
+
     }
+
+
 
     function renderHotRadar(assets) {
+
         const tbody = document.getElementById('hot-radar-body');
+
         if (assets.length === 0) {
+
             tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #8b949e; padding: 30px 10px; font-size: 11px;">No extreme conviction setups currently detected.<br>Market in equilibrium.</td></tr>';
+
             return;
+
         }
 
+
+
         tbody.innerHTML = assets.map((r, index) => {
+
             const metrics = getAssetVolatilityMetrics(r);
+
             const state = metrics.isTrending ? "Trending" : "Consolidated";
+
             const stateClass = metrics.isTrending ? "trending" : "consolidated";
 
+
+
             let biasClass = 'bias-neutral';
+
             let directionalArrow = '➔';
+
             if (r.bias === 'Strong Bullish') { biasClass = 'bias-strong-up'; directionalArrow = '▲'; }
+
             else if (r.bias === 'Medium Bullish') { biasClass = 'bias-medium-up'; directionalArrow = '▲'; }
+
             else if (r.bias === 'Strong Bearish') { biasClass = 'bias-strong-down'; directionalArrow = '▼'; }
+
             else if (r.bias === 'Medium Bearish') { biasClass = 'bias-medium-down'; directionalArrow = '▼'; }
 
+
+
             let tickerColorStyle = '';
+
             let svgFill = '#8b949e';
+
             let convictionLabel = '';
+
             if (r.isTopWinner) {
+
                 tickerColorStyle = 'color: #2ea043; text-shadow: 0 0 8px rgba(46,160,67,0.4);';
+
                 svgFill = '#2ea043';
+
                 convictionLabel = '<span style="font-size: 8px; font-weight:700; color:#2ea043; margin-left: 4px; letter-spacing: 0.5px;">[STRONG]</span>';
+
             } else if (r.isTopLoser) {
+
                 tickerColorStyle = 'color: #f85149; text-shadow: 0 0 8px rgba(248,81,73,0.4);';
+
                 svgFill = '#f85149';
+
                 convictionLabel = '<span style="font-size: 8px; font-weight:700; color:#f85149; margin-left: 4px; letter-spacing: 0.5px;">[WEAK]</span>';
+
             }
 
+
+
             const lolli = r.lollipop ? r.lollipop.toUpperCase() : '';
+
             let lolliClass = 'lolli-range';
+
             if (lolli.includes('UPPER') || lolli.includes('BREAK OUT')) lolliClass = 'lolli-upper';
+
             else if (lolli.includes('LOWER') || lolli.includes('BREAK DOWN')) lolliClass = 'lolli-lower';
+
             
+
             return `
+
                 <tr>
+
                     <td>
+
                         <div class="ticker-flex">
+
                             <svg width="10" height="10" viewBox="0 0 24 24" style="fill: ${svgFill};"><path d="M3.5 18.5v-13h2v13h-2zm5 0v-7h2v7h-2zm5 0v-11h2v11h-2zm5 0v-5h2v5h-2z"/></svg>
+
                             <span class="ticker-text" style="${tickerColorStyle}">${r.ticker}</span>
+
                             ${convictionLabel}
+
                         </div>
+
                     </td>
+
                     <td class="${biasClass}" style="font-size: 10.5px;">${directionalArrow} ${r.bias}</td>
+
                     <td><span class="state-badge ${stateClass}">${state}</span></td>
+
                     <td><button id="radar-btn-${index}" class="expand-toggle-btn" onclick="toggleRadarDrawer(${index}, '${r.ticker}')">Expand ▼</button></td>
+
                 </tr>
+
                 <tr id="radar-drawer-${index}" class="drawer-row">
+
                     <td colspan="4">
+
                         <div class="drawer-container">
+
                             <div style="display: flex; justify-content: space-between; gap: 10px;">
+
                                 <div style="flex: 1;">
+
                                     <span class="drawer-section-title">Lollipop</span>
+
                                     <div class="lollipop-system ${lolliClass}">
+
                                         <div class="lollipop-indicator-dot"></div>
+
                                         <div class="lollipop-badge">${r.lollipop || 'INSIDE RANGE'}</div>
+
                                     </div>
+
                                 </div>
+
                                 <div style="flex: 1;">
+
                                     <span class="drawer-section-title">Velocity (DoD)</span>
+
                                     <ul style="margin: 0; padding-left: 12px; font-size: 9px; color: #c9d1d9;">
+
                                         <li><span style="color:#8b949e">Val:</span> ${r.value_migration}</li>
+
                                         <li><span style="color:#8b949e">Vol:</span> ${r.vol_velocity}</li>
+
                                     </ul>
+
                                 </div>
+
                             </div>
+
                             <div style="margin-top: 4px; padding-top: 8px; border-top: 1px solid #1c2230;">
+
                                 <span class="drawer-section-title">Analysis</span>
+
                                 <p class="drawer-analysis-text">${r.analysis || 'Pending calculated analysis.'}</p>
+
                             </div>
+
                             <div id="radar-chart-${index}" class="embedded-chart-frame" style="margin-top: 4px;"></div>
+
                         </div>
+
                     </td>
+
                 </tr>
+
             `;
+
         }).join('');
+
     }
 
+
+
     async function init() {
+
         const { data: { session } } = await client.auth.getSession();
+
         if (!session) { window.location.href = 'index.html'; return; }
+
+
 
         const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
 
+
+
         const tags = profile?.subscription_tag || '';
+
         const isAdmin = profile?.is_admin === true;
 
+
+
         if (!profile || tags === '' || userHasAccess(tags, 'free')) {
+
             alert("Your subscription is inactive. Redirecting to login.");
+
             await client.auth.signOut();
+
             window.location.href = 'index.html';
+
             return;
+
         }
+
+
 
         // --- HARD ROUTING (BOUNCER LOGIC) ---
+
         if (!isAdmin && !userHasAccess(tags, 'pro')) {
+
             if (userHasAccess(tags, 'course') || userHasAccess(tags, 'courses')) {
+
                 window.location.href = 'courses.html';
+
                 return;
+
             } else if (userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk')) {
+
                 window.location.href = '/newsfeed';
+
                 return;
+
             } else {
+
                 window.location.href = 'account.html';
+
                 return;
+
             }
+
         }
+
+
 
         // --- STRICT NAVIGATION VISIBILITY ---
+
         // Since only Admin and Pro can reach here, we reveal the Pro links.
+
         document.getElementById('nav-courses').style.display = 'flex';
+
         document.getElementById('nav-key-levels').style.display = 'flex';
 
+
+
         if (isAdmin) {
+
             document.getElementById('nav-admin').style.display = 'block';
+
             document.getElementById('nav-upload').style.display = 'block';
+
         }
+
         
+
         loadHotAssets();
+
     }
 
+
+
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+
     
+
 </script>
+
 </body>
-</html>
+
+</html> 
+
