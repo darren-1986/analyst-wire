@@ -43,12 +43,29 @@
     <script>
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
+        function userHasAccess(userTags, requiredTag) {
+            if (!userTags) return false;
+            try {
+                const parsedArray = JSON.parse(userTags);
+                if (Array.isArray(parsedArray)) {
+                    return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+                }
+            } catch (e) {
+                return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
+            }
+            return false;
+        }
+
         async function checkPermissions() {
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
             const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
-            const allowedTags = ['pro', 'newsfeed', 'squawk', 'admin'];
-            const isAuthorized = profile && (profile.is_admin === true || allowedTags.includes(profile.subscription_tag));
+            
+            const tags = profile ? profile.subscription_tag : '';
+            const isAdmin = profile ? profile.is_admin === true : false;
+            
+            const isAuthorized = isAdmin || userHasAccess(tags, 'pro') || userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk') || userHasAccess(tags, 'admin');
+            
             if (!isAuthorized) { alert("Access denied."); await client.auth.signOut(); window.location.href = 'index.html'; return; }
         }
         checkPermissions();
