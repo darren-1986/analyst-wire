@@ -65,7 +65,7 @@
         /* Badges */
         .status-active { color: #3fb950; font-weight: 600; background: rgba(46, 160, 67, 0.15); border: 1px solid rgba(46, 160, 67, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; margin: 2px 0; }
         .status-inactive { color: #f85149; font-weight: 600; background: rgba(248, 81, 73, 0.15); border: 1px solid rgba(248, 81, 73, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; margin: 2px 0; }
-        .tag-badge { background: #1f2937; border: 1px solid #374151; padding: 4px 8px; border-radius: 6px; margin: 2px; display: inline-block; text-transform: capitalize; font-size: 0.75rem; color: #c9d1d9; font-weight: 600; }
+        .tag-badge { background: #1f2937; border: 1px solid #374151; padding: 4px 8px; border-radius: 6px; margin: 2px 0; display: inline-block; text-transform: capitalize; font-size: 0.75rem; color: #c9d1d9; font-weight: 600; }
         
         /* Table Button */
         .btn-profile { background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; }
@@ -340,7 +340,11 @@
         users.forEach(u => {
             let tags = parseList(u.subscription_tag);
             if (tags.length === 0) tags = ['free']; 
-            const tagsHtml = tags.map(t => `<span class="tag-badge">${t}</span>`).join(' ');
+            
+            // Updated tag badges container with vertical layout stacking
+            const tagsHtml = `<div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">` + 
+                tags.map(t => `<span class="tag-badge">${t}</span>`).join('') + 
+                `</div>`;
 
             let statuses = parseList(u.sub_status);
             if (statuses.length === 0) statuses = ['inactive'];
