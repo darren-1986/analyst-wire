@@ -33,10 +33,26 @@
 
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // --- HELPER FUNCTION: Updated to handle the new Postgres Array (text[]) ---
+    // --- HELPER FUNCTION: Bulletproof parsing for Arrays, Strings, and JSON ---
     function userHasAccess(userTags, requiredTag) {
-        if (!userTags || !Array.isArray(userTags)) return false;
-        return userTags.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+        if (!userTags) return false;
+        
+        let tagsArray = [];
+        
+        if (Array.isArray(userTags)) {
+            tagsArray = userTags;
+        } else if (typeof userTags === 'string') {
+            try {
+                // Parse it if it came through as stringified JSON: '["course","newsfeed"]'
+                let parsed = JSON.parse(userTags);
+                tagsArray = Array.isArray(parsed) ? parsed : [userTags];
+            } catch (e) {
+                // If it's just raw comma-separated text, split it
+                tagsArray = userTags.split(',').map(s => s.trim());
+            }
+        }
+
+        return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
     }
 
     // --- DEVICE TRACKING FUNCTION ---
@@ -151,6 +167,14 @@
                 .select('admin, active_tags')
                 .eq('id', data.user.id)
                 .single();
+
+            // FAILSAFE: If Row Level Security blocks the read, display the error directly
+            if (profileError) {
+                status.style.color = '#ff4444';
+                status.innerText = 'Profile Read Error: ' + profileError.message;
+                await client.auth.signOut();
+                return;
+            }
 
             await logUserDeviceAndLocation(data.user.id);
 
