@@ -30,11 +30,12 @@
 <script>
     const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5NDc1ODQsImV4cCI6MjA5ODUyMzU4NH0.BaxMA1FiXvyVDOsVNkN2tLNrkkCqsppVe54Sc8c0cYg';
+
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // --- HELPER FUNCTION: Greatly simplified for a native JS array ---
+    // --- HELPER FUNCTION: Updated to handle the new Postgres Array (text[]) ---
     function userHasAccess(userTags, requiredTag) {
-        if (!Array.isArray(userTags)) return false;
+        if (!userTags || !Array.isArray(userTags)) return false;
         return userTags.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
     }
 
@@ -57,9 +58,9 @@
             if (ua.indexOf("like Mac") !== -1) os = "iOS";
             
             const finalDeviceString = `${deviceType} - ${os}`;
+
             let country = "Unknown";
             let ipAddress = "Unknown";
-            
             try {
                 const geoResponse = await fetch('https://ipapi.co/json/');
                 const geoData = await geoResponse.json();
@@ -144,18 +145,18 @@
             status.style.color = '#28a745';
             status.innerText = 'Success! Checking permissions...';
             
-            // Check user role and the NEW active_tags column
+            // 1. Fetch exactly the columns that exist in your DB now
             const { data: profile, error: profileError } = await client
                 .from('profiles')
-                .select('is_admin, active_tags')
+                .select('admin, active_tags')
                 .eq('id', data.user.id)
                 .single();
 
             await logUserDeviceAndLocation(data.user.id);
 
-            // Default to an empty array if undefined
+            // 2. Read the tags and the exact 'admin' column
             const tags = profile?.active_tags ? profile.active_tags : [];
-            const isAdmin = profile?.is_admin === true;
+            const isAdmin = profile?.admin === true;
 
             // Strict Routing & Access Control
             if (isAdmin) {
