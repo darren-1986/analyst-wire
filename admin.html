@@ -1,584 +1,200 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
     <link rel="icon" type="image/png" href="media/favicon.png">
-    <title>Analyst Wire | Admin Portal</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-        body { background: #090b10; color: #c9d1d9; font-family: 'Inter', sans-serif; margin: 0; font-size: 14px; }
-
-        /* Top Navigation */
-        .top-nav { background: #0d1117; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; flex-wrap: wrap; position: relative; }
-        .nav-brand { color: #fff; font-weight: 700; font-size: 1.1rem; display: none; }
-        .nav-links { display: flex; gap: 15px; align-items: center; width: 100%; flex-wrap: wrap; }
-        .nav-links button, .nav-links a { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 0.95rem; text-decoration: none; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.2s; text-align: left; }
-        .nav-links button:hover, .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
-        .nav-links .active { color: #2962ff; background: rgba(41, 98, 255, 0.1); }
-        .menu-toggle { display: none; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1; }
-
-        /* Main Container */
-        .admin-container { max-width: 1400px; width: 95%; margin: 25px auto; background: #161b22; border-radius: 12px; padding: 25px; border: 1px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.2); box-sizing: border-box; }
-
-        /* Sections */
-        .section { display: none; }
-        .section.active { display: block; }
-
-        /* Management Panel Form */
-        .manage-user-form { background: #0d1117; padding: 20px; border-radius: 10px; margin-bottom: 25px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; border: 1px solid #30363d; }
-        .manage-user-form h3 { margin: 0; font-size: 1.05rem; color: #fff; width: 100%; flex-basis: 100%; font-weight: 600; }
-        .manage-user-form input, .manage-user-form select { flex: 1 1 180px; padding: 10px 14px; background: #161b22; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
-        .manage-user-form input:focus, .manage-user-form select:focus { border-color: #2962ff; }
-        
-        /* Buttons */
-        .btn-primary { flex: 1 1 150px; background: #2962ff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; }
-        .btn-primary:hover { background: #1c4ed8; }
-        .btn-danger { background: transparent; color: #f85149; border: 1px solid #f85149; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; }
-        .btn-danger:hover { background: rgba(248, 81, 73, 0.1); }
-
-        /* Controls & Filters */
-        .controls { display: flex; gap: 15px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; justify-content: space-between; }
-        .filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: 1; }
-        .filters h2 { margin: 0; margin-right: 10px; color: #fff; font-size: 1.25rem; font-weight: 600; }
-        .search-box, .filter-select { padding: 9px 14px; background: #0d1117; border: 1px solid #30363d; color: #fff; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; flex: 1 1 150px; box-sizing: border-box; }
-
-        /* Table & Responsive Wrapper */
-        .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #30363d; background: #0d1117; -webkit-overflow-scrolling: touch; }
-        .table-responsive::-webkit-scrollbar { height: 8px; width: 8px; }
-        .table-responsive::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-        .table-responsive::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
-        .table-responsive::-webkit-scrollbar-thumb:hover { background: #4b5563; }
-        
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        tr { border-bottom: 1px solid #30363d; transition: background 0.2s; }
-        tr:hover { background: rgba(255,255,255,0.02); }
-        tr:last-child { border-bottom: none; }
-        th, td { padding: 14px 16px; text-align: left; font-size: 0.9rem; vertical-align: middle; }
-        th { background: #161b22; text-transform: uppercase; font-size: 0.75rem; color: #8b949e; user-select: none; font-weight: 600; letter-spacing: 0.5px; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
-        th.sortable { cursor: pointer; }
-        th.sortable:hover { color: #fff; }
-        .sort-icon { font-size: 0.8rem; margin-left: 5px; color: #4b5563; }
-        
-        /* Badges */
-        .status-active { color: #3fb950; font-weight: 600; background: rgba(46, 160, 67, 0.15); border: 1px solid rgba(46, 160, 67, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 0.5px; height: 24px; box-sizing: border-box; }
-        .status-inactive { color: #f85149; font-weight: 600; background: rgba(248, 81, 73, 0.15); border: 1px solid rgba(248, 81, 73, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 0.5px; height: 24px; box-sizing: border-box; }
-        .status-refunded { color: #d29922; font-weight: 600; background: rgba(210, 153, 34, 0.15); border: 1px solid rgba(210, 153, 34, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 0.5px; height: 24px; box-sizing: border-box; }
-        
-        .tag-badge { background: #1f2937; border: 1px solid #374151; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; text-transform: uppercase; font-size: 0.75rem; color: #c9d1d9; font-weight: 600; height: 24px; box-sizing: border-box; letter-spacing: 0.5px; }
-        
-        /* Vertical Aligners for Columns */
-        .col-stack { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; justify-content: center; }
-        .date-text { height: 24px; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #c9d1d9; }
-
-        /* Table Button */
-        .btn-profile { background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; }
-        .btn-profile:hover { background: #2962ff; color: #fff; border-color: #2962ff; }
-
-        /* Modal Overlay */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-        .modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; width: 100%; max-width: 700px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); max-height: 95vh; overflow-y: auto; box-sizing: border-box; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #30363d; padding-bottom: 15px; }
-        .modal-header h2 { margin: 0; font-size: 1.25rem; font-weight: 600; color: #fff; }
-        .close-btn { background: none; border: none; color: #8b949e; font-size: 1.75rem; cursor: pointer; line-height: 1; transition: color 0.2s; padding: 0; }
-        .close-btn:hover { color: #f85149; }
-        
-        .profile-grid { display: flex; flex-direction: column; gap: 18px; margin-bottom: 25px; }
-        .modal-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .profile-group { display: flex; flex-direction: column; gap: 8px; }
-        .profile-group label { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
-        .profile-group input { padding: 12px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; box-sizing: border-box; width: 100%; }
-        .profile-group input:focus { border-color: #2962ff; }
-        
-        .readonly-data { padding: 12px; background: #090b10; border: 1px solid #30363d; border-radius: 6px; color: #8b949e; font-family: 'Inter', sans-serif; font-size: 0.9rem; }
-        .quick-view-box { display: flex; justify-content: space-between; align-items: center; }
-        
-        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #30363d; padding-top: 20px; margin-top: 20px; }
-        .btn-save { background: #238636; color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: 'Inter', sans-serif; transition: background 0.2s; box-sizing: border-box; }
-        .btn-save:hover { background: #2ea043; }
-
-        /* History Table Specific */
-        .history-table th { font-size: 0.7rem; padding: 10px; background: #0d1117; }
-        .history-table td { font-size: 0.85rem; padding: 10px; }
-
-        /* Mobile Adaptive Styling */
-        @media (max-width: 768px) {
-            .nav-brand { display: block; }
-            .menu-toggle { display: block; }
-            .nav-links { display: none; flex-direction: column; align-items: stretch; margin-top: 15px; width: 100%; }
-            .nav-links.show { display: flex; }
-            #logoutBtn { margin-left: 0 !important; color: #f85149; }
-
-            .controls, .filters { flex-direction: column; align-items: stretch; width: 100%; }
-            .filters h2 { margin-bottom: 10px; text-align: center; }
-            .btn-danger { width: 100%; }
-            .search-box, .filter-select { flex: none; width: 100%; min-height: 42px; margin-bottom: 8px; }
-            .manage-user-form { flex-direction: column; align-items: stretch; }
-            .manage-user-form input, .manage-user-form select, .btn-primary { flex: none; width: 100%; margin-bottom: 12px; min-height: 42px; }
-            .admin-container { padding: 15px; margin: 10px auto; }
-            
-            .modal { padding: 20px; }
-            .modal-form-row { grid-template-columns: 1fr; gap: 10px; }
-            .quick-view-box { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .modal-actions { justify-content: stretch; }
-            .btn-save { width: 100%; }
-        }
+        body { font-family: sans-serif; background: #0f0f0f; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #1a1a1a; padding: 30px; border-radius: 8px; text-align: center; width: 100%; max-width: 300px; }
+        input { padding: 12px; width: 100%; box-sizing: border-box; margin: 10px 0; border-radius: 4px; border: none; }
+        button { padding: 12px; width: 100%; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        .forgot-link { display: block; margin-top: 15px; color: #8b949e; text-decoration: none; font-size: 13px; transition: color 0.2s; }
+        .forgot-link:hover { color: #fff; }
+        #status { margin-top: 15px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div class="top-nav">
-    <div class="nav-brand">Analyst Wire Admin</div>
-    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-    <div class="nav-links" id="navLinks">
-        <button onclick="showSection('users', this)" class="active">Users</button>
-        <button onclick="showSection('revenue', this)">Revenue</button>
-        <a href="terminal.html">Terminal</a>
-        <a href="admin_upload.html">Upload Data</a>
-        <button id="logoutBtn" style="color: #f85149; margin-left: auto;">Logout</button>
-    </div>
-</div>
-
-<div class="admin-container">
-
-    <div id="users-section" class="section active">
-        <div class="manage-user-form">
-            <h3>Edit / Invite User</h3>
-            <input type="email" id="m-email" placeholder="Email Address">
-            <input type="text" id="m-name" placeholder="Customer Name">
-            <input type="text" id="m-tag" placeholder="Tags (e.g. course, newsfeed)">
-            <input type="datetime-local" id="m-expiry" title="Course Expiry Override (Optional)">
-            <button class="btn-primary" onclick="saveUser()">Update / Invite</button>
-        </div>
-
-        <div class="controls">
-            <div class="filters">
-                <h2>User Management</h2>
-                <input type="text" id="search" class="search-box" placeholder="Search name or email...">
-                <select id="filter-status" class="filter-select">
-                    <option value="all">Status: All</option>
-                    <option value="active">Active</option>
-                    <option value="canceled">Canceled</option>
-                    <option value="refunded">Refunded</option>
-                </select>
-                <select id="filter-tag" class="filter-select">
-                    <option value="all">Tag: All</option>
-                    <option value="pro">Pro</option>
-                    <option value="course">Course</option>
-                    <option value="newsfeed">Newsfeed</option>
-                    <option value="free">Free</option>
-                </select>
-            </div>
-            <button class="btn-danger" onclick="forceDowngradeCancelled()">Clean Up Cancelled Users</button>
-        </div>
-        
-        <div class="table-responsive">
-            <table id="admin-table">
-                <thead>
-                    <tr>
-                        <th class="sortable" onclick="handleSort('name')">Name <span id="sort-icon-name" class="sort-icon">↕</span></th>
-                        <th class="sortable" onclick="handleSort('email')">Email <span id="sort-icon-email" class="sort-icon">↕</span></th>
-                        <th class="sortable" onclick="handleSort('tag')">Tags <span id="sort-icon-tag" class="sort-icon">↕</span></th>
-                        <th>Status</th>
-                        <th>Last Billing</th>
-                        <th>Next Billing / Expiry</th>
-                        <th>Cancel?</th>
-                        <th>Profile</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-body">
-                    <tr><td colspan="8" style="text-align:center; padding: 30px; color: #8b949e;">Loading records...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="revenue-section" class="section">
-        <h2 style="margin-top: 0;">Revenue Overview</h2>
-        <p style="color: #8b949e;">Revenue data module initialization pending...</p>
-    </div>
-
-</div>
-
-<!-- Profile Modal -->
-<div class="modal-overlay" id="profileModal">
-    <div class="modal">
-        <div class="modal-header">
-            <h2>User Profile Details</h2>
-            <button class="close-btn" onclick="closeProfileModal()">×</button>
-        </div>
-        
-        <div class="profile-grid">
-            <input type="hidden" id="p-id">
-            
-            <div class="modal-form-row">
-                <div class="profile-group">
-                    <label>Customer Name</label>
-                    <input type="text" id="p-name" placeholder="Customer Name">
-                </div>
-                
-                <div class="profile-group">
-                    <label>Email Address</label>
-                    <input type="email" id="p-email" placeholder="Email Address">
-                </div>
-            </div>
-
-            <div class="profile-group">
-                <label>Latest Quick View</label>
-                <div class="readonly-data quick-view-box" id="p-quick-view">
-                    <span id="p-last-login">Fetching...</span>
-                    <span><strong style="color: #fff;">Country:</strong> <span id="p-country">...</span></span>
-                    <span><strong style="color: #fff;">Device:</strong> <span id="p-device">...</span></span>
-                </div>
-            </div>
-        </div>
-
-        <div style="border-top: 1px solid #30363d; padding-top: 20px;">
-            <h3 style="margin-top: 0; font-size: 1.05rem; color: #fff; font-weight: 600;">Detailed Login History</h3>
-            <div class="table-responsive" style="max-height: 250px;">
-                <table class="history-table" style="min-width: 600px;">
-                    <thead>
-                        <tr>
-                            <th>Date & Time</th>
-                            <th>IP Address</th>
-                            <th>Country</th>
-                            <th>Device & OS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="p-login-history">
-                        <tr><td colspan="4" style="text-align:center; color: #8b949e;">Loading history...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="modal-actions">
-            <button class="btn-save" id="btn-save-profile" onclick="saveProfileDetails()">Save Changes</button>
-        </div>
-    </div>
+<div class="container">
+    <img src="media/logo.png" alt="Company Logo" style="max-width: 150px; margin-bottom: 20px;">
+    <h2>Terminal Login</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+    <a href="#" id="forgotBtn" class="forgot-link">Forgot Password?</a>
+    <p id="status"></p>
 </div>
 
 <script>
-    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5NDc1ODQsImV4cCI6MjA5ODUyMzU4NH0.BaxMA1FiXvyVDOsVNkN2tLNrkkCqsppVe54Sc8c0cYg';
 
-    let allUsers = [];
-    let currentFilteredUsers = [];
-    let sortState = { column: null, asc: true };
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function init() {
-        const { data: { session } } = await client.auth.getSession();
-        if (!session) { window.location.href = 'index.html'; return; }
+    // --- HELPER FUNCTION: Bulletproof parsing for Arrays, Strings, and JSON ---
+    function userHasAccess(userTags, requiredTag) {
+        if (!userTags) return false;
         
-        const { data: profileArray, error: profileError } = await client
-            .from('profiles')
-            .select('admin')
-            .eq('id', session.user.id)
-            .limit(1);
-            
-        const profile = profileArray?.[0];
-        if (!profile || profile.admin !== true) { window.location.href = 'terminal.html'; return; }
-
-        const { data, error } = await client.from('profiles').select('*');
-        if (error) { document.getElementById('admin-body').innerHTML = `<tr><td colspan="8" style="text-align:center;">Error: ${error.message}</td></tr>`; return; }
+        let tagsArray = [];
         
-        allUsers = data;
-        applyFilters(); 
-    }
-
-    function toggleMenu() {
-        document.getElementById('navLinks').classList.toggle('show');
-    }
-
-    function formatDate(dateStr) {
-        if (!dateStr || dateStr === 'null' || dateStr === 'N/A') return '-';
-        const dateObj = new Date(dateStr);
-        if (isNaN(dateObj.getTime())) return '-';
-        return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
-
-    // --- SORTING LOGIC ---
-    function handleSort(column) {
-        if (sortState.column === column) { sortState.asc = !sortState.asc; } 
-        else { sortState.column = column; sortState.asc = true; }
-
-        document.querySelectorAll('.sort-icon').forEach(icon => icon.innerText = '↕');
-        document.querySelectorAll('.sort-icon').forEach(icon => icon.style.color = '#4b5563');
-        
-        const activeIcon = document.getElementById(`sort-icon-${column}`);
-        activeIcon.innerText = sortState.asc ? '↑' : '↓';
-        activeIcon.style.color = '#2962ff';
-
-        sortData();
-    }
-
-    function sortData() {
-        if (!sortState.column) return;
-        currentFilteredUsers.sort((a, b) => {
-            let valA, valB;
-            switch (sortState.column) {
-                case 'name': valA = String(a.customer_name || '').toLowerCase(); valB = String(b.customer_name || '').toLowerCase(); break;
-                case 'email': valA = String(a.email || '').toLowerCase(); valB = String(b.email || '').toLowerCase(); break;
-                case 'tag': 
-                    valA = (a.active_tags && a.active_tags.length > 0) ? String(a.active_tags[0]).toLowerCase() : ''; 
-                    valB = (b.active_tags && b.active_tags.length > 0) ? String(b.active_tags[0]).toLowerCase() : ''; 
-                    break;
+        if (Array.isArray(userTags)) {
+            tagsArray = userTags;
+        } else if (typeof userTags === 'string') {
+            try {
+                let parsed = JSON.parse(userTags);
+                tagsArray = Array.isArray(parsed) ? parsed : [userTags];
+            } catch (e) {
+                tagsArray = userTags.split(',').map(s => s.trim());
             }
-            if (valA < valB) return sortState.asc ? -1 : 1;
-            if (valA > valB) return sortState.asc ? 1 : -1;
-            return 0;
-        });
-        renderTable(currentFilteredUsers);
-    }
-
-    function renderTable(users) {
-        const tbody = document.getElementById('admin-body');
-        let rowsHtml = '';
-
-        users.forEach(u => {
-            const tags = (u.active_tags && u.active_tags.length > 0) ? u.active_tags : ['free'];
-            
-            const tagsHtml = `<div class="col-stack">` + tags.map(t => `<span class="tag-badge">${t}</span>`).join('') + `</div>`;
-
-            let statusesHtml = '<div class="col-stack">';
-            let cancelsHtml = '<div class="col-stack">';
-            let lastBillHtml = '<div class="col-stack">';
-            let nextBillHtml = '<div class="col-stack">';
-
-            tags.forEach(tag => {
-                // Determine Flags
-                const isRefunded = u.refunded_by_tag?.[tag] === true;
-                const isScheduled = !!u.scheduled_tag_removals?.[tag] || u.cancellation_scheduled === true;
-                
-                let statusStr = 'ACTIVE';
-                let statusClass = 'status-active';
-                
-                if (isRefunded) {
-                    statusStr = 'REFUNDED'; 
-                    statusClass = 'status-refunded';
-                } else if (isScheduled && tag !== 'course') {
-                    statusStr = 'CANCELLED'; 
-                    statusClass = 'status-inactive';
-                }
-
-                // Render Status Badge
-                statusesHtml += `<span class="${statusClass}">${statusStr}</span>`;
-
-                // Render Cancel Flag
-                const cancelText = isScheduled ? 'YES' : 'NO';
-                const cancelClass = isScheduled ? 'status-inactive' : 'status-active';
-                cancelsHtml += `<span class="${cancelClass}">${cancelText}</span>`;
-
-                // Render Last Billing
-                const lb = u.last_billing_dates_by_tag?.[tag];
-                lastBillHtml += `<span class="date-text">${formatDate(lb)}</span>`;
-
-                // Render Next Billing / Expiry
-                const accessEnds = u.access_ends_by_tag?.[tag] || u.scheduled_tag_removals?.[tag] || u.onetime_access_expires;
-                const nb = u.next_billing_dates_by_tag?.[tag];
-                
-                if (tag === 'course' || statusStr === 'CANCELLED') {
-                    nextBillHtml += `<span class="date-text" title="Expiration Date">${formatDate(accessEnds)}</span>`;
-                } else {
-                    nextBillHtml += `<span class="date-text" title="Next Billing">${formatDate(nb)}</span>`;
-                }
-            });
-
-            statusesHtml += '</div>';
-            cancelsHtml += '</div>';
-            lastBillHtml += '</div>';
-            nextBillHtml += '</div>';
-
-            const safeEmail = (u.email || '').replace(/'/g, "\\'");
-            const safeName = (u.customer_name || '').replace(/'/g, "\\'");
-            const safeTag = tags.join(', ').replace(/'/g, "\\'");
-
-            rowsHtml += `
-            <tr style="cursor: pointer;" onclick="selectUser('${safeEmail}', '${safeName}', '${safeTag}')">
-                <td style="font-weight: 500; color: #fff;">${u.customer_name || '-'}</td>
-                <td>${u.email || '-'}</td>
-                <td>${tagsHtml}</td>
-                <td>${statusesHtml}</td>
-                <td>${lastBillHtml}</td>
-                <td>${nextBillHtml}</td>
-                <td>${cancelsHtml}</td>
-                <td><button class="btn-profile" onclick="event.stopPropagation(); openProfileModal('${u.id}')">View</button></td>
-            </tr>
-            `;
-        });
-        tbody.innerHTML = rowsHtml || '<tr><td colspan="8" style="text-align:center; padding: 30px; color: #8b949e;">No users found.</td></tr>';
-    }
-
-    function applyFilters() {
-        const term = document.getElementById('search').value.toLowerCase();
-        const statusFilter = document.getElementById('filter-status').value;
-        const tagFilter = document.getElementById('filter-tag').value;
-
-        currentFilteredUsers = allUsers.filter(u => {
-            const matchesSearch = (u.customer_name?.toLowerCase().includes(term)) || (u.email?.toLowerCase().includes(term));
-            const tags = (u.active_tags && u.active_tags.length > 0) ? u.active_tags : ['free'];
-            const matchesTag = (tagFilter === 'all') || tags.some(t => t.toLowerCase().includes(tagFilter));
-            
-            let matchesStatus = false;
-            if (statusFilter === 'all') {
-                matchesStatus = true;
-            } else {
-                // If checking status, see if any of the tags match the requested status
-                matchesStatus = tags.some(tag => {
-                    const isRefunded = u.refunded_by_tag?.[tag] === true;
-                    const isScheduled = !!u.scheduled_tag_removals?.[tag] || u.cancellation_scheduled === true;
-                    if (statusFilter === 'refunded' && isRefunded) return true;
-                    if (statusFilter === 'canceled' && isScheduled) return true;
-                    if (statusFilter === 'active' && !isRefunded && !isScheduled) return true;
-                    return false;
-                });
-            }
-
-            return matchesSearch && matchesStatus && matchesTag;
-        });
-
-        if (sortState.column) { sortData(); } else { renderTable(currentFilteredUsers); }
-    }
-
-    function selectUser(email, name, tag) {
-        document.getElementById('m-email').value = email;
-        document.getElementById('m-name').value = name || '';
-        document.getElementById('m-tag').value = tag || 'free';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    async function saveUser() {
-        const email = document.getElementById('m-email').value;
-        const name = document.getElementById('m-name').value;
-        const tagString = document.getElementById('m-tag').value;
-        const expiry = document.getElementById('m-expiry').value;
-        if (!email) return alert("Email is required");
-
-        const cleanedTagArray = tagString.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-        
-        const { data: existingUser } = await client.from('profiles').select('id').eq('email', email).maybeSingle();
-
-        if (existingUser) {
-            const updatePayload = {
-                customer_name: name,
-                active_tags: cleanedTagArray
-            };
-            if (expiry) updatePayload.onetime_access_expires = expiry;
-
-            const { error } = await client.from('profiles').update(updatePayload).eq('email', email);
-            if (error) alert('Update Error: ' + error.message); else { alert('User updated successfully!'); init(); }
-        } else {
-            const inviteData = {
-                customer_name: name,
-                active_tags: cleanedTagArray
-            };
-            if (expiry) inviteData.onetime_access_expires = expiry;
-
-            const { error } = await client.auth.admin.inviteUserByEmail(email, { 
-                redirectTo: 'https://analyst-wire.pages.dev/setup', 
-                data: inviteData 
-            });
-            if (error) alert('Invite Error: ' + error.message); else { alert('Invite sent!'); init(); }
         }
+
+        return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
     }
 
-    async function forceDowngradeCancelled() {
-        if (!confirm("This will instantly remove cancelled and refunded tags from affected users. Proceed?")) return;
-        
-        // Find users with cancellation flags or specific tags scheduled for removal
-        const toDowngrade = allUsers.filter(u => u.cancellation_scheduled === true || Object.keys(u.scheduled_tag_removals || {}).length > 0 || Object.keys(u.refunded_by_tag || {}).length > 0);
-        
-        if (toDowngrade.length === 0) { alert("No cancelled or refunded users found. Everything is clean!"); return; }
-
-        let successCount = 0;
-        for (const user of toDowngrade) {
-            let currentTags = [...(user.active_tags || [])];
-            let newTags = currentTags.filter(tag => {
-                const isRefunded = user.refunded_by_tag?.[tag] === true;
-                const isScheduled = !!user.scheduled_tag_removals?.[tag] || user.cancellation_scheduled === true;
-                return !isRefunded && !isScheduled;
-            });
-            
-            if (newTags.length === 0) newTags = ['free'];
-
-            const { error } = await client.from('profiles').update({ 
-                active_tags: newTags,
-                cancellation_scheduled: false,
-                scheduled_tag_removals: {},
-                refunded_by_tag: {}
-            }).eq('id', user.id);
-            
-            if (!error) successCount++;
-        }
-        alert(`Successfully scrubbed tags for ${successCount} user(s).`);
-        init(); 
-    }
-
-    async function openProfileModal(userId) {
-        document.getElementById('profileModal').style.display = 'flex';
-        const userRow = allUsers.find(u => u.id === userId);
-        document.getElementById('p-id').value = userId;
-        document.getElementById('p-name').value = userRow.customer_name || '';
-        document.getElementById('p-email').value = userRow.email || '';
-        document.getElementById('p-last-login').innerText = 'Fetching...';
-        document.getElementById('p-country').innerText = userRow.last_country || 'No data';
-        document.getElementById('p-device').innerText = userRow.last_device || 'No data';
-        
-        const historyTableBody = document.getElementById('p-login-history');
-        historyTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #8b949e;">Loading history...</td></tr>';
-
-        const { data: authData, error: authError } = await client.auth.admin.getUserById(userId);
-        if (authError) { document.getElementById('p-last-login').innerText = "Unable to load data."; } 
-        else if (authData && authData.user) {
-            const lastLogin = authData.user.last_sign_in_at;
-            document.getElementById('p-last-login').innerHTML = lastLogin ? `<strong style="color:#fff;">Last seen:</strong> ${new Date(lastLogin).toLocaleString()}` : 'Never logged in';
-        }
-        
-        const { data: historyData, error: historyError } = await client.from('login_history').select('*').eq('user_id', userId).order('login_time', { ascending: false }).limit(50);
-        if (historyError) { historyTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: #f85149;">Error loading history: ${historyError.message}</td></tr>`; } 
-        else if (historyData && historyData.length > 0) {
-            historyTableBody.innerHTML = historyData.map(record => {
-                const dateStr = new Date(record.login_time).toLocaleString();
-                const deviceStr = `${record.device_type || 'Unknown'} - ${record.os || 'Unknown'}`;
-                return `<tr><td style="color: #c9d1d9;">${dateStr}</td><td style="font-family: 'Inter', monospace; color: #8b949e;">${record.ip_address || 'N/A'}</td><td style="color: #c9d1d9;">${record.country || 'N/A'}</td><td style="color: #c9d1d9;">${deviceStr}</td></tr>`;
-            }).join('');
-        } else { historyTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #8b949e;">No detailed login history found.</td></tr>'; }
-    }
-
-    function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
-
-    async function saveProfileDetails() {
-        const userId = document.getElementById('p-id').value;
-        const newName = document.getElementById('p-name').value;
-        const newEmail = document.getElementById('p-email').value;
-        const saveBtn = document.getElementById('btn-save-profile');
-
-        saveBtn.innerText = "Saving..."; saveBtn.disabled = true;
+    // --- DEVICE TRACKING FUNCTION ---
+    async function logUserDeviceAndLocation(userId) {
         try {
-            const { error: authError } = await client.auth.admin.updateUserById(userId, { email: newEmail });
-            if (authError) throw authError;
-            const { error: dbError } = await client.from('profiles').update({ customer_name: newName, email: newEmail }).eq('id', userId);
-            if (dbError) throw dbError;
-            alert("Profile details updated successfully!"); closeProfileModal(); init(); 
-        } catch (err) { alert("Error saving profile: " + err.message); } 
-        finally { saveBtn.innerText = "Save Changes"; saveBtn.disabled = false; }
+            const ua = navigator.userAgent;
+            let deviceType = "Desktop";
+            if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+                deviceType = "Mobile";
+            } else if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+                deviceType = "Tablet";
+            }
+            
+            let os = "Unknown OS";
+            if (ua.indexOf("Win") !== -1) os = "Windows";
+            if (ua.indexOf("Mac") !== -1) os = "MacOS";
+            if (ua.indexOf("Linux") !== -1) os = "Linux";
+            if (ua.indexOf("Android") !== -1) os = "Android";
+            if (ua.indexOf("like Mac") !== -1) os = "iOS";
+            
+            const finalDeviceString = `${deviceType} - ${os}`;
+
+            let country = "Unknown";
+            let ipAddress = "Unknown";
+            try {
+                const geoResponse = await fetch('https://ipapi.co/json/');
+                const geoData = await geoResponse.json();
+                if (geoData.country_name) country = geoData.country_name;
+                if (geoData.ip) ipAddress = geoData.ip;
+            } catch (apiError) {
+                console.log("Adblocker blocked IP tracking, skipping country/IP.");
+            }
+
+            await client.from('login_history').insert([{
+                user_id: userId,
+                ip_address: ipAddress,
+                country: country,
+                device_type: deviceType,
+                os: os,
+                raw_user_agent: ua
+            }]);
+
+            await client.from('profiles').update({
+                last_device: finalDeviceString,
+                last_country: country
+            }).eq('id', userId);
+
+        } catch (err) {
+            console.error("Device tracking failed:", err);
+        }
     }
 
-    function showSection(id, btn) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.top-nav button, .top-nav a').forEach(b => b.classList.remove('active'));
-        document.getElementById(id + '-section').classList.add('active');
-        btn.classList.add('active');
-        document.getElementById('navLinks').classList.remove('show');
-    }
+    // --- FORGOT PASSWORD HANDLER ---
+    document.getElementById('forgotBtn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const status = document.getElementById('status');
 
-    document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
-    document.getElementById('search').addEventListener('input', applyFilters);
-    document.getElementById('filter-status').addEventListener('change', applyFilters);
-    document.getElementById('filter-tag').addEventListener('change', applyFilters);
+        if (!email) {
+            status.style.color = '#ff4444';
+            status.innerText = 'Please enter your email address to reset your password.';
+            return;
+        }
 
-    init();
+        status.style.color = '#b3b3b3';
+        status.innerText = 'Sending reset link...';
+
+        const { data, error } = await client.auth.resetPasswordForEmail(email, {
+            redirectTo: 'https://analyst-wire.pages.dev/setup.html',
+        });
+
+        if (error) {
+            status.style.color = '#ff4444';
+            status.innerText = 'Error: ' + error.message;
+        } else {
+            status.style.color = '#28a745';
+            status.innerText = 'Password reset link sent! Please check your email.';
+        }
+    });
+
+    // --- LOGIN HANDLER ---
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const status = document.getElementById('status');
+
+        if (!email || !password) {
+            status.style.color = '#ff4444';
+            status.innerText = 'Please enter both email and password.';
+            return;
+        }
+
+        status.style.color = '#b3b3b3';
+        status.innerText = 'Logging in...';
+
+        const { data, error } = await client.auth.signInWithPassword({ 
+            email: email, 
+            password: password 
+        });
+
+        if (error) {
+            status.style.color = '#ff4444';
+            status.innerText = 'Error: ' + error.message;
+        } else {
+            status.style.color = '#28a745';
+            status.innerText = 'Success! Checking permissions...';
+            
+            // Strictly query the 'admin' boolean column
+            const { data: profileArray, error: profileError } = await client
+                .from('profiles')
+                .select('admin, active_tags')
+                .eq('id', data.user.id)
+                .limit(1);
+
+            if (profileError) {
+                status.style.color = '#ff4444';
+                status.innerText = 'Profile Read Error: ' + profileError.message;
+                await client.auth.signOut();
+                return;
+            }
+
+            await logUserDeviceAndLocation(data.user.id);
+
+            const profile = profileArray && profileArray.length > 0 ? profileArray[0] : null;
+            const tags = profile?.active_tags ? profile.active_tags : [];
+            const isAdmin = profile?.admin === true;
+
+            // Strict Routing & Access Control
+            if (isAdmin) {
+                window.location.href = 'admin.html';
+            } else if (userHasAccess(tags, 'pro')) {
+                window.location.href = 'terminal.html';
+            } else if (userHasAccess(tags, 'course') || userHasAccess(tags, 'courses')) {
+                window.location.href = 'courses.html';
+            } else if (userHasAccess(tags, 'newsfeed')) {
+                window.location.href = '/newsfeed';
+            } else {
+                status.style.color = '#ff4444';
+                status.innerText = 'Access Denied: Active subscription required.';
+                await client.auth.signOut();
+            }
+        }
+    });
 </script>
+
 </body>
 </html>
