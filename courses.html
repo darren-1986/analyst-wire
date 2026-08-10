@@ -459,18 +459,24 @@
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    // --- HELPER FUNCTION: Safely parse JSON array tags ---
+    // --- HELPER FUNCTION: Bulletproof parsing for Arrays, Strings, and JSON ---
     function userHasAccess(userTags, requiredTag) {
         if (!userTags) return false;
-        try {
-            const parsedArray = JSON.parse(userTags);
-            if (Array.isArray(parsedArray)) {
-                return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+        
+        let tagsArray = [];
+        
+        if (Array.isArray(userTags)) {
+            tagsArray = userTags;
+        } else if (typeof userTags === 'string') {
+            try {
+                let parsed = JSON.parse(userTags);
+                tagsArray = Array.isArray(parsed) ? parsed : [userTags];
+            } catch (e) {
+                tagsArray = userTags.split(',').map(s => s.trim());
             }
-        } catch (e) {
-            return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
         }
-        return false;
+
+        return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
     }
 
     async function init() {
@@ -478,13 +484,25 @@
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
         
-        // 2. Fetch Profile
-        const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
+        // 2. Fetch Profile Using Updated Schema
+        const { data: profileArray, error: profileError } = await client
+            .from('profiles')
+            .select('admin, active_tags')
+            .eq('id', session.user.id)
+            .limit(1);
+            
+        if (profileError) {
+            alert("Database Error: " + profileError.message);
+            await client.auth.signOut();
+            window.location.href = 'index.html';
+            return;
+        }
         
-        const tags = profile?.subscription_tag || '';
-        const isAdmin = profile?.is_admin === true;
+        const profile = profileArray && profileArray.length > 0 ? profileArray[0] : null;
+        const tags = profile?.active_tags ? profile.active_tags : [];
+        const isAdmin = profile?.admin === true;
 
-        if (!profile || tags === '' || userHasAccess(tags, 'free')) {
+        if (!profile || tags.length === 0 || userHasAccess(tags, 'free')) {
             alert("Your subscription is inactive. Redirecting to login.");
             await client.auth.signOut();
             window.location.href = 'index.html';
@@ -494,7 +512,6 @@
         // ==========================================
         // 3. HARD ROUTING (BOUNCER LOGIC)
         // ==========================================
-        // If not an admin, not a pro, AND not a course buyer, they don't belong here
         if (!isAdmin && !userHasAccess(tags, 'pro') && !userHasAccess(tags, 'course')) {
             if (userHasAccess(tags, 'newsfeed')) {
                 window.location.href = '/newsfeed';
@@ -508,7 +525,6 @@
         // ==========================================
         // 4. STRICT NAVIGATION VISIBILITY
         // ==========================================
-        // Grab all nav links
         const navLinks = {
             dashboard: document.querySelector('a[href="terminal.html"]'),
             newsfeed: document.querySelector('a[href="/newsfeed"]'),
@@ -523,7 +539,7 @@
 
         // Reveal based on strict tier assignment
         if (isAdmin || userHasAccess(tags, 'pro')) {
-            Object.values(navLinks).forEach(link => { if (link) link.style.display = 'block'; }); // Show all
+            Object.values(navLinks).forEach(link => { if (link) link.style.display = 'block'; }); 
             
             if (isAdmin) {
                 const navAdmin = document.getElementById('nav-admin');
@@ -532,7 +548,6 @@
                 if (navUpload) navUpload.style.display = 'block';
             }
         } else {
-            // Check individual a la carte tags for non-pro users
             if (userHasAccess(tags, 'course') && navLinks.courses) {
                 navLinks.courses.style.display = 'block';
             }
