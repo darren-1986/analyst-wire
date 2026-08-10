@@ -43,41 +43,72 @@
     <script>
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
+        // --- HELPER FUNCTION: Bulletproof parsing for Arrays, Strings, and JSON ---
         function userHasAccess(userTags, requiredTag) {
             if (!userTags) return false;
-            try {
-                const parsedArray = JSON.parse(userTags);
-                if (Array.isArray(parsedArray)) {
-                    return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+            
+            let tagsArray = [];
+            
+            if (Array.isArray(userTags)) {
+                tagsArray = userTags;
+            } else if (typeof userTags === 'string') {
+                try {
+                    let parsed = JSON.parse(userTags);
+                    tagsArray = Array.isArray(parsed) ? parsed : [userTags];
+                } catch (e) {
+                    tagsArray = userTags.split(',').map(s => s.trim());
                 }
-            } catch (e) {
-                return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
             }
-            return false;
+
+            return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
         }
 
         async function checkPermissions() {
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
-            const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
             
-            const tags = profile ? profile.subscription_tag : '';
-            const isAdmin = profile ? profile.is_admin === true : false;
+            // Query exactly the admin bool and active_tags array using the limit(1) failsafe
+            const { data: profileArray, error: profileError } = await client
+                .from('profiles')
+                .select('admin, active_tags')
+                .eq('id', session.user.id)
+                .limit(1);
             
-            const isAuthorized = isAdmin || userHasAccess(tags, 'pro') || userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk') || userHasAccess(tags, 'admin');
+            if (profileError) {
+                alert("Profile Read Error: " + profileError.message);
+                await client.auth.signOut(); 
+                window.location.href = 'index.html'; 
+                return;
+            }
+                
+            const profile = profileArray && profileArray.length > 0 ? profileArray[0] : null;
             
-            if (!isAuthorized) { alert("Access denied."); await client.auth.signOut(); window.location.href = 'index.html'; return; }
+            const tags = profile?.active_tags ? profile.active_tags : [];
+            const isAdmin = profile?.admin === true;
+            
+            // Strict Authorization Check: Only Admin, Pro, or Newsfeed allowed
+            const isAuthorized = isAdmin || userHasAccess(tags, 'pro') || userHasAccess(tags, 'newsfeed');
+            
+            if (!isAuthorized) { 
+                alert("Access denied. Pro or Newsfeed subscription required."); 
+                await client.auth.signOut(); 
+                window.location.href = 'index.html'; 
+                return; 
+            }
         }
         checkPermissions();
 
         window.messenger_start_init = function() { if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); };
         
-        // --- BULLETPROOF FILTER FOR "BRIEFING" ---
-        // This loop checks twice a second to force-hide anything without the keyword.
+        // --- BULLETPROOF FILTER ---
+        // This loop checks twice a second to force-hide anything without the required keywords.
         setInterval(() => {
             document.querySelectorAll('.news__item__outer').forEach(item => {
-                if (item.innerText && !item.innerText.toLowerCase().includes('briefing')) {
-                    item.style.setProperty('display', 'none', 'important');
+                if (item.innerText) {
+                    const text = item.innerText.toLowerCase();
+                    if (!(text.includes('gold') || text.includes('australia') || text.includes('usa'))) {
+                        item.style.setProperty('display', 'none', 'important');
+                    }
                 }
             });
         }, 500);
