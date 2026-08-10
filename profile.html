@@ -4,490 +4,1381 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="media/favicon.png">
-    <title>Analyst Wire | Admin Upload</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <title>Analyst Wire | Member Network</title>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-        body { background: #090b10; color: #c9d1d9; font-family: 'Inter', sans-serif; margin: 0; font-size: 14px; }
+        /* Theme Variables - Scoped only for the network container */
+        .network-theme {
+            --bg-main: #090b10;
+            --bg-panel: #0d1117;
+            --bg-card: #161b22;
+            --border-color: #30363d;
+            --border-light: #1c2230;
+            --text-primary: #ffffff;
+            --text-secondary: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-blue: #2962ff;
+            --accent-hover: #1e4bd8;
+            --btn-bg: #21262d;
+            --btn-hover: #30363d;
+            --input-bg: #090b10;
+        }
 
-        /* Top Navigation (Synced with admin.html) */
-        .top-nav { background: #0d1117; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; flex-wrap: wrap; position: relative; }
-        .nav-brand { color: #fff; font-weight: 700; font-size: 1.1rem; display: none; }
-        .nav-links { display: flex; gap: 15px; align-items: center; width: 100%; flex-wrap: wrap; }
-        .nav-links button, .nav-links a { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 0.95rem; text-decoration: none; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: all 0.2s; text-align: left; }
-        .nav-links button:hover, .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
-        .nav-links .active { color: #2962ff; background: rgba(41, 98, 255, 0.1); }
-        .menu-toggle { display: none; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1; }
+        .network-theme.light-mode {
+            --bg-main: #f3f4f6;
+            --bg-panel: #ffffff;
+            --bg-card: #f9fafb;
+            --border-color: #e5e7eb;
+            --border-light: #d1d5db;
+            --text-primary: #111827;
+            --text-secondary: #374151;
+            --text-muted: #6b7280;
+            --accent-blue: #2563eb;
+            --accent-hover: #1d4ed8;
+            --btn-bg: #e5e7eb;
+            --btn-hover: #d1d5db;
+            --input-bg: #ffffff;
+        }
 
-        /* Main Container */
-        .upload-container { max-width: 800px; width: 95%; margin: 40px auto; background: #161b22; padding: 30px; border-radius: 12px; border: 1px solid #30363d; box-shadow: 0 8px 24px rgba(0,0,0,0.2); box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: #090b10; 
+            margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; 
+        }
+        *, *:before, *:after { box-sizing: border-box; }
         
-        /* Tabs */
-        .tabs-header { display: flex; border-bottom: 1px solid #30363d; margin-bottom: 25px; overflow-x: auto; gap: 10px; -webkit-overflow-scrolling: touch; }
-        .tabs-header::-webkit-scrollbar { display: none; }
-        .tab-button { background: none; border: none; color: #8b949e; padding: 12px 15px; cursor: pointer; font-size: 0.95rem; font-weight: 600; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; font-family: 'Inter', sans-serif; }
-        .tab-button:hover { color: #fff; }
-        .tab-button.active { color: #2962ff; border-bottom: 2px solid #2962ff; color: #fff; }
+        /* HARDCODED DARK THEME FOR TOP NAV WITH MOBILE BURGER SUPPORT */
+        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1001; position: fixed; top: 0; left: 0; width: 100%; }
+        .nav-links { display: flex; align-items: center; gap: 5px; }
+        .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s, background 0.2s; padding: 6px 12px; border-radius: 6px; }
+        .nav-links a:hover { color: #ffffff; background: rgba(128,128,128,0.1); }
+        .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
         
-        .tab-pane { display: none; }
-        .tab-pane.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .mobile-menu-btn { display: none; font-size: 24px; color: #8b949e; cursor: pointer; background: none; border: none; }
+        
+        .dropdown { position: relative; margin-left: 10px; }
+        .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
+        .dropbtn:hover { color: #ffffff; }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
+        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s;}
+        .dropdown-content a:hover { background-color: #30363d; color: #ffffff; }
 
-        /* Typography & Inputs */
-        h2 { margin-top: 0; color: #fff; font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; }
-        label { font-size: 0.85rem; color: #8b949e; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; display: block; margin-bottom: 8px; }
-        
-        input[type="file"], input[type="date"], textarea { margin-bottom: 20px; display: block; width: 100%; padding: 12px; background: #0d1117; color: white; border: 1px solid #30363d; border-radius: 6px; box-sizing: border-box; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
-        input[type="file"]:focus, input[type="date"]:focus, textarea:focus { border-color: #2962ff; }
-        input[type="file"]::file-selector-button { background: #30363d; border: none; color: #fff; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 15px; font-weight: 600; font-family: 'Inter', sans-serif; transition: background 0.2s; }
-        input[type="file"]::file-selector-button:hover { background: #4b5563; }
-        
-        textarea { resize: vertical; line-height: 1.5; min-height: 150px; }
-        
-        /* Buttons */
-        button.action-btn { background: #2962ff; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 0.95rem; font-weight: 600; width: 100%; font-family: 'Inter', sans-serif; transition: background 0.2s; }
-        button.action-btn:hover { background: #1c4ed8; }
-        
-        /* Status & Debug */
-        .status-msg { margin-top: 20px; font-size: 0.95rem; font-weight: 500; text-align: center; color: #8b949e; padding: 10px; border-radius: 6px; }
-        #debug-panel { background: #0d1117; padding: 15px; margin-top: 20px; border-radius: 6px; border: 1px solid #30363d; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; display: none; color: #3fb950; overflow-x: auto; }
+        /* FULL WIDTH LAYOUT */
+        .network-container { 
+            display: grid; 
+            grid-template-columns: 420px 1fr; 
+            gap: 25px; 
+            height: calc(100vh - 55px); 
+            margin-top: 55px; 
+            padding: 20px 2vw; 
+            width: 100%; 
+            box-sizing: border-box; 
+            background: var(--bg-main);
+            color: var(--text-secondary);
+            transition: background 0.3s, color 0.3s;
+        }
 
-        /* Mobile Adaptive Styling */
-        @media (max-width: 768px) {
-            .nav-brand { display: block; }
-            .menu-toggle { display: block; }
-            .nav-links { display: none; flex-direction: column; align-items: stretch; margin-top: 15px; width: 100%; }
-            .nav-links.show { display: flex; }
-            #logoutBtn { margin-left: 0 !important; color: #f85149; }
+        /* Left Sidebar & Search Dropdown */
+        .sidebar-panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: background 0.3s, border-color 0.3s; }
+        .sidebar-header { padding: 15px 20px; border-bottom: 1px solid var(--border-light); background: var(--bg-card); position: relative; transition: background 0.3s, border-color 0.3s;}
+        .search-input { width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: background 0.3s, color 0.3s, border-color 0.3s;}
+        .search-input:focus { border-color: var(--accent-blue); }
+        
+        .search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border-color); border-top: none; z-index: 100; max-height: 250px; overflow-y: auto; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+        .search-result-item { padding: 12px 20px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid var(--border-light); }
+        .search-result-item:hover { background: var(--btn-hover); }
+        .search-result-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-main); display: flex; align-items: center; justify-content: center; color: var(--accent-blue); font-weight: bold; overflow: hidden; }
+        .search-result-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .search-result-info { display: flex; flex-direction: column; }
+        .search-result-name { color: var(--text-primary); font-weight: 600; font-size: 13px; }
+
+        .profile-display-area { padding: 0; overflow-y: auto; flex-grow: 1; }
+        .profile-banner { height: 100px; position: relative; }
+        
+        .avatar-container { position: relative; width: 80px; height: 80px; margin-top: -40px; margin-left: 20px; }
+        .profile-avatar-large { width: 100%; height: 100%; border-radius: 50%; background: var(--bg-card); border: 4px solid var(--bg-panel); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: var(--accent-blue); overflow: hidden; transition: border-color 0.3s, background 0.3s; }
+        .profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+        .status-dot { position: absolute; bottom: 5px; right: 5px; width: 16px; height: 16px; background-color: #3fb950; border: 3px solid var(--bg-panel); border-radius: 50%; display: none; transition: border-color 0.3s; }
+        .status-dot.online { display: block; box-shadow: 0 0 8px rgba(63, 185, 80, 0.6); }
+
+        .profile-core-info { padding: 15px 20px 0 20px; }
+        .profile-header-row { display: flex; justify-content: space-between; align-items: flex-start; }
+        .profile-name-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0 0 2px 0; display: flex; align-items: center; gap: 8px;}
+        .admin-badge { background: #f85149; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; letter-spacing: 0.5px;}
+        .profile-meta-line { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; gap: 10px; align-items: center; }
+        .meta-divider { color: var(--border-color); }
+        
+        .follow-stats { display: flex; gap: 15px; margin-top: 12px; font-size: 13px; }
+        .follow-stat { color: var(--text-muted); }
+        .follow-stat strong { color: var(--text-primary); font-weight: 700; }
+
+        .profile-tabs { display: flex; border-bottom: 1px solid var(--border-light); margin-top: 20px; }
+        .p-tab { flex: 1; text-align: center; padding: 12px 0; color: var(--text-muted); font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; font-size: 12.5px; }
+        .p-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+
+        .profile-tab-content { padding: 20px; display: none; }
+        .profile-tab-content.active { display: block; }
+        
+        .about-section-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .about-text { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; word-break: break-word; margin-bottom: 20px; }
+        .profile-link { display: inline-block; background: rgba(41, 98, 255, 0.1); color: var(--accent-blue); padding: 6px 12px; border-radius: 6px; text-decoration: none; margin-right: 8px; margin-bottom: 8px; font-weight: 500; font-size: 12.5px; transition: background 0.2s;}
+        .profile-link:hover { background: rgba(41, 98, 255, 0.2); }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .stat-box { background: var(--bg-card); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; text-align: center; transition: background 0.3s, border-color 0.3s;}
+        .stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
+        .stat-val { font-size: 16px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .val-up { color: #3fb950; }
+        .val-down { color: #f85149; }
+        
+        .sidebar-actions { padding: 0 20px 20px 20px; display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+        
+        .btn-action { background: var(--btn-bg); color: var(--text-secondary); border: 1px solid var(--border-color); padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12.5px; text-align: center; transition: background 0.2s, color 0.2s; }
+        .btn-action:hover { background: var(--btn-hover); color: var(--text-primary); }
+        .btn-primary-action { background: var(--accent-blue); color: #fff; border: none; }
+        .btn-primary-action:hover { background: var(--accent-hover); color: #fff; }
+        .btn-danger-action { background: var(--btn-bg); color: #f85149; border: 1px solid rgba(248, 81, 73, 0.4); }
+        .btn-danger-action:hover { background: rgba(248, 81, 73, 0.1); }
+
+        /* Right Panel: Feed Area */
+        .feed-panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: background 0.3s, border-color 0.3s;}
+        .feed-header-area { padding: 15px 25px 15px 25px; border-bottom: 1px solid var(--border-light); background: var(--bg-card); transition: background 0.3s, border-color 0.3s;}
+        
+        .feed-controls { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+        .feed-tabs { display: flex; gap: 10px; }
+        .f-tab { background: transparent; border: none; color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 12px; border-radius: 6px; }
+        .f-tab.active { background: rgba(41, 98, 255, 0.1); color: var(--accent-blue); }
+        
+        .feed-filter-search { display: flex; gap: 10px; flex-grow: 1; max-width: 450px; }
+        .feed-search-container { flex-grow: 1; }
+        .feed-search-input { width: 100%; padding: 8px 12px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-size: 12px; outline: none; transition: background 0.3s, color 0.3s, border-color 0.3s;}
+
+        .feed-scroll-area { overflow-y: auto; flex-grow: 1; padding: 20px 25px; }
+        .feed-scroll-area::-webkit-scrollbar, .profile-display-area::-webkit-scrollbar { width: 6px; }
+        .feed-scroll-area::-webkit-scrollbar-thumb, .profile-display-area::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+        .composer-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; margin-bottom: 25px; transition: background 0.3s, border-color 0.3s;}
+        .composer-textarea { width: 100%; background: transparent; border: none; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 13.5px; resize: none; height: 70px; outline: none; }
+        .composer-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-light); padding-top: 10px; margin-top: 5px; }
+        .word-counter { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        .btn-post { background: var(--accent-blue); color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; font-size: 12.5px; cursor: pointer; }
+        .btn-post:disabled { background: var(--btn-bg); color: var(--text-muted); cursor: not-allowed; }
+
+        .post-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; margin-bottom: 15px; transition: background 0.3s, border-color 0.3s; position: relative;}
+        .post-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(41, 98, 255, 0.15); border: 1px solid rgba(41, 98, 255, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--accent-blue); font-size: 14px; cursor: pointer; overflow: hidden; }
+        .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .post-author-info { display: flex; flex-direction: column; cursor: pointer; }
+        .post-author-name { font-weight: 600; color: var(--text-primary); font-size: 13.5px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;}
+        
+        .cat-badge { font-size: 10px; background: rgba(41, 98, 255, 0.1); color: var(--accent-blue); padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase;}
+
+        .post-timestamp { font-size: 11px; color: var(--text-muted); }
+        .post-body { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 15px; word-break: break-word; }
+
+        .delete-post-btn { position: absolute; top: 15px; right: 18px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; }
+        .delete-post-btn:hover { color: #f85149; }
+
+        .replies-container { margin-top: 12px; padding-left: 20px; border-left: 2px solid var(--border-light); display: flex; flex-direction: column; gap: 10px; }
+        .reply-item { background: var(--bg-panel); border: 1px solid var(--border-light); padding: 10px 14px; border-radius: 8px; position: relative; transition: background 0.3s, border-color 0.3s;}
+        .reply-meta { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11.5px; }
+        .reply-author { font-weight: 600; color: var(--accent-blue); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .reply-author img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
+        .reply-text { font-size: 13px; color: var(--text-secondary); word-break: break-word; }
+        
+        .reply-footer-row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+        .like-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 4px; padding: 0; transition: color 0.2s;}
+        .like-btn:hover { color: #f85149; }
+        .like-btn.liked { color: #f85149; }
+        .delete-reply-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; padding: 0; }
+        .delete-reply-btn:hover { color: #f85149; }
+
+        .reply-composer { display: flex; gap: 8px; margin-top: 12px; }
+        .reply-input { flex-grow: 1; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 12px; outline: none; }
+        .btn-reply-submit { background: var(--btn-bg); color: var(--text-secondary); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
+        .btn-reply-submit:disabled { background: var(--btn-hover); cursor: not-allowed; }
+
+        /* Form Variables */
+        .form-input, .form-textarea, .form-select { width: 100%; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: border-color 0.3s;}
+        .form-select:focus { border-color: var(--accent-blue); }
+
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
+        .modal-content { background-color: var(--bg-panel); margin: 2% auto; padding: 30px; border: 1px solid var(--border-color); width: 90%; max-width: 600px; color: var(--text-secondary); border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; transition: background 0.3s;}
+        .modal-header { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 20px; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;}
+        .form-group { margin-bottom: 15px; }
+        .form-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 6px; display: block; }
+        .form-textarea { resize: vertical; height: 70px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 25px; }
+        
+        .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .pro-locked-container { opacity: 0.4; pointer-events: none; position: relative; }
+        .pro-notice-box { background: rgba(41, 98, 255, 0.08); border: 1px solid rgba(41, 98, 255, 0.3); padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text-primary); }
+        .pro-notice-box strong { color: var(--accent-blue); font-weight: 600; }
+        .link-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .link-row input { flex: 1; }
+        .remove-link-btn { background: var(--btn-bg); color: #f85149; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; padding: 10px; }
+        .avatar-edit-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .avatar-edit-preview { width: 60px; height: 60px; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 20px; font-weight: bold; color: var(--accent-blue);}
+        .avatar-edit-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-upload-btn { background: var(--btn-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer; font-size: 12px; color: var(--text-secondary);}
+        .avatar-delete-btn { background: transparent; border: none; color: #f85149; font-size: 12px; cursor: pointer; padding: 8px;}
+
+        /* MOBILE RESPONSIVE BURGER STYLING */
+        @media (max-width: 950px) {
+            body { height: auto; overflow: auto; }
+            .network-container { grid-template-columns: 1fr; height: auto; overflow: visible; padding: 10px; margin-top: 55px; }
+            .sidebar-panel { height: auto; margin-bottom: 20px; }
+            .feed-panel { height: auto; }
+            .feed-controls { flex-direction: column; align-items: stretch; }
+            .feed-filter-search { max-width: 100%; flex-direction: column;}
             
-            .upload-container { padding: 20px; margin: 15px auto; width: 100%; border-radius: 0; border-left: none; border-right: none; }
-            .tab-button { font-size: 0.9rem; padding: 10px 12px; }
+            .mobile-menu-btn { display: block; }
+            .nav-links { display: none; flex-direction: column; position: absolute; top: 55px; left: 0; width: 100%; background: #0d1117; border-bottom: 1px solid #1c2230; padding: 15px 20px; gap: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 1002; }
+            .nav-links.active-nav { display: flex; }
+            .nav-links a { margin-left: 0; width: 100%; text-align: left; }
+            .dropdown { margin-left: 0; width: 100%; }
+            .dropdown-content { position: static; width: 100%; box-shadow: none; border: none; background: transparent; }
         }
     </style>
 </head>
 <body>
 
 <div class="top-nav">
-    <div class="nav-brand">Analyst Wire Admin</div>
-    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    <div style="height: 50px; display: flex; align-items: center;">
+        <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px; width: auto; object-fit: contain;">
+    </div>
+    
+    <button class="mobile-menu-btn" onclick="toggleNav()">☰</button>
+
     <div class="nav-links" id="navLinks">
-        <a href="admin.html">Users</a>
-        <a href="admin.html">Revenue</a>
-        <a href="terminal.html">Terminal</a>
-        <a href="admin_upload.html" class="active">Upload Data</a>
-        <button id="logoutBtn" style="color: #f85149; margin-left: auto;">Logout</button>
+        <a href="terminal.html" id="nav-dashboard" style="display: none;">Dashboard</a>
+        <a href="/newsfeed" id="nav-newsfeed" style="display: none;">Newsfeed</a>
+        <a href="analysis.html" id="nav-analysis" style="display: none;">Analysis</a>
+        <a href="profile.html" id="nav-profile" class="active" style="display: none;">Network</a>
+        <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
+        <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
+        
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown(event)">⚙️</button>
+            <div id="settingsDropdown" class="dropdown-content">
+                <a href="account.html">Account</a>
+                <a href="support.html">Support</a>
+                <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
+                <a id="logoutBtn" style="color: #f85149; cursor: pointer;">Logout</a>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="upload-container">
-    <div class="tabs-header">
-        <button class="tab-button active" onclick="switchTab(event, 'tab-key-levels')">Key Levels</button>
-        <button class="tab-button" onclick="switchTab(event, 'tab-expiries')">FX Option Expiries</button>
-        <button class="tab-button" onclick="switchTab(event, 'tab-project-3')">Trade Ideas</button>
+<div class="network-container network-theme" id="network-theme-wrapper">
+    
+    <!-- LEFT SIDEBAR: PROFILE & SEARCH -->
+    <div class="sidebar-panel">
+        <div class="sidebar-header">
+            <input type="text" id="member-search" class="search-input" placeholder="Search members by name or email..." oninput="handleSearchInput(this.value)">
+            <div id="search-dropdown" class="search-dropdown"></div>
+            <button id="theme-toggle" class="btn-action" style="position: absolute; right: 20px; top: 12px; padding: 6px 10px; background: var(--bg-card);" onclick="toggleTheme()" title="Toggle Theme">☀️</button>
+        </div>
+        
+        <div class="profile-display-area" id="profile-display-card"></div>
     </div>
 
-    <div id="tab-key-levels" class="tab-pane active">
-        <h2>Upload Key Levels</h2>
-        <label>Select Date</label>
-        <input type="date" id="upload-date-kl">
-        
-        <label>Upload CSV or Excel File</label>
-        <input type="file" id="excelFile-kl" accept=".csv, text/csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, */*" />
-        
-        <button class="action-btn" onclick="processKeyLevels()">Upload Key Levels</button>
-        <div id="status-kl" class="status-msg"></div>
-        <div id="debug-panel"></div>
-    </div>
+    <!-- RIGHT PANEL: FEED -->
+    <div class="feed-panel">
+        <div class="feed-header-area">
+            <div class="feed-controls">
+                <div class="feed-tabs">
+                    <button id="tab-global" class="f-tab active" onclick="setFeedFilter('global')">Global Feed</button>
+                    <button id="tab-following" class="f-tab" onclick="setFeedFilter('following')">Following</button>
+                </div>
+                <div class="feed-filter-search">
+                    <select id="feed-category-filter" class="form-select" style="width: auto; padding: 8px; font-size: 12px;" onchange="renderFeed()">
+                        <option value="All">All Categories</option>
+                        <option value="General">General</option>
+                        <option value="Trade Idea">💡 Trade Idea</option>
+                        <option value="Macro Analysis">🌍 Macro Analysis</option>
+                        <option value="Technical Analysis">📈 Technical Analysis</option>
+                        <option value="Fundamental Analysis">📊 Fundamental Analysis</option>
+                        <option value="Risk Management">🛡️ Risk Management</option>
+                        <option value="Market News">📰 Market News</option>
+                        <option value="Educational">📚 Educational</option>
+                    </select>
+                    <div class="feed-search-container">
+                        <input type="text" id="feed-search" class="feed-search-input" placeholder="Search keywords or members..." oninput="renderFeed()">
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <div id="tab-expiries" class="tab-pane">
-        <h2>Upload FX Option Expiries</h2>
-        <label>Select Trade Date</label>
-        <input type="date" id="upload-date-exp">
-        
-        <label>Upload CSV or Excel File</label>
-        <input type="file" id="excelFile-exp" accept=".csv, text/csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, */*" />
-        
-        <button class="action-btn" onclick="processExpiries()">Extract & Upload Expiries</button>
-        <div id="status-exp" class="status-msg"></div>
-    </div>
+        <div class="feed-scroll-area">
+            <div class="composer-box">
+                <textarea id="post-input-main" class="composer-textarea" placeholder="Share a market insight or trade thought (max 100 words)..." oninput="updateWordCount('post-input-main', 'word-counter-main')"></textarea>
+                <div class="composer-footer">
+                    <span id="word-counter-main" class="word-counter">100 words remaining</span>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <select id="post-category-main" class="form-select" style="width: 160px; padding: 8px; font-size: 12px;">
+                            <option value="General">General</option>
+                            <option value="Trade Idea">💡 Trade Idea</option>
+                            <option value="Macro Analysis">🌍 Macro Analysis</option>
+                            <option value="Technical Analysis">📈 Technical Analysis</option>
+                            <option value="Fundamental Analysis">📊 Fundamental Analysis</option>
+                            <option value="Risk Management">🛡️ Risk Management</option>
+                            <option value="Market News">📰 Market News</option>
+                            <option value="Educational">📚 Educational</option>
+                        </select>
+                        <button id="btn-post-main" class="btn-post" onclick="submitPost('post-input-main', 'word-counter-main', 'global', 'btn-post-main', 'post-category-main')">Post Message</button>
+                    </div>
+                </div>
+            </div>
 
-    <div id="tab-project-3" class="tab-pane">
-        <h2>Upload Trade Ideas</h2>
-        <p style="color: #8b949e; margin-bottom: 15px; font-size: 0.9rem; line-height: 1.5;">Paste raw text containing one or multiple trade ideas below.</p>
-        <textarea id="trade-ideas-text" placeholder="July 21st 2026:&#10;Trade Idea 1: EUR/GBP Call Option&#10;Instrument: EUR/GBP&#10;Direction: Long&#10;Strike: 0.8510 call&#10;..."></textarea>
+            <div id="posts-stream">
+                <div style="color: var(--text-muted); text-align: center; padding: 30px;">Loading feed...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="modal network-theme">
+    <div class="modal-content">
+        <div class="modal-header">Edit Profile Settings</div>
         
-        <button class="action-btn" onclick="processTradeIdeas()">Upload Trade Ideas</button>
-        <div id="status-ti" class="status-msg"></div>
+        <div id="pro-notice-banner" class="pro-notice-box" style="display: none;">
+            <div>🔒 Custom avatars and portfolio links require a <strong>Pro Membership</strong>.</div>
+        </div>
+
+        <div class="form-group" id="avatar-section-wrapper">
+            <label class="form-label">Profile Avatar (Min 150x150)</label>
+            <div class="avatar-edit-wrapper">
+                <div class="avatar-edit-preview" id="edit-avatar-preview">?</div>
+                <input type="file" id="avatar-input" accept="image/*" style="display: none;" onchange="handleAvatarSelect(event)">
+                <button class="avatar-upload-btn" onclick="document.getElementById('avatar-input').click()">Upload Image</button>
+                <button class="avatar-delete-btn" onclick="clearAvatarSelection()">Remove</button>
+            </div>
+        </div>
+        
+        <div class="edit-grid">
+            <div class="form-group">
+                <label class="form-label">Banner Color</label>
+                <input type="color" id="edit-banner-color" style="width: 100%; height: 40px; border: 1px solid var(--border-color); border-radius: 6px; background: transparent; cursor: pointer;" value="#1e4bd8">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Privacy</label>
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-primary); margin-top: 10px; cursor: pointer;">
+                    <input type="checkbox" id="edit-hide-email"> Hide email from public profile
+                </label>
+            </div>
+        </div>
+
+        <div class="edit-grid">
+            <div class="form-group">
+                <label class="form-label">Display Name <span id="name-lock-notice" style="font-size: 10px; color: var(--accent-blue); font-weight: normal;"></span></label>
+                <input type="text" id="edit-name" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Location</label>
+                <input type="text" id="edit-location" class="form-input" placeholder="e.g. London, UK">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Trading Experience</label>
+            <select id="edit-experience" class="form-select">
+                <option value="">Select experience level...</option>
+                <option value="Less than 1 year">Less than 1 year</option>
+                <option value="1-3 years">1-3 years</option>
+                <option value="3-5 years">3-5 years</option>
+                <option value="More than 5 years">More than 5 years</option>
+                <option value="10+ years Professional">10+ years Professional</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Bio</label>
+            <textarea id="edit-bio" class="form-textarea" placeholder="Who are you? What is your background?"></textarea>
+        </div>
+        
+        <div class="form-group" id="links-section-wrapper">
+            <label class="form-label">Social / Portfolio Links</label>
+            <div id="links-container"></div>
+            <button id="add-link-btn" class="avatar-upload-btn" onclick="addLinkRow('', '')" style="margin-top: 5px;">+ Add Link</button>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Trading Style</label>
+            <textarea id="edit-trading-style" class="form-textarea" placeholder="e.g. Intraday Trading & Precision Scalping..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Motto</label>
+            <input type="text" id="edit-motto" class="form-input" placeholder="e.g. Protect Capital | Trade with Discipline">
+        </div>
+        
+        <h4 style="color: var(--text-primary); margin: 20px 0 10px 0; font-size: 14px; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">Trading Stats</h4>
+        <div class="edit-grid">
+            <div class="form-group">
+                <label class="form-label">Total Gain (%)</label>
+                <input type="text" id="edit-gain" class="form-input" placeholder="e.g. +45.2%">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Max Drawdown (%)</label>
+                <input type="text" id="edit-drawdown" class="form-input" placeholder="e.g. -12.4%">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Win Rate (%)</label>
+                <input type="text" id="edit-winrate" class="form-input" placeholder="e.g. 68%">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Total Trades</label>
+                <input type="number" id="edit-trades" class="form-input" placeholder="e.g. 142">
+            </div>
+        </div>
+
+        <div class="modal-buttons">
+            <button id="saveProfileBtn" class="btn-action btn-primary-action" style="flex: 1;" onclick="saveProfileChanges()">Save Changes</button>
+            <button class="btn-action" style="flex: 1;" onclick="closeEditModal()">Cancel</button>
+        </div>
     </div>
 </div>
 
 <script>
-    function toggleMenu() {
-        document.getElementById('navLinks').classList.toggle('show');
+    // Profanity Filter Helper (censors extreme slurs/profanity while leaving expressions like WTF alone)
+    function sanitizeText(text) {
+        if (!text) return '';
+        const bannedWords = ['fuck', 'shit', 'cunt', 'dick', 'cock', 'asshole', 'bitch', 'bastard', 'motherfucker'];
+        let cleanText = text;
+        bannedWords.forEach(word => {
+            const regex = new RegExp(`\\b${word}\\b`, 'gi');
+            cleanText = cleanText.replace(regex, '***');
+        });
+        return cleanText;
     }
 
-    function switchTab(evt, tabId) {
-        document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        evt.currentTarget.classList.add('active');
+    function initTheme() {
+        const wrapper = document.getElementById('network-theme-wrapper');
+        const modal = document.getElementById('editProfileModal');
+        if (localStorage.getItem('theme') === 'light') {
+            wrapper.classList.add('light-mode');
+            modal.classList.add('light-mode');
+            document.getElementById('theme-toggle').innerText = '🌙';
+        }
     }
 
-    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    function toggleTheme() {
+        const wrapper = document.getElementById('network-theme-wrapper');
+        const modal = document.getElementById('editProfileModal');
+        const isLight = wrapper.classList.toggle('light-mode');
+        modal.classList.toggle('light-mode');
+        document.getElementById('theme-toggle').innerText = isLight ? '🌙' : '☀️';
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+    
+    initTheme();
 
-    // --- HELPER FUNCTION: Bulletproof parsing for Arrays, Strings, and JSON ---
     function userHasAccess(userTags, requiredTag) {
         if (!userTags) return false;
+        try {
+            const parsedArray = JSON.parse(userTags);
+            if (Array.isArray(parsedArray)) return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+        } catch (e) {
+            return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
+        }
+        return false;
+    }
+
+    function timeAgo(isoString) {
+        const epoch = new Date(isoString).getTime();
+        const seconds = Math.floor((Date.now() - epoch) / 1000);
+        if (seconds < 60) return 'Just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        const days = Math.floor(hours / 24);
+        return `${days}d ago`;
+    }
+
+    function toggleNav() { document.getElementById("navLinks").classList.toggle("active-nav"); }
+    function toggleDropdown(event) { 
+        if (event) event.stopPropagation();
+        document.getElementById("settingsDropdown").style.display = 
+            document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"; 
+    }
+
+    window.onclick = function(event) { 
+        if (!event.target.matches('.dropbtn')) {
+            document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); 
+        }
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = "none";
+        }
+        if (!event.target.matches('#member-search')) {
+            document.getElementById('search-dropdown').style.display = 'none';
+        }
+    }
+
+    const mainClient = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    const networkClient = supabase.createClient('https://nayucfhbnecwhtzuaiur.supabase.co', 'sb_publishable_yNK-_0-3ZI2ssYfbSvw75g_RXLD_R-A');
+    
+    let loggedInUser = null;
+    let viewedProfileId = null; 
+    let isAdminGlobal = false;
+    let isProOrAdminGlobal = false;
+    
+    let profilesCache = {}; 
+    let globalPosts = [];
+    let myFollowingIds = [];
+    let pendingAvatarBlob = null; 
+    let shouldDeleteAvatar = false;
+    
+    let currentFeedFilter = 'global'; 
+    let currentProfileTab = 'about'; 
+
+    async function init() {
+        const { data: { session } } = await mainClient.auth.getSession();
+        if (!session) { window.location.href = 'index.html'; return; }
         
-        let tagsArray = [];
-        
-        if (Array.isArray(userTags)) {
-            tagsArray = userTags;
-        } else if (typeof userTags === 'string') {
-            try {
-                let parsed = JSON.parse(userTags);
-                tagsArray = Array.isArray(parsed) ? parsed : [userTags];
-            } catch (e) {
-                tagsArray = userTags.split(',').map(s => s.trim());
+        loggedInUser = session.user;
+        viewedProfileId = loggedInUser.id; 
+
+        const { data: profile } = await mainClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
+        if (profile) {
+            const tagStr = profile.subscription_tag || 'free';
+            isAdminGlobal = profile.is_admin === true;
+            isProOrAdminGlobal = isAdminGlobal || userHasAccess(tagStr, 'pro');
+
+            if (isAdminGlobal) {
+                document.getElementById('nav-admin').style.display = 'block';
+                document.getElementById('nav-upload').style.display = 'block';
+            }
+            if (isProOrAdminGlobal) {
+                document.getElementById('nav-dashboard').style.display = 'block';
+                document.getElementById('nav-newsfeed').style.display = 'block';
+                document.getElementById('nav-analysis').style.display = 'block';
+                document.getElementById('nav-courses').style.display = 'block';
+                document.getElementById('nav-key-levels').style.display = 'block';
+                document.getElementById('nav-profile').style.display = 'block';
+            } else {
+                if (userHasAccess(tagStr, 'course') || userHasAccess(tagStr, 'courses')) document.getElementById('nav-courses').style.display = 'block';
+                if (userHasAccess(tagStr, 'newsfeed') || userHasAccess(tagStr, 'squawk')) document.getElementById('nav-newsfeed').style.display = 'block';
+                document.getElementById('nav-profile').style.display = 'block';
             }
         }
 
-        return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+        const { data: sandboxProfile } = await networkClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
+        if (!sandboxProfile) {
+            await networkClient.from('profiles').insert([{
+                id: loggedInUser.id,
+                email: loggedInUser.email,
+                full_name: profile?.full_name || loggedInUser.email.split('@')[0],
+                bio: 'Active Analyst Wire Community Member & Trader.'
+            }]);
+        } else {
+            await networkClient.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', loggedInUser.id);
+        }
+
+        await loadMyFollowing();
+        await loadProfile(loggedInUser.id);
+        await loadFeedData();
+
+        setInterval(async () => {
+            const nowIso = new Date().toISOString();
+            await networkClient.from('profiles').update({ last_seen: nowIso }).eq('id', loggedInUser.id);
+            if (profilesCache[loggedInUser.id]) profilesCache[loggedInUser.id].last_seen = nowIso;
+            renderLeftProfileUI(viewedProfileId);
+        }, 60000);
     }
 
-    // Extended Authorization Check
-    async function init() {
-        const { data: { session } } = await client.auth.getSession();
-        if (!session) { window.location.href = 'index.html'; return; }
-        
-        const { data: profileArray, error: profileError } = await client
-            .from('profiles')
-            .select('admin, active_tags')
-            .eq('id', session.user.id)
-            .limit(1);
+    async function loadMyFollowing() {
+        const { data } = await networkClient.from('user_follows').select('following_id').eq('follower_id', loggedInUser.id);
+        if (data) {
+            myFollowingIds = data.map(row => row.following_id);
+        }
+    }
+
+    async function loadFeedData() {
+        const { data: posts } = await networkClient
+            .from('network_posts')
+            .select(`
+                *,
+                post_replies (
+                    *,
+                    reply_likes (user_id)
+                )
+            `)
+            .order('created_at', { ascending: false })
+            .limit(100);
+
+        if (posts) {
+            posts.forEach(p => p.post_replies.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)));
             
-        if (profileError) {
-            alert("Profile Read Error: " + profileError.message);
-            await client.auth.signOut();
-            window.location.href = 'index.html';
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            globalPosts = posts.filter(p => {
+                if (p.feed_type === 'global') {
+                    return new Date(p.created_at) >= thirtyDaysAgo;
+                }
+                return true; 
+            });
+        }
+
+        const missingUserIds = new Set();
+        globalPosts.forEach(p => {
+            if(!profilesCache[p.user_id]) missingUserIds.add(p.user_id);
+            p.post_replies.forEach(r => {
+                if(!profilesCache[r.user_id]) missingUserIds.add(r.user_id);
+            });
+        });
+
+        if (missingUserIds.size > 0) {
+            const { data: profiles } = await networkClient.from('profiles').select('*').in('id', Array.from(missingUserIds));
+            if(profiles) {
+                profiles.forEach(p => profilesCache[p.id] = p);
+            }
+        }
+        
+        renderFeed();
+    }
+
+    async function loadProfile(userId) {
+        viewedProfileId = userId;
+        document.getElementById('member-search').value = '';
+        document.getElementById('search-dropdown').style.display = 'none';
+
+        const { data: profile } = await networkClient.from('profiles').select('*').eq('id', userId).single();
+        if (profile) profilesCache[userId] = profile;
+
+        const { count: followerCount } = await networkClient.from('user_follows').select('*', { count: 'exact', head: true }).eq('following_id', userId);
+        const { count: followingCount } = await networkClient.from('user_follows').select('*', { count: 'exact', head: true }).eq('follower_id', userId);
+        
+        if (profilesCache[userId]) {
+            profilesCache[userId].followerCount = followerCount || 0;
+            profilesCache[userId].followingCount = followingCount || 0;
+        }
+
+        renderLeftProfileUI(userId);
+    }
+
+    function renderLeftProfileUI(userId) {
+        const memberData = profilesCache[userId];
+        if (!memberData) return;
+
+        if (memberData.is_hidden && userId !== loggedInUser.id && !isAdminGlobal) {
+            document.getElementById('profile-display-card').innerHTML = `<div style="padding: 30px; text-align: center; color: var(--text-muted);">This profile is hidden.</div>`;
             return;
         }
-            
-        const profile = profileArray?.[0];
+
+        const isMe = (userId === loggedInUser.id);
+        const amIFollowing = myFollowingIds.includes(userId);
         
-        const tags = profile?.active_tags ? profile.active_tags : [];
-        const isAdmin = profile?.admin === true;
-        
-        // Strict Check: Must be admin, pro, newsfeed, or course
-        const isAuthorized = isAdmin || userHasAccess(tags, 'pro') || userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'course');
-        
-        if (!isAuthorized) { 
-            window.location.href = 'terminal.html'; 
-            return; 
+        const isOnline = memberData.last_seen ? (Date.now() - new Date(memberData.last_seen).getTime()) < (5 * 60 * 1000) : false;
+        const onlineClass = isOnline ? 'online' : '';
+
+        const container = document.getElementById('profile-display-card');
+
+        let actionsHtml = '';
+        if (isMe) {
+            actionsHtml = `
+                <div class="sidebar-actions">
+                    <button class="btn-action btn-primary-action" onclick="openEditModal()">Edit Profile</button>
+                </div>
+            `;
+        } else {
+            actionsHtml = `<div class="sidebar-actions">`;
+            if (isAdminGlobal) {
+                const hiddenText = memberData.is_hidden ? 'Unhide User Profile' : 'Hide User Profile';
+                actionsHtml += `<button class="btn-action btn-danger-action" onclick="adminToggleHideUser('${userId}', ${!memberData.is_hidden})">${hiddenText}</button>`;
+            }
+            actionsHtml += `
+                    <button id="btn-follow" class="btn-action ${amIFollowing ? '' : 'btn-primary-action'}" onclick="toggleFollow('${userId}')">
+                        ${amIFollowing ? 'Unfollow' : 'Follow'}
+                    </button>
+                    <button class="btn-action" onclick="loadProfile('${loggedInUser.id}')">Back to My Profile</button>
+                </div>
+            `;
         }
+
+        const gainVal = memberData.total_gain || 'N/A';
+        const gainClass = gainVal.includes('+') ? 'val-up' : (gainVal.includes('-') ? 'val-down' : '');
+        const ddVal = memberData.max_drawdown || 'N/A';
+        const ddClass = ddVal.includes('-') ? 'val-down' : '';
+
+        let metaHtml = '';
+        if (memberData.location || memberData.experience) {
+            metaHtml = `<div class="profile-meta-line">`;
+            if (memberData.location) metaHtml += `<span>📍 ${memberData.location}</span>`;
+            if (memberData.location && memberData.experience) metaHtml += `<span class="meta-divider">|</span>`;
+            if (memberData.experience) metaHtml += `<span>Experience: ${memberData.experience}</span>`;
+            metaHtml += `</div>`;
+        }
+
+        let linksHtml = '';
+        if (memberData.social_links && memberData.social_links.length > 0) {
+            linksHtml = `<div class="about-section-title">Links</div><div style="margin-bottom: 20px;">`;
+            memberData.social_links.forEach(l => {
+                if(l.url && l.title) {
+                    let href = l.url.startsWith('http') ? l.url : `https://${l.url}`;
+                    linksHtml += `<a href="${href}" target="_blank" class="profile-link">🔗 ${l.title}</a>`;
+                }
+            });
+            linksHtml += `</div>`;
+        }
+
+        let aboutHtml = '';
+        if (memberData.bio) aboutHtml += `<div class="about-section-title">Bio</div><div class="about-text">${memberData.bio}</div>`;
+        aboutHtml += linksHtml;
+        if (memberData.trading_style) aboutHtml += `<div class="about-section-title">Trading Style</div><div class="about-text" style="white-space: pre-line;">${memberData.trading_style}</div>`;
+        if (memberData.motto) aboutHtml += `<div class="about-section-title">Motto</div><div class="about-text" style="font-style: italic;">"${memberData.motto}"</div>`;
+        if (!aboutHtml) aboutHtml = `<div class="about-text">No profile information provided yet.</div>`;
+
+        let privateComposerHtml = '';
+        if (isMe) {
+            privateComposerHtml = `
+                <div class="composer-box" style="margin-bottom: 20px;">
+                    <textarea id="post-input-private" class="composer-textarea" placeholder="Post directly to your personal feed..." oninput="updateWordCount('post-input-private', 'word-counter-private')"></textarea>
+                    <div class="composer-footer">
+                        <span id="word-counter-private" class="word-counter">100 words remaining</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <select id="post-category-private" class="form-select" style="width: 160px; padding: 8px; font-size: 12px;">
+                                <option value="General">General</option>
+                                <option value="Trade Idea">💡 Trade Idea</option>
+                                <option value="Macro Analysis">🌍 Macro Analysis</option>
+                                <option value="Technical Analysis">📈 Technical Analysis</option>
+                                <option value="Fundamental Analysis">📊 Fundamental Analysis</option>
+                                <option value="Risk Management">🛡️ Risk Management</option>
+                                <option value="Market News">📰 Market News</option>
+                                <option value="Educational">📚 Educational</option>
+                            </select>
+                            <button id="btn-post-private" class="btn-post" onclick="submitPost('post-input-private', 'word-counter-private', 'private', 'btn-post-private', 'post-category-private')">Post</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const fallbackName = memberData.full_name || 'Member';
+        const bannerColor = memberData.banner_color || '#1e4bd8';
+        const displayEmail = (!memberData.hide_email || isMe || isAdminGlobal) ? memberData.email : 'Email Hidden';
+        
+        let avatarInner = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${fallbackName.charAt(0).toUpperCase()}</div>`;
+        if (memberData.avatar_url) {
+            avatarInner = `<img src="${memberData.avatar_url}?t=${new Date().getTime()}" alt="avatar">`;
+        }
+
+        const adminBadge = (memberData.is_hidden) ? `<span class="admin-badge">HIDDEN</span>` : '';
+
+        container.innerHTML = `
+            <div class="profile-banner" style="background: ${bannerColor};"></div>
+            <div class="profile-core-info">
+                <div class="profile-header-row">
+                    <div class="avatar-container">
+                        <div class="profile-avatar-large">${avatarInner}</div>
+                        <div class="status-dot ${onlineClass}"></div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <h2 class="profile-name-title">${fallbackName} ${adminBadge}</h2>
+                    <div class="profile-handle">${displayEmail}</div>
+                    ${metaHtml}
+                    <div class="follow-stats">
+                        <span class="follow-stat"><strong>${memberData.followingCount}</strong> Following</span>
+                        <span class="follow-stat"><strong>${memberData.followerCount}</strong> Followers</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-tabs">
+                <div class="p-tab ${currentProfileTab === 'about' ? 'active' : ''}" onclick="switchProfileTab('about')">About</div>
+                <div class="p-tab ${currentProfileTab === 'stats' ? 'active' : ''}" onclick="switchProfileTab('stats')">Stats</div>
+                <div class="p-tab ${currentProfileTab === 'feed' ? 'active' : ''}" onclick="switchProfileTab('feed')">Feed</div>
+            </div>
+
+            <div id="tab-content-about" class="profile-tab-content ${currentProfileTab === 'about' ? 'active' : ''}">
+                ${aboutHtml}
+            </div>
+
+            <div id="tab-content-stats" class="profile-tab-content ${currentProfileTab === 'stats' ? 'active' : ''}">
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Gain</div>
+                        <div class="stat-val ${gainClass}">${gainVal}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Drawdown</div>
+                        <div class="stat-val ${ddClass}">${ddVal}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Win Rate</div>
+                        <div class="stat-val" style="color: var(--text-secondary);">${memberData.win_rate || 'N/A'}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Trades</div>
+                        <div class="stat-val" style="color: var(--text-secondary);">${memberData.total_trades || 0}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-content-feed" class="profile-tab-content ${currentProfileTab === 'feed' ? 'active' : ''}" style="padding: 15px;">
+                ${privateComposerHtml}
+                <div id="private-feed-stream"></div>
+            </div>
+
+            ${actionsHtml}
+        `;
+
+        if (currentProfileTab === 'feed') renderPrivateFeed(userId);
+    }
+
+    function switchProfileTab(tab) {
+        currentProfileTab = tab;
+        renderLeftProfileUI(viewedProfileId);
+    }
+
+    async function toggleFollow(targetId) {
+        const btn = document.getElementById('btn-follow');
+        if(btn) btn.disabled = true;
+
+        const isFollowing = myFollowingIds.includes(targetId);
+
+        if (isFollowing) {
+            await networkClient.from('user_follows').delete().match({ follower_id: loggedInUser.id, following_id: targetId });
+            myFollowingIds = myFollowingIds.filter(id => id !== targetId);
+            profilesCache[targetId].followerCount = Math.max(0, profilesCache[targetId].followerCount - 1);
+        } else {
+            await networkClient.from('user_follows').insert([{ follower_id: loggedInUser.id, following_id: targetId }]);
+            myFollowingIds.push(targetId);
+            profilesCache[targetId].followerCount += 1;
+        }
+
+        renderLeftProfileUI(targetId);
+        if (currentFeedFilter === 'following') renderFeed(); 
+    }
+
+    async function adminToggleHideUser(targetId, hideStatus) {
+        if(!isAdminGlobal) return;
+        await networkClient.from('profiles').update({ is_hidden: hideStatus }).eq('id', targetId);
+        profilesCache[targetId].is_hidden = hideStatus;
+        renderLeftProfileUI(targetId);
+        await loadFeedData();
+    }
+
+    async function handleSearchInput(query) {
+        const dd = document.getElementById('search-dropdown');
+        if (query.length < 2) {
+            dd.style.display = 'none';
+            return;
+        }
+        
+        const { data } = await networkClient.from('profiles')
+            .select('id, full_name, email, avatar_url, is_hidden')
+            .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
+            .limit(10);
+            
+        if (data && data.length > 0) {
+            const results = data.filter(p => !p.is_hidden || isAdminGlobal);
+            if(results.length === 0) {
+                dd.innerHTML = `<div style="padding: 12px 20px; color: var(--text-muted); font-size: 12px;">No members found.</div>`;
+            } else {
+                dd.innerHTML = results.map(p => {
+                    const fallback = p.full_name ? p.full_name.charAt(0).toUpperCase() : '?';
+                    let av = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${fallback}</div>`;
+                    if (p.avatar_url) av = `<img src="${p.avatar_url}" alt="avatar">`;
+                    return `
+                        <div class="search-result-item" onclick="loadProfile('${p.id}')">
+                            <div class="search-result-avatar">${av}</div>
+                            <div class="search-result-info">
+                                <span class="search-result-name">${p.full_name || 'Member'}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            dd.style.display = 'block';
+        } else {
+            dd.innerHTML = `<div style="padding: 12px 20px; color: var(--text-muted); font-size: 12px;">No members found.</div>`;
+            dd.style.display = 'block';
+        }
+    }
+
+    function openEditModal() {
+        const current = profilesCache[loggedInUser.id] || {};
+        
+        pendingAvatarBlob = null;
+        shouldDeleteAvatar = false;
+
+        const nameInput = document.getElementById('edit-name');
+        nameInput.value = current.full_name || '';
+        
+        // 7-day name change check
+        const nameNotice = document.getElementById('name-lock-notice');
+        if (current.name_last_updated_at) {
+            const lastUpdated = new Date(current.name_last_updated_at).getTime();
+            const daysSince = (Date.now() - lastUpdated) / (1000 * 60 * 60 * 24);
+            if (daysSince < 7 && !isAdminGlobal) {
+                const daysLeft = Math.ceil(7 - daysSince);
+                nameInput.disabled = true;
+                nameNotice.innerText = `(Locked: can change in ${daysLeft} days)`;
+            } else {
+                nameInput.disabled = false;
+                nameNotice.innerText = `(Can be updated once every 7 days)`;
+            }
+        } else {
+            nameInput.disabled = false;
+            nameNotice.innerText = `(Can be updated once every 7 days)`;
+        }
+
+        document.getElementById('edit-location').value = current.location || '';
+        document.getElementById('edit-experience').value = current.experience || '';
+        document.getElementById('edit-bio').value = current.bio || '';
+        document.getElementById('edit-trading-style').value = current.trading_style || '';
+        document.getElementById('edit-motto').value = current.motto || '';
+        document.getElementById('edit-hide-email').checked = current.hide_email === true;
+        document.getElementById('edit-banner-color').value = current.banner_color || '#1e4bd8';
+
+        document.getElementById('edit-gain').value = current.total_gain || '';
+        document.getElementById('edit-drawdown').value = current.max_drawdown || '';
+        document.getElementById('edit-winrate').value = current.win_rate || '';
+        document.getElementById('edit-trades').value = current.total_trades || '';
+        
+        const noticeBanner = document.getElementById('pro-notice-banner');
+        const avatarWrapper = document.getElementById('avatar-section-wrapper');
+        const linksWrapper = document.getElementById('links-section-wrapper');
+
+        if (!isProOrAdminGlobal) {
+            noticeBanner.style.display = 'flex';
+            avatarWrapper.classList.add('pro-locked-container');
+            linksWrapper.classList.add('pro-locked-container');
+        } else {
+            noticeBanner.style.display = 'none';
+            avatarWrapper.classList.remove('pro-locked-container');
+            linksWrapper.classList.remove('pro-locked-container');
+        }
+
+        const preview = document.getElementById('edit-avatar-preview');
+        const fallback = (current.full_name || loggedInUser.email).charAt(0).toUpperCase();
+        if (current.avatar_url) {
+            preview.innerHTML = `<img src="${current.avatar_url}?t=${new Date().getTime()}">`;
+        } else {
+            preview.innerHTML = fallback;
+        }
+
+        const linksContainer = document.getElementById('links-container');
+        linksContainer.innerHTML = '';
+        if (current.social_links && current.social_links.length > 0) {
+            current.social_links.forEach(l => addLinkRow(l.title, l.url));
+        } else {
+            addLinkRow('', ''); 
+        }
+        
+        document.getElementById('editProfileModal').style.display = 'block';
+    }
+
+    function closeEditModal() { document.getElementById('editProfileModal').style.display = 'none'; }
+
+    function addLinkRow(title, url) {
+        if (!isProOrAdminGlobal) return;
+        const container = document.getElementById('links-container');
+        const row = document.createElement('div');
+        row.className = 'link-row';
+        row.innerHTML = `
+            <input type="text" class="form-input link-title-input" placeholder="Title (e.g. MyFxBook)" value="${title}">
+            <input type="text" class="form-input link-url-input" placeholder="URL (e.g. myfxbook.com/...)" value="${url}">
+            <button class="remove-link-btn" onclick="this.parentElement.remove()">X</button>
+        `;
+        container.appendChild(row);
+    }
+    
+    function getLinksData() {
+        if (!isProOrAdminGlobal) {
+            return profilesCache[loggedInUser.id]?.social_links || [];
+        }
+        const rows = document.querySelectorAll('.link-row');
+        let links = [];
+        rows.forEach(r => {
+            const title = r.querySelector('.link-title-input').value.trim();
+            const url = r.querySelector('.link-url-input').value.trim();
+            if(title || url) links.push({title, url});
+        });
+        return links;
+    }
+
+    function handleAvatarSelect(e) {
+        if (!isProOrAdminGlobal) return;
+        const file = e.target.files[0];
+        if (!file) return;
+        shouldDeleteAvatar = false;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                if (img.width < 150 || img.height < 150) {
+                    alert('Image is too small. Minimum dimensions must be 150x150 pixels.');
+                    document.getElementById('avatar-input').value = '';
+                    return;
+                }
+
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 300;
+                let scaleSize = 1;
+                if (img.width > MAX_WIDTH) {
+                    scaleSize = MAX_WIDTH / img.width;
+                }
+                
+                canvas.width = img.width * scaleSize;
+                canvas.height = img.height * scaleSize;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                canvas.toBlob((blob) => {
+                    const kbSize = blob.size / 1024;
+                    if (kbSize > 200) {
+                        alert(`Compressed image is ${kbSize.toFixed(1)} KB, which exceeds the 200 KB limit. Please try a simpler image.`);
+                        return;
+                    }
+
+                    pendingAvatarBlob = blob;
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('edit-avatar-preview').innerHTML = `<img src="${url}">`;
+                }, 'image/jpeg', 0.75); 
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function clearAvatarSelection() {
+        if (!isProOrAdminGlobal) return;
+        pendingAvatarBlob = null;
+        shouldDeleteAvatar = true;
+        const current = profilesCache[loggedInUser.id] || {};
+        const fallback = (current.full_name || loggedInUser.email).charAt(0).toUpperCase();
+        document.getElementById('edit-avatar-preview').innerHTML = fallback;
+    }
+
+    async function saveProfileChanges() {
+        const nameInput = document.getElementById('edit-name');
+        const newName = nameInput.value.trim();
+        if (!newName) { alert('Display Name is required.'); return; }
+
+        const saveBtn = document.getElementById('saveProfileBtn');
+        saveBtn.disabled = true;
+        saveBtn.innerText = 'Saving...';
+
+        let finalAvatarUrl = profilesCache[loggedInUser.id]?.avatar_url;
+
+        if (isProOrAdminGlobal) {
+            if (shouldDeleteAvatar && finalAvatarUrl) {
+                const fileName = finalAvatarUrl.split('/').pop().split('?')[0]; 
+                await networkClient.storage.from('avatars').remove([fileName]);
+                finalAvatarUrl = null;
+            } else if (pendingAvatarBlob) {
+                const fileName = `${loggedInUser.id}.jpg`;
+                const { data, error } = await networkClient.storage.from('avatars').upload(fileName, pendingAvatarBlob, { upsert: true, contentType: 'image/jpeg' });
+                if (!error) {
+                    const { data: publicUrlData } = networkClient.storage.from('avatars').getPublicUrl(fileName);
+                    finalAvatarUrl = publicUrlData.publicUrl;
+                } else {
+                    console.error("Avatar upload failed:", error);
+                    alert("Avatar upload failed: Make sure your bucket is public, named 'avatars', and respects RLS policies.");
+                }
+            }
+        }
+
+        const updates = {
+            location: document.getElementById('edit-location').value.trim(),
+            experience: document.getElementById('edit-experience').value,
+            bio: document.getElementById('edit-bio').value.trim(),
+            trading_style: document.getElementById('edit-trading-style').value.trim(),
+            motto: document.getElementById('edit-motto').value.trim(),
+            hide_email: document.getElementById('edit-hide-email').checked,
+            banner_color: document.getElementById('edit-banner-color').value,
+            avatar_url: finalAvatarUrl,
+            social_links: getLinksData(),
+            total_gain: document.getElementById('edit-gain').value.trim(),
+            max_drawdown: document.getElementById('edit-drawdown').value.trim(),
+            win_rate: document.getElementById('edit-winrate').value.trim(),
+            total_trades: parseInt(document.getElementById('edit-trades').value) || 0
+        };
+
+        // Check if name changed and update timestamp if allowed
+        const oldName = profilesCache[loggedInUser.id]?.full_name;
+        if (newName !== oldName && !nameInput.disabled) {
+            updates.full_name = newName;
+            updates.name_last_updated_at = new Date().toISOString();
+        }
+
+        const { error } = await networkClient.from('profiles').update(updates).eq('id', loggedInUser.id);
+        
+        if (!error) {
+            profilesCache[loggedInUser.id] = { ...profilesCache[loggedInUser.id], ...updates };
+            loadProfile(loggedInUser.id);
+            await loadFeedData();
+        } else {
+            alert('Error updating profile. Please try again.');
+        }
+
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save Changes';
+        closeEditModal();
+    }
+
+    function setFeedFilter(filter) {
+        currentFeedFilter = filter;
+        document.getElementById('tab-global').classList.toggle('active', filter === 'global');
+        document.getElementById('tab-following').classList.toggle('active', filter === 'following');
+        renderFeed();
+    }
+
+    function updateWordCount(inputId, counterId) {
+        const text = document.getElementById(inputId).value.trim();
+        const words = text === '' ? [] : text.split(/\s+/);
+        const remaining = 100 - words.length;
+        
+        const counter = document.getElementById(counterId);
+        if(counter) {
+            counter.innerText = `${remaining} words remaining`;
+            counter.style.color = remaining < 0 ? '#f85149' : 'var(--text-muted)';
+        }
+    }
+
+    async function submitPost(inputId, counterId, feedType, btnId, categoryId = null) {
+        const inputElem = document.getElementById(inputId);
+        const rawText = inputElem.value.trim();
+        if (!rawText) return;
+
+        const words = rawText.split(/\s+/);
+        if (words.length > 100) { alert('Post exceeds the 100-word limit.'); return; }
+
+        const btn = document.getElementById(btnId);
+        btn.disabled = true;
+
+        let categoryVal = 'General';
+        if (categoryId) {
+            const catElem = document.getElementById(categoryId);
+            if (catElem) categoryVal = catElem.value;
+        }
+
+        // Apply profanity filter to post content
+        const sanitizedPostText = sanitizeText(rawText);
+        const authorName = profilesCache[loggedInUser.id]?.full_name || loggedInUser.email.split('@')[0];
+
+        const { error } = await networkClient.from('network_posts').insert([{
+            user_id: loggedInUser.id,
+            user_email: loggedInUser.email,
+            author_name: authorName,
+            post_text: sanitizedPostText,
+            feed_type: feedType,
+            category: categoryVal
+        }]);
+
+        if (error) {
+            alert('Failed to post. Try again later.');
+        } else {
+            inputElem.value = '';
+            updateWordCount(inputId, counterId);
+            await loadFeedData(); 
+            
+            if (viewedProfileId === loggedInUser.id && currentProfileTab === 'feed') {
+                renderPrivateFeed(loggedInUser.id);
+            }
+        }
+        btn.disabled = false;
+    }
+
+    async function deletePost(postId) {
+        if (!confirm('Are you sure you want to delete this post?')) return;
+        const { error } = await networkClient.from('network_posts').delete().eq('id', postId);
+        if (!error) {
+            await loadFeedData();
+            if (currentProfileTab === 'feed') renderPrivateFeed(viewedProfileId);
+        } else {
+            console.error(error);
+            alert('Failed to delete post. Please ensure RLS policies allow deletion.');
+        }
+    }
+
+    async function submitReply(postId) {
+        const inputElem = document.getElementById(`reply-input-${postId}`);
+        const btnElem = document.getElementById(`btn-reply-${postId}`);
+        const rawText = inputElem.value.trim();
+        if (!rawText) return;
+
+        btnElem.disabled = true;
+        const sanitizedReplyText = sanitizeText(rawText);
+        const authorName = profilesCache[loggedInUser.id]?.full_name || loggedInUser.email.split('@')[0];
+
+        const { error } = await networkClient.from('post_replies').insert([{
+            post_id: postId,
+            user_id: loggedInUser.id,
+            user_email: loggedInUser.email,
+            author_name: authorName,
+            reply_text: sanitizedReplyText
+        }]);
+
+        if (!error) {
+            await loadFeedData();
+            if (currentProfileTab === 'feed') renderPrivateFeed(viewedProfileId);
+        } else {
+            alert('Failed to reply.');
+        }
+        btnElem.disabled = false;
+    }
+
+    async function deleteReply(replyId) {
+        if (!confirm('Are you sure you want to delete this reply?')) return;
+        const { error } = await networkClient.from('post_replies').delete().eq('id', replyId);
+        if (!error) {
+            await loadFeedData();
+            if (currentProfileTab === 'feed') renderPrivateFeed(viewedProfileId);
+        } else {
+            console.error(error);
+            alert('Failed to delete reply. Please ensure RLS policies allow deletion.');
+        }
+    }
+
+    async function toggleReplyLike(replyId, currentLikedStatus) {
+        if (currentLikedStatus) {
+            await networkClient.from('reply_likes').delete().match({ reply_id: replyId, user_id: loggedInUser.id });
+        } else {
+            await networkClient.from('reply_likes').insert([{ reply_id: replyId, user_id: loggedInUser.id }]);
+        }
+        
+        await loadFeedData();
+        if (currentProfileTab === 'feed') renderPrivateFeed(viewedProfileId);
+    }
+
+    function buildPostHTML(post) {
+        const authorProfile = profilesCache[post.user_id] || {};
+        
+        if (authorProfile.is_hidden && !isAdminGlobal && post.user_id !== loggedInUser.id) return '';
+
+        const authorName = authorProfile.full_name || post.author_name;
+        
+        let postAv = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${authorName.charAt(0).toUpperCase()}</div>`;
+        if (authorProfile.avatar_url) postAv = `<img src="${authorProfile.avatar_url}">`;
+        
+        const canDeletePost = isAdminGlobal || post.user_id === loggedInUser.id;
+        const deletePostBtnHtml = canDeletePost ? `<button class="delete-post-btn" onclick="deletePost('${post.id}')" title="Delete Post">🗑️ Delete</button>` : '';
+
+        const catBadge = (post.category && post.category !== 'General') 
+            ? `<span class="cat-badge">${post.category}</span>`
+            : '';
+
+        const repliesHtml = post.post_replies.map(reply => {
+            const replyAuthorProfile = profilesCache[reply.user_id] || {};
+            if (replyAuthorProfile.is_hidden && !isAdminGlobal && reply.user_id !== loggedInUser.id) return '';
+
+            const replyAuthorName = replyAuthorProfile.full_name || reply.author_name;
+            
+            let repAv = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--bg-main); color:var(--accent-blue);">${replyAuthorName.charAt(0).toUpperCase()}</div>`;
+            if (replyAuthorProfile.avatar_url) repAv = `<img src="${replyAuthorProfile.avatar_url}">`;
+            
+            const likesCount = reply.reply_likes ? reply.reply_likes.length : 0;
+            const iLiked = reply.reply_likes ? reply.reply_likes.some(l => l.user_id === loggedInUser.id) : false;
+            const heartIcon = iLiked ? '❤️' : '🤍';
+            const likeClass = iLiked ? 'liked' : '';
+
+            const canDeleteReply = isAdminGlobal || reply.user_id === loggedInUser.id;
+            const deleteReplyBtnHtml = canDeleteReply ? `<button class="delete-reply-btn" onclick="deleteReply('${reply.id}')">Delete</button>` : '';
+
+            return `
+                <div class="reply-item">
+                    <div class="reply-meta">
+                        <span class="reply-author" onclick="loadProfile('${reply.user_id}')">${repAv} ${replyAuthorName}</span>
+                        <span class="post-timestamp">${timeAgo(reply.created_at)}</span>
+                    </div>
+                    <div class="reply-text">${reply.reply_text}</div>
+                    <div class="reply-footer-row">
+                        <button class="like-btn ${likeClass}" onclick="toggleReplyLike('${reply.id}', ${iLiked})">${heartIcon} ${likesCount}</button>
+                        ${deleteReplyBtnHtml}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="post-card">
+                ${deletePostBtnHtml}
+                <div class="post-meta">
+                    <div class="post-avatar" onclick="loadProfile('${post.user_id}')">${postAv}</div>
+                    <div class="post-author-info" onclick="loadProfile('${post.user_id}')">
+                        <span class="post-author-name">${authorName} ${catBadge}</span>
+                        <span class="post-timestamp">${timeAgo(post.created_at)}</span>
+                    </div>
+                </div>
+                <div class="post-body">${post.post_text}</div>
+                
+                <div class="replies-container">
+                    ${repliesHtml}
+                    <div class="reply-composer">
+                        <input type="text" id="reply-input-${post.id}" class="reply-input" placeholder="Write a reply...">
+                        <button id="btn-reply-${post.id}" class="btn-reply-submit" onclick="submitReply('${post.id}')">Reply</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderFeed() {
+        const stream = document.getElementById('posts-stream');
+        
+        let postsToDisplay = globalPosts.filter(p => p.feed_type === 'global');
+        
+        if (currentFeedFilter === 'following') {
+            postsToDisplay = postsToDisplay.filter(p => myFollowingIds.includes(p.user_id) || p.user_id === loggedInUser.id);
+        }
+
+        const catFilter = document.getElementById('feed-category-filter').value;
+        if (catFilter !== 'All') {
+            postsToDisplay = postsToDisplay.filter(p => (p.category || 'General') === catFilter);
+        }
+
+        const query = document.getElementById('feed-search').value.toLowerCase();
+        if (query) {
+            postsToDisplay = postsToDisplay.filter(p => {
+                const name = (profilesCache[p.user_id]?.full_name || p.author_name).toLowerCase();
+                const text = (p.post_text || '').toLowerCase();
+                return text.includes(query) || name.includes(query);
+            });
+        }
+
+        const outputHtml = postsToDisplay.map(p => buildPostHTML(p)).filter(html => html !== '').join('');
+
+        if (outputHtml === '') {
+            stream.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 30px;">No posts found for this view.</div>`;
+            return;
+        }
+
+        stream.innerHTML = outputHtml;
+    }
+
+    function renderPrivateFeed(userId) {
+        const stream = document.getElementById('private-feed-stream');
+        const postsToDisplay = globalPosts.filter(p => p.user_id === userId);
+        
+        const outputHtml = postsToDisplay.map(p => buildPostHTML(p)).filter(html => html !== '').join('');
+
+        if (outputHtml === '') {
+            stream.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 20px 0; font-size: 12px;">This user hasn't posted anything yet.</div>`;
+            return;
+        }
+        stream.innerHTML = outputHtml;
     }
 
     document.getElementById('logoutBtn').addEventListener('click', async () => { 
-        await client.auth.signOut(); 
+        await mainClient.auth.signOut(); 
         window.location.href = 'index.html'; 
     });
 
-    function parseFileToRows(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const rows = XLSX.utils.sheet_to_json(sheet, {header: 1, defval: null});
-                    resolve(rows);
-                } catch(err) { reject(err); }
-            };
-            reader.readAsArrayBuffer(file);
-        });
-    }
-
-    async function processKeyLevels() {
-        const fileInput = document.getElementById('excelFile-kl');
-        const date = document.getElementById('upload-date-kl').value;
-        const statusDiv = document.getElementById('status-kl');
-        const debugDiv = document.getElementById('debug-panel');
-
-        debugDiv.style.display = 'none';
-
-        if (!fileInput.files.length || !date) return alert("Select a file AND choose a target date.");
-        statusDiv.innerText = "Processing Key Levels Data...";
-
-        try {
-            const rows = await parseFileToRows(fileInput.files[0]);
-            if (rows.length < 2) return statusDiv.innerText = "Error: File is empty or invalid.";
-
-            const rawHeaders = rows[0];
-            const formattedData = [];
-            const uploadTimestamp = new Date().toISOString();
-
-            for (let i = 1; i < rows.length; i++) {
-                const row = rows[i];
-                if (!row || !row[0]) continue;
-
-                let payloadObj = { trade_date: date, last_updated: uploadTimestamp };
-
-                rawHeaders.forEach((header, idx) => {
-                    if (header === undefined || header === null) return;
-                    let h = String(header).toLowerCase().replace(/[^a-z0-9]/g, '');
-                    let dbKey = "";
-
-                    if (h.includes('ticker') || h.includes('symbol')) dbKey = 'ticker';
-                    else if (h.includes('prev') || h.includes('prior') || h.includes('previous')) dbKey = 'prev_bull_bear';
-                    else if (h.includes('bull') || h.includes('bear')) dbKey = 'bull_bear_line';
-                    else if (h.includes('bias')) dbKey = 'bias';
-                    else if (h === 's1') dbKey = 's1';
-                    else if (h === 'r1') dbKey = 'r1';
-                    else if (h === 's2') dbKey = 's2';
-                    else if (h === 'r2') dbKey = 'r2';
-                    else if (h.includes('analysis')) dbKey = 'analysis';
-                    else if (h.includes('lollipop') || h.includes('lollopop')) dbKey = 'lollipop';
-
-                    if (dbKey && row[idx] !== undefined && row[idx] !== null) {
-                        let val = String(row[idx]).trim();
-                        if (val === '' || val === '-' || val.toLowerCase() === 'n/a') {
-                            payloadObj[dbKey] = null;
-                        } else {
-                            const numericColumns = ['prev_bull_bear', 'bull_bear_line', 's1', 'r1', 's2', 'r2'];
-                            if (numericColumns.includes(dbKey)) {
-                                val = val.replace(/,/g, '.').replace(/[^\d.-]/g, '');
-                                let parsedVal = parseFloat(val);
-                                payloadObj[dbKey] = isNaN(parsedVal) ? null : parsedVal;
-                            } else {
-                                payloadObj[dbKey] = val;
-                            }
-                        }
-                    }
-                });
-
-                if (payloadObj.ticker) {
-                    formattedData.push(payloadObj);
-                }
-            }
-
-            if (formattedData.length === 0) return statusDiv.innerText = "Error: No valid rows extracted.";
-            statusDiv.innerText = `Pushing ${formattedData.length} rows to database...`;
-            await client.from('key_levels').delete().eq('trade_date', date);
-            const { error } = await client.from('key_levels').insert(formattedData);
-            
-            if (error) {
-                statusDiv.innerText = "Supabase Error: " + error.message;
-                statusDiv.style.color = "#f85149";
-            } else {
-                statusDiv.innerText = `Success! Uploaded ${formattedData.length} Key Levels.`;
-                statusDiv.style.color = "#3fb950";
-            }
-
-        } catch (err) {
-            statusDiv.innerText = "Parsing Error: " + err.message;
-            statusDiv.style.color = "#f85149";
-        }
-    }
-
-    async function processExpiries() {
-        const fileInput = document.getElementById('excelFile-exp');
-        const date = document.getElementById('upload-date-exp').value;
-        const statusDiv = document.getElementById('status-exp');
-
-        if (!fileInput.files.length || !date) return alert("Select a data file AND date entry.");
-        statusDiv.innerText = "Parsing FX Option Expiries...";
-
-        try {
-            const rows = await parseFileToRows(fileInput.files[0]);
-            if (rows.length < 3) return statusDiv.innerText = "Error: Dataset lacks required structural row depth.";
-
-            const headers = rows[0]; 
-            const spotRow = rows[1]; 
-            const tickerMap = {};
-            const spotPriceMap = {};
-            const corePortfolio = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CAD', 'EUR/GBP'];
-
-            headers.forEach((header, index) => {
-                const tickerStr = String(header || '').trim();
-                if (corePortfolio.includes(tickerStr)) {
-                    tickerMap[index] = tickerStr;
-                    const rawSpot = spotRow ? spotRow[index] : null;
-                    if (rawSpot !== undefined && rawSpot !== null && String(rawSpot).trim() !== '') {
-                        spotPriceMap[tickerStr] = parseFloat(String(rawSpot).replace(/,/g, '.').replace(/[^\d.-]/g, ''));
-                    }
-                }
-            });
-
-            const flatData = [];
-            const regex = /([\d\.,]+)\s*\([^\d]*([\d\.,]+)([bm]+)\)/gi;
-            const uploadTimestamp = new Date().toISOString();
-
-            for (let i = 2; i < rows.length; i++) {
-                const row = rows[i];
-                if (!row) continue;
-
-                Object.keys(tickerMap).forEach(colIdx => {
-                    const ticker = tickerMap[colIdx];
-                    const cellString = row[colIdx];
-                    if (!cellString) return;
-
-                    let match;
-                    regex.lastIndex = 0;
-
-                    while ((match = regex.exec(String(cellString))) !== null) {
-                        const strike = parseFloat(match[1].replace(/,/g, '.'));
-                        let vol = parseFloat(match[2].replace(/,/g, '.'));
-                        const denomination = match[3].toLowerCase();
-
-                        if (denomination.includes('m')) vol = vol / 1000;
-
-                        flatData.push({
-                            trade_date: date,
-                            ticker: ticker,
-                            strike: strike,
-                            volume: parseFloat(vol.toFixed(3)),
-                            spot_price: spotPriceMap[ticker] || null,
-                            last_updated: uploadTimestamp
-                        });
-                    }
-                });
-            }
-
-            if (flatData.length === 0) return statusDiv.innerText = "Error: Zero options columns successfully targeted.";
-            statusDiv.innerText = `Pushing ${flatData.length} FX Option entries to Supabase...`;
-            await client.from('order_levels').delete().eq('trade_date', date);
-            const { error } = await client.from('order_levels').insert(flatData);
-            
-            if (error) {
-                statusDiv.innerText = "Supabase Error: " + error.message;
-                statusDiv.style.color = "#f85149";
-            } else {
-                statusDiv.innerText = `Success! Uploaded ${flatData.length} FX Option Expiries seamlessly.`;
-                statusDiv.style.color = "#3fb950";
-            }
-
-        } catch (err) {
-            statusDiv.innerText = "Execution Failure: " + err.message;
-            statusDiv.style.color = "#f85149";
-        }
-    }
-
-    async function processTradeIdeas() {
-        const textInput = document.getElementById('trade-ideas-text').value.trim();
-        const statusDiv = document.getElementById('status-ti');
-
-        if (!textInput) return alert("Please paste trade ideas text.");
-        statusDiv.innerText = "Parsing Trade Ideas...";
-
-        try {
-            let globalDate = new Date().toISOString().split('T')[0];
-            const dateLineMatch = textInput.match(/^([A-Za-z]+ \d{1,2}(?:st|nd|rd|th)? \d{4})/i);
-            if (dateLineMatch) {
-                globalDate = dateLineMatch[1];
-            }
-
-            const tradeBlocks = textInput.split(/Trade Idea \d+:/i);
-            const parsedData = [];
-            const uploadTimestamp = new Date().toISOString();
-
-            tradeBlocks.forEach((block, index) => {
-                if (!block.trim()) return;
-                if (index === 0 && !block.toLowerCase().includes('instrument:')) return;
-
-                let normalizedBlock = block
-                    .replace(/(Instrument:)/gi, '\n$1')
-                    .replace(/(Direction:)/gi, '\n$1')
-                    .replace(/(Strike:)/gi, '\n$1')
-                    .replace(/(Entry:)/gi, '\n$1')
-                    .replace(/(Key Levels:)/gi, '\n$1')
-                    .replace(/(Rationale:)/gi, '\n$1')
-                    .replace(/(Conditions:)/gi, '\n$1');
-
-                const lines = normalizedBlock.split('\n');
-                let currentKey = 'title';
-                let trade = {
-                    trade_date: globalDate,
-                    title: '',
-                    instrument: '',
-                    direction: '',
-                    strike: null,
-                    entry: null,
-                    key_levels: null, 
-                    rationale: '',
-                    conditions: '',
-                    last_updated: uploadTimestamp
-                };
-
-                lines.forEach(line => {
-                    line = line.trim();
-                    if (!line) return;
-
-                    let lowerLine = line.toLowerCase();
-                    if (lowerLine.startsWith('instrument:')) { currentKey = 'instrument'; trade.instrument = line.substring(11).trim(); }
-                    else if (lowerLine.startsWith('direction:')) { currentKey = 'direction'; trade.direction = line.substring(10).trim(); }
-                    else if (lowerLine.startsWith('strike:')) { currentKey = 'strike'; trade.strike = line.substring(7).trim(); }
-                    else if (lowerLine.startsWith('entry:')) { currentKey = 'entry'; trade.entry = line.substring(6).trim(); }
-                    else if (lowerLine.startsWith('key levels:')) { currentKey = 'key_levels'; trade.key_levels = line.substring(11).trim(); }
-                    else if (lowerLine.startsWith('rationale:')) { currentKey = 'rationale'; trade.rationale = line.substring(10).trim(); }
-                    else if (lowerLine.startsWith('conditions:')) { currentKey = 'conditions'; trade.conditions = line.substring(11).trim(); }
-                    else {
-                        if (currentKey && trade[currentKey] !== undefined) {
-                            if (currentKey === 'title') {
-                                trade.title += (trade.title ? ' ' : '') + line;
-                            } else {
-                                trade[currentKey] += ' ' + line;
-                            }
-                        }
-                    }
-                });
-
-                if (trade.instrument) {
-                    parsedData.push(trade);
-                }
-            });
-
-            if (parsedData.length === 0) {
-                return statusDiv.innerText = "Error: No valid trade ideas could be parsed from the text provided.";
-            }
-
-            statusDiv.innerText = `Pushing ${parsedData.length} Trade Ideas to Supabase...`;
-            
-            const { error } = await client.from('trade_ideas').insert(parsedData);
-
-            if (error) {
-                statusDiv.innerText = "Supabase Error: " + error.message;
-                statusDiv.style.color = "#f85149";
-                return;
-            } 
-            
-            const { data: datesData } = await client.from('trade_ideas').select('trade_date');
-            
-            if (datesData) {
-                const uniqueDates = [...new Set(datesData.map(d => d.trade_date))]
-                    .sort((a, b) => new Date(b.replace(/(st|nd|rd|th)/, '')) - new Date(a.replace(/(st|nd|rd|th)/, '')));
-                
-                if (uniqueDates.length > 2) {
-                    const datesToDelete = uniqueDates.slice(2);
-                    for (const oldDate of datesToDelete) {
-                        await client.from('trade_ideas').delete().eq('trade_date', oldDate);
-                    }
-                }
-            }
-
-            statusDiv.innerText = `Success! Uploaded ${parsedData.length} Trade Idea(s) and cleaned up older data.`;
-            statusDiv.style.color = "#3fb950";
-            document.getElementById('trade-ideas-text').value = ''; 
-
-        } catch (err) {
-            statusDiv.innerText = "Execution Failure: " + err.message;
-            statusDiv.style.color = "#f85149";
-        }
-    }
-    
-    // Initialize admin verification on load
     init();
 </script>
 </body>
