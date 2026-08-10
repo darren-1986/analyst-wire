@@ -142,8 +142,15 @@
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
         
-        const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
-        if (!profile || profile.is_admin !== true) { 
+        const { data: profileArray, error } = await client
+            .from('profiles')
+            .select('admin')
+            .eq('id', session.user.id)
+            .limit(1);
+            
+        const profile = profileArray?.[0];
+        
+        if (!profile || profile.admin !== true) { 
             window.location.href = 'terminal.html'; 
             return; 
         }
