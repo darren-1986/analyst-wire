@@ -43,11 +43,9 @@
             tagsArray = userTags;
         } else if (typeof userTags === 'string') {
             try {
-                // Parse it if it came through as stringified JSON: '["course","newsfeed"]'
                 let parsed = JSON.parse(userTags);
                 tagsArray = Array.isArray(parsed) ? parsed : [userTags];
             } catch (e) {
-                // If it's just raw comma-separated text, split it
                 tagsArray = userTags.split(',').map(s => s.trim());
             }
         }
@@ -161,14 +159,14 @@
             status.style.color = '#28a745';
             status.innerText = 'Success! Checking permissions...';
             
-            // 1. Fetch exactly the columns that exist in your DB now
-            const { data: profile, error: profileError } = await client
+            // 1. Fetch exactly the columns that exist in your DB now.
+            // Using .limit(1) instead of .single() to safely ignore duplicate rows.
+            const { data: profileArray, error: profileError } = await client
                 .from('profiles')
                 .select('admin, active_tags')
                 .eq('id', data.user.id)
-                .single();
+                .limit(1);
 
-            // FAILSAFE: If Row Level Security blocks the read, display the error directly
             if (profileError) {
                 status.style.color = '#ff4444';
                 status.innerText = 'Profile Read Error: ' + profileError.message;
@@ -177,6 +175,9 @@
             }
 
             await logUserDeviceAndLocation(data.user.id);
+
+            // Extract the first profile from the array
+            const profile = profileArray && profileArray.length > 0 ? profileArray[0] : null;
 
             // 2. Read the tags and the exact 'admin' column
             const tags = profile?.active_tags ? profile.active_tags : [];
