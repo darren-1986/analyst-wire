@@ -297,9 +297,77 @@
             <div class="dock-title">Widget Library</div>
             <button class="close-dock-btn" onclick="toggleDock()">Hide Library ▲</button>
         </div>
-        <!-- Dock is now a standard flex container to prevent truncation issues -->
         <div id="dock-container">
             
+            <!-- PROFILE AND SUBSCRIPTIONS WIDGET -->
+            <div class="grid-stack-item" gs-id="profile-widget" gs-w="2" gs-h="1" data-default-w="4" data-default-h="4" data-in-dock="true" data-zoom="1.0">
+                <div class="grid-stack-item-content">
+                    <div class="panel">
+                        <div class="panel-header" title="My Profile & Subscriptions">
+                            <div class="panel-title-wrapper">
+                                <span class="panel-title-text"><span class="full-text">My Profile</span><span class="short-text">P</span></span>
+                            </div>
+                            <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+                                <div class="settings-container">
+                                    <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+                                    <div class="widget-settings-menu">
+                                        <div class="menu-row">
+                                            <span class="menu-label">Zoom</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                            <span class="zoom-label">100%</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                        </div>
+                                        <div class="menu-row mobile-only">
+                                            <span class="menu-label">Height</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+                                            <span class="h-label">Auto</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+                                <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+                            </div>
+                        </div>
+                        <div class="panel-content" style="background: #0d1117;">
+                            <div class="adaptive-wrapper" style="padding: 15px; overflow-y: auto;">
+                                <style>
+                                    .profile-widget-inner { font-family: 'Inter', sans-serif; color: #c9d1d9; }
+                                    .profile-widget-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #1c2230; }
+                                    .profile-widget-avatar { width: 45px; height: 45px; border-radius: 50%; background: rgba(41, 98, 255, 0.1); border: 1px solid rgba(41, 98, 255, 0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #58a6ff; flex-shrink: 0; }
+                                    .profile-widget-info h4 { margin: 0 0 4px 0; color: #fff; font-size: 15px; font-weight: 600; }
+                                    .profile-widget-info p { margin: 0; color: #8b949e; font-size: 12px; word-break: break-all; }
+                                    .profile-widget-subs { display: flex; flex-direction: column; gap: 10px; }
+                                    .widget-sub-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; transition: border-color 0.2s; }
+                                    .widget-sub-card:hover { border-color: #4b5563; }
+                                    .widget-sub-details { display: flex; flex-direction: column; gap: 4px; }
+                                    .widget-sub-title { font-size: 13px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
+                                    .widget-sub-date { font-size: 11px; color: #8b949e; font-family: 'JetBrains Mono', monospace; }
+                                    .widget-badge { padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+                                    .w-badge-active { background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.4); }
+                                    .w-badge-canceled { background: rgba(248, 81, 73, 0.15); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); }
+                                    .w-badge-refunded { background: rgba(210, 153, 34, 0.15); color: #d29922; border: 1px solid rgba(210, 153, 34, 0.4); }
+                                </style>
+                                <div class="profile-widget-inner">
+                                    <div class="profile-widget-header">
+                                        <div class="profile-widget-avatar" id="pw-avatar">?</div>
+                                        <div class="profile-widget-info">
+                                            <h4 id="pw-name">Loading...</h4>
+                                            <p id="pw-email">Authenticating...</p>
+                                        </div>
+                                    </div>
+                                    <div class="profile-widget-subs" id="pw-subs-container">
+                                        <div style="font-size: 12px; color: #8b949e; text-align: center;">Fetching active plans...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- NEWSFEED -->
             <div class="grid-stack-item" gs-id="newsfeed" gs-w="2" gs-h="1" data-default-w="7" data-default-h="4" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
@@ -536,7 +604,6 @@
                             </style>
                             <script>
                             (function() {
-                                // Updated to target exact user filters: Gold, Australia (Sydney), and USA (New York)
                                 const SESSIONS = [
                                     { name: 'Sydney', zone: 'Australia/Sydney', open: 8, close: 16 },
                                     { name: 'New York', zone: 'America/New_York', open: 8, close: 16 }
@@ -816,6 +883,79 @@
     }
 
     // ==========================================
+    // PROFILE WIDGET RENDERING ENGINE
+    // ==========================================
+    function formatWidgetDate(dateStr) {
+        if (!dateStr || dateStr === 'null' || dateStr === 'N/A') return 'N/A';
+        const dateObj = new Date(dateStr);
+        if (isNaN(dateObj.getTime())) return 'N/A';
+        return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function renderProfileWidget(user, profile) {
+        if (!user || !profile) return;
+        
+        document.getElementById('pw-email').innerText = user.email || 'N/A';
+        const fullName = profile.customer_name || 'Valued Member';
+        document.getElementById('pw-name').innerText = fullName;
+        document.getElementById('pw-avatar').innerText = fullName.charAt(0).toUpperCase();
+
+        const container = document.getElementById('pw-subs-container');
+        container.innerHTML = '';
+        
+        let tags = profile.active_tags || [];
+        if (typeof tags === 'string') {
+            try { tags = JSON.parse(tags); } catch(e) { tags = [tags]; }
+        }
+
+        if (!Array.isArray(tags) || tags.length === 0) {
+            container.innerHTML = `<div style="color: #8b949e; font-size: 12px; text-align: center; padding: 10px; border: 1px dashed #30363d; border-radius: 6px;">No active plans</div>`;
+            return;
+        }
+
+        tags.forEach(tag => {
+            const lastBilling = profile.last_billing_dates_by_tag?.[tag];
+            const nextBilling = profile.next_billing_dates_by_tag?.[tag];
+            const accessEnds = profile.access_ends_by_tag?.[tag] || profile.scheduled_tag_removals?.[tag] || profile.onetime_access_expires;
+            
+            const isRefunded = profile.refunded_by_tag?.[tag] === true;
+            const isScheduled = !!profile.scheduled_tag_removals?.[tag] || profile.cancellation_scheduled === true;
+            
+            let statusStr = 'ACTIVE';
+            let badgeClass = 'w-badge-active';
+            
+            if (isRefunded) {
+                statusStr = 'REFUNDED';
+                badgeClass = 'w-badge-refunded';
+            } else if (isScheduled && tag !== 'course') {
+                statusStr = 'CANCELLED';
+                badgeClass = 'w-badge-canceled';
+            }
+
+            let dateLabel = 'Next Bill';
+            let dateDisplay = formatWidgetDate(nextBilling);
+
+            if (tag === 'course') {
+                dateLabel = 'Expires';
+                dateDisplay = formatWidgetDate(accessEnds);
+            } else if (statusStr === 'CANCELLED') {
+                dateLabel = 'Access Ends';
+                dateDisplay = formatWidgetDate(accessEnds);
+            }
+
+            container.innerHTML += `
+                <div class="widget-sub-card">
+                    <div class="widget-sub-details">
+                        <span class="widget-sub-title">${tag}</span>
+                        <span class="widget-sub-date">${dateLabel}: ${dateDisplay}</span>
+                    </div>
+                    <span class="widget-badge ${badgeClass}">${statusStr}</span>
+                </div>
+            `;
+        });
+    }
+
+    // ==========================================
     // MOBILE MENU & SETTINGS TOGGLES
     // ==========================================
     function toggleMobileMenu() {
@@ -835,7 +975,6 @@
             const isOpen = menu.classList.toggle('open');
             btn.classList.toggle('active');
             
-            // Populate Labels dynamically upon open
             if (isOpen) {
                 const el = btn.closest('.grid-stack-item');
                 const currentZoom = parseFloat(el.getAttribute('data-zoom')) || 1.0;
@@ -1004,7 +1143,6 @@
     function adjustHeight(btn, delta) {
         const el = btn.closest('.grid-stack-item');
         if (window.innerWidth <= 768) {
-            // Strictly push mobile inline CSS heights in 50px increments
             let currentH = parseInt(el.getAttribute('data-mobile-h')) || 350;
             let newH = Math.max(150, currentH + (delta * 50)); 
             el.setAttribute('data-mobile-h', newH);
@@ -1012,7 +1150,6 @@
             const label = el.querySelector('.h-label');
             if (label) label.innerText = `${newH}px`;
         } else {
-            // Native GridStack desktop block height modification
             const node = el.gridstackNode;
             if (!node) return;
             let currentH = node.h || parseInt(el.getAttribute('data-default-h')) || 4;
@@ -1061,7 +1198,6 @@
         el.parentNode.removeChild(el);
         el.setAttribute('data-in-dock', 'false');
         
-        // Setup initial locked mobile height natively if it hasn't been set yet
         if (!el.hasAttribute('data-mobile-h')) {
             el.setAttribute('data-mobile-h', 350);
             el.style.setProperty('--mobile-h', '350px');
@@ -1089,7 +1225,7 @@
         }
         el.setAttribute('data-in-dock', 'true');
         el.setAttribute('data-zoom', '1.0');
-        el.removeAttribute('style'); // Clear desktop coordinate positioning overrides
+        el.removeAttribute('style'); 
         
         const menu = el.querySelector('.widget-settings-menu');
         const toggleBtn = el.querySelector('.settings-toggle-btn');
@@ -1106,7 +1242,7 @@
     }
 
     window.onload = function() {
-        const savedLayout = localStorage.getItem('analystWireLayoutV20');
+        const savedLayout = localStorage.getItem('analystWireLayoutV21');
         
         mainGrid = GridStack.init({
             cellHeight: '60px', margin: 5, handle: '.panel-header', animate: true, 
@@ -1134,7 +1270,6 @@
                                 el.setAttribute('data-in-dock', 'false');
                                 document.getElementById('main-grid').appendChild(el);
                                 
-                                // Restore desktop attributes natively so they aren't lost on mobile re-saves
                                 if (item.x !== undefined) el.setAttribute('gs-x', item.x);
                                 if (item.w !== undefined) el.setAttribute('gs-w', item.w);
                                 if (item.h !== undefined) el.setAttribute('gs-h', item.h);
@@ -1195,7 +1330,6 @@
         
         let mainItems = [];
         if (window.innerWidth <= 768) {
-            // Read background gs attributes so you don't corrupt the desktop layout cache when editing on phone
             mainItems = Array.from(document.getElementById('main-grid').children).map((el, idx) => ({
                 id: el.getAttribute('gs-id'), 
                 grid: 'main', 
@@ -1212,7 +1346,7 @@
             }));
         }
         
-        localStorage.setItem('analystWireLayoutV20', JSON.stringify([...dockItems, ...mainItems]));
+        localStorage.setItem('analystWireLayoutV21', JSON.stringify([...dockItems, ...mainItems]));
     }
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
@@ -1271,7 +1405,6 @@
         let todayData = todayRes.data || [];
         const yesterdayData = yesterdayRes.data || [];
 
-        // Apply Gold filter rule here based on saved preferences
         todayData = todayData.filter(row => row.ticker === 'XAU/USD' || row.ticker.includes('AUD') || row.ticker.includes('USD'));
 
         let radarData = todayData.map(todayRow => {
@@ -1426,9 +1559,10 @@
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
 
+        // Fetching '*' so we have access to customer_name, billing dates, etc. for the new Profile widget
         const { data: profileArray, error: profileError } = await client
             .from('profiles')
-            .select('admin, active_tags')
+            .select('*')
             .eq('id', session.user.id)
             .limit(1);
 
@@ -1450,6 +1584,9 @@
             return;
         }
 
+        // --- RENDER PROFILE WIDGET ---
+        renderProfileWidget(session.user, profile);
+
         // --- HARD ROUTING (BOUNCER LOGIC) ---
         if (!isAdmin && !userHasAccess(tags, 'pro')) {
             if (userHasAccess(tags, 'course') || userHasAccess(tags, 'courses')) {
@@ -1465,7 +1602,6 @@
         }
 
         // --- STRICT NAVIGATION VISIBILITY ---
-        // Since only Admin and Pro can reach here, we reveal the Pro links.
         document.getElementById('nav-courses').style.display = 'flex';
         document.getElementById('nav-key-levels').style.display = 'flex';
 
