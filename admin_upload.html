@@ -137,14 +137,34 @@
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-    // Admin authorization check
+    // --- HELPER FUNCTION: Bulletproof parsing for Arrays, Strings, and JSON ---
+    function userHasAccess(userTags, requiredTag) {
+        if (!userTags) return false;
+        
+        let tagsArray = [];
+        
+        if (Array.isArray(userTags)) {
+            tagsArray = userTags;
+        } else if (typeof userTags === 'string') {
+            try {
+                let parsed = JSON.parse(userTags);
+                tagsArray = Array.isArray(parsed) ? parsed : [userTags];
+            } catch (e) {
+                tagsArray = userTags.split(',').map(s => s.trim());
+            }
+        }
+
+        return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+    }
+
+    // Extended Authorization Check
     async function init() {
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
         
         const { data: profileArray, error: profileError } = await client
             .from('profiles')
-            .select('admin')
+            .select('admin, active_tags')
             .eq('id', session.user.id)
             .limit(1);
             
@@ -157,8 +177,13 @@
             
         const profile = profileArray?.[0];
         
-        // Strictly check for boolean true on the admin column
-        if (!profile || profile.admin !== true) { 
+        const tags = profile?.active_tags ? profile.active_tags : [];
+        const isAdmin = profile?.admin === true;
+        
+        // Strict Check: Must be admin, pro, newsfeed, or course
+        const isAuthorized = isAdmin || userHasAccess(tags, 'pro') || userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'course');
+        
+        if (!isAuthorized) { 
             window.location.href = 'terminal.html'; 
             return; 
         }
