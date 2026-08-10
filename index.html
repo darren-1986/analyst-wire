@@ -28,32 +28,19 @@
 </div>
 
 <script>
-    // 1. Correct API URL
     const SUPABASE_URL = 'https://fgidelsazisdqjfckerd.supabase.co';
-    
-    // 2. ANON Key
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5NDc1ODQsImV4cCI6MjA5ODUyMzU4NH0.BaxMA1FiXvyVDOsVNkN2tLNrkkCqsppVe54Sc8c0cYg';
-
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // --- HELPER FUNCTION: Safely parse JSON array tags ---
+    // --- HELPER FUNCTION: Greatly simplified for a native JS array ---
     function userHasAccess(userTags, requiredTag) {
-        if (!userTags) return false;
-        try {
-            const parsedArray = JSON.parse(userTags);
-            if (Array.isArray(parsedArray)) {
-                return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
-            }
-        } catch (e) {
-            return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
-        }
-        return false;
+        if (!Array.isArray(userTags)) return false;
+        return userTags.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
     }
 
     // --- DEVICE TRACKING FUNCTION ---
     async function logUserDeviceAndLocation(userId) {
         try {
-            // 1. Parse basic device information from the browser's User-Agent
             const ua = navigator.userAgent;
             let deviceType = "Desktop";
             if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
@@ -62,7 +49,6 @@
                 deviceType = "Tablet";
             }
             
-            // Grab the OS to make it more detailed
             let os = "Unknown OS";
             if (ua.indexOf("Win") !== -1) os = "Windows";
             if (ua.indexOf("Mac") !== -1) os = "MacOS";
@@ -71,10 +57,9 @@
             if (ua.indexOf("like Mac") !== -1) os = "iOS";
             
             const finalDeviceString = `${deviceType} - ${os}`;
-
-            // 2. Fetch the Country & IP using a free IP Geolocation API
             let country = "Unknown";
             let ipAddress = "Unknown";
+            
             try {
                 const geoResponse = await fetch('https://ipapi.co/json/');
                 const geoData = await geoResponse.json();
@@ -84,7 +69,6 @@
                 console.log("Adblocker blocked IP tracking, skipping country/IP.");
             }
 
-            // 3. Insert the new record into the login_history table
             await client.from('login_history').insert([{
                 user_id: userId,
                 ip_address: ipAddress,
@@ -94,7 +78,6 @@
                 raw_user_agent: ua
             }]);
 
-            // 4. Silently update the database profiles table for quick view
             await client.from('profiles').update({
                 last_device: finalDeviceString,
                 last_country: country
@@ -161,33 +144,29 @@
             status.style.color = '#28a745';
             status.innerText = 'Success! Checking permissions...';
             
-            // Check user role and subscription tag
+            // Check user role and the NEW active_tags column
             const { data: profile, error: profileError } = await client
                 .from('profiles')
-                .select('is_admin, subscription_tag')
+                .select('is_admin, active_tags')
                 .eq('id', data.user.id)
                 .single();
 
-            // Run the device tracker in the background before redirecting
             await logUserDeviceAndLocation(data.user.id);
 
-            const tag = profile?.subscription_tag ? profile.subscription_tag : '';
+            // Default to an empty array if undefined
+            const tags = profile?.active_tags ? profile.active_tags : [];
             const isAdmin = profile?.is_admin === true;
 
             // Strict Routing & Access Control
             if (isAdmin) {
                 window.location.href = 'admin.html';
-            } else if (userHasAccess(tag, 'pro')) {
-                // Pro takes highest priority
+            } else if (userHasAccess(tags, 'pro')) {
                 window.location.href = 'terminal.html';
-            } else if (userHasAccess(tag, 'course') || userHasAccess(tag, 'courses')) {
-                // If they have the course (and aren't Pro), send to courses
+            } else if (userHasAccess(tags, 'course') || userHasAccess(tags, 'courses')) {
                 window.location.href = 'courses.html';
-            } else if (userHasAccess(tag, 'newsfeed')) {
-                // If they only have newsfeed, send there
+            } else if (userHasAccess(tags, 'newsfeed')) {
                 window.location.href = '/newsfeed';
             } else {
-                // If they don't have any of the above tags (e.g., free, empty, or cancelled)
                 status.style.color = '#ff4444';
                 status.innerText = 'Access Denied: Active subscription required.';
                 await client.auth.signOut();
