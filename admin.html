@@ -63,10 +63,16 @@
         .sort-icon { font-size: 0.8rem; margin-left: 5px; color: #4b5563; }
         
         /* Badges */
-        .status-active { color: #3fb950; font-weight: 600; background: rgba(46, 160, 67, 0.15); border: 1px solid rgba(46, 160, 67, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; margin: 2px 0; }
-        .status-inactive { color: #f85149; font-weight: 600; background: rgba(248, 81, 73, 0.15); border: 1px solid rgba(248, 81, 73, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; margin: 2px 0; }
-        .tag-badge { background: #1f2937; border: 1px solid #374151; padding: 4px 8px; border-radius: 6px; margin: 2px 0; display: inline-block; text-transform: capitalize; font-size: 0.75rem; color: #c9d1d9; font-weight: 600; }
+        .status-active { color: #3fb950; font-weight: 600; background: rgba(46, 160, 67, 0.15); border: 1px solid rgba(46, 160, 67, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 0.5px; height: 24px; box-sizing: border-box; }
+        .status-inactive { color: #f85149; font-weight: 600; background: rgba(248, 81, 73, 0.15); border: 1px solid rgba(248, 81, 73, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 0.5px; height: 24px; box-sizing: border-box; }
+        .status-refunded { color: #d29922; font-weight: 600; background: rgba(210, 153, 34, 0.15); border: 1px solid rgba(210, 153, 34, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 0.5px; height: 24px; box-sizing: border-box; }
         
+        .tag-badge { background: #1f2937; border: 1px solid #374151; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; text-transform: uppercase; font-size: 0.75rem; color: #c9d1d9; font-weight: 600; height: 24px; box-sizing: border-box; letter-spacing: 0.5px; }
+        
+        /* Vertical Aligners for Columns */
+        .col-stack { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; justify-content: center; }
+        .date-text { height: 24px; display: flex; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #c9d1d9; }
+
         /* Table Button */
         .btn-profile { background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif; }
         .btn-profile:hover { background: #2962ff; color: #fff; border-color: #2962ff; }
@@ -99,14 +105,12 @@
 
         /* Mobile Adaptive Styling */
         @media (max-width: 768px) {
-            /* Navbar adjustments */
             .nav-brand { display: block; }
             .menu-toggle { display: block; }
             .nav-links { display: none; flex-direction: column; align-items: stretch; margin-top: 15px; width: 100%; }
             .nav-links.show { display: flex; }
             #logoutBtn { margin-left: 0 !important; color: #f85149; }
 
-            /* Grid and filters */
             .controls, .filters { flex-direction: column; align-items: stretch; width: 100%; }
             .filters h2 { margin-bottom: 10px; text-align: center; }
             .btn-danger { width: 100%; }
@@ -115,7 +119,6 @@
             .manage-user-form input, .manage-user-form select, .btn-primary { flex: none; width: 100%; margin-bottom: 12px; min-height: 42px; }
             .admin-container { padding: 15px; margin: 10px auto; }
             
-            /* Modal adjustments */
             .modal { padding: 20px; }
             .modal-form-row { grid-template-columns: 1fr; gap: 10px; }
             .quick-view-box { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -144,9 +147,9 @@
         <div class="manage-user-form">
             <h3>Edit / Invite User</h3>
             <input type="email" id="m-email" placeholder="Email Address">
-            <input type="text" id="m-name" placeholder="Full Name">
+            <input type="text" id="m-name" placeholder="Customer Name">
             <input type="text" id="m-tag" placeholder="Tags (e.g. course, newsfeed)">
-            <input type="datetime-local" id="m-expiry" title="Trial Record Date">
+            <input type="datetime-local" id="m-expiry" title="Course Expiry Override (Optional)">
             <button class="btn-primary" onclick="saveUser()">Update / Invite</button>
         </div>
 
@@ -158,12 +161,12 @@
                     <option value="all">Status: All</option>
                     <option value="active">Active</option>
                     <option value="canceled">Canceled</option>
+                    <option value="refunded">Refunded</option>
                 </select>
                 <select id="filter-tag" class="filter-select">
                     <option value="all">Tag: All</option>
                     <option value="pro">Pro</option>
                     <option value="course">Course</option>
-                    <option value="audio squawk">Audio Squawk</option>
                     <option value="newsfeed">Newsfeed</option>
                     <option value="free">Free</option>
                 </select>
@@ -175,19 +178,18 @@
             <table id="admin-table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Email</th>
+                        <th class="sortable" onclick="handleSort('name')">Name <span id="sort-icon-name" class="sort-icon">↕</span></th>
+                        <th class="sortable" onclick="handleSort('email')">Email <span id="sort-icon-email" class="sort-icon">↕</span></th>
                         <th class="sortable" onclick="handleSort('tag')">Tags <span id="sort-icon-tag" class="sort-icon">↕</span></th>
-                        <th class="sortable" onclick="handleSort('status')">Status <span id="sort-icon-status" class="sort-icon">↕</span></th>
-                        <th>Trial Record</th>
-                        <th class="sortable" onclick="handleSort('last_billing')">Last Billing <span id="sort-icon-last_billing" class="sort-icon">↕</span></th>
-                        <th class="sortable" onclick="handleSort('billing')">Next Billing <span id="sort-icon-billing" class="sort-icon">↕</span></th>
-                        <th class="sortable" onclick="handleSort('cancel')">Cancel? <span id="sort-icon-cancel" class="sort-icon">↕</span></th>
+                        <th>Status</th>
+                        <th>Last Billing</th>
+                        <th>Next Billing / Expiry</th>
+                        <th>Cancel?</th>
                         <th>Profile</th>
                     </tr>
                 </thead>
                 <tbody id="admin-body">
-                    <tr><td colspan="9" style="text-align:center; padding: 30px; color: #8b949e;">Loading records...</td></tr>
+                    <tr><td colspan="8" style="text-align:center; padding: 30px; color: #8b949e;">Loading records...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -213,8 +215,8 @@
             
             <div class="modal-form-row">
                 <div class="profile-group">
-                    <label>Full Name</label>
-                    <input type="text" id="p-name" placeholder="Full Name">
+                    <label>Customer Name</label>
+                    <input type="text" id="p-name" placeholder="Customer Name">
                 </div>
                 
                 <div class="profile-group">
@@ -268,11 +270,18 @@
     async function init() {
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
-        const { data: profile } = await client.from('profiles').select('is_admin').eq('id', session.user.id).single();
-        if (!profile || profile.is_admin !== true) { window.location.href = 'terminal.html'; return; }
+        
+        const { data: profileArray, error: profileError } = await client
+            .from('profiles')
+            .select('admin')
+            .eq('id', session.user.id)
+            .limit(1);
+            
+        const profile = profileArray?.[0];
+        if (!profile || profile.admin !== true) { window.location.href = 'terminal.html'; return; }
 
         const { data, error } = await client.from('profiles').select('*');
-        if (error) { document.getElementById('admin-body').innerHTML = `<tr><td colspan="9" style="text-align:center;">Error: ${error.message}</td></tr>`; return; }
+        if (error) { document.getElementById('admin-body').innerHTML = `<tr><td colspan="8" style="text-align:center;">Error: ${error.message}</td></tr>`; return; }
         
         allUsers = data;
         applyFilters(); 
@@ -282,20 +291,12 @@
         document.getElementById('navLinks').classList.toggle('show');
     }
 
-    const parseList = (val) => {
-        if (!val) return [];
-        if (Array.isArray(val)) return val.map(String);
-        let str = String(val).trim();
-        if (str.startsWith('[') && str.endsWith(']')) {
-            try { const parsed = JSON.parse(str); if (Array.isArray(parsed)) return parsed.map(String); } catch(e) {}
-        }
-        return str.split(',').map(s => s.trim()).filter(Boolean);
-    };
-
-    const getSortDate = (val) => {
-        let parsed = parseList(val);
-        return (parsed.length && parsed[0] !== 'null') ? new Date(parsed[0]).getTime() : 0;
-    };
+    function formatDate(dateStr) {
+        if (!dateStr || dateStr === 'null' || dateStr === 'N/A') return '-';
+        const dateObj = new Date(dateStr);
+        if (isNaN(dateObj.getTime())) return '-';
+        return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
 
     // --- SORTING LOGIC ---
     function handleSort(column) {
@@ -317,13 +318,11 @@
         currentFilteredUsers.sort((a, b) => {
             let valA, valB;
             switch (sortState.column) {
-                case 'tag': valA = a.subscription_tag || ''; valB = b.subscription_tag || ''; break;
-                case 'status': valA = String(a.sub_status || 'inactive').toLowerCase(); valB = String(b.sub_status || 'inactive').toLowerCase(); break;
-                case 'last_billing': valA = getSortDate(a.last_payment_date); valB = getSortDate(b.last_payment_date); break;
-                case 'billing': valA = getSortDate(a.current_period_end); valB = getSortDate(b.current_period_end); break;
-                case 'cancel': 
-                    valA = (String(a.cancel_at_period_end || '').toLowerCase().includes('true') || String(a.cancel_at_period_end || '').toLowerCase().includes('cancel')) ? 1 : 0; 
-                    valB = (String(b.cancel_at_period_end || '').toLowerCase().includes('true') || String(b.cancel_at_period_end || '').toLowerCase().includes('cancel')) ? 1 : 0; 
+                case 'name': valA = String(a.customer_name || '').toLowerCase(); valB = String(b.customer_name || '').toLowerCase(); break;
+                case 'email': valA = String(a.email || '').toLowerCase(); valB = String(b.email || '').toLowerCase(); break;
+                case 'tag': 
+                    valA = (a.active_tags && a.active_tags.length > 0) ? String(a.active_tags[0]).toLowerCase() : ''; 
+                    valB = (b.active_tags && b.active_tags.length > 0) ? String(b.active_tags[0]).toLowerCase() : ''; 
                     break;
             }
             if (valA < valB) return sortState.asc ? -1 : 1;
@@ -338,93 +337,107 @@
         let rowsHtml = '';
 
         users.forEach(u => {
-            let tags = parseList(u.subscription_tag);
-            if (tags.length === 0) tags = ['free']; 
+            const tags = (u.active_tags && u.active_tags.length > 0) ? u.active_tags : ['free'];
             
-            // Updated tag badges container with vertical layout stacking
-            const tagsHtml = `<div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">` + 
-                tags.map(t => `<span class="tag-badge">${t}</span>`).join('') + 
-                `</div>`;
+            const tagsHtml = `<div class="col-stack">` + tags.map(t => `<span class="tag-badge">${t}</span>`).join('') + `</div>`;
 
-            let statuses = parseList(u.sub_status);
-            if (statuses.length === 0) statuses = ['inactive'];
-            const statusHtml = statuses.map(s => {
-                const isActive = s.toLowerCase() === 'active';
-                return `<span class="${isActive ? 'status-active' : 'status-inactive'}">${isActive ? 'ACTIVE' : 'INACTIVE'}</span>`;
-            }).join('<br>');
+            let statusesHtml = '<div class="col-stack">';
+            let cancelsHtml = '<div class="col-stack">';
+            let lastBillHtml = '<div class="col-stack">';
+            let nextBillHtml = '<div class="col-stack">';
 
-            let cancels = parseList(u.cancel_at_period_end);
-            if (cancels.length === 0) cancels = ['false'];
-            const cancelHtml = cancels.map(c => {
-                const isCancelled = c.toLowerCase().includes('true') || c.toLowerCase().includes('cancel');
-                return `<span class="${isCancelled ? 'status-inactive' : 'status-active'}">${isCancelled ? 'Cancelled' : 'Active'}</span>`;
-            }).join('<br>');
-
-            let trials = parseList(u.trial_expires_at);
-            const trialHtml = trials.map(tr => {
-                if (tr && tr !== 'null' && tr !== '-') {
-                    const trDate = new Date(tr);
-                    if (!isNaN(trDate.getTime())) return trDate.toLocaleDateString();
+            tags.forEach(tag => {
+                // Determine Flags
+                const isRefunded = u.refunded_by_tag?.[tag] === true;
+                const isScheduled = !!u.scheduled_tag_removals?.[tag] || u.cancellation_scheduled === true;
+                
+                let statusStr = 'ACTIVE';
+                let statusClass = 'status-active';
+                
+                if (isRefunded) {
+                    statusStr = 'REFUNDED'; 
+                    statusClass = 'status-refunded';
+                } else if (isScheduled && tag !== 'course') {
+                    statusStr = 'CANCELLED'; 
+                    statusClass = 'status-inactive';
                 }
-                return '-';
-            }).join('<br>');
 
-            let lastBills = parseList(u.last_payment_date);
-            const lastBillHtml = lastBills.map(b => {
-                const dateNum = Number(b);
-                const dateObj = isNaN(dateNum) ? new Date(b) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
-                if (b && b !== 'null' && b !== '-' && !isNaN(dateObj.getTime())) {
-                    return dateObj.toLocaleDateString();
-                }
-                return '-';
-            }).join('<br>');
+                // Render Status Badge
+                statusesHtml += `<span class="${statusClass}">${statusStr}</span>`;
 
-            let billings = parseList(u.current_period_end);
-            const billingHtml = billings.map(b => {
-                const dateNum = Number(b);
-                const dateObj = isNaN(dateNum) ? new Date(b) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
-                if (b && b !== 'null' && b !== '-' && !isNaN(dateObj.getTime())) {
-                    return dateObj.toLocaleDateString();
+                // Render Cancel Flag
+                const cancelText = isScheduled ? 'YES' : 'NO';
+                const cancelClass = isScheduled ? 'status-inactive' : 'status-active';
+                cancelsHtml += `<span class="${cancelClass}">${cancelText}</span>`;
+
+                // Render Last Billing
+                const lb = u.last_billing_dates_by_tag?.[tag];
+                lastBillHtml += `<span class="date-text">${formatDate(lb)}</span>`;
+
+                // Render Next Billing / Expiry
+                const accessEnds = u.access_ends_by_tag?.[tag] || u.scheduled_tag_removals?.[tag] || u.onetime_access_expires;
+                const nb = u.next_billing_dates_by_tag?.[tag];
+                
+                if (tag === 'course' || statusStr === 'CANCELLED') {
+                    nextBillHtml += `<span class="date-text" title="Expiration Date">${formatDate(accessEnds)}</span>`;
+                } else {
+                    nextBillHtml += `<span class="date-text" title="Next Billing">${formatDate(nb)}</span>`;
                 }
-                return '-';
-            }).join('<br>');
+            });
+
+            statusesHtml += '</div>';
+            cancelsHtml += '</div>';
+            lastBillHtml += '</div>';
+            nextBillHtml += '</div>';
 
             const safeEmail = (u.email || '').replace(/'/g, "\\'");
-            const safeName = (u.full_name || '').replace(/'/g, "\\'");
+            const safeName = (u.customer_name || '').replace(/'/g, "\\'");
             const safeTag = tags.join(', ').replace(/'/g, "\\'");
 
             rowsHtml += `
             <tr style="cursor: pointer;" onclick="selectUser('${safeEmail}', '${safeName}', '${safeTag}')">
-                <td>${u.full_name || '-'}</td>
+                <td style="font-weight: 500; color: #fff;">${u.customer_name || '-'}</td>
                 <td>${u.email || '-'}</td>
                 <td>${tagsHtml}</td>
-                <td>${statusHtml}</td>
-                <td>${trialHtml}</td>
+                <td>${statusesHtml}</td>
                 <td>${lastBillHtml}</td>
-                <td>${billingHtml}</td>
-                <td>${cancelHtml}</td>
+                <td>${nextBillHtml}</td>
+                <td>${cancelsHtml}</td>
                 <td><button class="btn-profile" onclick="event.stopPropagation(); openProfileModal('${u.id}')">View</button></td>
             </tr>
             `;
         });
-        tbody.innerHTML = rowsHtml || '<tr><td colspan="9" style="text-align:center; padding: 30px; color: #8b949e;">No users found.</td></tr>';
+        tbody.innerHTML = rowsHtml || '<tr><td colspan="8" style="text-align:center; padding: 30px; color: #8b949e;">No users found.</td></tr>';
     }
 
     function applyFilters() {
         const term = document.getElementById('search').value.toLowerCase();
         const statusFilter = document.getElementById('filter-status').value;
-        const tag = document.getElementById('filter-tag').value;
+        const tagFilter = document.getElementById('filter-tag').value;
 
         currentFilteredUsers = allUsers.filter(u => {
-            const matchesSearch = (u.full_name?.toLowerCase().includes(term)) || (u.email?.toLowerCase().includes(term));
-            const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
-            const rawStatus = String(u.sub_status || 'inactive').toLowerCase();
-            let matchesStatus = true;
-            if (statusFilter === 'active') matchesStatus = rawStatus.includes('active');
-            if (statusFilter === 'canceled') matchesStatus = rawCancel.includes('true') || rawCancel.includes('cancel');
-            const matchesTag = (tag === 'all') || (u.subscription_tag?.toLowerCase().includes(tag));
+            const matchesSearch = (u.customer_name?.toLowerCase().includes(term)) || (u.email?.toLowerCase().includes(term));
+            const tags = (u.active_tags && u.active_tags.length > 0) ? u.active_tags : ['free'];
+            const matchesTag = (tagFilter === 'all') || tags.some(t => t.toLowerCase().includes(tagFilter));
+            
+            let matchesStatus = false;
+            if (statusFilter === 'all') {
+                matchesStatus = true;
+            } else {
+                // If checking status, see if any of the tags match the requested status
+                matchesStatus = tags.some(tag => {
+                    const isRefunded = u.refunded_by_tag?.[tag] === true;
+                    const isScheduled = !!u.scheduled_tag_removals?.[tag] || u.cancellation_scheduled === true;
+                    if (statusFilter === 'refunded' && isRefunded) return true;
+                    if (statusFilter === 'canceled' && isScheduled) return true;
+                    if (statusFilter === 'active' && !isRefunded && !isScheduled) return true;
+                    return false;
+                });
+            }
+
             return matchesSearch && matchesStatus && matchesTag;
         });
+
         if (sortState.column) { sortData(); } else { renderTable(currentFilteredUsers); }
     }
 
@@ -438,38 +451,67 @@
     async function saveUser() {
         const email = document.getElementById('m-email').value;
         const name = document.getElementById('m-name').value;
-        const tag = document.getElementById('m-tag').value;
+        const tagString = document.getElementById('m-tag').value;
         const expiry = document.getElementById('m-expiry').value;
         if (!email) return alert("Email is required");
 
-        const cleanedTag = tag.split(',').map(s => s.trim()).filter(Boolean).join(', ');
+        const cleanedTagArray = tagString.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+        
         const { data: existingUser } = await client.from('profiles').select('id').eq('email', email).maybeSingle();
 
         if (existingUser) {
-            const isAllFree = cleanedTag.toLowerCase() === 'free' || !cleanedTag;
-            const { error } = await client.from('profiles').update({ full_name: name, subscription_tag: cleanedTag, sub_status: isAllFree ? 'inactive' : 'active', trial_expires_at: expiry || null }).eq('email', email);
+            const updatePayload = {
+                customer_name: name,
+                active_tags: cleanedTagArray
+            };
+            if (expiry) updatePayload.onetime_access_expires = expiry;
+
+            const { error } = await client.from('profiles').update(updatePayload).eq('email', email);
             if (error) alert('Update Error: ' + error.message); else { alert('User updated successfully!'); init(); }
         } else {
-            const isAllFree = cleanedTag.toLowerCase() === 'free' || !cleanedTag;
-            const { error } = await client.auth.admin.inviteUserByEmail(email, { redirectTo: 'https://analyst-wire.pages.dev/setup', data: { full_name: name, subscription_tag: cleanedTag, sub_status: isAllFree ? 'inactive' : 'active', trial_expires_at: expiry || null } });
+            const inviteData = {
+                customer_name: name,
+                active_tags: cleanedTagArray
+            };
+            if (expiry) inviteData.onetime_access_expires = expiry;
+
+            const { error } = await client.auth.admin.inviteUserByEmail(email, { 
+                redirectTo: 'https://analyst-wire.pages.dev/setup', 
+                data: inviteData 
+            });
             if (error) alert('Invite Error: ' + error.message); else { alert('Invite sent!'); init(); }
         }
     }
 
     async function forceDowngradeCancelled() {
-        if (!confirm("This will instantly downgrade all cancelled users to 'free' and 'inactive'. Proceed?")) return;
-        const toDowngrade = allUsers.filter(u => {
-            const rawCancel = String(u.cancel_at_period_end || '').toLowerCase();
-            return (rawCancel.includes('true') || rawCancel.includes('cancel')) && (u.subscription_tag !== 'free' || String(u.sub_status).toLowerCase() !== 'inactive');
-        });
-        if (toDowngrade.length === 0) { alert("No cancelled users found that need downgrading. Everything is clean!"); return; }
+        if (!confirm("This will instantly remove cancelled and refunded tags from affected users. Proceed?")) return;
+        
+        // Find users with cancellation flags or specific tags scheduled for removal
+        const toDowngrade = allUsers.filter(u => u.cancellation_scheduled === true || Object.keys(u.scheduled_tag_removals || {}).length > 0 || Object.keys(u.refunded_by_tag || {}).length > 0);
+        
+        if (toDowngrade.length === 0) { alert("No cancelled or refunded users found. Everything is clean!"); return; }
 
         let successCount = 0;
         for (const user of toDowngrade) {
-            const { error } = await client.from('profiles').update({ subscription_tag: 'free', sub_status: 'inactive' }).eq('id', user.id);
+            let currentTags = [...(user.active_tags || [])];
+            let newTags = currentTags.filter(tag => {
+                const isRefunded = user.refunded_by_tag?.[tag] === true;
+                const isScheduled = !!user.scheduled_tag_removals?.[tag] || user.cancellation_scheduled === true;
+                return !isRefunded && !isScheduled;
+            });
+            
+            if (newTags.length === 0) newTags = ['free'];
+
+            const { error } = await client.from('profiles').update({ 
+                active_tags: newTags,
+                cancellation_scheduled: false,
+                scheduled_tag_removals: {},
+                refunded_by_tag: {}
+            }).eq('id', user.id);
+            
             if (!error) successCount++;
         }
-        alert(`Successfully downgraded ${successCount} cancelled user(s).`);
+        alert(`Successfully scrubbed tags for ${successCount} user(s).`);
         init(); 
     }
 
@@ -477,7 +519,7 @@
         document.getElementById('profileModal').style.display = 'flex';
         const userRow = allUsers.find(u => u.id === userId);
         document.getElementById('p-id').value = userId;
-        document.getElementById('p-name').value = userRow.full_name || '';
+        document.getElementById('p-name').value = userRow.customer_name || '';
         document.getElementById('p-email').value = userRow.email || '';
         document.getElementById('p-last-login').innerText = 'Fetching...';
         document.getElementById('p-country').innerText = userRow.last_country || 'No data';
@@ -516,7 +558,7 @@
         try {
             const { error: authError } = await client.auth.admin.updateUserById(userId, { email: newEmail });
             if (authError) throw authError;
-            const { error: dbError } = await client.from('profiles').update({ full_name: newName, email: newEmail }).eq('id', userId);
+            const { error: dbError } = await client.from('profiles').update({ customer_name: newName, email: newEmail }).eq('id', userId);
             if (dbError) throw dbError;
             alert("Profile details updated successfully!"); closeProfileModal(); init(); 
         } catch (err) { alert("Error saving profile: " + err.message); } 
