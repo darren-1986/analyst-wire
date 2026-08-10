@@ -198,15 +198,9 @@
     // ==========================================
     function userHasAccess(userTags, requiredTag) {
         if (!userTags) return false;
-        try {
-            const parsedArray = JSON.parse(userTags);
-            if (Array.isArray(parsedArray)) {
-                return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
-            }
-        } catch (e) {
-            return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
-        }
-        return false;
+        let tagsArray = Array.isArray(userTags) ? userTags : 
+                        (typeof userTags === 'string' ? (userTags.startsWith('[') ? JSON.parse(userTags) : userTags.split(',')) : []);
+        return tagsArray.some(tag => String(tag).trim().toLowerCase() === requiredTag.toLowerCase());
     }
 
     function switchTab(tabId) {
@@ -332,13 +326,18 @@
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
         
-        // 2. Fetch Profile
-        const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
+        // 2. Fetch Profile (Updated Schema & Failsafe)
+        const { data: profileArray, error: profileError } = await client
+            .from('profiles')
+            .select('admin, active_tags')
+            .eq('id', session.user.id)
+            .limit(1);
         
-        const tag = profile?.subscription_tag || '';
-        const isAdmin = profile?.is_admin === true;
+        const profile = profileArray?.[0];
+        const tags = profile?.active_tags || [];
+        const isAdmin = profile?.admin === true;
 
-        if (!profile || tag === '' || userHasAccess(tag, 'free')) {
+        if (!profile || (tags.length === 0 && !isAdmin) || userHasAccess(tags, 'free')) {
             alert("Your subscription is inactive. Redirecting to login.");
             await client.auth.signOut();
             window.location.href = 'index.html';
@@ -349,11 +348,11 @@
         // 3. HARD ROUTING (BOUNCER LOGIC)
         // ==========================================
         // Only Admin and Pro users are allowed on the Analysis page.
-        if (!isAdmin && !userHasAccess(tag, 'pro')) {
-            if (userHasAccess(tag, 'courses') || userHasAccess(tag, 'course')) {
+        if (!isAdmin && !userHasAccess(tags, 'pro')) {
+            if (userHasAccess(tags, 'course') || userHasAccess(tags, 'courses')) {
                 window.location.href = 'courses.html';
                 return;
-            } else if (userHasAccess(tag, 'newsfeed') || userHasAccess(tag, 'squawk')) {
+            } else if (userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk')) {
                 window.location.href = '/newsfeed';
                 return;
             } else {
@@ -379,7 +378,7 @@
         Object.values(navElements).forEach(el => { if (el) el.style.display = 'none'; });
 
         // Reveal based on strict tier assignment
-        if (isAdmin || userHasAccess(tag, 'pro')) {
+        if (isAdmin || userHasAccess(tags, 'pro')) {
             if (navElements.dashboard) navElements.dashboard.style.display = 'block';
             if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
             if (navElements.analysis) navElements.analysis.style.display = 'block';
