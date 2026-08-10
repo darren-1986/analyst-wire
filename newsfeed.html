@@ -189,18 +189,24 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // --- HELPER FUNCTION: Safely parse JSON array tags ---
+        // --- HELPER FUNCTION: Bulletproof parsing for Arrays, Strings, and JSON ---
         function userHasAccess(userTags, requiredTag) {
             if (!userTags) return false;
-            try {
-                const parsedArray = JSON.parse(userTags);
-                if (Array.isArray(parsedArray)) {
-                    return parsedArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+            
+            let tagsArray = [];
+            
+            if (Array.isArray(userTags)) {
+                tagsArray = userTags;
+            } else if (typeof userTags === 'string') {
+                try {
+                    let parsed = JSON.parse(userTags);
+                    tagsArray = Array.isArray(parsed) ? parsed : [userTags];
+                } catch (e) {
+                    tagsArray = userTags.split(',').map(s => s.trim());
                 }
-            } catch (e) {
-                return String(userTags).toLowerCase().includes(requiredTag.toLowerCase());
             }
-            return false;
+
+            return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
         }
 
         // --- AUTH & PERMISSION CHECK ---
@@ -211,13 +217,25 @@
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
             
-            // 2. Fetch Profile
-            const { data: profile } = await client.from('profiles').select('is_admin, subscription_tag').eq('id', session.user.id).single();
+            // 2. Fetch Profile Using Updated Schema
+            const { data: profileArray, error: profileError } = await client
+                .from('profiles')
+                .select('admin, active_tags')
+                .eq('id', session.user.id)
+                .limit(1);
+                
+            if (profileError) {
+                alert("Database Error: " + profileError.message);
+                await client.auth.signOut();
+                window.location.href = 'index.html';
+                return;
+            }
             
-            const tag = profile?.subscription_tag || '';
-            const isAdmin = profile?.is_admin === true;
+            const profile = profileArray && profileArray.length > 0 ? profileArray[0] : null;
+            const tags = profile?.active_tags ? profile.active_tags : [];
+            const isAdmin = profile?.admin === true;
 
-            if (!profile || tag === '' || userHasAccess(tag, 'free')) {
+            if (!profile || tags.length === 0 || userHasAccess(tags, 'free')) {
                 alert("Your subscription is inactive. Redirecting to login.");
                 await client.auth.signOut();
                 window.location.href = 'index.html';
@@ -227,8 +245,8 @@
             // ==========================================
             // 3. HARD ROUTING (BOUNCER LOGIC)
             // ==========================================
-            if (!isAdmin && !userHasAccess(tag, 'pro') && !userHasAccess(tag, 'newsfeed') && !userHasAccess(tag, 'squawk')) {
-                if (userHasAccess(tag, 'courses') || userHasAccess(tag, 'course')) {
+            if (!isAdmin && !userHasAccess(tags, 'pro') && !userHasAccess(tags, 'newsfeed') && !userHasAccess(tags, 'squawk')) {
+                if (userHasAccess(tags, 'courses') || userHasAccess(tags, 'course')) {
                     window.location.href = 'courses.html';
                     return;
                 } else {
@@ -254,7 +272,7 @@
             Object.values(navElements).forEach(el => { if (el) el.style.display = 'none'; });
 
             // Reveal items based on tier
-            if (isAdmin || userHasAccess(tag, 'pro')) {
+            if (isAdmin || userHasAccess(tags, 'pro')) {
                 if (navElements.dashboard) navElements.dashboard.style.display = 'block';
                 if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
                 if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
@@ -267,10 +285,10 @@
                 }
             } else {
                 // A la carte visibility for non-pro users
-                if ((userHasAccess(tag, 'newsfeed') || userHasAccess(tag, 'squawk')) && navElements.newsfeed) {
+                if ((userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk')) && navElements.newsfeed) {
                     navElements.newsfeed.style.display = 'block';
                 }
-                if ((userHasAccess(tag, 'course') || userHasAccess(tag, 'courses')) && navElements.courses) {
+                if ((userHasAccess(tags, 'course') || userHasAccess(tags, 'courses')) && navElements.courses) {
                     navElements.courses.style.display = 'block';
                 }
             }
