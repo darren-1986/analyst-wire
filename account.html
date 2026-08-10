@@ -358,25 +358,6 @@
         return tagsArray.some(tag => String(tag).trim().toLowerCase() === requiredTag.toLowerCase());
     }
 
-    // ==========================================
-    // HELPER FUNCTION: Safely parse messy DB strings into clean arrays
-    // ==========================================
-    function parseDBArray(val) {
-        if (!val) return [];
-        
-        try {
-            const parsed = JSON.parse(val);
-            if (Array.isArray(parsed)) {
-                return parsed.map(v => String(v).trim());
-            }
-        } catch (e) {
-            // Fails silently if not strict JSON, proceeds to manual cleanup
-        }
-
-        const cleanedStr = String(val).replace(/[\[\]"']/g, '');
-        return cleanedStr.split(',').map(s => s.trim()).filter(Boolean);
-    }
-
     // --- NAVIGATION LOGIC ---
     function toggleNav() {
         document.getElementById("navLinks").classList.toggle("active-nav");
@@ -396,6 +377,14 @@
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
     
+    // Global Helper to format date strings uniformly
+    function formatDate(dateStr) {
+        if (!dateStr || dateStr === 'null' || dateStr === 'N/A') return 'N/A';
+        const dateObj = new Date(dateStr);
+        if (isNaN(dateObj.getTime())) return 'N/A';
+        return dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
     async function init() {
         // 1. Session check
         const { data: { session } } = await client.auth.getSession();
@@ -427,7 +416,7 @@
                 return;
             }
 
-            // Strict Menu Visibility Logic using userHasAccess helper
+            // Strict Menu Visibility Logic based on tags
             if (isAdmin) {
                 document.getElementById('nav-admin').style.display = 'block';
                 document.getElementById('nav-upload').style.display = 'block';
@@ -448,8 +437,8 @@
                 }
             }
 
-            // Global Profile Data Set
-            const fullName = profile.full_name || 'Valued Member';
+            // Global Profile Data Set (Using the new customer_name DB field)
+            const fullName = profile.customer_name || 'Valued Member';
             document.getElementById('user-name').innerText = fullName;
             document.getElementById('user-avatar').innerText = fullName.charAt(0).toUpperCase();
             
@@ -457,49 +446,70 @@
             const container = document.getElementById('subscriptions-container');
             container.innerHTML = '';
             
-            const tagItems = parseDBArray(profile.active_tags || 'FREE');
-            const statuses = parseDBArray(profile.stripe_status || profile.status || 'ACTIVE');
-            const prices = parseDBArray(profile.plan_price || 'N/A');
-            const endDates = parseDBArray(profile.current_period_end || 'N/A');
-            const startDates = parseDBArray(profile.last_payment_date || 'N/A');
-            
-            tagItems.forEach((tagItem, index) => {
-                const statusStr = (statuses[index] || statuses[0] || 'ACTIVE').toUpperCase();
-                const priceStr = prices[index] || prices[0] || 'N/A';
-                const endDateVal = endDates[index] || endDates[0] || null;
-                const startDateVal = startDates[index] || startDates[0] || null;
-                
-                let badgeClass = 'badge-active';
-                if (statusStr === 'CANCELED' || statusStr === 'CANCELLED') badgeClass = 'badge-canceled';
-                if (statusStr === 'REFUNDED') badgeClass = 'badge-refunded';
+            if (tags.length === 0) {
+                container.innerHTML = `<div style="color: #8b949e; text-align: center; padding: 20px; border: 1px dashed #30363d; border-radius: 8px;">No active subscriptions found.</div>`;
+                return;
+            }
 
-                let priceDisplay = priceStr;
-                if (priceDisplay !== 'N/A' && !priceDisplay.includes('$')) {
-                    priceDisplay = `$${priceDisplay}/mo`;
+            // Loop through each active tag and map its respective JSONB data fields
+            tags.forEach(tag => {
+                const amountPaid = profile.amount_paid_by_tag?.[tag];
+                const currency = profile.currency_by_tag?.[tag] || 'USD';
+                const lastBilling = profile.last_billing_dates_by_tag?.[tag];
+                const nextBilling = profile.next_billing_dates_by_tag?.[tag];
+                
+                // Expiry/Cancellation dates usually live in access_ends_by_tag or scheduled_tag_removals
+                const accessEnds = profile.access_ends_by_tag?.[tag] || profile.scheduled_tag_removals?.[tag] || profile.onetime_access_expires;
+                
+                const isRefunded = profile.refunded_by_tag?.[tag] === true;
+                const isScheduledForRemoval = !!profile.scheduled_tag_removals?.[tag] || profile.cancellation_scheduled === true;
+                
+                let statusStr = 'ACTIVE';
+                let badgeClass = 'badge-active';
+                
+                // Badging priorities
+                if (isRefunded) {
+                    statusStr = 'REFUNDED';
+                    badgeClass = 'badge-refunded';
+                } else if (isScheduledForRemoval && tag !== 'course') {
+                    // Courses inherently downgrade/expire, so we skip the red "Cancelled" badge for them.
+                    statusStr = 'CANCELLED';
+                    badgeClass = 'badge-canceled';
                 }
 
-                let endDateStr = 'N/A';
-                if (endDateVal && endDateVal !== 'null' && endDateVal !== 'N/A') {
-                    const dateNum = Number(endDateVal);
-                    const dateObj = isNaN(dateNum) ? new Date(endDateVal) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
-                    if (!isNaN(dateObj.getTime())) {
-                        endDateStr = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                // Format Price Data
+                let priceDisplay = 'N/A';
+                if (amountPaid !== undefined && amountPaid !== null) {
+                    const currencySymbol = currency.toUpperCase() === 'GBP' ? '£' : (currency.toUpperCase() === 'EUR' ? '€' : '$');
+                    priceDisplay = `${currencySymbol}${amountPaid}`;
+                    
+                    // Courses are one-time payments, skip the /mo styling.
+                    if (tag !== 'course') {
+                        priceDisplay += '/mo';
                     }
                 }
-                
-                let startDateStr = 'N/A';
-                if (startDateVal && startDateVal !== 'null' && startDateVal !== 'N/A') {
-                    const dateNum = Number(startDateVal);
-                    const dateObj = isNaN(dateNum) ? new Date(startDateVal) : new Date(dateNum > 9999999999 ? dateNum : dateNum * 1000);
-                    if (!isNaN(dateObj.getTime())) {
-                        startDateStr = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+                const lastBillingDisplay = formatDate(lastBilling);
+                let futureDateLabel = 'Next Billing Date';
+                let futureDateDisplay = 'N/A';
+
+                // Core logic check for dynamic labels (Course expiration vs Subscription Next Billing)
+                if (tag === 'course') {
+                    futureDateLabel = 'Expiration Date';
+                    futureDateDisplay = formatDate(accessEnds);
+                } else {
+                    if (statusStr === 'CANCELLED') {
+                        futureDateLabel = 'Access Ends';
+                        futureDateDisplay = formatDate(accessEnds);
+                    } else {
+                        futureDateDisplay = formatDate(nextBilling);
                     }
                 }
 
                 container.innerHTML += `
                     <div class="sub-card">
                         <div class="sub-card-header">
-                            <span class="plan-title">${tagItem.toUpperCase()} PLAN</span>
+                            <span class="plan-title">${tag.toUpperCase()} PLAN</span>
                             <span class="badge ${badgeClass}">${statusStr}</span>
                         </div>
                         <div class="sub-card-body">
@@ -509,20 +519,16 @@
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Last Billing Date</span>
-                                <span class="detail-value">${startDateStr}</span>
+                                <span class="detail-value">${lastBillingDisplay}</span>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-label">Next Billing Date</span>
-                                <span class="detail-value">${endDateStr}</span>
+                                <span class="detail-label">${futureDateLabel}</span>
+                                <span class="detail-value">${futureDateDisplay}</span>
                             </div>
                         </div>
                     </div>
                 `;
             });
-            
-            if (tagItems.length === 0) {
-                container.innerHTML = `<div style="color: #8b949e; text-align: center; padding: 20px; border: 1px dashed #30363d; border-radius: 8px;">No active subscriptions found.</div>`;
-            }
         }
     }
 
