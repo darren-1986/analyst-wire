@@ -571,8 +571,18 @@
             }
         }
 
-        const { data: sandboxProfile } = await networkClient.from('profiles').select('*').eq('id', loggedInUser.id).single();
+        // --- UPDATED FIX STARTS HERE ---
+        // Look up by EMAIL to guarantee we find the unique account for this user
+        const { data: existingProfiles } = await networkClient
+            .from('profiles')
+            .select('*')
+            .eq('email', loggedInUser.email)
+            .limit(1);
+
+        const sandboxProfile = existingProfiles && existingProfiles.length > 0 ? existingProfiles[0] : null;
+
         if (!sandboxProfile) {
+            // Truly a new user, safe to insert
             await networkClient.from('profiles').insert([{
                 id: loggedInUser.id,
                 email: loggedInUser.email,
@@ -580,8 +590,15 @@
                 bio: 'Active Analyst Wire Community Member & Trader.'
             }]);
         } else {
+            // Overwrite the local session ID with the original network database ID.
+            // This ensures if their auth ID ever changed, they stay linked to their original profile, posts, and followers.
+            loggedInUser.id = sandboxProfile.id; 
+            viewedProfileId = loggedInUser.id; 
+            
+            // Note: keeping last_seen update as per your original code.
             await networkClient.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', loggedInUser.id);
         }
+        // --- UPDATED FIX ENDS HERE ---
 
         await loadMyFollowing();
         await loadProfile(loggedInUser.id);
