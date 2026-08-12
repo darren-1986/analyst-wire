@@ -229,6 +229,53 @@
         .lolli-range { color: #d29922; } .lolli-range .lollipop-indicator-dot { background: #d29922; box-shadow: 0 0 6px rgba(210, 153, 34, 0.4); } .lolli-range .lollipop-badge { background: rgba(210, 153, 34, 0.1); border: 1px solid rgba(210, 153, 34, 0.3); }
         .embedded-chart-frame { position: relative; height: 160px; background: #0d1117; border: 1px solid #30363d; border-radius: 4px; overflow: hidden; }
         .embedded-chart-frame iframe { position: absolute; top: 0; left: 0; width: 166.66%; height: 166.66%; transform: scale(0.6); transform-origin: top left; border: none; }
+
+        /* Feed Widget Styles */
+        .fw-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+        .fw-tabs { display: flex; gap: 5px; }
+        .fw-tab { background: transparent; border: none; color: #8b949e; font-size: 11px; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: color 0.2s, background 0.2s; }
+        .fw-tab.active { background: rgba(41, 98, 255, 0.1); color: #58a6ff; }
+        .fw-input { padding: 6px 10px; background: #05070a; border: 1px solid #30363d; color: #c9d1d9; border-radius: 4px; font-size: 11px; outline: none; transition: border-color 0.2s; }
+        .fw-input:focus { border-color: #58a6ff; }
+        
+        .fw-composer { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; margin-bottom: 15px; }
+        .fw-textarea { width: 100%; background: transparent; border: none; color: #fff; font-family: 'Inter', sans-serif; font-size: 12px; resize: none; height: 50px; outline: none; }
+        .fw-composer-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #30363d; padding-top: 8px; margin-top: 5px; }
+        .fw-word-count { font-size: 10px; color: #8b949e; font-family: 'JetBrains Mono', monospace; }
+        .fw-btn { background: #2962ff; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 11px; cursor: pointer; transition: background 0.2s; }
+        .fw-btn:hover:not(:disabled) { background: #1e4bd8; }
+        .fw-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .fw-post { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; margin-bottom: 12px; position: relative; }
+        .fw-post-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .fw-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(41, 98, 255, 0.15); border: 1px solid rgba(41, 98, 255, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #58a6ff; font-size: 12px; overflow: hidden; flex-shrink: 0; }
+        .fw-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .fw-author-info { display: flex; flex-direction: column; }
+        .fw-author-name { font-weight: 600; color: #fff; font-size: 12px; display: flex; align-items: center; gap: 6px; }
+        .fw-cat-badge { font-size: 9px; background: rgba(41, 98, 255, 0.1); color: #58a6ff; padding: 2px 4px; border-radius: 4px; text-transform: uppercase; font-weight: 700; }
+        .fw-time { font-size: 10px; color: #8b949e; }
+        .fw-body { font-size: 12px; color: #c9d1d9; line-height: 1.5; margin-bottom: 10px; word-break: break-word; }
+        
+        .fw-delete { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #8b949e; cursor: pointer; font-size: 10px; }
+        .fw-delete:hover { color: #f85149; }
+        
+        .fw-replies { margin-top: 10px; padding-left: 15px; border-left: 2px solid #30363d; display: flex; flex-direction: column; gap: 8px; }
+        .fw-reply { background: #0d1117; border: 1px solid #1c2230; padding: 8px 10px; border-radius: 6px; position: relative; }
+        .fw-reply-meta { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 4px; }
+        .fw-reply-author { font-weight: 600; color: #58a6ff; display: flex; align-items: center; gap: 6px; }
+        .fw-reply-author img { width: 14px; height: 14px; border-radius: 50%; object-fit: cover; }
+        .fw-reply-text { font-size: 11px; color: #c9d1d9; word-break: break-word; line-height: 1.4; }
+        .fw-reply-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+        .fw-like-btn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 10px; display: flex; align-items: center; gap: 4px; padding: 0; }
+        .fw-like-btn.liked, .fw-like-btn:hover { color: #f85149; }
+        .fw-reply-del { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 9px; padding: 0; }
+        .fw-reply-del:hover { color: #f85149; }
+        
+        .fw-reply-comp { display: flex; gap: 6px; margin-top: 8px; }
+        .fw-reply-input { flex-grow: 1; background: #05070a; border: 1px solid #30363d; color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 11px; outline: none; }
+        .fw-reply-input:focus { border-color: #58a6ff; }
+        .fw-reply-btn { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .fw-reply-btn:hover { background: #30363d; color: #fff; }
     </style>
 </head>
 <body>
@@ -299,13 +346,13 @@
         </div>
         <div id="dock-container">
             
-            <!-- PROFILE AND SUBSCRIPTIONS WIDGET -->
-            <div class="grid-stack-item" gs-id="profile-widget" gs-w="2" gs-h="1" data-default-w="4" data-default-h="4" data-in-dock="true" data-zoom="1.0">
+            <!-- USERS FEED WIDGET -->
+            <div class="grid-stack-item" gs-id="users-feed" gs-w="2" gs-h="1" data-default-w="5" data-default-h="6" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
-                        <div class="panel-header" title="My Profile & Subscriptions">
+                        <div class="panel-header" title="Community Feed">
                             <div class="panel-title-wrapper">
-                                <span class="panel-title-text"><span class="full-text">My Profile</span><span class="short-text">P</span></span>
+                                <span class="panel-title-text"><span class="full-text">Community Feed</span><span class="short-text">C</span></span>
                             </div>
                             <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
                                 <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
@@ -331,36 +378,41 @@
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
                         </div>
-                        <div class="panel-content" style="background: #0d1117;">
-                            <div class="adaptive-wrapper" style="padding: 15px; overflow-y: auto;">
-                                <style>
-                                    .profile-widget-inner { font-family: 'Inter', sans-serif; color: #c9d1d9; }
-                                    .profile-widget-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #1c2230; }
-                                    .profile-widget-avatar { width: 45px; height: 45px; border-radius: 50%; background: rgba(41, 98, 255, 0.1); border: 1px solid rgba(41, 98, 255, 0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #58a6ff; flex-shrink: 0; }
-                                    .profile-widget-info h4 { margin: 0 0 4px 0; color: #fff; font-size: 15px; font-weight: 600; }
-                                    .profile-widget-info p { margin: 0; color: #8b949e; font-size: 12px; word-break: break-all; }
-                                    .profile-widget-subs { display: flex; flex-direction: column; gap: 10px; }
-                                    .widget-sub-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; transition: border-color 0.2s; }
-                                    .widget-sub-card:hover { border-color: #4b5563; }
-                                    .widget-sub-details { display: flex; flex-direction: column; gap: 4px; }
-                                    .widget-sub-title { font-size: 13px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
-                                    .widget-sub-date { font-size: 11px; color: #8b949e; font-family: 'JetBrains Mono', monospace; }
-                                    .widget-badge { padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-                                    .w-badge-active { background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.4); }
-                                    .w-badge-canceled { background: rgba(248, 81, 73, 0.15); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); }
-                                    .w-badge-refunded { background: rgba(210, 153, 34, 0.15); color: #d29922; border: 1px solid rgba(210, 153, 34, 0.4); }
-                                </style>
-                                <div class="profile-widget-inner">
-                                    <div class="profile-widget-header">
-                                        <div class="profile-widget-avatar" id="pw-avatar">?</div>
-                                        <div class="profile-widget-info">
-                                            <h4 id="pw-name">Loading...</h4>
-                                            <p id="pw-email">Authenticating...</p>
+                        <div class="panel-content" style="background: #0d1117; display: flex; flex-direction: column;">
+                            <div class="fw-controls" style="padding: 10px; border-bottom: 1px solid #1c2230; background: #161b22; flex-shrink: 0; pointer-events: auto;">
+                                <div class="fw-tabs">
+                                    <button id="fw-tab-global" class="fw-tab active" onclick="setFeedFilter('global')">Global Feed</button>
+                                    <button id="fw-tab-following" class="fw-tab" onclick="setFeedFilter('following')">Following</button>
+                                </div>
+                                <div style="display: flex; gap: 6px;">
+                                    <select id="fw-cat-filter" class="fw-input" onchange="renderFeed()">
+                                        <option value="All">All Categories</option>
+                                        <option value="General">General</option>
+                                        <option value="Trade Idea">💡 Trade Idea</option>
+                                        <option value="Macro Analysis">🌍 Macro</option>
+                                        <option value="Technical Analysis">📈 Technical</option>
+                                    </select>
+                                    <input type="text" id="fw-search" class="fw-input" placeholder="Search..." oninput="renderFeed()" style="width: 80px;">
+                                </div>
+                            </div>
+                            <div class="adaptive-wrapper" style="flex-grow: 1; overflow-y: auto; padding: 12px; height: 0; pointer-events: auto;">
+                                <div class="fw-composer">
+                                    <textarea id="fw-post-main" class="fw-textarea" placeholder="Share a market insight (max 100 words)..." oninput="updateWordCount('fw-post-main', 'fw-word-counter')"></textarea>
+                                    <div class="fw-composer-footer">
+                                        <span id="fw-word-counter" class="fw-word-count">100 words left</span>
+                                        <div style="display: flex; gap: 8px; align-items: center;">
+                                            <select id="fw-post-cat" class="fw-input" style="padding: 4px 6px;">
+                                                <option value="General">General</option>
+                                                <option value="Trade Idea">💡 Trade Idea</option>
+                                                <option value="Macro Analysis">🌍 Macro</option>
+                                                <option value="Technical Analysis">📈 Technical</option>
+                                            </select>
+                                            <button id="fw-btn-post" class="fw-btn" onclick="submitPost('fw-post-main', 'fw-word-counter', 'global', 'fw-btn-post', 'fw-post-cat')">Post</button>
                                         </div>
                                     </div>
-                                    <div class="profile-widget-subs" id="pw-subs-container">
-                                        <div style="font-size: 12px; color: #8b949e; text-align: center;">Fetching active plans...</div>
-                                    </div>
+                                </div>
+                                <div id="fw-stream">
+                                    <div style="color: #8b949e; text-align: center; padding: 20px;">Loading feed...</div>
                                 </div>
                             </div>
                         </div>
@@ -883,79 +935,6 @@
     }
 
     // ==========================================
-    // PROFILE WIDGET RENDERING ENGINE
-    // ==========================================
-    function formatWidgetDate(dateStr) {
-        if (!dateStr || dateStr === 'null' || dateStr === 'N/A') return 'N/A';
-        const dateObj = new Date(dateStr);
-        if (isNaN(dateObj.getTime())) return 'N/A';
-        return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
-
-    function renderProfileWidget(user, profile) {
-        if (!user || !profile) return;
-        
-        document.getElementById('pw-email').innerText = user.email || 'N/A';
-        const fullName = profile.customer_name || 'Valued Member';
-        document.getElementById('pw-name').innerText = fullName;
-        document.getElementById('pw-avatar').innerText = fullName.charAt(0).toUpperCase();
-
-        const container = document.getElementById('pw-subs-container');
-        container.innerHTML = '';
-        
-        let tags = profile.active_tags || [];
-        if (typeof tags === 'string') {
-            try { tags = JSON.parse(tags); } catch(e) { tags = [tags]; }
-        }
-
-        if (!Array.isArray(tags) || tags.length === 0) {
-            container.innerHTML = `<div style="color: #8b949e; font-size: 12px; text-align: center; padding: 10px; border: 1px dashed #30363d; border-radius: 6px;">No active plans</div>`;
-            return;
-        }
-
-        tags.forEach(tag => {
-            const lastBilling = profile.last_billing_dates_by_tag?.[tag];
-            const nextBilling = profile.next_billing_dates_by_tag?.[tag];
-            const accessEnds = profile.access_ends_by_tag?.[tag] || profile.scheduled_tag_removals?.[tag] || profile.onetime_access_expires;
-            
-            const isRefunded = profile.refunded_by_tag?.[tag] === true;
-            const isScheduled = !!profile.scheduled_tag_removals?.[tag] || profile.cancellation_scheduled === true;
-            
-            let statusStr = 'ACTIVE';
-            let badgeClass = 'w-badge-active';
-            
-            if (isRefunded) {
-                statusStr = 'REFUNDED';
-                badgeClass = 'w-badge-refunded';
-            } else if (isScheduled && tag !== 'course') {
-                statusStr = 'CANCELLED';
-                badgeClass = 'w-badge-canceled';
-            }
-
-            let dateLabel = 'Next Bill';
-            let dateDisplay = formatWidgetDate(nextBilling);
-
-            if (tag === 'course') {
-                dateLabel = 'Expires';
-                dateDisplay = formatWidgetDate(accessEnds);
-            } else if (statusStr === 'CANCELLED') {
-                dateLabel = 'Access Ends';
-                dateDisplay = formatWidgetDate(accessEnds);
-            }
-
-            container.innerHTML += `
-                <div class="widget-sub-card">
-                    <div class="widget-sub-details">
-                        <span class="widget-sub-title">${tag}</span>
-                        <span class="widget-sub-date">${dateLabel}: ${dateDisplay}</span>
-                    </div>
-                    <span class="widget-badge ${badgeClass}">${statusStr}</span>
-                </div>
-            `;
-        });
-    }
-
-    // ==========================================
     // MOBILE MENU & SETTINGS TOGGLES
     // ==========================================
     function toggleMobileMenu() {
@@ -1131,6 +1110,10 @@
         const target = panelItem.querySelector('.panel-content');
         const wrapper = panelItem.querySelector('.adaptive-wrapper');
         if (!wrapper || !target) return;
+        
+        // Prevent zoom on the feed widget as it handles its own internal layout
+        if (panelItem.getAttribute('gs-id') === 'users-feed') return;
+
         const width = target.clientWidth;
         let baseScale = width < 480 ? Math.max(width / 480, 0.4) : 1;
         let zoomMult = parseFloat(panelItem.getAttribute('data-zoom')) || 1.0;
@@ -1242,7 +1225,7 @@
     }
 
     window.onload = function() {
-        const savedLayout = localStorage.getItem('analystWireLayoutV21');
+        const savedLayout = localStorage.getItem('analystWireLayoutV22'); // Bumped version for new widget
         
         mainGrid = GridStack.init({
             cellHeight: '60px', margin: 5, handle: '.panel-header', animate: true, 
@@ -1305,15 +1288,7 @@
                     targetPanel.classList.remove('compact-widget');
                 }
 
-                const wrapper = targetPanel.querySelector('.adaptive-wrapper');
-                if (wrapper && width > 0) {
-                    let baseScale = width < 480 ? Math.max(width / 480, 0.4) : 1;
-                    let zoomMult = parseFloat(panelItem.getAttribute('data-zoom')) || 1.0;
-                    let finalScale = baseScale * zoomMult;
-                    wrapper.style.transform = `scale(${finalScale})`;
-                    wrapper.style.width = `${100 / finalScale}%`;
-                    wrapper.style.height = `${100 / finalScale}%`;
-                }
+                forceUpdateZoom(panelItem);
             }
         });
 
@@ -1346,10 +1321,282 @@
             }));
         }
         
-        localStorage.setItem('analystWireLayoutV21', JSON.stringify([...dockItems, ...mainItems]));
+        localStorage.setItem('analystWireLayoutV22', JSON.stringify([...dockItems, ...mainItems]));
     }
 
     const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    const networkClient = supabase.createClient('https://nayucfhbnecwhtzuaiur.supabase.co', 'sb_publishable_yNK-_0-3ZI2ssYfbSvw75g_RXLD_R-A');
+
+    // ==========================================
+    // COMMUNITY FEED WIDGET LOGIC 
+    // ==========================================
+    let profilesCache = {}; 
+    let globalPosts = [];
+    let myFollowingIds = [];
+    let currentFeedFilter = 'global';
+    let loggedInUserId = null;
+    let loggedInUserEmail = null;
+    let isAdminGlobal = false;
+    let authorFallbackName = '';
+
+    function sanitizeText(text) {
+        if (!text) return '';
+        const bannedWords = ['fuck', 'shit', 'cunt', 'dick', 'cock', 'asshole', 'bitch', 'bastard', 'motherfucker'];
+        let cleanText = text;
+        bannedWords.forEach(word => {
+            const regex = new RegExp(`\\b${word}\\b`, 'gi');
+            cleanText = cleanText.replace(regex, '***');
+        });
+        return cleanText;
+    }
+
+    function timeAgo(isoString) {
+        const epoch = new Date(isoString).getTime();
+        const seconds = Math.floor((Date.now() - epoch) / 1000);
+        if (seconds < 60) return 'Just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        const days = Math.floor(hours / 24);
+        return `${days}d ago`;
+    }
+
+    async function loadMyFollowing() {
+        const { data } = await networkClient.from('user_follows').select('following_id').eq('follower_id', loggedInUserId);
+        if (data) myFollowingIds = data.map(row => row.following_id);
+    }
+
+    async function loadFeedData() {
+        const { data: posts } = await networkClient
+            .from('network_posts')
+            .select(`*, post_replies (*, reply_likes (user_id))`)
+            .order('created_at', { ascending: false })
+            .limit(100);
+
+        if (posts) {
+            posts.forEach(p => p.post_replies.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)));
+            const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            globalPosts = posts.filter(p => p.feed_type === 'global' && new Date(p.created_at) >= thirtyDaysAgo);
+        }
+
+        const missingUserIds = new Set();
+        globalPosts.forEach(p => {
+            if(!profilesCache[p.user_id]) missingUserIds.add(p.user_id);
+            p.post_replies.forEach(r => {
+                if(!profilesCache[r.user_id]) missingUserIds.add(r.user_id);
+            });
+        });
+
+        if (missingUserIds.size > 0) {
+            const { data: profiles } = await networkClient.from('profiles').select('*').in('id', Array.from(missingUserIds));
+            if(profiles) profiles.forEach(p => profilesCache[p.id] = p);
+        }
+        
+        renderFeed();
+    }
+
+    function setFeedFilter(filter) {
+        currentFeedFilter = filter;
+        document.getElementById('fw-tab-global').classList.toggle('active', filter === 'global');
+        document.getElementById('fw-tab-following').classList.toggle('active', filter === 'following');
+        renderFeed();
+    }
+
+    function updateWordCount(inputId, counterId) {
+        const text = document.getElementById(inputId).value.trim();
+        const words = text === '' ? [] : text.split(/\s+/);
+        const remaining = 100 - words.length;
+        
+        const counter = document.getElementById(counterId);
+        if(counter) {
+            counter.innerText = `${remaining} words left`;
+            counter.style.color = remaining < 0 ? '#f85149' : '#8b949e';
+        }
+    }
+
+    async function submitPost(inputId, counterId, feedType, btnId, categoryId = null) {
+        const inputElem = document.getElementById(inputId);
+        const rawText = inputElem.value.trim();
+        if (!rawText) return;
+
+        const words = rawText.split(/\s+/);
+        if (words.length > 100) { alert('Post exceeds the 100-word limit.'); return; }
+
+        const btn = document.getElementById(btnId);
+        btn.disabled = true;
+        const categoryVal = categoryId ? document.getElementById(categoryId).value : 'General';
+        const sanitizedPostText = sanitizeText(rawText);
+        
+        const currentName = profilesCache[loggedInUserId]?.full_name || authorFallbackName || loggedInUserEmail.split('@')[0];
+
+        const { error } = await networkClient.from('network_posts').insert([{
+            user_id: loggedInUserId,
+            user_email: loggedInUserEmail,
+            author_name: currentName,
+            post_text: sanitizedPostText,
+            feed_type: feedType,
+            category: categoryVal
+        }]);
+
+        if (error) {
+            alert('Failed to post. Try again later.');
+        } else {
+            inputElem.value = '';
+            updateWordCount(inputId, counterId);
+            await loadFeedData(); 
+        }
+        btn.disabled = false;
+    }
+
+    async function deletePost(postId) {
+        if (!confirm('Delete this post?')) return;
+        const { error } = await networkClient.from('network_posts').delete().eq('id', postId);
+        if (!error) await loadFeedData();
+        else alert('Failed to delete post.');
+    }
+
+    async function submitReply(postId) {
+        const inputElem = document.getElementById(`reply-input-${postId}`);
+        const btnElem = document.getElementById(`btn-reply-${postId}`);
+        const rawText = inputElem.value.trim();
+        if (!rawText) return;
+
+        btnElem.disabled = true;
+        const sanitizedReplyText = sanitizeText(rawText);
+        const currentName = profilesCache[loggedInUserId]?.full_name || authorFallbackName || loggedInUserEmail.split('@')[0];
+
+        const { error } = await networkClient.from('post_replies').insert([{
+            post_id: postId, user_id: loggedInUserId, user_email: loggedInUserEmail,
+            author_name: currentName, reply_text: sanitizedReplyText
+        }]);
+
+        if (!error) {
+            inputElem.value = '';
+            await loadFeedData();
+        } else {
+            alert('Failed to reply.');
+        }
+        btnElem.disabled = false;
+    }
+
+    async function deleteReply(replyId) {
+        if (!confirm('Delete this reply?')) return;
+        const { error } = await networkClient.from('post_replies').delete().eq('id', replyId);
+        if (!error) await loadFeedData();
+        else alert('Failed to delete reply.');
+    }
+
+    async function toggleReplyLike(replyId, currentLikedStatus) {
+        if (currentLikedStatus) {
+            await networkClient.from('reply_likes').delete().match({ reply_id: replyId, user_id: loggedInUserId });
+        } else {
+            await networkClient.from('reply_likes').insert([{ reply_id: replyId, user_id: loggedInUserId }]);
+        }
+        await loadFeedData();
+    }
+
+    function buildPostHTML(post) {
+        const authorProfile = profilesCache[post.user_id] || {};
+        if (authorProfile.is_hidden && !isAdminGlobal && post.user_id !== loggedInUserId) return '';
+
+        const authorName = authorProfile.full_name || post.author_name;
+        let postAv = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${authorName.charAt(0).toUpperCase()}</div>`;
+        if (authorProfile.avatar_url) postAv = `<img src="${authorProfile.avatar_url}">`;
+        
+        const canDeletePost = isAdminGlobal || post.user_id === loggedInUserId;
+        const deletePostBtnHtml = canDeletePost ? `<button class="fw-delete" onclick="deletePost('${post.id}')" title="Delete Post">✖</button>` : '';
+        const catBadge = (post.category && post.category !== 'General') ? `<span class="fw-cat-badge">${post.category}</span>` : '';
+
+        const repliesHtml = post.post_replies.map(reply => {
+            const replyAuthorProfile = profilesCache[reply.user_id] || {};
+            if (replyAuthorProfile.is_hidden && !isAdminGlobal && reply.user_id !== loggedInUserId) return '';
+
+            const replyAuthorName = replyAuthorProfile.full_name || reply.author_name;
+            let repAv = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#161b22; color:#58a6ff;">${replyAuthorName.charAt(0).toUpperCase()}</div>`;
+            if (replyAuthorProfile.avatar_url) repAv = `<img src="${replyAuthorProfile.avatar_url}">`;
+            
+            const likesCount = reply.reply_likes ? reply.reply_likes.length : 0;
+            const iLiked = reply.reply_likes ? reply.reply_likes.some(l => l.user_id === loggedInUserId) : false;
+            const likeClass = iLiked ? 'liked' : '';
+            const canDeleteReply = isAdminGlobal || reply.user_id === loggedInUserId;
+            const deleteReplyBtnHtml = canDeleteReply ? `<button class="fw-reply-del" onclick="deleteReply('${reply.id}')">Delete</button>` : '';
+
+            return `
+                <div class="fw-reply">
+                    <div class="fw-reply-meta">
+                        <span class="fw-reply-author">${repAv} ${replyAuthorName}</span>
+                        <span class="fw-time">${timeAgo(reply.created_at)}</span>
+                    </div>
+                    <div class="fw-reply-text">${reply.reply_text}</div>
+                    <div class="fw-reply-footer">
+                        <button class="fw-like-btn ${likeClass}" onclick="toggleReplyLike('${reply.id}', ${iLiked})">❤️ ${likesCount}</button>
+                        ${deleteReplyBtnHtml}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="fw-post">
+                ${deletePostBtnHtml}
+                <div class="fw-post-meta">
+                    <div class="fw-avatar">${postAv}</div>
+                    <div class="fw-author-info">
+                        <span class="fw-author-name">${authorName} ${catBadge}</span>
+                        <span class="fw-time">${timeAgo(post.created_at)}</span>
+                    </div>
+                </div>
+                <div class="fw-body">${post.post_text}</div>
+                
+                <div class="fw-replies">
+                    ${repliesHtml}
+                    <div class="fw-reply-comp">
+                        <input type="text" id="reply-input-${post.id}" class="fw-reply-input" placeholder="Write a reply...">
+                        <button id="btn-reply-${post.id}" class="fw-reply-btn" onclick="submitReply('${post.id}')">Reply</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderFeed() {
+        const stream = document.getElementById('fw-stream');
+        if (!stream) return;
+
+        let postsToDisplay = [...globalPosts];
+        
+        if (currentFeedFilter === 'following') {
+            postsToDisplay = postsToDisplay.filter(p => myFollowingIds.includes(p.user_id) || p.user_id === loggedInUserId);
+        }
+
+        const catFilter = document.getElementById('fw-cat-filter').value;
+        if (catFilter !== 'All') {
+            postsToDisplay = postsToDisplay.filter(p => (p.category || 'General') === catFilter);
+        }
+
+        const query = document.getElementById('fw-search').value.toLowerCase();
+        if (query) {
+            postsToDisplay = postsToDisplay.filter(p => {
+                const name = (profilesCache[p.user_id]?.full_name || p.author_name).toLowerCase();
+                const text = (p.post_text || '').toLowerCase();
+                return text.includes(query) || name.includes(query);
+            });
+        }
+
+        const outputHtml = postsToDisplay.map(p => buildPostHTML(p)).filter(html => html !== '').join('');
+
+        if (outputHtml === '') {
+            stream.innerHTML = `<div style="color: #8b949e; text-align: center; padding: 30px;">No posts found for this view.</div>`;
+            return;
+        }
+
+        stream.innerHTML = outputHtml;
+    }
+
+    // ==========================================
+    // RADAR LOGIC
+    // ==========================================
     const tvSymbolMap = { 'S&P500': 'SPY', 'NASDAQ': 'QQQ', 'DOW': 'DIA', 'WTI': 'USOIL', 'COPPER': 'HG1!', 'COCOA': 'CC1!', 'COFFEE': 'KC1!', 'CORN': 'ZC1!', 'WHEAT': 'ZW1!', 'SOYBEANS': 'ZS1!', 'COTTONSUGAR': 'CT1!' };
     const categoryMap = { 'EUR/USD': 'Forex', 'GBP/USD': 'Forex', 'AUD/USD': 'Forex', 'NZD/USD': 'Forex', 'AUD/NZD': 'Forex', 'EUR/CHF': 'Forex', 'USD/CHF': 'Forex', 'USD/CAD': 'Forex', 'USD/NOK': 'Forex', 'USD/MXN': 'Forex', 'USD/JPY': 'Forex', 'EUR/JPY': 'Forex', 'GBP/JPY': 'Forex', 'AUD/JPY': 'Forex', 'NZD/JPY': 'Forex', 'CAD/JPY': 'Forex', 'EUR/GBP': 'Forex', 'EUR/AUD': 'Forex', 'EUR/NZD': 'Forex', 'GBP/AUD': 'Forex', 'GBP/NZD': 'Forex', 'DXY': 'Forex', 'XAU/USD': 'Commodities', 'XAG/USD': 'Commodities', 'WTI': 'Commodities', 'COPPER': 'Commodities', 'COCOA': 'Commodities', 'COFFEE': 'Commodities', 'COTTONSUGAR': 'Commodities', 'CORN': 'Commodities', 'SOYBEANS': 'Commodities', 'WHEAT': 'Commodities', 'AAPL': 'Equities', 'AMZN': 'Equities', 'GOOG': 'Equities', 'MSFT': 'Equities', 'TSLA': 'Equities', 'META': 'Equities', 'V': 'Equities', 'JPM': 'Equities', 'KO': 'Equities', 'MCD': 'Equities', 'AMD': 'Equities', 'BABA': 'Equities', 'JNJ': 'Equities', 'NVDA': 'Equities', 'S&P500': 'Indices', 'NASDAQ': 'Indices', 'DOW': 'Indices', 'RUSSEL': 'Indices', 'FTSE': 'Indices', 'NIKKEI': 'Indices', 'HANG': 'Indices', 'BTC/USD': 'Crypto', 'ETH/USD': 'Crypto' };
 
@@ -1559,7 +1806,10 @@
         const { data: { session } } = await client.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
 
-        // Fetching '*' so we have access to customer_name, billing dates, etc. for the new Profile widget
+        loggedInUserEmail = session.user.email;
+        loggedInUserId = session.user.id; 
+
+        // Main DB check for roles/tags
         const { data: profileArray, error: profileError } = await client
             .from('profiles')
             .select('*')
@@ -1575,7 +1825,8 @@
 
         const profile = profileArray && profileArray.length > 0 ? profileArray[0] : null;
         const tags = profile?.active_tags ? profile.active_tags : [];
-        const isAdmin = profile?.admin === true;
+        isAdminGlobal = profile?.admin === true;
+        authorFallbackName = profile?.customer_name || '';
 
         if (!profile || tags.length === 0 || userHasAccess(tags, 'free')) {
             alert("Your subscription is inactive. Redirecting to login.");
@@ -1584,33 +1835,52 @@
             return;
         }
 
-        // --- RENDER PROFILE WIDGET ---
-        renderProfileWidget(session.user, profile);
+        // Network DB ID Fix - ensure feed posts are mapped to the correct original profile
+        const { data: existingProfiles } = await networkClient
+            .from('profiles')
+            .select('*')
+            .eq('email', loggedInUserEmail)
+            .order('id', { ascending: true })
+            .limit(1);
 
-        // --- HARD ROUTING (BOUNCER LOGIC) ---
-        if (!isAdmin && !userHasAccess(tags, 'pro')) {
+        const sandboxProfile = existingProfiles && existingProfiles.length > 0 ? existingProfiles[0] : null;
+
+        if (!sandboxProfile) {
+            await networkClient.from('profiles').insert([{
+                id: loggedInUserId,
+                email: loggedInUserEmail,
+                full_name: authorFallbackName || loggedInUserEmail.split('@')[0],
+                bio: 'Active Analyst Wire Community Member'
+            }]);
+        } else {
+            loggedInUserId = sandboxProfile.id; 
+            await networkClient.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', loggedInUserId);
+        }
+
+        // Bouncer logic 
+        if (!isAdminGlobal && !userHasAccess(tags, 'pro')) {
             if (userHasAccess(tags, 'course') || userHasAccess(tags, 'courses')) {
-                window.location.href = 'courses.html';
-                return;
+                window.location.href = 'courses.html'; return;
             } else if (userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk')) {
-                window.location.href = '/newsfeed';
-                return;
+                window.location.href = '/newsfeed'; return;
             } else {
-                window.location.href = 'account.html';
-                return;
+                window.location.href = 'account.html'; return;
             }
         }
 
-        // --- STRICT NAVIGATION VISIBILITY ---
         document.getElementById('nav-courses').style.display = 'flex';
         document.getElementById('nav-key-levels').style.display = 'flex';
 
-        if (isAdmin) {
+        if (isAdminGlobal) {
             document.getElementById('nav-admin').style.display = 'block';
             document.getElementById('nav-upload').style.display = 'block';
         }
         
         loadHotAssets();
+        
+        // Load Feed dependencies
+        await loadMyFollowing();
+        await loadFeedData();
     }
 
     document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
