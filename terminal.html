@@ -1112,7 +1112,8 @@
         if (!wrapper || !target) return;
         
         // Prevent zoom on the feed widget as it handles its own internal layout
-        if (panelItem.getAttribute('gs-id') === 'users-feed') return;
+        // (Removed to allow Community Feed zooming)
+        // if (panelItem.getAttribute('gs-id') === 'users-feed') return;
 
         const width = target.clientWidth;
         let baseScale = width < 480 ? Math.max(width / 480, 0.4) : 1;
