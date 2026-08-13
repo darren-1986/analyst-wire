@@ -358,7 +358,7 @@
 
             <div class="contact-email">
                 <span>Prefer direct email?</span>
-                <a href="mailto:support@analystwire.com">support@analystwire.com</a>
+                <a href="mailto:analystwire@gmail.com">analystwire@gmail.com</a>
             </div>
         </div>
         
@@ -466,8 +466,8 @@
         statusDiv.className = 'status-message';
         
         try {
-            // NOTE: This assumes you create a table named 'support_tickets' in your Supabase database.
-            const { error } = await client.from('support_tickets').insert([
+            // 1. Log the ticket in the database (optional but good for tracking)
+            const { error: dbError } = await client.from('support_tickets').insert([
                 { 
                     user_id: currentUser.id, 
                     email: currentUser.email, 
@@ -477,19 +477,42 @@
                 }
             ]);
 
-            if (error) {
-                // If table doesn't exist yet, it will throw an error here.
-                console.error('Support Insert Error:', error);
-                throw error;
+            if (dbError) {
+                console.error('Support Insert Error:', dbError);
+            }
+
+            // 2. Fire the Edge Function to send the email directly to your Gmail
+            const { data: { session } } = await client.auth.getSession();
+            const token = session ? session.access_token : '';
+            
+            // Format the body so it looks readable in your inbox
+            const emailBody = `From: ${currentUser.email}<br><br>Category: ${subject}<br><br>Message:<br>${message.replace(/\n/g, '<br>')}`;
+
+            const response = await fetch('https://fgidelsazisdqjfckerd.supabase.co/functions/v1/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ 
+                    to: 'analystwire@gmail.com', 
+                    subject: `New Support Ticket: ${subject}`, 
+                    body: emailBody 
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Email failed to send via Edge Function');
             }
 
             // Success state
             statusDiv.innerText = 'Success! Your message has been sent to our support team.';
             statusDiv.className = 'status-message status-success';
             document.getElementById('supportForm').reset();
-            document.getElementById('support-email').value = currentUser.email; // reset clears disabled inputs too
+            document.getElementById('support-email').value = currentUser.email; 
 
         } catch (err) {
+            console.error(err);
             statusDiv.innerText = 'Failed to send message. Please try emailing us directly.';
             statusDiv.className = 'status-message status-error';
         } finally {
