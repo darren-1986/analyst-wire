@@ -302,7 +302,7 @@
         <a href="terminal.html" id="nav-dashboard" style="display: none;">Dashboard</a>
         <a href="/newsfeed" id="nav-newsfeed" style="display: none;">Newsfeed</a>
         <a href="analysis.html" id="nav-analysis" style="display: none;">Analysis</a>
-        <a href="profile.html" id="nav-profile" class="active" style="display: none;">Network</a>
+        <a href="profile.html" id="nav-profile" style="display: none;">Network</a>
         <a id="nav-courses" href="courses.html" style="display: none;">Courses</a>
         <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
         
@@ -422,6 +422,11 @@
             if (isAdmin) {
                 document.getElementById('nav-admin').style.display = 'block';
                 document.getElementById('nav-upload').style.display = 'block';
+            }
+            
+            // Network Visibility Logic
+            if (isAdmin || userHasAccess(tags, 'pro') || userHasAccess(tags, 'course') || userHasAccess(tags, 'courses') || userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk')) {
+                document.getElementById('nav-profile').style.display = 'block';
             }
             
             if (isAdmin || userHasAccess(tags, 'pro')) {
