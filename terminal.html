@@ -909,6 +909,47 @@
                 </div>
             </div>
             
+            <!-- ADVANCED CHART (NEW) -->
+            <div class="grid-stack-item" gs-id="tv-advanced-chart" gs-w="3" gs-h="1" data-default-w="6" data-default-h="6" data-in-dock="true" data-zoom="1.0">
+                <div class="grid-stack-item-content">
+                    <div class="panel">
+                        <div class="panel-header" title="Advanced Chart">
+                            <div class="panel-title-wrapper">
+                                <span class="panel-title-text"><span class="full-text">Advanced Chart</span><span class="short-text">AC</span></span>
+                            </div>
+                            <div class="panel-controls" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, -1)" title="Move Up">▲</button>
+                                <button class="panel-btn mobile-arrow" onclick="moveWidget(this, 1)" title="Move Down">▼</button>
+                                <div class="settings-container">
+                                    <button class="panel-btn settings-toggle-btn" onclick="toggleWidgetSettings(this)" title="Settings">⚙</button>
+                                    <div class="widget-settings-menu">
+                                        <div class="menu-row">
+                                            <span class="menu-label">Zoom</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, -0.1)">-</button>
+                                            <span class="zoom-label">100%</span>
+                                            <button class="panel-btn" onclick="adjustZoom(this, 0.1)">+</button>
+                                        </div>
+                                        <div class="menu-row mobile-only">
+                                            <span class="menu-label">Height</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, -1)">-</button>
+                                            <span class="h-label">Auto</span>
+                                            <button class="panel-btn" onclick="adjustHeight(this, 1)">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="panel-btn add-btn" onclick="moveToDashboard(this)">➕</button>
+                                <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
+                            </div>
+                        </div>
+                        <div class="panel-content">
+                            <div class="adaptive-wrapper">
+                                <!-- Rendered dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -1040,6 +1081,54 @@
             tv.style.width = '100%';
             tv.style.height = '100%';
             wrapper.appendChild(tv);
+        }
+        else if (gsId === 'tv-advanced-chart') {
+            wrapper.innerHTML = '';
+            const container = document.createElement('div');
+            container.className = 'tradingview-widget-container';
+            container.style.cssText = 'height:100%;width:100%';
+            
+            const widgetDiv = document.createElement('div');
+            widgetDiv.className = 'tradingview-widget-container__widget';
+            widgetDiv.style.cssText = 'height:calc(100% - 32px);width:100%';
+            
+            const copyright = document.createElement('div');
+            copyright.className = 'tradingview-widget-copyright';
+            copyright.innerHTML = '<a href="https://www.tradingview.com/symbols/EURUSD/?exchange=OANDA" rel="noopener nofollow" target="_blank"><span class="blue-text">EURUSD chart</span></a><span class="trademark"> by TradingView</span>';
+            
+            container.appendChild(widgetDiv);
+            container.appendChild(copyright);
+            
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+            script.async = true;
+            script.innerHTML = JSON.stringify({
+                "allow_symbol_change": true,
+                "calendar": false,
+                "details": false,
+                "hide_side_toolbar": false,
+                "hide_top_toolbar": false,
+                "hide_legend": false,
+                "hide_volume": false,
+                "hotlist": false,
+                "interval": "D",
+                "locale": "en",
+                "save_image": true,
+                "style": "1",
+                "symbol": "OANDA:EURUSD",
+                "theme": "dark",
+                "timezone": "Etc/UTC",
+                "backgroundColor": "#0F0F0F",
+                "gridColor": "rgba(242, 242, 242, 0.2)",
+                "watchlist": [],
+                "withdateranges": true,
+                "compareSymbols": [],
+                "studies": [],
+                "autosize": true
+            });
+            container.appendChild(script);
+            wrapper.appendChild(container);
         }
         else if (gsId === 'calendar') {
             wrapper.innerHTML = '';
