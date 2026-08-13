@@ -94,6 +94,20 @@
         
         .readonly-data { padding: 12px; background: #090b10; border: 1px solid #30363d; border-radius: 6px; color: #8b949e; font-family: 'Inter', sans-serif; font-size: 0.9rem; }
         .quick-view-box { display: flex; justify-content: space-between; align-items: center; }
+
+        /* Security Alert Boxes */
+        .alert-box { margin-top: 15px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; font-family: 'Inter', sans-serif; }
+        .alert-header { padding: 10px 14px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; }
+        .alert-body { padding: 0 14px 14px 14px; display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; }
+        .alert-item { display: flex; align-items: flex-start; gap: 6px; }
+        .status-box-danger { border: 1px solid rgba(248, 81, 73, 0.4); background: rgba(248, 81, 73, 0.05); }
+        .status-box-danger .alert-header { background: rgba(248, 81, 73, 0.15); color: #f85149; }
+        .status-box-danger .alert-body { color: #c9d1d9; }
+        .status-box-warn { border: 1px solid rgba(210, 153, 34, 0.4); background: rgba(210, 153, 34, 0.05); }
+        .status-box-warn .alert-header { background: rgba(210, 153, 34, 0.15); color: #d29922; }
+        .status-box-warn .alert-body { color: #c9d1d9; }
+        .status-box-ok { border: 1px solid rgba(46, 160, 67, 0.4); background: rgba(46, 160, 67, 0.05); }
+        .status-box-ok .alert-header { background: rgba(46, 160, 67, 0.15); color: #3fb950; }
         
         .modal-actions { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #30363d; padding-top: 20px; margin-top: 20px; }
         .btn-save { background: #238636; color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: 'Inter', sans-serif; transition: background 0.2s; box-sizing: border-box; }
@@ -226,12 +240,14 @@
             </div>
 
             <div class="profile-group">
-                <label>Latest Quick View</label>
+                <label>Latest Quick View & Security</label>
                 <div class="readonly-data quick-view-box" id="p-quick-view">
                     <span id="p-last-login">Fetching...</span>
                     <span><strong style="color: #fff;">Country:</strong> <span id="p-country">Fetching...</span></span>
                     <span><strong style="color: #fff;">Device:</strong> <span id="p-device">Fetching...</span></span>
                 </div>
+                <!-- Dynamic Security Alerts injected here -->
+                <div id="p-security-alerts"></div>
             </div>
         </div>
 
@@ -518,32 +534,89 @@
         document.getElementById('p-id').value = userId;
         document.getElementById('p-name').value = userRow.customer_name || '';
         document.getElementById('p-email').value = userRow.email || '';
-        document.getElementById('p-last-login').innerText = 'Fetching...';
-        document.getElementById('p-country').innerText = 'Fetching...';
-        document.getElementById('p-device').innerText = 'Fetching...';
         
+        const lastLoginEl = document.getElementById('p-last-login');
+        const countryEl = document.getElementById('p-country');
+        const deviceEl = document.getElementById('p-device');
         const historyTableBody = document.getElementById('p-login-history');
+        const securityAlertsBox = document.getElementById('p-security-alerts');
+        
+        lastLoginEl.innerText = 'Fetching...';
+        countryEl.innerText = 'Fetching...';
+        deviceEl.innerText = 'Fetching...';
+        securityAlertsBox.innerHTML = '';
         historyTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #8b949e;">Loading history...</td></tr>';
 
         const { data: authData, error: authError } = await client.auth.admin.getUserById(userId);
-        if (authError) { document.getElementById('p-last-login').innerText = "Unable to load data."; } 
+        if (authError) { lastLoginEl.innerText = "Unable to load data."; } 
         else if (authData && authData.user) {
             const lastLogin = authData.user.last_sign_in_at;
-            document.getElementById('p-last-login').innerHTML = lastLogin ? `<strong style="color:#fff;">Last seen:</strong> ${new Date(lastLogin).toLocaleString()}` : 'Never logged in';
+            lastLoginEl.innerHTML = lastLogin ? `<strong style="color:#fff;">Last seen:</strong> ${new Date(lastLogin).toLocaleString()}` : 'Never logged in';
         }
         
         const { data: historyData, error: historyError } = await client.from('login_history').select('*').eq('user_id', userId).order('login_time', { ascending: false }).limit(50);
         
         if (historyError) { 
             historyTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: #f85149;">Error loading history: ${historyError.message}</td></tr>`; 
-            document.getElementById('p-country').innerText = 'Error';
-            document.getElementById('p-device').innerText = 'Error';
+            countryEl.innerText = 'Error';
+            deviceEl.innerText = 'Error';
         } 
         else if (historyData && historyData.length > 0) {
+            // Update Quick View with most recent record
             const latest = historyData[0];
-            document.getElementById('p-country').innerText = latest.country || 'No data';
-            document.getElementById('p-device').innerText = `${latest.device_type || 'Unknown'} - ${latest.os || 'Unknown'}`;
+            countryEl.innerText = latest.country || 'No data';
+            deviceEl.innerText = `${latest.device_type || 'Unknown'} - ${latest.os || 'Unknown'}`;
 
+            // Security Pattern Analysis (14-Day Window Heuristic)
+            const now = new Date();
+            const recentLogins = historyData.filter(r => (now - new Date(r.login_time)) / (1000 * 60 * 60 * 24) <= 14);
+            const dataToAnalyze = recentLogins.length > 0 ? recentLogins : historyData.slice(0, 15);
+            
+            const ips = new Set();
+            const countries = new Set();
+            const devices = new Set();
+            
+            dataToAnalyze.forEach(r => {
+                if (r.ip_address) ips.add(r.ip_address);
+                if (r.country) countries.add(r.country);
+                if (r.device_type || r.os) devices.add(`${r.device_type}-${r.os}`);
+            });
+            
+            const alerts = [];
+            if (countries.size > 1) {
+                alerts.push({ level: 'danger', icon: '🚨', text: `Logins from ${countries.size} different countries (${Array.from(countries).join(', ')}).` });
+            }
+            if (ips.size > 2) {
+                alerts.push({ level: 'warn', icon: '⚠️', text: `Account accessed from ${ips.size} unique IP addresses.` });
+            }
+            if (devices.size > 2) {
+                alerts.push({ level: 'warn', icon: '💻', text: `Account accessed using ${devices.size} distinct device profiles.` });
+            }
+            
+            // Render Security Alerts
+            if (alerts.length > 0) {
+                const hasDanger = alerts.some(a => a.level === 'danger');
+                const boxClass = hasDanger ? 'status-box-danger' : 'status-box-warn';
+                const headerIcon = hasDanger ? '🚨' : '⚠️';
+                const headerText = hasDanger ? 'High Risk Account Sharing Detected' : 'Suspicious Login Patterns Detected';
+                
+                const alertsHtml = alerts.map(a => `<div class="alert-item"><span>${a.icon}</span> <span>${a.text}</span></div>`).join('');
+                
+                securityAlertsBox.innerHTML = `
+                    <div class="alert-box ${boxClass}">
+                        <div class="alert-header"><span>${headerIcon}</span> ${headerText} (14-Day Window)</div>
+                        <div class="alert-body" style="padding-top: 10px;">${alertsHtml}</div>
+                    </div>
+                `;
+            } else {
+                securityAlertsBox.innerHTML = `
+                    <div class="alert-box status-box-ok">
+                        <div class="alert-header"><span>✅</span> No Suspicious Sharing Activity (14-Day Window)</div>
+                    </div>
+                `;
+            }
+
+            // Render detailed table
             historyTableBody.innerHTML = historyData.map(record => {
                 const dateStr = new Date(record.login_time).toLocaleString();
                 const deviceStr = `${record.device_type || 'Unknown'} - ${record.os || 'Unknown'}`;
@@ -551,8 +624,13 @@
             }).join('');
         } else { 
             historyTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #8b949e;">No detailed login history found.</td></tr>'; 
-            document.getElementById('p-country').innerText = 'No data';
-            document.getElementById('p-device').innerText = 'No data';
+            countryEl.innerText = 'No data';
+            deviceEl.innerText = 'No data';
+            securityAlertsBox.innerHTML = `
+                <div class="alert-box status-box-ok">
+                    <div class="alert-header"><span>ℹ️</span> Insufficient data to analyze account sharing.</div>
+                </div>
+            `;
         }
     }
 
