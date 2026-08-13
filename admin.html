@@ -100,12 +100,19 @@
         .alert-header { padding: 10px 14px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; }
         .alert-body { padding: 0 14px 14px 14px; display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; }
         .alert-item { display: flex; align-items: flex-start; gap: 6px; }
+        
+        .status-box-critical { border: 1px solid rgba(220, 38, 38, 0.8); background: rgba(220, 38, 38, 0.1); }
+        .status-box-critical .alert-header { background: rgba(220, 38, 38, 0.25); color: #f87171; text-transform: uppercase; }
+        .status-box-critical .alert-body { color: #fca5a5; }
+
         .status-box-danger { border: 1px solid rgba(248, 81, 73, 0.4); background: rgba(248, 81, 73, 0.05); }
         .status-box-danger .alert-header { background: rgba(248, 81, 73, 0.15); color: #f85149; }
         .status-box-danger .alert-body { color: #c9d1d9; }
+        
         .status-box-warn { border: 1px solid rgba(210, 153, 34, 0.4); background: rgba(210, 153, 34, 0.05); }
         .status-box-warn .alert-header { background: rgba(210, 153, 34, 0.15); color: #d29922; }
         .status-box-warn .alert-body { color: #c9d1d9; }
+        
         .status-box-ok { border: 1px solid rgba(46, 160, 67, 0.4); background: rgba(46, 160, 67, 0.05); }
         .status-box-ok .alert-header { background: rgba(46, 160, 67, 0.15); color: #3fb950; }
         
@@ -582,30 +589,45 @@
                 if (r.device_type || r.os) devices.add(`${r.device_type}-${r.os}`);
             });
             
-            const alerts = [];
-            if (countries.size > 1) {
-                alerts.push({ level: 'danger', icon: '🚨', text: `Logins from ${countries.size} different countries (${Array.from(countries).join(', ')}).` });
-            }
-            if (ips.size > 2) {
-                alerts.push({ level: 'warn', icon: '⚠️', text: `Account accessed from ${ips.size} unique IP addresses.` });
-            }
-            if (devices.size > 2) {
-                alerts.push({ level: 'warn', icon: '💻', text: `Account accessed using ${devices.size} distinct device profiles.` });
+            const countryCount = countries.size;
+            const ipCount = ips.size;
+            const deviceCount = devices.size;
+
+            let riskLevel = 'ok';
+            let boxClass = 'status-box-ok';
+            let headerIcon = '✅';
+            let headerText = 'No Suspicious Sharing Activity';
+
+            // Calculate overall risk
+            if (countryCount > 1 && (deviceCount > 1 || ipCount > 3)) {
+                riskLevel = 'critical';
+                boxClass = 'status-box-critical';
+                headerIcon = '⛔';
+                headerText = 'CRITICAL RISK: Strong Evidence of Account Sharing';
+            } else if (countryCount > 1 || (deviceCount > 2 && ipCount > 2)) {
+                riskLevel = 'danger';
+                boxClass = 'status-box-danger';
+                headerIcon = '🚨';
+                headerText = 'HIGH RISK: Highly Suspicious Patterns';
+            } else if (ipCount > 2 || deviceCount > 2) {
+                riskLevel = 'warn';
+                boxClass = 'status-box-warn';
+                headerIcon = '⚠️';
+                headerText = 'ELEVATED RISK: Multiple Access Points';
             }
             
+            // Build bullet points
+            const alertsHtml = [];
+            if (countryCount > 1) alertsHtml.push(`<div class="alert-item"><span>🌍</span> <span>Logins from ${countryCount} different countries (${Array.from(countries).join(', ')}).</span></div>`);
+            if (ipCount > 2) alertsHtml.push(`<div class="alert-item"><span>📡</span> <span>Account accessed from ${ipCount} unique IP addresses.</span></div>`);
+            if (deviceCount > 2 || (deviceCount > 1 && riskLevel === 'critical')) alertsHtml.push(`<div class="alert-item"><span>💻</span> <span>Account accessed using ${deviceCount} distinct device profiles.</span></div>`);
+
             // Render Security Alerts
-            if (alerts.length > 0) {
-                const hasDanger = alerts.some(a => a.level === 'danger');
-                const boxClass = hasDanger ? 'status-box-danger' : 'status-box-warn';
-                const headerIcon = hasDanger ? '🚨' : '⚠️';
-                const headerText = hasDanger ? 'High Risk Account Sharing Detected' : 'Suspicious Login Patterns Detected';
-                
-                const alertsHtml = alerts.map(a => `<div class="alert-item"><span>${a.icon}</span> <span>${a.text}</span></div>`).join('');
-                
+            if (riskLevel !== 'ok') {
                 securityAlertsBox.innerHTML = `
                     <div class="alert-box ${boxClass}">
                         <div class="alert-header"><span>${headerIcon}</span> ${headerText} (14-Day Window)</div>
-                        <div class="alert-body" style="padding-top: 10px;">${alertsHtml}</div>
+                        <div class="alert-body" style="padding-top: 10px;">${alertsHtml.join('')}</div>
                     </div>
                 `;
             } else {
