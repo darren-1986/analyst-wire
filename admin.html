@@ -277,6 +277,19 @@
             </div>
         </div>
 
+        <div style="border-top: 1px solid #30363d; padding-top: 20px; margin-top: 20px;">
+            <h3 style="margin-top: 0; font-size: 1.05rem; color: #fff; font-weight: 600;">Send Direct Email</h3>
+            <div class="profile-group" style="margin-bottom: 10px;">
+                <label>Subject</label>
+                <input type="text" id="p-email-subject" placeholder="Email Subject">
+            </div>
+            <div class="profile-group" style="margin-bottom: 15px;">
+                <label>Message</label>
+                <textarea id="p-email-body" rows="4" placeholder="Type your message here..." style="padding: 12px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 6px; font-family: 'Inter', sans-serif; outline: none; width: 100%; box-sizing: border-box; resize: vertical;"></textarea>
+            </div>
+            <button class="btn-profile" id="btn-send-custom-email" onclick="sendCustomEmail()" style="width: 100%; border-color: #2962ff; color: #2962ff;">Send Email via Resend</button>
+        </div>
+
         <div class="modal-actions">
             <button class="btn-profile" id="btn-reset-pwd" onclick="sendPasswordReset()">Send Reset Email</button>
             <button class="btn-save" id="btn-save-profile" onclick="saveProfileDetails()">Save Changes</button>
@@ -541,6 +554,8 @@
         document.getElementById('p-id').value = userId;
         document.getElementById('p-name').value = userRow.customer_name || '';
         document.getElementById('p-email').value = userRow.email || '';
+        document.getElementById('p-email-subject').value = '';
+        document.getElementById('p-email-body').value = '';
         
         const lastLoginEl = document.getElementById('p-last-login');
         const countryEl = document.getElementById('p-country');
@@ -696,6 +711,47 @@
 
         btn.innerText = "Send Reset Email"; 
         btn.disabled = false;
+    }
+
+    async function sendCustomEmail() {
+        const email = document.getElementById('p-email').value;
+        const subject = document.getElementById('p-email-subject').value;
+        const body = document.getElementById('p-email-body').value;
+        const btn = document.getElementById('btn-send-custom-email');
+
+        if (!email || !subject || !body) {
+            alert("Please fill in the recipient email, subject, and message.");
+            return;
+        }
+
+        btn.innerText = "Sending...";
+        btn.disabled = true;
+
+        try {
+            // Securely invoke the Edge Function using the Supabase client
+            const { data, error } = await client.functions.invoke('send-email', {
+                body: { 
+                    to: email, 
+                    subject: subject, 
+                    body: body 
+                }
+            });
+
+            if (error) throw error;
+            
+            if (data && !data.error && !data.statusCode) {
+                alert("Email sent successfully!");
+                document.getElementById('p-email-subject').value = '';
+                document.getElementById('p-email-body').value = '';
+            } else {
+                alert("Error sending email: " + (data.message || JSON.stringify(data)));
+            }
+        } catch (error) {
+            alert("Error: " + error.message);
+        } finally {
+            btn.innerText = "Send Email via Resend";
+            btn.disabled = false;
+        }
     }
 
     function showSection(id, btn) {
