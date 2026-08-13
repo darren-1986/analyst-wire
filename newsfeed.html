@@ -135,7 +135,7 @@
             <a href="/newsfeed" id="nav-newsfeed" class="active" style="display: none;">Newsfeed</a>
             <a href="key-levels.html" id="nav-key-levels" style="display: none;">Key Levels</a>
             <a href="analysis.html" id="nav-analysis" style="display: none;">Analysis</a>
-           <a href="profile.html" id="nav-profile" class="active" style="display: none;">Network</a>
+            <a href="profile.html" id="nav-profile" style="display: none;">Network</a>
             <a href="courses.html" id="nav-courses" style="display: none;">Courses</a>
             
             <div class="dropdown">
@@ -265,6 +265,7 @@
                 newsfeed: document.getElementById('nav-newsfeed'),
                 keyLevels: document.getElementById('nav-key-levels'),
                 analysis: document.getElementById('nav-analysis'),
+                profile: document.getElementById('nav-profile'),
                 courses: document.getElementById('nav-courses'),
                 admin: document.getElementById('nav-admin'),
                 upload: document.getElementById('nav-upload')
@@ -279,6 +280,7 @@
                 if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
                 if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
                 if (navElements.analysis) navElements.analysis.style.display = 'block';
+                if (navElements.profile) navElements.profile.style.display = 'block';
                 if (navElements.courses) navElements.courses.style.display = 'block';
                 
                 if (isAdmin) {
@@ -292,6 +294,9 @@
                 }
                 if ((userHasAccess(tags, 'course') || userHasAccess(tags, 'courses')) && navElements.courses) {
                     navElements.courses.style.display = 'block';
+                }
+                if (navElements.profile && (userHasAccess(tags, 'course') || userHasAccess(tags, 'courses') || userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk'))) {
+                    navElements.profile.style.display = 'block';
                 }
             }
         }
