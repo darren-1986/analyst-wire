@@ -63,7 +63,7 @@
         .media-section { max-width: 1400px; margin: 0 auto 40px auto; }
 
         /* -------------------------------------
-           MODERN TRADE IDEAS STYLING 
+            MODERN TRADE IDEAS STYLING 
         ---------------------------------------- */
         .trade-card { 
             background: linear-gradient(145deg, #161b22, #10141a); 
@@ -370,7 +370,7 @@
             dashboard: document.getElementById('nav-dashboard'),
             newsfeed: document.getElementById('nav-newsfeed'),
             analysis: document.getElementById('nav-analysis'),
-            network: document.getElementById('nav-network'),
+            profile: document.getElementById('nav-profile'),
             courses: document.getElementById('nav-courses'),
             keyLevels: document.getElementById('nav-key-levels'),
             admin: document.getElementById('nav-admin'),
@@ -380,6 +380,11 @@
         // Hide everything by default
         Object.values(navElements).forEach(el => { if (el) el.style.display = 'none'; });
 
+        // Show Network to valid tiers (Admin, Pro, Course, Newsfeed/Squawk)
+        if (navElements.profile && (isAdmin || userHasAccess(tags, 'pro') || userHasAccess(tags, 'course') || userHasAccess(tags, 'courses') || userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk'))) {
+            navElements.profile.style.display = 'block';
+        }
+
         // Reveal based on strict tier assignment
         if (isAdmin || userHasAccess(tags, 'pro')) {
             if (navElements.dashboard) navElements.dashboard.style.display = 'block';
@@ -387,7 +392,6 @@
             if (navElements.analysis) navElements.analysis.style.display = 'block';
             if (navElements.courses) navElements.courses.style.display = 'block';
             if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
-            if (navElements.profile) navElements.profile.style.display = 'block';
             
             if (isAdmin) {
                 if (navElements.admin) navElements.admin.style.display = 'block';
