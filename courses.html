@@ -217,7 +217,7 @@
         <a href="terminal.html">Dashboard</a>
         <a href="/newsfeed">Newsfeed</a>
         <a href="analysis.html">Analysis</a>
-        <a href="profile.html" id="nav-profile" class="active" style="display: none;">Network</a>
+        <a href="profile.html" id="nav-profile" style="display: none;">Network</a>
         <a href="interest-rate-tracker.html">Rate Tracker</a>
         <a href="courses.html" class="active">Courses</a>
         <a id="nav-key-levels" href="key-levels.html" style="display: none;">Key Levels</a>
@@ -514,8 +514,8 @@
         // ==========================================
         // 3. HARD ROUTING (BOUNCER LOGIC)
         // ==========================================
-        if (!isAdmin && !userHasAccess(tags, 'pro') && !userHasAccess(tags, 'course')) {
-            if (userHasAccess(tags, 'newsfeed')) {
+        if (!isAdmin && !userHasAccess(tags, 'pro') && !userHasAccess(tags, 'course') && !userHasAccess(tags, 'courses')) {
+            if (userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk')) {
                 window.location.href = '/newsfeed';
                 return;
             } else {
@@ -531,6 +531,7 @@
             dashboard: document.querySelector('a[href="terminal.html"]'),
             newsfeed: document.querySelector('a[href="/newsfeed"]'),
             analysis: document.querySelector('a[href="analysis.html"]'),
+            profile: document.getElementById('nav-profile'),
             rateTracker: document.querySelector('a[href="interest-rate-tracker.html"]'),
             courses: document.querySelector('a[href="courses.html"]'),
             keyLevels: document.getElementById('nav-key-levels')
@@ -550,11 +551,16 @@
                 if (navUpload) navUpload.style.display = 'block';
             }
         } else {
-            if (userHasAccess(tags, 'course') && navLinks.courses) {
+            // A la carte visibility for non-pro users
+            if ((userHasAccess(tags, 'course') || userHasAccess(tags, 'courses')) && navLinks.courses) {
                 navLinks.courses.style.display = 'block';
             }
-            if (userHasAccess(tags, 'newsfeed') && navLinks.newsfeed) {
+            if ((userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk')) && navLinks.newsfeed) {
                 navLinks.newsfeed.style.display = 'block';
+            }
+            // Show Network to valid non-pro tiers (Course, Newsfeed/Squawk)
+            if (navLinks.profile && (userHasAccess(tags, 'course') || userHasAccess(tags, 'courses') || userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk'))) {
+                navLinks.profile.style.display = 'block';
             }
         }
     }
