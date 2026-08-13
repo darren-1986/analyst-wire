@@ -122,8 +122,8 @@
             .modal { padding: 20px; }
             .modal-form-row { grid-template-columns: 1fr; gap: 10px; }
             .quick-view-box { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .modal-actions { justify-content: stretch; }
-            .btn-save { width: 100%; }
+            .modal-actions { justify-content: stretch; flex-direction: column; }
+            .btn-save, .btn-profile { width: 100%; }
         }
     </style>
 </head>
@@ -229,8 +229,8 @@
                 <label>Latest Quick View</label>
                 <div class="readonly-data quick-view-box" id="p-quick-view">
                     <span id="p-last-login">Fetching...</span>
-                    <span><strong style="color: #fff;">Country:</strong> <span id="p-country">...</span></span>
-                    <span><strong style="color: #fff;">Device:</strong> <span id="p-device">...</span></span>
+                    <span><strong style="color: #fff;">Country:</strong> <span id="p-country">Fetching...</span></span>
+                    <span><strong style="color: #fff;">Device:</strong> <span id="p-device">Fetching...</span></span>
                 </div>
             </div>
         </div>
@@ -255,6 +255,7 @@
         </div>
 
         <div class="modal-actions">
+            <button class="btn-profile" id="btn-reset-pwd" onclick="sendPasswordReset()">Send Reset Email</button>
             <button class="btn-save" id="btn-save-profile" onclick="saveProfileDetails()">Save Changes</button>
         </div>
     </div>
@@ -518,8 +519,8 @@
         document.getElementById('p-name').value = userRow.customer_name || '';
         document.getElementById('p-email').value = userRow.email || '';
         document.getElementById('p-last-login').innerText = 'Fetching...';
-        document.getElementById('p-country').innerText = userRow.last_country || 'No data';
-        document.getElementById('p-device').innerText = userRow.last_device || 'No data';
+        document.getElementById('p-country').innerText = 'Fetching...';
+        document.getElementById('p-device').innerText = 'Fetching...';
         
         const historyTableBody = document.getElementById('p-login-history');
         historyTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #8b949e;">Loading history...</td></tr>';
@@ -532,14 +533,27 @@
         }
         
         const { data: historyData, error: historyError } = await client.from('login_history').select('*').eq('user_id', userId).order('login_time', { ascending: false }).limit(50);
-        if (historyError) { historyTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: #f85149;">Error loading history: ${historyError.message}</td></tr>`; } 
+        
+        if (historyError) { 
+            historyTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: #f85149;">Error loading history: ${historyError.message}</td></tr>`; 
+            document.getElementById('p-country').innerText = 'Error';
+            document.getElementById('p-device').innerText = 'Error';
+        } 
         else if (historyData && historyData.length > 0) {
+            const latest = historyData[0];
+            document.getElementById('p-country').innerText = latest.country || 'No data';
+            document.getElementById('p-device').innerText = `${latest.device_type || 'Unknown'} - ${latest.os || 'Unknown'}`;
+
             historyTableBody.innerHTML = historyData.map(record => {
                 const dateStr = new Date(record.login_time).toLocaleString();
                 const deviceStr = `${record.device_type || 'Unknown'} - ${record.os || 'Unknown'}`;
                 return `<tr><td style="color: #c9d1d9;">${dateStr}</td><td style="font-family: 'Inter', monospace; color: #8b949e;">${record.ip_address || 'N/A'}</td><td style="color: #c9d1d9;">${record.country || 'N/A'}</td><td style="color: #c9d1d9;">${deviceStr}</td></tr>`;
             }).join('');
-        } else { historyTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #8b949e;">No detailed login history found.</td></tr>'; }
+        } else { 
+            historyTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #8b949e;">No detailed login history found.</td></tr>'; 
+            document.getElementById('p-country').innerText = 'No data';
+            document.getElementById('p-device').innerText = 'No data';
+        }
     }
 
     function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
@@ -559,6 +573,29 @@
             alert("Profile details updated successfully!"); closeProfileModal(); init(); 
         } catch (err) { alert("Error saving profile: " + err.message); } 
         finally { saveBtn.innerText = "Save Changes"; saveBtn.disabled = false; }
+    }
+
+    async function sendPasswordReset() {
+        const email = document.getElementById('p-email').value;
+        if (!email) {
+            alert("No email address found for this user.");
+            return;
+        }
+
+        const btn = document.getElementById('btn-reset-pwd');
+        btn.innerText = "Sending..."; 
+        btn.disabled = true;
+
+        const { data, error } = await client.auth.resetPasswordForEmail(email);
+
+        if (error) {
+            alert("Error sending reset email: " + error.message);
+        } else {
+            alert("Password reset email sent successfully to " + email);
+        }
+
+        btn.innerText = "Send Reset Email"; 
+        btn.disabled = false;
     }
 
     function showSection(id, btn) {
