@@ -25,10 +25,10 @@
         .messenger__outer { flex-grow: 1; overflow: hidden; }
         .messenger__outer .newsfeed__title { display: none !important; }
         
-        .custom-newsfeed-header { display: flex; align-items: center; padding: 8px 12px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 13px; background: #0d1117; border-bottom: 1px solid #1c2230; }
-        .green-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 8px; }
-
-        .controls { display: flex; justify-content: flex-start; margin-bottom: 0; gap: 6px; align-items: center; flex-wrap: wrap; padding: 8px 12px; background: #0A0A0a; border-bottom: 1px solid #1c2230; }
+        .controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; padding: 8px 12px; background: #0A0A0a; border-bottom: 1px solid #1c2230; gap: 10px; }
+        
+        .left-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        
         .filter-btn { padding: 4px 8px; cursor: pointer; border-radius: 4px; border: 1px solid #475569; background: #1e293b; color: white; font-size: 11px; transition: 0.2s; }
         .filter-btn:hover { background: #334155; }
         .filter-btn.active { background: #00b4f9; border-color: #00b4f9; }
@@ -38,8 +38,9 @@
         
         #mobileFilter { display: none; padding: 4px 8px; border-radius: 4px; border: 1px solid #475569; background: #1e293b; color: white; outline: none; cursor: pointer; font-size: 11px; }
 
-        .audio-container { display: flex; align-items: center; gap: 8px; margin-right: auto; }
-        .audio-container img { height: 20px; width: auto; }
+        .audio-container { display: flex; align-items: center; gap: 12px; }
+        /* Slightly increased image size */
+        .audio-container img { height: 26px; width: auto; }
         .audio-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid #00b4f9; padding: 4px 10px; border-radius: 6px; background: #0A0A0a; }
         #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 6px; min-width: 140px; font-size: 11px; padding: 0; }
         .status-on { color: #22c55e !important; }
@@ -60,7 +61,8 @@
             .filter-btn { display: none; }
             #mobileFilter { display: block; }
             
-            .audio-container { width: 100%; justify-content: space-between; margin-bottom: 5px; }
+            .controls { justify-content: flex-start; }
+            .audio-container { width: 100%; justify-content: space-between; order: -1; margin-bottom: 5px; }
             #audioToggle { min-width: auto; }
             
             /* Expandable Search Bar */
@@ -85,9 +87,34 @@
 </head>
 <body class="dark">
 
-    <div class="custom-newsfeed-header"><div class="green-dot"></div> NEWSFEED</div>
-    
     <div class="controls">
+        <div class="left-group">
+            <input type="text" id="searchBar" placeholder="Search keywords..." onkeyup="filterFeed()">
+            
+            <!-- Mobile Dropdown Filter -->
+            <select id="mobileFilter" onchange="setFilter(this.value)">
+                <option value="all">All</option>
+                <option value="commodities">Commodities</option>
+                <option value="forex">Forex</option>
+                <option value="equities">Equities</option>
+                <option value="crypto">Crypto</option>
+                <option value="centralBanks">Central Banks</option>
+            </select>
+
+            <!-- Desktop Filter Buttons -->
+            <button class="filter-btn active" data-type="all" onclick="setFilter('all')">All</button>
+            <button class="filter-btn" data-type="commodities" onclick="setFilter('commodities')">Commodities</button>
+            <button class="filter-btn" data-type="forex" onclick="setFilter('forex')">Forex</button>
+            <button class="filter-btn" data-type="equities" onclick="setFilter('equities')">Equities</button>
+            <button class="filter-btn" data-type="crypto" onclick="setFilter('crypto')">Crypto</button>
+            <button class="filter-btn" data-type="centralBanks" onclick="setFilter('centralBanks')">Central Banks</button>
+            
+            <label class="switch">
+                <input type="checkbox" id="themeToggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
         <div class="audio-container">
             <img src="media/squawkimage.png" alt="Logo" />
             <div class="audio-wrapper">
@@ -95,33 +122,6 @@
                 <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
             </div>
         </div>
-        
-        <input type="text" id="searchBar" placeholder="Search keywords..." onkeyup="filterFeed()">
-        
-        <!-- Mobile Dropdown Filter -->
-        <select id="mobileFilter" onchange="setFilter(this.value)">
-            <option value="targeted">Targeted</option>
-            <option value="all">All</option>
-            <option value="commodities">Commodities</option>
-            <option value="forex">Forex</option>
-            <option value="equities">Equities</option>
-            <option value="crypto">Crypto</option>
-            <option value="centralBanks">Central Banks</option>
-        </select>
-
-        <!-- Desktop Filter Buttons -->
-        <button class="filter-btn active" data-type="targeted" onclick="setFilter('targeted')">Targeted</button>
-        <button class="filter-btn" data-type="all" onclick="setFilter('all')">All</button>
-        <button class="filter-btn" data-type="commodities" onclick="setFilter('commodities')">Commodities</button>
-        <button class="filter-btn" data-type="forex" onclick="setFilter('forex')">Forex</button>
-        <button class="filter-btn" data-type="equities" onclick="setFilter('equities')">Equities</button>
-        <button class="filter-btn" data-type="crypto" onclick="setFilter('crypto')">Crypto</button>
-        <button class="filter-btn" data-type="centralBanks" onclick="setFilter('centralBanks')">Central Banks</button>
-        
-        <label class="switch">
-            <input type="checkbox" id="themeToggle" checked>
-            <span class="slider"></span>
-        </label>
     </div>
 
     <div class="messenger__outer" id="livesquawk_messenger_outer"></div>
@@ -254,10 +254,8 @@
         }
 
         // --- FILTER LOGIC ---
-        let currentFilter = 'targeted';
+        let currentFilter = 'all';
         const filters = { 
-            targeted: ['gold', 'australia', 'usa', 'aud', 'usd'],
-            all: [],
             commodities: ['oil', 'gold', 'metal', 'copper', 'gas', 'brent', 'wti', 'silver'], 
             forex: ['usd', 'eur', 'jpy', 'gbp', 'fx', 'forex', 'currency', 'yield'], 
             equities: ['stock', 'equity', 'sp500', 'nasdaq', 'dow', 'nikkei', 'shares'], 
@@ -295,8 +293,6 @@
         window.messenger_start_init = function() { 
             if (typeof Messenger !== 'undefined') {
                 Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); 
-                // Delay initial filter to allow feed population
-                setTimeout(() => setFilter('targeted'), 1500); 
             }
         };
         
