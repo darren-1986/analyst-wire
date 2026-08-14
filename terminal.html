@@ -909,7 +909,7 @@
                 </div>
             </div>
             
-            <!-- ADVANCED CHART (NEW) -->
+            <!-- ADVANCED CHART -->
             <div class="grid-stack-item" gs-id="tv-advanced-chart" gs-w="3" gs-h="1" data-default-w="6" data-default-h="6" data-in-dock="true" data-zoom="1.0">
                 <div class="grid-stack-item-content">
                     <div class="panel">
@@ -941,7 +941,7 @@
                                 <button class="panel-btn close-btn" onclick="returnToDock(this)">✖</button>
                             </div>
                         </div>
-                        <div class="panel-content">
+                        <div class="panel-content" style="overflow: hidden !important;">
                             <div class="adaptive-wrapper">
                                 <!-- Rendered dynamically -->
                             </div>
@@ -1086,18 +1086,13 @@
             wrapper.innerHTML = '';
             const container = document.createElement('div');
             container.className = 'tradingview-widget-container';
-            container.style.cssText = 'height:100%;width:100%';
+            container.style.cssText = 'height:100%;width:100%;position:relative;overflow:hidden;';
             
             const widgetDiv = document.createElement('div');
             widgetDiv.className = 'tradingview-widget-container__widget';
-            widgetDiv.style.cssText = 'height:calc(100% - 32px);width:100%';
-            
-            const copyright = document.createElement('div');
-            copyright.className = 'tradingview-widget-copyright';
-            copyright.innerHTML = '<a href="https://www.tradingview.com/symbols/EURUSD/?exchange=OANDA" rel="noopener nofollow" target="_blank"><span class="blue-text">EURUSD chart</span></a><span class="trademark"> by TradingView</span>';
+            widgetDiv.style.cssText = 'height:100%;width:100%';
             
             container.appendChild(widgetDiv);
-            container.appendChild(copyright);
             
             const script = document.createElement('script');
             script.type = 'text/javascript';
@@ -1209,10 +1204,6 @@
         const target = panelItem.querySelector('.panel-content');
         const wrapper = panelItem.querySelector('.adaptive-wrapper');
         if (!wrapper || !target) return;
-        
-        // Prevent zoom on the feed widget as it handles its own internal layout
-        // (Removed to allow Community Feed zooming)
-        // if (panelItem.getAttribute('gs-id') === 'users-feed') return;
 
         const width = target.clientWidth;
         let baseScale = width < 480 ? Math.max(width / 480, 0.4) : 1;
@@ -1325,7 +1316,7 @@
     }
 
     window.onload = function() {
-        const savedLayout = localStorage.getItem('analystWireLayoutV23'); // Bumped version for new widget
+        const savedLayout = localStorage.getItem('analystWireLayoutV23');
         
         mainGrid = GridStack.init({
             cellHeight: '60px', margin: 5, handle: '.panel-header', animate: true, 
@@ -1424,7 +1415,7 @@
         localStorage.setItem('analystWireLayoutV22', JSON.stringify([...dockItems, ...mainItems]));
     }
 
-    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+    const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIkkicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
     const networkClient = supabase.createClient('https://nayucfhbnecwhtzuaiur.supabase.co', 'sb_publishable_yNK-_0-3ZI2ssYfbSvw75g_RXLD_R-A');
 
     // ==========================================
