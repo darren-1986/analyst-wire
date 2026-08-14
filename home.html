@@ -95,6 +95,24 @@
             background-color: var(--accent-hover);
         }
 
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border);
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent) !important;
+            background-color: rgba(41, 98, 255, 0.05);
+        }
+
         /* --- HERO SECTION --- */
         .hero {
             padding: 10rem 2rem 5rem;
@@ -330,6 +348,27 @@
             font-weight: bold;
         }
 
+        /* --- TRIAL CTA --- */
+        .trial-cta {
+            text-align: center;
+            margin-top: 5rem;
+            padding: 3rem 2rem;
+            background-color: rgba(41, 98, 255, 0.03);
+            border-radius: 12px;
+            border: 1px dashed var(--border);
+        }
+
+        .trial-cta h3 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .trial-cta p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
         /* --- FOOTER --- */
         footer {
             background-color: var(--bg-base);
@@ -369,7 +408,8 @@
                 <a href="#analysis">Analysis</a>
                 <a href="#education">Education</a>
                 <a href="#pricing">Pricing</a>
-                <a href="#pricing" class="btn-primary">Get Access</a>
+                <!-- Link this directly to your dashboard login page -->
+                <a href="login.html" class="btn-primary">Login</a>
             </nav>
         </div>
     </header>
@@ -521,6 +561,13 @@
                 </div>
                 <a href="#" class="btn-primary" style="background-color: #21262d; border: 1px solid var(--border);">Enroll in Course</a>
             </div>
+        </div>
+
+        <!-- Request Free Trial CTA -->
+        <div class="trial-cta">
+            <h3>Not ready to commit?</h3>
+            <p>Experience the full power of the Analyst Wire terminal firsthand.</p>
+            <a href="#" class="btn-outline">Request a Free Trial</a>
         </div>
     </section>
 
