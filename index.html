@@ -33,12 +33,9 @@
 
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // --- HELPER FUNCTION: Bulletproof parsing for Arrays, Strings, and JSON ---
     function userHasAccess(userTags, requiredTag) {
         if (!userTags) return false;
-        
         let tagsArray = [];
-        
         if (Array.isArray(userTags)) {
             tagsArray = userTags;
         } else if (typeof userTags === 'string') {
@@ -49,11 +46,9 @@
                 tagsArray = userTags.split(',').map(s => s.trim());
             }
         }
-
         return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
     }
 
-    // --- DEVICE TRACKING FUNCTION ---
     async function logUserDeviceAndLocation(userId) {
         try {
             const ua = navigator.userAgent;
@@ -103,7 +98,6 @@
         }
     }
 
-    // --- FORGOT PASSWORD HANDLER ---
     document.getElementById('forgotBtn').addEventListener('click', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value;
@@ -131,7 +125,6 @@
         }
     });
 
-    // --- LOGIN HANDLER ---
     document.getElementById('loginBtn').addEventListener('click', async () => {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
@@ -146,7 +139,6 @@
         status.style.color = '#b3b3b3';
         status.innerText = 'Logging in...';
 
-        // Perform Login
         const { data, error } = await client.auth.signInWithPassword({ 
             email: email, 
             password: password 
@@ -159,8 +151,6 @@
             status.style.color = '#28a745';
             status.innerText = 'Success! Checking permissions...';
             
-            // 1. Fetch exactly the columns that exist in your DB now.
-            // Using .limit(1) instead of .single() to safely ignore duplicate rows.
             const { data: profileArray, error: profileError } = await client
                 .from('profiles')
                 .select('admin, active_tags')
@@ -176,14 +166,10 @@
 
             await logUserDeviceAndLocation(data.user.id);
 
-            // Extract the first profile from the array
             const profile = profileArray && profileArray.length > 0 ? profileArray[0] : null;
-
-            // 2. Read the tags and the exact 'admin' column
             const tags = profile?.active_tags ? profile.active_tags : [];
             const isAdmin = profile?.admin === true;
 
-            // Strict Routing & Access Control
             if (isAdmin) {
                 window.location.href = 'admin.html';
             } else if (userHasAccess(tags, 'pro')) {
