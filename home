@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyst Wire | Real-Time Market Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #05070a;
+            --bg-surface: #161b22;
+            --bg-surface-hover: #21262d;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --accent: #2962ff;
+            --accent-hover: #1e4bd8;
+            --border: #30363d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- NAVIGATION --- */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: rgba(5, 7, 10, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-main);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: #fff !important;
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            padding: 10rem 2rem 5rem;
+            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, #fff, #8b949e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-image-wrapper {
+            margin-top: 4rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .hero-image-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(to top, var(--bg-base), transparent);
+        }
+
+        img {
+            width: 100%;
+            display: block;
+            height: auto;
+        }
+
+        /* --- FEATURES GRID --- */
+        .features-section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-row {
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+            margin-bottom: 8rem;
+        }
+
+        .feature-row:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .feature-content {
+            flex: 1;
+        }
+
+        .feature-tag {
+            color: var(--accent);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .feature-content h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-content p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .feature-image {
+            flex: 1.2;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+        }
+
+        .feature-image:hover {
+            transform: translateY(-5px);
+        }
+
+        /* --- CTA SECTION --- */
+        .cta-section {
+            background-color: var(--bg-surface);
+            border-top: 1px solid var(--border);
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background-color: var(--bg-base);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 900px) {
+            .feature-row, .feature-row:nth-child(even) {
+                flex-direction: column;
+                gap: 2rem;
+                margin-bottom: 4rem;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            .nav-links {
+                display: none; /* Add mobile menu logic later if needed */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <a href="#" class="logo">Analyst<span>Wire</span></a>
+            <nav class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#analysis">Analysis</a>
+                <a href="#education">Education</a>
+                <a href="#" class="btn-primary">Start Trial</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Institutional Intelligence.<br>Customized for You.</h1>
+        <p>Get the edge with our fully customizable dashboard, lightning-fast realtime newsfeed, and our revolutionary Beta AI AudioSquawk. Eyes on the charts, ears on the market.</p>
+        <div>
+            <a href="#" class="btn-primary" style="font-size: 1.1rem; padding: 0.8rem 2rem;">Build Your Terminal</a>
+        </div>
+        
+        <div class="hero-image-wrapper">
+            <img src="Opera Snapshot_2026-08-14_174458_analyst-wire.pages.dev.jpg" alt="Analyst Wire Customizable Dashboard">
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="section-header">
+            <h2>Everything you need, in one place.</h2>
+            <p style="color: var(--text-muted); font-size: 1.1rem;">From macro reports to actionable trade setups, Analyst Wire powers your trading day.</p>
+        </div>
+
+        <!-- Feature 1: Newsfeed & AudioSquawk -->
+        <div class="feature-row">
+            <div class="feature-content">
+                <span class="feature-tag">Real-time Advantage</span>
+                <h3>Newsfeed & AI AudioSquawk</h3>
+                <p>Never miss a market-moving headline again. Our ultra-fast newsfeed delivers the facts instantly, while our Beta AI AudioSquawk reads critical updates aloud so you never have to take your eyes off the price action.</p>
+                <ul class="feature-list">
+                    <li>Zero-delay headline streaming</li>
+                    <li>Customizable category filtering (Forex, Crypto, Equities)</li>
+                    <li>Toggleable Beta AI AudioSquawk</li>
+                </ul>
+            </div>
+            <div class="feature-image">
+                <img src="Opera Snapshot_2026-08-14_174601_analyst-wire.pages.dev.png" alt="Analyst Wire Newsfeed and AudioSquawk">
+            </div>
+        </div>
+
+        <!-- Feature 2: Analysis & Briefs -->
+        <div class="feature-row" id="analysis">
+            <div class="feature-content">
+                <span class="feature-tag">Macro Context</span>
+                <h3>Deep-Dive Market Briefs</h3>
+                <p>Cut through the noise with our Daily Market Snapshots and extensive Week Ahead reports. Understand the 'why' behind central bank decisions, geopolitical shifts, and macroeconomic data.</p>
+                <ul class="feature-list">
+                    <li>Comprehensive Daily Snapshots</li>
+                    <li>Week Ahead written reports and video breakdowns</li>
+                    <li>Institutional-grade macro narrative analysis</li>
+                </ul>
+            </div>
+            <div class="feature-image">
+                <!-- Stacking the briefs and video analysis images for impact -->
+                <img src="Opera Snapshot_2026-08-14_174658_analyst-wire.pages.dev.png" alt="Analyst Wire Daily Snapshot Analysis" style="margin-bottom: 1rem;">
+                <img src="Opera Snapshot_2026-08-14_174629_analyst-wire.pages.dev.jpg" alt="Analyst Wire Week Ahead Video Analysis">
+            </div>
+        </div>
+
+        <!-- Feature 3: Trade Ideas -->
+        <div class="feature-row">
+            <div class="feature-content">
+                <span class="feature-tag">Actionable Insight</span>
+                <h3>Daily Trade Ideas</h3>
+                <p>Turn analysis into action. Access daily, high-conviction trade ideas complete with entry levels, specific strikes, rationale, and integrated charting.</p>
+                <ul class="feature-list">
+                    <li>Clear Entry and Strike parameters</li>
+                    <li>Detailed fundamental & technical rationale</li>
+                    <li>Embedded TradingView charts for visual confirmation</li>
+                </ul>
+            </div>
+            <div class="feature-image">
+                <img src="Opera Snapshot_2026-08-14_174722_analyst-wire.pages.dev.jpg" alt="Analyst Wire Trade Ideas">
+            </div>
+        </div>
+
+        <!-- Feature 4: Education -->
+        <div class="feature-row" id="education">
+            <div class="feature-content">
+                <span class="feature-tag">Skill Building</span>
+                <h3>Macro-Fundamental Course</h3>
+                <p>Level up your trading knowledge. Our comprehensive Macro-Fundamental Analyst Program takes you from basic economics to advanced central bank dynamics across 9 intensive modules.</p>
+                <ul class="feature-list">
+                    <li>Over 10 hours of video content</li>
+                    <li>Master fixed income, sentiment, and FX</li>
+                    <li>Structured approach to market fundamentals</li>
+                </ul>
+            </div>
+            <div class="feature-image">
+                <img src="Opera Snapshot_2026-08-14_174754_analyst-wire.pages.dev.jpg" alt="Analyst Wire Macro Course">
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <h2>Ready to upgrade your workspace?</h2>
+        <p>Join professionals utilizing Analyst Wire to navigate global markets.</p>
+        <a href="#" class="btn-primary" style="font-size: 1.2rem; padding: 1rem 3rem; margin-top: 1rem;">Create Your Account</a>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Analyst Wire. All rights reserved. Data provided for informational purposes.</p>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
