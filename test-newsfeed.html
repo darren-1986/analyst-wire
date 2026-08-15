@@ -71,7 +71,7 @@
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
         }
 
-        /* Logo & Status Flex Container */
+        /* Logo & Status Left Panel */
         .audio-left {
             display: flex;
             align-items: center;
@@ -525,16 +525,68 @@
             btn.disabled = false;
         }
 
-        // --- FILTER LOGIC (Functions untouched as requested) ---
+        // --- UPGRADED CLEVER FILTER SYSTEM ---
         let currentFilter = 'all';
         const filters = { 
             commodities: ['oil', 'gold', 'metal', 'copper', 'gas', 'brent', 'wti', 'silver'], 
-            forex: ['usd', 'eur', 'jpy', 'gbp', 'fx', 'forex', 'currency', 'yield'], 
+            forex: ['usd', 'eur', 'jpy', 'gbp', 'chf', 'aud', 'cad', 'nzd', 'fx', 'forex', 'currency', 'yield'], 
             equities: ['stock', 'equity', 'sp500', 'nasdaq', 'dow', 'nikkei', 'shares'], 
             crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'coin'], 
-            centralBanks: ['fed', 'ecb', 'boj', 'bank of england', 'rba', 'central bank', 'interest rate', 'hike', 'cut'] 
+            centralBanks: ['fed', 'ecb', 'boj', 'boe', 'rba', 'boc', 'snb', 'rbnz', 'central bank', 'interest rate', 'hike', 'cut'] 
         };
-        const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'S&P Global Manufacturing', 'ISM Manufacturing', 'CPI', 'JOLTS', 'ADP', 'S&P Global Services', 'ISM Non-Manufacturing', 'Crude Oil Inventories', 'Initial Jobless Claims', 'New Home Sales', 'Average Hourly Earnings', 'Nonfarm Payrolls', 'Unemployment Rate', 'GDP', 'Core CPI', 'BoC Interest Rate Decision', 'BoJ Interest Rate Decision', 'Fed Interest Rate Decision', 'SNB Interest Rate Decision', 'BoE Interest Rate Decision', 'Retail Sales', 'Core Retail Sales', 'RBA Interest Rate Decision', 'Core PCE Price Index', 'Durable Goods Orders', 'Philadelphia Fed Manufacturing Index', '10-Year Note Auction', 'ECB Interest Rate Decision', 'PPI', 'German CPI', 'Manufacturing PMI', 'CB Consumer Confidence', 'Chicago PMI', 'HCOB Spain Manufacturing PMI', 'Yield Rises', 'Treasury Falls', 'Rate-Hike', 'Monetary Policy', 'Military Strikes', 'Missile Attack', 'Revokes', 'WTI Oil Jumps', 'Gold', 'Australia', 'AUD', 'US Military', 'Central Command', 'USA'];
+
+        // Tier 1: Includes all original exact macro data points & specific shocks
+        const tier1ExactTriggers = [
+            's&p global manufacturing', 'ism manufacturing', 'cpi', 'jolts', 'adp', 's&p global services',
+            'ism non-manufacturing', 'crude oil inventories', 'initial jobless claims', 'new home sales',
+            'average hourly earnings', 'nonfarm payrolls', 'unemployment rate', 'gdp', 'core cpi',
+            'boc interest rate decision', 'boj interest rate decision', 'fed interest rate decision',
+            'snb interest rate decision', 'boe interest rate decision', 'retail sales', 'core retail sales',
+            'rba interest rate decision', 'core pce price index', 'durable goods orders',
+            'philadelphia fed manufacturing index', '10-year note auction', 'ecb interest rate decision',
+            'ppi', 'german cpi', 'manufacturing pmi', 'cb consumer confidence', 'chicago pmi',
+            'hcob spain manufacturing pmi', 'military strikes', 'missile attack', 'us military', 'central command',
+            'emergency rate cut', 'circuit breaker', 'opec+', 'nfp', 'uk cpi', 'tokyo core cpi'
+        ];
+
+        // Tier 2: Balanced Core Asset Matrix
+        const tier2Assets = ['usd', 'eur', 'gbp', 'chf', 'aud', 'cad', 'nzd', 'jpy', 'gold', 'oil', 'crude', 'brent', 'wti', 'treasury', 's&p', 'nasdaq', 'usa', 'australia'];
+        
+        // Tier 2 & 3: Institutions and Action Verbs
+        const tier3Institutions = ['fed', 'ecb', 'boe', 'boj', 'rba', 'boc', 'snb', 'rbnz', 'sec', 'opec', 'etf'];
+        const tier2Actions = ['surges', 'plummets', 'spikes', 'crashes', 'intervention', 'hike', 'cut', 'pause', 'pivot', 'breaks', 'tariff', 'sanctions', 'emergency', 'stimulus', 'buyout', 'merger', 'yield', 'revokes', 'jumps', 'rises', 'falls'];
+        
+        // Extra Shocks
+        const tier3Shocks = ['missile', 'military strike', 'war', 'attack', 'sanctions', 'resigns'];
+
+        function shouldTriggerAudio(headlineText) {
+            const lower = headlineText.toLowerCase();
+
+            // 1. Check Tier 1 Exact Strings (All your original data points live here)
+            if (tier1ExactTriggers.some(trigger => lower.includes(trigger))) {
+                return true;
+            }
+
+            // 2. Check Tier 3 Shocks
+            if (tier3Shocks.some(shock => lower.includes(shock))) {
+                return true;
+            }
+
+            // 3. Check specific high-impact policy phrasing from original list
+            if (lower.includes('monetary policy') || lower.includes('rate-hike')) {
+                return true;
+            }
+
+            // 4. Check Tier 2 Compound Logic (Asset/Institution + Action pairing)
+            const hasAssetOrInstitution = tier2Assets.some(asset => lower.includes(asset)) || tier3Institutions.some(inst => lower.includes(inst));
+            const hasAction = tier2Actions.some(action => lower.includes(action));
+            
+            if (hasAssetOrInstitution && hasAction) {
+                return true;
+            }
+
+            return false;
+        }
         
         function setFilter(type) { 
             currentFilter = type; 
@@ -567,9 +619,8 @@
                 if (node.classList && node.classList.contains('news__item__outer')) { 
                     if (audioEnabled) {
                         const rawText = node.innerText;
-                        const lowerText = rawText.toLowerCase();
-                        const hasKeyword = audioTriggerKeywords.some(kw => lowerText.includes(kw.toLowerCase()));
-                        if (hasKeyword) {
+                        
+                        if (shouldTriggerAudio(rawText)) {
                             speakText(rawText); 
                         } else {
                             const vol = parseFloat(document.getElementById('volSlider').value);
