@@ -12,153 +12,232 @@
         /* Modern typography import */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-        /* Force box-sizing to prevent overflow/alignment issues */
         *, *:before, *:after { box-sizing: border-box; }
         
         body, .messenger__outer { transition: background 0.3s, color 0.3s; }
         body.dark, .dark .messenger__outer { background-color: #0A0A0a !important; color: #ffffff !important; }
-        body.light, .light .messenger__outer { background-color: #ffffff !important; color: #000000 !important; }
+        body.light, .light .messenger__outer { background-color: #f8fafc !important; color: #000000 !important; }
         body.dark .messenger__outer, .dark .messenger__outer * { color: #e2e8f0 !important; }
 
-        /* Unified Dark Theme Navigation */
-        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        /* Navigation */
+        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%; font-family: 'Inter', sans-serif; }
         .nav-links { display: flex; align-items: center; gap: 5px; }
         .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
         .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
-        .nav-links a.active { color: #2962ff; font-weight: 600; background: rgba(41, 98, 255, 0.1); }
-
+        .nav-links a.active { color: #00b4f9; font-weight: 600; background: rgba(0, 180, 249, 0.1); }
         .mobile-menu-btn { display: none; font-size: 24px; color: #8b949e; cursor: pointer; background: none; border: none; }
 
-        /* Dropdown Styling */
         .dropdown { position: relative; margin-left: 10px; }
         .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
         .dropbtn:hover { color: #fff; }
         .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
-        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer; transition: background 0.15s; margin: 0; border-radius: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; font-family: 'Inter', sans-serif; }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
-        /* Newsfeed Content Styles */
+        /* Base Layout */
         body { margin: 0; padding-top: 55px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; }
         .messenger__outer { flex-grow: 1; overflow: hidden; }
         .messenger__outer .newsfeed__title { display: none !important; }
-        .custom-newsfeed-header { display: flex; align-items: center; padding: 15px 0 15px 165px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 16px; }
-        .green-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; margin-right: 12px; }
 
-        .controls { display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px; background: #0A0A0a; }
-        .filter-btn { padding: 5px 10px; cursor: pointer; border-radius: 4px; border: 1px solid #475569; background: #1e293b; color: white; }
-        .filter-btn.active { background: #00b4f9; border-color: #00b4f9; }
+        /* --- MODERNIZED TOP CONTROLS SECTION --- */
+        .controls-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            background: #0A0A0a;
+            border-bottom: 1px solid #1c2230;
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        /* Large Audio Dashboard Module */
+        .audio-dashboard {
+            display: flex;
+            align-items: center;
+            background: #0d1117;
+            border: 1px solid #1c2230;
+            border-radius: 12px;
+            padding: 15px 25px;
+            flex-grow: 1;
+            max-width: 800px;
+            justify-content: space-between;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* Power Toggle & Status */
+        .audio-status-col {
+            display: flex;
+            flex-direction: column;
+            min-width: 140px;
+        }
         
-        #searchBar { padding: 5px 10px; border-radius: 4px; border: 1px solid #475569; transition: all 0.3s ease; width: 160px; }
+        .audio-status-col button {
+            background: none;
+            border: none;
+            color: #8b949e;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0;
+            transition: color 0.3s;
+        }
         
-        #mobileFilter { display: none; padding: 5px 10px; border-radius: 4px; border: 1px solid #475569; background: #1e293b; color: white; outline: none; cursor: pointer; }
+        .audio-status-col button:hover { color: #fff; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #475569; box-shadow: 0 0 5px #475569; transition: all 0.3s; }
+        .status-on .status-dot { background: #00b4f9; box-shadow: 0 0 12px #00b4f9; }
+        .status-on { color: #00b4f9 !important; }
+        
+        #timerText { font-size: 11px; color: #475569; margin-top: 4px; font-family: 'JetBrains Mono', monospace; min-height: 15px; }
+        .status-on ~ #timerText { color: #00b4f9; }
 
-        .audio-container { display: flex; align-items: center; gap: 10px; margin-right: auto; }
-        .audio-wrapper { display: flex; align-items: center; gap: 15px; border: 1px solid #00b4f9; padding: 6px 14px; border-radius: 8px; background: #0A0A0a; }
-        #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 8px; min-width: 190px; }
-        .status-on { color: #22c55e !important; }
-
-        .vol-slider { -webkit-appearance: none; width: 80px; height: 6px; background: #334155; border-radius: 3px; outline: none; }
-        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: #00b4f9; border-radius: 50%; cursor: pointer; transition: background 0.2s; }
-        .vol-slider::-webkit-slider-thumb:hover { background: #ffffff; }
-
-        .switch { position: relative; display: inline-block; width: 50px; height: 24px; flex-shrink: 0; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: "🌙"; font-size: 12px; display: flex; align-items: center; justify-content: center; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #00b4f9; }
-        input:checked + .slider:before { transform: translateX(26px); content: "☀️"; }
-
-        /* Modern Audio Visualizer */
+        /* The Massive Audio Visualizer */
         .squawk-visualizer {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            height: 30px;
-            width: 45px;
-            opacity: 0.3; /* Dim state when connected but silent */
-            transition: opacity 0.3s ease;
+            gap: 5px;
+            height: 60px;
+            flex-grow: 1;
+            padding: 0 30px;
+            opacity: 0.15; 
+            transition: opacity 0.4s ease;
         }
         
-        .squawk-visualizer.active {
-            opacity: 1; /* Full brightness when speaking */
-        }
+        .squawk-visualizer.active { opacity: 1; }
         
         .squawk-visualizer .bar {
-            width: 3px;
+            width: 4px;
             background: #00b4f9;
             border-radius: 2px;
-            height: 4px; /* Idle flat line */
-            box-shadow: 0 0 6px rgba(0, 180, 249, 0.8);
-            transition: height 0.2s ease;
+            height: 4px; 
+            box-shadow: 0 0 10px rgba(0, 180, 249, 0.6);
+            transition: height 0.1s ease;
         }
 
-        /* The animation classes applied via JS */
-        .squawk-visualizer.active .bar {
-            animation: squawkPulse 0.5s infinite alternate ease-in-out;
-        }
+        /* Resting waveform shape */
+        .bar:nth-child(1), .bar:nth-child(17) { height: 4px; }
+        .bar:nth-child(2), .bar:nth-child(16) { height: 8px; }
+        .bar:nth-child(3), .bar:nth-child(15) { height: 12px; }
+        .bar:nth-child(4), .bar:nth-child(14) { height: 6px; }
+        .bar:nth-child(5), .bar:nth-child(13) { height: 16px; }
+        .bar:nth-child(6), .bar:nth-child(12) { height: 24px; }
+        .bar:nth-child(7), .bar:nth-child(11) { height: 14px; }
+        .bar:nth-child(8), .bar:nth-child(10) { height: 35px; }
+        .bar:nth-child(9) { height: 50px; background: #fff; box-shadow: 0 0 15px #fff, 0 0 30px #00b4f9; }
 
-        /* Stagger the animation times for a wave effect */
-        .squawk-visualizer .bar:nth-child(1) { animation-delay: 0.0s; }
-        .squawk-visualizer .bar:nth-child(2) { animation-delay: 0.2s; }
-        .squawk-visualizer .bar:nth-child(3) { animation-delay: 0.4s; }
-        .squawk-visualizer .bar:nth-child(4) { animation-delay: 0.2s; }
-        .squawk-visualizer .bar:nth-child(5) { animation-delay: 0.0s; }
+        /* Active animations mimicking speech */
+        .squawk-visualizer.active .bar { animation: pulseWave 0.6s infinite alternate ease-in-out; }
+        .squawk-visualizer.active .bar:nth-child(even) { animation-duration: 0.4s; animation-direction: alternate-reverse; }
+        .squawk-visualizer.active .bar:nth-child(3n) { animation-duration: 0.7s; }
+        .squawk-visualizer.active .bar:nth-child(9) { animation: centerPulse 0.4s infinite alternate ease-in-out; }
 
-        @keyframes squawkPulse {
+        @keyframes pulseWave {
             0% { height: 4px; }
-            100% { height: 26px; box-shadow: 0 0 12px rgba(0, 180, 249, 1); }
+            100% { height: 40px; box-shadow: 0 0 15px rgba(0, 180, 249, 1); }
         }
+        @keyframes centerPulse {
+            0% { height: 20px; }
+            100% { height: 60px; box-shadow: 0 0 20px #fff, 0 0 40px #00b4f9; }
+        }
+
+        /* Integrated Volume Control */
+        .vol-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid #1c2230;
+        }
+        .vol-icon { font-size: 14px; opacity: 0.7; }
+        .vol-slider { -webkit-appearance: none; width: 100px; height: 4px; background: #30363d; border-radius: 2px; outline: none; }
+        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #fff; border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+
+        /* Modernized Filters & Tools */
+        .tools-col {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        #searchBar { 
+            padding: 8px 15px; 
+            border-radius: 20px; 
+            border: 1px solid #30363d; 
+            background: #0d1117;
+            color: #fff;
+            transition: all 0.3s ease; 
+            width: 200px; 
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+        }
+        #searchBar:focus { border-color: #00b4f9; outline: none; box-shadow: 0 0 10px rgba(0, 180, 249, 0.2); }
+        
+        .filter-btn { 
+            padding: 6px 16px; 
+            cursor: pointer; 
+            border-radius: 20px; 
+            border: 1px solid #30363d; 
+            background: #0d1117; 
+            color: #8b949e; 
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { background: #161b22; color: #fff; }
+        .filter-btn.active { 
+            background: rgba(0, 180, 249, 0.1); 
+            border-color: #00b4f9; 
+            color: #00b4f9; 
+            box-shadow: 0 0 12px rgba(0, 180, 249, 0.2);
+        }
+
+        #mobileFilter { display: none; padding: 8px 15px; border-radius: 20px; border: 1px solid #30363d; background: #0d1117; color: white; outline: none; cursor: pointer; }
+
+        /* Theme Switcher */
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; flex-shrink: 0; margin-left: 10px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #1c2230; transition: .4s; border-radius: 34px; border: 1px solid #30363d; }
+        .slider:before { position: absolute; content: "🌙"; font-size: 10px; display: flex; align-items: center; justify-content: center; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: #0d1117; color: #fff; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: rgba(0, 180, 249, 0.2); border-color: #00b4f9; }
+        input:checked + .slider:before { transform: translateX(22px); content: "☀️"; background-color: #00b4f9; }
+
+        .custom-newsfeed-header { display: flex; align-items: center; padding: 10px 20px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 14px; border-bottom: 1px solid #1c2230; color: #8b949e; }
+        .green-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 12px; box-shadow: 0 0 8px #22c55e; }
 
         /* --- MOBILE RESPONSIVE STYLES --- */
-        @media (max-width: 850px) {
-            .custom-newsfeed-header { padding-left: 20px; }
+        @media (max-width: 950px) {
             .mobile-menu-btn { display: block; }
-            
-            /* Responsive Nav */
-            .nav-links {
-                display: none;
-                position: absolute;
-                top: 55px;
-                left: 0;
-                width: 100%;
-                background: #0d1117;
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 10px 20px;
-                border-bottom: 1px solid #1c2230;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            }
+            .nav-links { display: none; position: absolute; top: 55px; left: 0; width: 100%; background: #0d1117; flex-direction: column; align-items: flex-start; padding: 10px 20px; border-bottom: 1px solid #1c2230; z-index: 1001; }
             .nav-links.active-nav { display: flex; }
             .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
-            .dropdown { margin-left: 0; width: 100%; margin-top: 5px; }
-            .dropbtn { padding-left: 0; }
-            .dropdown-content { position: static; width: 100%; box-shadow: none; border: 1px solid #30363d; margin-top: 5px; }
             
-            /* Responsive Controls */
+            .audio-dashboard { flex-direction: column; gap: 20px; padding: 20px; }
+            .audio-status-col { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; }
+            #timerText { margin-top: 0; }
+            .squawk-visualizer { width: 100%; height: 50px; }
+            .vol-wrapper { width: 100%; justify-content: center; }
+            .vol-slider { width: 100%; max-width: 250px; }
+            
             .filter-btn { display: none; }
-            #mobileFilter { display: block; }
-            
-            .audio-container { width: 100%; justify-content: space-between; margin-bottom: 5px; }
-            #audioToggle { min-width: auto; }
-            
-            /* Expandable Search Bar */
-            #searchBar {
-                width: 38px;
-                padding: 5px;
-                color: transparent;
-                cursor: pointer;
-                background: #1e293b url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23ffffff" class="bi bi-search" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>') no-repeat center;
-            }
-            #searchBar::placeholder { color: transparent; }
-            #searchBar:focus {
-                width: 140px;
-                background-image: none;
-                color: white;
-                cursor: text;
-                padding-left: 10px;
-            }
-            #searchBar:focus::placeholder { color: #94a3b8; }
+            #mobileFilter { display: block; flex-grow: 1; }
+            #searchBar { width: 100%; }
         }
     </style>
 </head>
@@ -192,50 +271,69 @@
        </div>
     </div>
 
-    <div class="controls" style="margin-top: 10px;">
-        <div class="audio-container">
-            <!-- Dynamic Audio Visualizer -->
-            <div class="squawk-visualizer" id="squawkVisualizer">
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-            </div>
-            
-            <div class="audio-wrapper">
-                <button id="audioToggle" onclick="handleAudioToggle()">🔊 <span id="audioLabel">Disconnected</span> <span id="timerText"></span></button>
-                <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
+    <!-- NEW MODERNIZED CONTROLS -->
+    <div class="controls-container">
+        
+        <div class="controls-row">
+            <div class="audio-dashboard">
+                <div class="audio-status-col">
+                    <button id="audioToggle" onclick="handleAudioToggle()">
+                        <div class="status-dot" id="statusDot"></div>
+                        <span id="audioLabel">Disconnected</span>
+                    </button>
+                    <div id="timerText"></div>
+                </div>
+
+                <!-- Massive Visualizer -->
+                <div class="squawk-visualizer" id="squawkVisualizer">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div>
+                </div>
+
+                <div class="vol-wrapper">
+                    <span class="vol-icon">🔉</span>
+                    <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
+                </div>
             </div>
         </div>
-        
-        <input type="text" id="searchBar" placeholder="Search keywords..." onkeyup="filterFeed()">
-        
-        <!-- Mobile Dropdown Filter -->
-        <select id="mobileFilter" onchange="setFilter(this.value)">
-            <option value="all">All</option>
-            <option value="commodities">Commodities</option>
-            <option value="forex">Forex</option>
-            <option value="equities">Equities</option>
-            <option value="crypto">Crypto</option>
-            <option value="centralBanks">Central Banks</option>
-        </select>
 
-        <!-- Desktop Filter Buttons -->
-        <button class="filter-btn active" data-type="all" onclick="setFilter('all')">All</button>
-        <button class="filter-btn" data-type="commodities" onclick="setFilter('commodities')">Commodities</button>
-        <button class="filter-btn" data-type="forex" onclick="setFilter('forex')">Forex</button>
-        <button class="filter-btn" data-type="equities" onclick="setFilter('equities')">Equities</button>
-        <button class="filter-btn" data-type="crypto" onclick="setFilter('crypto')">Crypto</button>
-        <button class="filter-btn" data-type="centralBanks" onclick="setFilter('centralBanks')">Central Banks</button>
-        
-        <label class="switch">
-            <input type="checkbox" id="themeToggle" checked>
-            <span class="slider"></span>
-        </label>
+        <div class="controls-row" style="justify-content: space-between; background: #0d1117; padding: 10px 15px; border-radius: 12px; border: 1px solid #1c2230;">
+            
+            <input type="text" id="searchBar" placeholder="Search keywords..." onkeyup="filterFeed()">
+            
+            <div class="tools-col">
+                <select id="mobileFilter" onchange="setFilter(this.value)">
+                    <option value="all">All</option>
+                    <option value="commodities">Commodities</option>
+                    <option value="forex">Forex</option>
+                    <option value="equities">Equities</option>
+                    <option value="crypto">Crypto</option>
+                    <option value="centralBanks">Central Banks</option>
+                </select>
+
+                <button class="filter-btn active" data-type="all" onclick="setFilter('all')">All</button>
+                <button class="filter-btn" data-type="commodities" onclick="setFilter('commodities')">Commodities</button>
+                <button class="filter-btn" data-type="forex" onclick="setFilter('forex')">Forex</button>
+                <button class="filter-btn" data-type="equities" onclick="setFilter('equities')">Equities</button>
+                <button class="filter-btn" data-type="crypto" onclick="setFilter('crypto')">Crypto</button>
+                <button class="filter-btn" data-type="centralBanks" onclick="setFilter('centralBanks')">Central Banks</button>
+                
+                <div style="width: 1px; height: 20px; background: #30363d; margin: 0 5px;"></div>
+                
+                <label class="switch">
+                    <input type="checkbox" id="themeToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
     </div>
 
-    <div class="custom-newsfeed-header"><div class="green-dot"></div> NEWSFEED</div>
+    <div class="custom-newsfeed-header"><div class="green-dot"></div> LIVE FEED</div>
     <div class="messenger__outer" id="livesquawk_messenger_outer"></div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -243,9 +341,7 @@
         // --- HELPER FUNCTION: Bulletproof parsing for Arrays, Strings, and JSON ---
         function userHasAccess(userTags, requiredTag) {
             if (!userTags) return false;
-            
             let tagsArray = [];
-            
             if (Array.isArray(userTags)) {
                 tagsArray = userTags;
             } else if (typeof userTags === 'string') {
@@ -256,7 +352,6 @@
                     tagsArray = userTags.split(',').map(s => s.trim());
                 }
             }
-
             return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
         }
 
@@ -264,11 +359,9 @@
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
         async function init() {
-            // 1. Session check
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
             
-            // 2. Fetch Profile Using Updated Schema
             const { data: profileArray, error: profileError } = await client
                 .from('profiles')
                 .select('admin, active_tags')
@@ -293,22 +386,14 @@
                 return;
             }
 
-            // ==========================================
-            // 3. HARD ROUTING (BOUNCER LOGIC)
-            // ==========================================
             if (!isAdmin && !userHasAccess(tags, 'pro') && !userHasAccess(tags, 'newsfeed') && !userHasAccess(tags, 'squawk')) {
                 if (userHasAccess(tags, 'courses') || userHasAccess(tags, 'course')) {
-                    window.location.href = 'courses.html';
-                    return;
+                    window.location.href = 'courses.html'; return;
                 } else {
-                    window.location.href = 'account.html';
-                    return;
+                    window.location.href = 'account.html'; return;
                 }
             }
 
-            // ==========================================
-            // 4. STRICT NAVIGATION VISIBILITY
-            // ==========================================
             const navElements = {
                 dashboard: document.getElementById('nav-dashboard'),
                 newsfeed: document.getElementById('nav-newsfeed'),
@@ -320,10 +405,8 @@
                 upload: document.getElementById('nav-upload')
             };
 
-            // Hide everything by default
             Object.values(navElements).forEach(el => { if (el) el.style.display = 'none'; });
 
-            // Reveal items based on tier
             if (isAdmin || userHasAccess(tags, 'pro')) {
                 if (navElements.dashboard) navElements.dashboard.style.display = 'block';
                 if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
@@ -337,35 +420,15 @@
                     if (navElements.upload) navElements.upload.style.display = 'block';
                 }
             } else {
-                // A la carte visibility for non-pro users
-                if ((userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk')) && navElements.newsfeed) {
-                    navElements.newsfeed.style.display = 'block';
-                }
-                if ((userHasAccess(tags, 'course') || userHasAccess(tags, 'courses')) && navElements.courses) {
-                    navElements.courses.style.display = 'block';
-                }
-                if (navElements.profile && (userHasAccess(tags, 'course') || userHasAccess(tags, 'courses') || userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk'))) {
-                    navElements.profile.style.display = 'block';
-                }
+                if ((userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk')) && navElements.newsfeed) navElements.newsfeed.style.display = 'block';
+                if ((userHasAccess(tags, 'course') || userHasAccess(tags, 'courses')) && navElements.courses) navElements.courses.style.display = 'block';
+                if (navElements.profile && (userHasAccess(tags, 'course') || userHasAccess(tags, 'courses') || userHasAccess(tags, 'newsfeed') || userHasAccess(tags, 'squawk'))) navElements.profile.style.display = 'block';
             }
         }
 
-        // --- NAVIGATION LOGIC ---
-        function toggleNav() {
-            document.getElementById("navLinks").classList.toggle("active-nav");
-        }
-
-        function toggleDropdown(event) { 
-            event.stopPropagation();
-            document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); 
-        }
-
-        window.onclick = function(event) { 
-            if (!event.target.matches('.dropbtn')) {
-                document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); 
-            }
-        }
-        
+        function toggleNav() { document.getElementById("navLinks").classList.toggle("active-nav"); }
+        function toggleDropdown(event) { event.stopPropagation(); document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
+        window.onclick = function(event) { if (!event.target.matches('.dropbtn')) { document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); } }
         document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
 
         // --- AUDIO ENGINE ---
@@ -377,9 +440,7 @@
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
             }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
         }
 
         function playSynthesizedPing(volumeLevel) {
@@ -389,7 +450,6 @@
             
             oscillator.type = 'sine';
             oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
-            
             gainNode.gain.setValueAtTime(volumeLevel * 0.3, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
             
@@ -398,7 +458,6 @@
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 0.5);
 
-            // Animate visualizer briefly for the ping
             const viz = document.getElementById('squawkVisualizer');
             viz.classList.add('active');
             setTimeout(() => viz.classList.remove('active'), 500);
@@ -411,11 +470,10 @@
             const u = new SpeechSynthesisUtterance(text); 
             u.volume = document.getElementById('volSlider').value; 
             
-            // Link visualizer animation to speech start/end
             const viz = document.getElementById('squawkVisualizer');
             u.onstart = () => viz.classList.add('active');
             u.onend = () => viz.classList.remove('active');
-            u.onerror = () => viz.classList.remove('active'); // Fallback if speech fails
+            u.onerror = () => viz.classList.remove('active'); 
             
             window.speechSynthesis.speak(u); 
         }
@@ -423,11 +481,12 @@
         async function handleAudioToggle() {
             const btn = document.getElementById('audioToggle');
             const lbl = document.getElementById('audioLabel');
+            const btnEl = lbl.parentElement;
             btn.disabled = true;
             
             if (audioEnabled) { 
                 lbl.innerText = "Disconnecting..."; 
-                lbl.classList.remove('status-on'); 
+                btnEl.classList.remove('status-on'); 
                 await new Promise(r => setTimeout(r, 800)); 
                 clearInterval(timerInterval); 
                 audioEnabled = false; 
@@ -441,12 +500,12 @@
                 seconds = 0; 
                 startTimer(); 
                 lbl.innerText = "On Air"; 
-                lbl.classList.add('status-on'); 
+                btnEl.classList.add('status-on'); 
             }
             btn.disabled = false;
         }
 
-        // --- FILTER LOGIC ---
+        // --- FILTER LOGIC (Functions untouched as requested) ---
         let currentFilter = 'all';
         const filters = { 
             commodities: ['oil', 'gold', 'metal', 'copper', 'gas', 'brent', 'wti', 'silver'], 
@@ -459,17 +518,12 @@
         
         function setFilter(type) { 
             currentFilter = type; 
-            
             document.querySelectorAll('.filter-btn').forEach(b => {
                 if (b.dataset.type === type) b.classList.add('active');
                 else b.classList.remove('active');
             });
-            
             const mobileSelect = document.getElementById('mobileFilter');
-            if (mobileSelect && mobileSelect.value !== type) {
-                mobileSelect.value = type;
-            }
-            
+            if (mobileSelect && mobileSelect.value !== type) { mobileSelect.value = type; }
             filterFeed(); 
         }
 
@@ -488,16 +542,13 @@
         
         const feedContainer = document.getElementById('livesquawk_messenger_outer');
         
-        // --- MUTATION OBSERVER (ALERT LOGIC) ---
         new MutationObserver((mutations) => { 
             mutations.forEach(m => m.addedNodes.forEach(node => { 
                 if (node.classList && node.classList.contains('news__item__outer')) { 
                     if (audioEnabled) {
                         const rawText = node.innerText;
                         const lowerText = rawText.toLowerCase();
-                        
                         const hasKeyword = audioTriggerKeywords.some(kw => lowerText.includes(kw.toLowerCase()));
-                        
                         if (hasKeyword) {
                             speakText(rawText); 
                         } else {
