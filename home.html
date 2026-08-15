@@ -38,7 +38,7 @@
             position: fixed;
             top: 0;
             width: 100%;
-            background-color: rgba(5, 7, 10, 0.9);
+            background-color: rgba(5, 7, 10, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border);
             z-index: 1000;
@@ -111,6 +111,24 @@
             border-color: var(--accent);
             color: var(--accent) !important;
             background-color: rgba(41, 98, 255, 0.05);
+        }
+
+        /* --- BURGER MENU --- */
+        .burger-menu {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .burger-menu span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: var(--text-main);
+            border-radius: 2px;
+            transition: all 0.3s ease;
         }
 
         /* --- HERO SECTION --- */
@@ -369,6 +387,40 @@
             margin-bottom: 2rem;
         }
 
+        /* --- CONTACT SECTION --- */
+        .contact-section {
+            padding: 6rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            border-top: 1px solid var(--border);
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .contact-form input, 
+        .contact-form textarea {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .contact-form input:focus, 
+        .contact-form textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
         /* --- FOOTER --- */
         footer {
             background-color: var(--bg-base);
@@ -389,8 +441,49 @@
             .hero h1 {
                 font-size: 2.5rem;
             }
+            
+            /* Mobile Navigation */
+            .burger-menu {
+                display: flex;
+            }
+
             .nav-links {
-                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background-color: var(--bg-surface);
+                flex-direction: column;
+                padding: 2rem;
+                border-bottom: 1px solid var(--border);
+                transform: translateY(-150%);
+                opacity: 0;
+                transition: all 0.3s ease-in-out;
+                pointer-events: none;
+            }
+
+            .nav-links.nav-active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .nav-links a {
+                font-size: 1.1rem;
+                width: 100%;
+                text-align: center;
+                padding: 10px 0;
+            }
+
+            /* Burger Animation */
+            .burger-menu.toggle span:nth-child(1) {
+                transform: rotate(-45deg) translate(-5px, 6px);
+            }
+            .burger-menu.toggle span:nth-child(2) {
+                opacity: 0;
+            }
+            .burger-menu.toggle span:nth-child(3) {
+                transform: rotate(45deg) translate(-5px, -6px);
             }
         }
     </style>
@@ -403,12 +496,17 @@
             <a href="#">
                 <img src="media/logo.png" alt="Analyst Wire Logo" class="logo-img">
             </a>
-            <nav class="nav-links">
+            <div class="burger-menu" id="burger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <nav class="nav-links" id="nav-links">
                 <a href="#features">Features</a>
                 <a href="#analysis">Analysis</a>
                 <a href="#education">Education</a>
                 <a href="#pricing">Pricing</a>
-                <!-- Link this directly to your dashboard login page -->
+                <a href="#contact">Contact</a>
                 <a href="login.html" class="btn-primary">Login</a>
             </nav>
         </div>
@@ -417,7 +515,7 @@
     <!-- Hero Section -->
     <section class="hero">
         <h1>Institutional Intelligence.<br>Customized for You.</h1>
-        <p>Get the edge with our fully customizable dashboard, lightning-fast realtime newsfeed, and our revolutionary Beta AI AudioSquawk. Eyes on the charts, ears on the market.</p>
+        <p>Get the edge with our fully customizable dashboard, lightning-fast realtime newsfeed, and our built-in AudioSquawk feature. Eyes on the charts, ears on the market.</p>
         <div>
             <a href="#pricing" class="btn-primary" style="font-size: 1.1rem; padding: 0.8rem 2rem;">Explore Access Plans</a>
         </div>
@@ -438,12 +536,12 @@
         <div class="feature-row">
             <div class="feature-content">
                 <span class="feature-tag">Real-time Advantage</span>
-                <h3>Newsfeed & AI AudioSquawk</h3>
-                <p>Never miss a market-moving headline again. Our ultra-fast newsfeed delivers the facts instantly, while our Beta AI AudioSquawk reads critical updates aloud so you never have to take your eyes off the price action.</p>
+                <h3>Newsfeed & AudioSquawk</h3>
+                <p>Never miss a market-moving headline again. Our ultra-fast newsfeed delivers the facts instantly, while our filtered AudioSquawk utilizes browser text-to-speech to read critical updates aloud, ensuring you catch key headlines while focused on the charts (with enhanced voice features coming soon).</p>
                 <ul class="feature-list">
                     <li>Zero-delay headline streaming</li>
                     <li>Customizable category filtering (Forex, Crypto, Equities)</li>
-                    <li>Toggleable Beta AI AudioSquawk</li>
+                    <li>Toggleable Beta AudioSquawk reader</li>
                 </ul>
             </div>
             <div class="feature-image">
@@ -520,7 +618,7 @@
                     <div class="plan-price">$29 <span>/ month</span></div>
                     <ul class="plan-features">
                         <li>Realtime Newsfeed Stream</li>
-                        <li>Beta AI AudioSquawk Access</li>
+                        <li>AudioSquawk Headline Reader (Beta)</li>
                         <li>Daily Market Snapshots & Briefs</li>
                         <li>Category & Asset Filtering</li>
                     </ul>
@@ -571,12 +669,45 @@
         </div>
     </section>
 
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="section-header">
+            <h2>Get in Touch</h2>
+            <p style="color: var(--text-muted); font-size: 1.1rem;">Have questions about our plans or need support? Send us a message.</p>
+        </div>
+        <form class="contact-form" action="#" method="POST">
+            <input type="text" name="name" placeholder="Your Name" required>
+            <input type="email" name="email" placeholder="Your Email Address" required>
+            <textarea name="message" rows="5" placeholder="How can we help you?" required></textarea>
+            <button type="submit" class="btn-primary" style="width: fit-content; margin: 0 auto; padding: 0.8rem 3rem;">Send Message</button>
+        </form>
+    </section>
+
     <!-- Footer -->
     <footer>
         <p>&copy; 2026 Analyst Wire. All rights reserved. Data provided for informational purposes.</p>
     </footer>
 
     <script>
+        // Mobile Menu Toggle
+        const burger = document.getElementById('burger-menu');
+        const nav = document.getElementById('nav-links');
+
+        burger.addEventListener('click', () => {
+            nav.classList.toggle('nav-active');
+            burger.classList.toggle('toggle');
+        });
+
+        // Close mobile menu when a link is clicked
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (nav.classList.contains('nav-active')) {
+                    nav.classList.remove('nav-active');
+                    burger.classList.remove('toggle');
+                }
+            });
+        });
+
         // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
