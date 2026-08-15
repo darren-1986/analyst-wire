@@ -66,16 +66,29 @@
             border-radius: 12px;
             padding: 15px 25px;
             flex-grow: 1;
-            max-width: 800px;
+            max-width: 900px;
             justify-content: space-between;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* Logo & Status Flex Container */
+        .audio-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            min-width: 220px;
+        }
+
+        .squawk-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
         }
 
         /* Power Toggle & Status */
         .audio-status-col {
             display: flex;
             flex-direction: column;
-            min-width: 140px;
         }
         
         .audio-status-col button {
@@ -229,8 +242,10 @@
             .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
             
             .audio-dashboard { flex-direction: column; gap: 20px; padding: 20px; }
-            .audio-status-col { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; }
-            #timerText { margin-top: 0; }
+            .audio-left { width: 100%; justify-content: space-between; }
+            .audio-status-col { align-items: flex-end; text-align: right; }
+            #timerText { margin-top: 2px; }
+            
             .squawk-visualizer { width: 100%; height: 50px; }
             .vol-wrapper { width: 100%; justify-content: center; }
             .vol-slider { width: 100%; max-width: 250px; }
@@ -276,12 +291,17 @@
         
         <div class="controls-row">
             <div class="audio-dashboard">
-                <div class="audio-status-col">
-                    <button id="audioToggle" onclick="handleAudioToggle()">
-                        <div class="status-dot" id="statusDot"></div>
-                        <span id="audioLabel">Disconnected</span>
-                    </button>
-                    <div id="timerText"></div>
+                
+                <!-- Logo & Status Left Panel -->
+                <div class="audio-left">
+                    <img src="media/squawkimage.png" alt="Squawk" class="squawk-logo">
+                    <div class="audio-status-col">
+                        <button id="audioToggle" onclick="handleAudioToggle()">
+                            <div class="status-dot" id="statusDot"></div>
+                            <span id="audioLabel">Disconnected</span>
+                        </button>
+                        <div id="timerText"></div>
+                    </div>
                 </div>
 
                 <!-- Massive Visualizer -->
