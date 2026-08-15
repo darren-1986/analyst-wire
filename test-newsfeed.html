@@ -69,6 +69,7 @@
             max-width: 900px;
             justify-content: space-between;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
         }
 
         /* Logo & Status Left Panel */
@@ -77,12 +78,14 @@
             align-items: center;
             gap: 20px;
             min-width: 220px;
+            transition: all 0.3s ease;
         }
 
         .squawk-logo {
             height: 40px;
             width: auto;
             object-fit: contain;
+            transition: all 0.3s ease;
         }
 
         /* Power Toggle & Status */
@@ -126,7 +129,7 @@
             flex-grow: 1;
             padding: 0 30px;
             opacity: 0.15; 
-            transition: opacity 0.4s ease;
+            transition: all 0.4s ease;
         }
         
         .squawk-visualizer.active { opacity: 1; }
@@ -175,6 +178,7 @@
             padding: 8px 12px;
             border-radius: 20px;
             border: 1px solid #1c2230;
+            transition: all 0.3s ease;
         }
         .vol-icon { font-size: 14px; opacity: 0.7; }
         .vol-slider { -webkit-appearance: none; width: 100px; height: 4px; background: #30363d; border-radius: 2px; outline: none; }
@@ -195,26 +199,57 @@
         }
         .test-audio-btn:hover { background: #00b4f9; color: #fff; box-shadow: 0 0 8px rgba(0, 180, 249, 0.4); }
 
-        /* Modernized Filters & Tools */
+        /* Modernized Bottom Filters & Tools */
+        .bottom-controls {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            background: #0d1117;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 1px solid #1c2230;
+            gap: 15px;
+        }
+
+        .search-container { flex-grow: 1; transition: all 0.3s ease; }
+        
+        #searchBar { 
+            padding: 8px 15px; 
+            border-radius: 20px; 
+            border: 1px solid #30363d; 
+            background: #0A0A0a;
+            color: #fff;
+            transition: all 0.3s ease; 
+            width: 100%; 
+            max-width: 250px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+        }
+        #searchBar:focus { border-color: #00b4f9; outline: none; box-shadow: 0 0 10px rgba(0, 180, 249, 0.2); }
+        
         .tools-col {
             display: flex;
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
         }
-        
-        #searchBar { 
-            padding: 8px 15px; 
-            border-radius: 20px; 
-            border: 1px solid #30363d; 
-            background: #0d1117;
-            color: #fff;
-            transition: all 0.3s ease; 
-            width: 200px; 
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
+
+        #mobileSearchToggle {
+            display: none;
+            background: rgba(0, 180, 249, 0.1);
+            border: 1px solid #00b4f9;
+            color: #00b4f9;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
-        #searchBar:focus { border-color: #00b4f9; outline: none; box-shadow: 0 0 10px rgba(0, 180, 249, 0.2); }
+        #mobileSearchToggle:hover, #mobileSearchToggle.active-btn {
+            background: #00b4f9; color: #fff;
+        }
         
         .filter-btn { 
             padding: 6px 16px; 
@@ -236,10 +271,10 @@
             box-shadow: 0 0 12px rgba(0, 180, 249, 0.2);
         }
 
-        #mobileFilter { display: none; padding: 8px 15px; border-radius: 20px; border: 1px solid #30363d; background: #0d1117; color: white; outline: none; cursor: pointer; }
+        #mobileFilter { display: none; padding: 8px 15px; border-radius: 20px; border: 1px solid #30363d; background: #0A0A0a; color: white; outline: none; cursor: pointer; }
 
         /* Theme Switcher */
-        .switch { position: relative; display: inline-block; width: 44px; height: 22px; flex-shrink: 0; margin-left: 10px; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #1c2230; transition: .4s; border-radius: 34px; border: 1px solid #30363d; }
         .slider:before { position: absolute; content: "🌙"; font-size: 10px; display: flex; align-items: center; justify-content: center; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: #0d1117; color: #fff; transition: .4s; border-radius: 50%; }
@@ -256,18 +291,38 @@
             .nav-links.active-nav { display: flex; }
             .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
             
-            .audio-dashboard { flex-direction: column; gap: 20px; padding: 20px; }
-            .audio-left { width: 100%; justify-content: space-between; }
-            .audio-status-col { align-items: flex-end; text-align: right; }
-            #timerText { margin-top: 2px; }
+            /* Compact Audio Section */
+            .audio-dashboard { flex-direction: column; gap: 8px; padding: 12px 15px; }
+            .audio-left { width: 100%; justify-content: space-between; align-items: center; }
+            .squawk-logo { height: 26px; } /* Shrunk Logo */
+            .audio-status-col button { font-size: 12px; }
+            #timerText { font-size: 10px; margin-top: 0px; }
             
-            .squawk-visualizer { width: 100%; height: 50px; }
-            .vol-wrapper { width: 100%; justify-content: center; flex-wrap: wrap; }
-            .vol-slider { width: 100%; max-width: 200px; }
+            /* Scale visualizer vertically and horizontally */
+            .squawk-visualizer { width: 100%; height: 35px; transform: scale(0.65); transform-origin: center; margin: -10px 0; }
+            
+            .vol-wrapper { width: 100%; justify-content: space-between; flex-wrap: nowrap; padding: 6px 12px; }
+            .vol-slider { flex-grow: 1; margin: 0 10px; }
+            .test-audio-btn { font-size: 10px; padding: 4px 8px; }
+            
+            /* Expandable Search & Controls */
+            .bottom-controls { flex-wrap: wrap; gap: 10px; padding: 10px; }
+            .search-container { 
+                display: none; /* Hidden by default */
+                width: 100%; 
+                order: 3; /* Pushes beneath filters */
+                padding-top: 10px;
+                border-top: 1px solid #1c2230;
+            }
+            .search-container.active { display: block; }
+            #searchBar { max-width: 100%; }
+            
+            .tools-col { width: 100%; justify-content: space-between; order: 1; flex-wrap: nowrap; }
+            #mobileSearchToggle { display: flex; }
+            .theme-divider { display: none; } /* Hide divider to save space */
             
             .filter-btn { display: none; }
-            #mobileFilter { display: block; flex-grow: 1; }
-            #searchBar { width: 100%; }
+            #mobileFilter { display: block; flex-grow: 1; margin: 0 8px; }
         }
     </style>
 </head>
@@ -337,11 +392,18 @@
             </div>
         </div>
 
-        <div class="controls-row" style="justify-content: space-between; background: #0d1117; padding: 10px 15px; border-radius: 12px; border: 1px solid #1c2230;">
+        <div class="bottom-controls">
             
-            <input type="text" id="searchBar" placeholder="Search keywords..." onkeyup="filterFeed()">
+            <div class="search-container" id="searchContainer">
+                <input type="text" id="searchBar" placeholder="Search keywords..." onkeyup="filterFeed()">
+            </div>
             
             <div class="tools-col">
+                <!-- Mobile Search Toggle Button -->
+                <button id="mobileSearchToggle" onclick="toggleMobileSearch()" title="Toggle Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+                </button>
+
                 <select id="mobileFilter" onchange="setFilter(this.value)">
                     <option value="all">All</option>
                     <option value="commodities">Commodities</option>
@@ -358,7 +420,7 @@
                 <button class="filter-btn" data-type="crypto" onclick="setFilter('crypto')">Crypto</button>
                 <button class="filter-btn" data-type="centralBanks" onclick="setFilter('centralBanks')">Central Banks</button>
                 
-                <div style="width: 1px; height: 20px; background: #30363d; margin: 0 5px;"></div>
+                <div class="theme-divider" style="width: 1px; height: 20px; background: #30363d; margin: 0 5px;"></div>
                 
                 <label class="switch">
                     <input type="checkbox" id="themeToggle" checked>
@@ -466,6 +528,18 @@
         function toggleDropdown(event) { event.stopPropagation(); document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
         window.onclick = function(event) { if (!event.target.matches('.dropbtn')) { document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); } }
         document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+
+        // Toggle Mobile Search Functionality
+        function toggleMobileSearch() {
+            const container = document.getElementById('searchContainer');
+            const btn = document.getElementById('mobileSearchToggle');
+            container.classList.toggle('active');
+            btn.classList.toggle('active-btn');
+            
+            if (container.classList.contains('active')) {
+                document.getElementById('searchBar').focus();
+            }
+        }
 
         // --- AUDIO ENGINE ---
         let audioEnabled = false, seconds = 0, timerInterval;
