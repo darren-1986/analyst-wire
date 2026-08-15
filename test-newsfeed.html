@@ -535,7 +535,10 @@
             centralBanks: ['fed', 'ecb', 'boj', 'boe', 'rba', 'boc', 'snb', 'rbnz', 'central bank', 'interest rate', 'hike', 'cut'] 
         };
 
-        // Tier 1: Includes all original exact macro data points & specific shocks
+        // 0. The Anti-Noise Filter: Mutes recaps, previews, and technicals immediately
+        const muteList = ['market wrap', 'recap', 'preview', 'for the week', 'expected to', 'poll:', 'technical analysis', 'update:'];
+
+        // 1. Tier 1: Exact macro data points & specific shocks
         const tier1ExactTriggers = [
             's&p global manufacturing', 'ism manufacturing', 'cpi', 'jolts', 'adp', 's&p global services',
             'ism non-manufacturing', 'crude oil inventories', 'initial jobless claims', 'new home sales',
@@ -545,24 +548,31 @@
             'rba interest rate decision', 'core pce price index', 'durable goods orders',
             'philadelphia fed manufacturing index', '10-year note auction', 'ecb interest rate decision',
             'ppi', 'german cpi', 'manufacturing pmi', 'cb consumer confidence', 'chicago pmi',
-            'hcob spain manufacturing pmi', 'military strikes', 'missile attack', 'us military', 'central command',
-            'emergency rate cut', 'circuit breaker', 'opec+', 'nfp', 'uk cpi', 'tokyo core cpi'
+            'hcob spain manufacturing pmi', 'emergency rate cut', 'circuit breaker', 'opec+', 'nfp', 
+            'uk cpi', 'tokyo core cpi'
         ];
 
-        // Tier 2: Balanced Core Asset Matrix
-        const tier2Assets = ['usd', 'eur', 'gbp', 'chf', 'aud', 'cad', 'nzd', 'jpy', 'gold', 'oil', 'crude', 'brent', 'wti', 'treasury', 's&p', 'nasdaq', 'usa', 'australia'];
+        // 2. Tier 2: Balanced Core Asset Matrix
+        const tier2Assets = ['usd', 'eur', 'gbp', 'chf', 'aud', 'cad', 'nzd', 'jpy', 'gold', 'oil', 'crude', 'brent', 'wti', 'treasury', 's&p', 'nasdaq', 'usa', 'australia', 'uk', 'europe', 'china'];
         
-        // Tier 2 & 3: Institutions and Action Verbs
-        const tier3Institutions = ['fed', 'ecb', 'boe', 'boj', 'rba', 'boc', 'snb', 'rbnz', 'sec', 'opec', 'etf'];
-        const tier2Actions = ['surges', 'plummets', 'spikes', 'crashes', 'intervention', 'hike', 'cut', 'pause', 'pivot', 'breaks', 'tariff', 'sanctions', 'emergency', 'stimulus', 'buyout', 'merger', 'yield', 'revokes', 'jumps', 'rises', 'falls'];
+        // 3. Tier 3: Institutions and Major Central Bankers
+        const tier3Institutions = ['fed', 'ecb', 'boe', 'boj', 'rba', 'boc', 'snb', 'rbnz', 'sec', 'opec', 'etf', 'powell', 'lagarde', 'bailey', 'ueda', 'macklem', 'bullock'];
         
-        // Extra Shocks
-        const tier3Shocks = ['missile', 'military strike', 'war', 'attack', 'sanctions', 'resigns'];
+        // Extended Action Verbs (Velocity & Surprise built in)
+        const tier2Actions = ['surges', 'plummets', 'spikes', 'crashes', 'intervention', 'hike', 'cut', 'pause', 'pivot', 'breaks', 'tariff', 'sanctions', 'emergency', 'stimulus', 'buyout', 'merger', 'yield', 'revokes', 'jumps', 'rises', 'falls', 'soars', 'sinks', 'tumbles', 'drops', 'halts', 'suspended', 'unexpected', 'surprise', 'warns', 'inflation', 'rates'];
+        
+        // Extra Geopolitical & Systemic Shocks
+        const tier3Shocks = ['missile', 'military strike', 'war', 'attack', 'sanctions', 'resigns', 'assassination', 'terror', 'us military', 'central command'];
 
         function shouldTriggerAudio(headlineText) {
             const lower = headlineText.toLowerCase();
 
-            // 1. Check Tier 1 Exact Strings (All your original data points live here)
+            // 0. The Mute Filter: Block known recap/noise formats
+            if (muteList.some(muteWord => lower.includes(muteWord))) {
+                return false;
+            }
+
+            // 1. Check Tier 1 Exact Strings
             if (tier1ExactTriggers.some(trigger => lower.includes(trigger))) {
                 return true;
             }
@@ -572,8 +582,8 @@
                 return true;
             }
 
-            // 3. Check specific high-impact policy phrasing from original list
-            if (lower.includes('monetary policy') || lower.includes('rate-hike')) {
+            // 3. Check specific high-impact policy phrasing
+            if (lower.includes('monetary policy') || lower.includes('rate-hike') || lower.includes('basis points') || lower.includes('bps')) {
                 return true;
             }
 
