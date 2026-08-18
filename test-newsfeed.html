@@ -42,18 +42,19 @@
         /* --- MODERNIZED TOP CONTROLS SECTION --- */
         .controls-container {
             display: flex;
-            flex-direction: row; /* Ensure elements sit side-by-side */
-            flex-wrap: nowrap; /* FORCE single row, do not wrap */
+            flex-direction: row;
+            flex-wrap: nowrap;
             gap: 15px;
             padding: 15px 20px;
             background: #0A0A0a;
             border-bottom: 1px solid #1c2230;
-            align-items: center; /* Vertically align the two modules */
+            align-items: stretch; /* Forces children to equal height */
         }
 
         .controls-row {
             display: flex;
-            flex: 0 0 auto; /* Prevent audio dashboard from stretching unnecessarily */
+            flex: 0 0 auto;
+            align-items: stretch; /* Inherit the stretch */
         }
 
         /* Large Audio Dashboard Module */
@@ -199,12 +200,12 @@
         /* Modernized Bottom Filters & Tools */
         .bottom-controls {
             display: flex;
-            flex: 1 1 auto; /* Take up the remaining space on the row */
-            width: auto; /* Override previous 100% width so it fits */
+            flex: 1 1 auto;
+            width: auto;
             justify-content: space-between;
             align-items: center;
             background: #0d1117;
-            padding: 10px 15px;
+            padding: 10px 20px;
             border-radius: 12px;
             border: 1px solid #1c2230;
             gap: 15px;
@@ -222,53 +223,45 @@
             width: 100%; 
             font-family: 'Inter', sans-serif;
             font-size: 13px;
+            outline: none;
         }
-        #searchBar:focus { border-color: #00b4f9; outline: none; box-shadow: 0 0 10px rgba(0, 180, 249, 0.2); }
+        #searchBar:focus { border-color: #00b4f9; box-shadow: 0 0 10px rgba(0, 180, 249, 0.2); }
         
         .tools-col {
             display: flex;
             align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+            gap: 15px;
+            flex-wrap: nowrap;
         }
 
-        #mobileSearchToggle {
-            display: none;
-            background: rgba(0, 180, 249, 0.1);
-            border: 1px solid #00b4f9;
-            color: #00b4f9;
-            padding: 8px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        #mobileSearchToggle:hover, #mobileSearchToggle.active-btn {
-            background: #00b4f9; color: #fff;
-        }
-        
-        .filter-btn { 
-            padding: 6px 16px; 
-            cursor: pointer; 
+        /* Unified Dropdown Filter (Replaces Buttons) */
+        #categoryFilter {
+            appearance: none;
+            -webkit-appearance: none;
+            padding: 8px 35px 8px 15px; 
             border-radius: 20px; 
             border: 1px solid #30363d; 
-            background: #0d1117; 
+            background: #0d1117 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b949e' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat calc(100% - 12px) center;
             color: #8b949e; 
             font-family: 'Inter', sans-serif;
             font-size: 13px;
             font-weight: 500;
+            cursor: pointer;
+            outline: none;
             transition: all 0.2s;
         }
-        .filter-btn:hover { background: #161b22; color: #fff; }
-        .filter-btn.active { 
-            background: rgba(0, 180, 249, 0.1); 
-            border-color: #00b4f9; 
-            color: #00b4f9; 
-            box-shadow: 0 0 12px rgba(0, 180, 249, 0.2);
+        
+        #categoryFilter:hover, #categoryFilter:focus {
+            border-color: #00b4f9;
+            color: #fff;
+            background-color: #161b22;
+            box-shadow: 0 0 10px rgba(0, 180, 249, 0.2);
         }
-
-        #mobileFilter { display: none; padding: 8px 15px; border-radius: 20px; border: 1px solid #30363d; background: #0A0A0a; color: white; outline: none; cursor: pointer; }
+        
+        #categoryFilter option {
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
 
         /* Theme Switcher */
         .switch { position: relative; display: inline-block; width: 44px; height: 22px; flex-shrink: 0; }
@@ -281,9 +274,10 @@
         .custom-newsfeed-header { display: flex; align-items: center; padding: 10px 20px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 14px; border-bottom: 1px solid #1c2230; color: #8b949e; }
         .green-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 12px; box-shadow: 0 0 8px #22c55e; }
 
-        /* --- DESKTOP BREAKPOINT (Stacks elements if screen gets too narrow before mobile) --- */
-        @media (max-width: 1300px) {
+        /* --- DESKTOP BREAKPOINT --- */
+        @media (max-width: 1100px) {
             .controls-container { flex-direction: column; align-items: stretch; }
+            .controls-row { flex: 1 1 auto; }
             .bottom-controls { justify-content: space-between; }
         }
 
@@ -297,7 +291,7 @@
             /* Compact Audio Section */
             .audio-dashboard { flex-direction: column; gap: 8px; padding: 12px 15px; }
             .audio-left { width: 100%; justify-content: space-between; align-items: center; }
-            .squawk-logo { height: 26px; } /* Shrunk Logo */
+            .squawk-logo { height: 26px; } 
             .audio-status-col button { font-size: 12px; }
             #timerText { font-size: 10px; margin-top: 0px; }
             
@@ -308,24 +302,12 @@
             .vol-slider { flex-grow: 1; margin: 0 10px; }
             .test-audio-btn { font-size: 10px; padding: 4px 8px; }
             
-            /* Expandable Search & Controls */
+            /* Controls Layout */
             .bottom-controls { flex-wrap: wrap; gap: 10px; padding: 10px; }
-            .search-container { 
-                display: none; /* Hidden by default */
-                width: 100%; 
-                order: 3; /* Pushes beneath filters */
-                padding-top: 10px;
-                border-top: 1px solid #1c2230;
-            }
-            .search-container.active { display: block; }
-            #searchBar { max-width: 100%; }
-            
-            .tools-col { width: 100%; justify-content: space-between; order: 1; flex-wrap: nowrap; }
-            #mobileSearchToggle { display: flex; }
-            .theme-divider { display: none; } /* Hide divider to save space */
-            
-            .filter-btn { display: none; }
-            #mobileFilter { display: block; flex-grow: 1; margin: 0 8px; }
+            .search-container { max-width: 100%; width: 100%; order: 2; margin-top: 10px; }
+            .tools-col { width: 100%; justify-content: space-between; order: 1; }
+            #categoryFilter { flex-grow: 1; margin-right: 15px; }
+            .theme-divider { display: none; } 
         }
     </style>
 </head>
@@ -402,26 +384,16 @@
             </div>
             
             <div class="tools-col">
-                <!-- Mobile Search Toggle Button -->
-                <button id="mobileSearchToggle" onclick="toggleMobileSearch()" title="Toggle Search">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
-                </button>
-
-                <select id="mobileFilter" onchange="setFilter(this.value)">
-                    <option value="all">All</option>
+                
+                <!-- Styled Native Select Dropdown for Filtering -->
+                <select id="categoryFilter" onchange="setFilter(this.value)">
+                    <option value="all">All Categories</option>
                     <option value="commodities">Commodities</option>
                     <option value="forex">Forex</option>
                     <option value="equities">Equities</option>
                     <option value="crypto">Crypto</option>
                     <option value="centralBanks">Central Banks</option>
                 </select>
-
-                <button class="filter-btn active" data-type="all" onclick="setFilter('all')">All</button>
-                <button class="filter-btn" data-type="commodities" onclick="setFilter('commodities')">Commodities</button>
-                <button class="filter-btn" data-type="forex" onclick="setFilter('forex')">Forex</button>
-                <button class="filter-btn" data-type="equities" onclick="setFilter('equities')">Equities</button>
-                <button class="filter-btn" data-type="crypto" onclick="setFilter('crypto')">Crypto</button>
-                <button class="filter-btn" data-type="centralBanks" onclick="setFilter('centralBanks')">Central Banks</button>
                 
                 <div class="theme-divider" style="width: 1px; height: 20px; background: #30363d; margin: 0 5px;"></div>
                 
@@ -531,18 +503,6 @@
         function toggleDropdown(event) { event.stopPropagation(); document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
         window.onclick = function(event) { if (!event.target.matches('.dropbtn')) { document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); } }
         document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
-
-        // Toggle Mobile Search Functionality
-        function toggleMobileSearch() {
-            const container = document.getElementById('searchContainer');
-            const btn = document.getElementById('mobileSearchToggle');
-            container.classList.toggle('active');
-            btn.classList.toggle('active-btn');
-            
-            if (container.classList.contains('active')) {
-                document.getElementById('searchBar').focus();
-            }
-        }
 
         // --- AUDIO ENGINE ---
         let audioEnabled = false, seconds = 0, timerInterval;
@@ -701,12 +661,10 @@
         
         function setFilter(type) { 
             currentFilter = type; 
-            document.querySelectorAll('.filter-btn').forEach(b => {
-                if (b.dataset.type === type) b.classList.add('active');
-                else b.classList.remove('active');
-            });
-            const mobileSelect = document.getElementById('mobileFilter');
-            if (mobileSelect && mobileSelect.value !== type) { mobileSelect.value = type; }
+            const selectBox = document.getElementById('categoryFilter');
+            if (selectBox && selectBox.value !== type) { 
+                selectBox.value = type; 
+            }
             filterFeed(); 
         }
 
