@@ -42,22 +42,18 @@
         /* --- MODERNIZED TOP CONTROLS SECTION --- */
         .controls-container {
             display: flex;
-            flex-direction: row; /* CHANGED to row to put elements side-by-side */
-            flex-wrap: wrap; /* ADDED wrap so it breaks cleanly on smaller screens */
+            flex-direction: row; /* Ensure elements sit side-by-side */
+            flex-wrap: nowrap; /* FORCE single row, do not wrap */
             gap: 15px;
-            padding: 20px;
+            padding: 15px 20px;
             background: #0A0A0a;
             border-bottom: 1px solid #1c2230;
-            align-items: center; /* ADDED for vertical alignment */
+            align-items: center; /* Vertically align the two modules */
         }
 
         .controls-row {
             display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            flex: 1 1 auto; /* ADDED so it can share space */
+            flex: 0 0 auto; /* Prevent audio dashboard from stretching unnecessarily */
         }
 
         /* Large Audio Dashboard Module */
@@ -67,9 +63,7 @@
             background: #0d1117;
             border: 1px solid #1c2230;
             border-radius: 12px;
-            padding: 10px 20px; /* REDUCED padding to save space */
-            flex-grow: 1;
-            max-width: 550px; /* REDUCED max-width from 900px */
+            padding: 10px 20px;
             justify-content: space-between;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
             transition: all 0.3s ease;
@@ -128,9 +122,9 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
-            height: 40px; /* REDUCED from 60px */
+            height: 40px; 
             flex-grow: 1;
-            padding: 0 15px; /* REDUCED from 30px */
+            padding: 0 15px; 
             opacity: 0.15; 
             transition: all 0.4s ease;
         }
@@ -146,7 +140,7 @@
             transition: height 0.1s ease;
         }
 
-        /* Resting waveform shape - Scaled down for 40px height */
+        /* Resting waveform shape */
         .bar:nth-child(1), .bar:nth-child(17) { height: 4px; }
         .bar:nth-child(2), .bar:nth-child(16) { height: 8px; }
         .bar:nth-child(3), .bar:nth-child(15) { height: 12px; }
@@ -154,8 +148,8 @@
         .bar:nth-child(5), .bar:nth-child(13) { height: 16px; }
         .bar:nth-child(6), .bar:nth-child(12) { height: 24px; }
         .bar:nth-child(7), .bar:nth-child(11) { height: 14px; }
-        .bar:nth-child(8), .bar:nth-child(10) { height: 25px; } /* REDUCED */
-        .bar:nth-child(9) { height: 35px; background: #fff; box-shadow: 0 0 15px #fff, 0 0 30px #00b4f9; } /* REDUCED */
+        .bar:nth-child(8), .bar:nth-child(10) { height: 25px; }
+        .bar:nth-child(9) { height: 35px; background: #fff; box-shadow: 0 0 15px #fff, 0 0 30px #00b4f9; }
 
         /* Active animations mimicking speech */
         .squawk-visualizer.active .bar { animation: pulseWave 0.6s infinite alternate ease-in-out; }
@@ -163,7 +157,6 @@
         .squawk-visualizer.active .bar:nth-child(3n) { animation-duration: 0.7s; }
         .squawk-visualizer.active .bar:nth-child(9) { animation: centerPulse 0.4s infinite alternate ease-in-out; }
 
-        /* Animation bounds scaled down */
         @keyframes pulseWave {
             0% { height: 4px; }
             100% { height: 28px; box-shadow: 0 0 15px rgba(0, 180, 249, 1); }
@@ -206,8 +199,9 @@
         /* Modernized Bottom Filters & Tools */
         .bottom-controls {
             display: flex;
-            flex: 1 1 auto; /* CHANGED from width: 100% */
-            justify-content: flex-end; /* Align right next to squawk */
+            flex: 1 1 auto; /* Take up the remaining space on the row */
+            width: auto; /* Override previous 100% width so it fits */
+            justify-content: space-between;
             align-items: center;
             background: #0d1117;
             padding: 10px 15px;
@@ -216,7 +210,7 @@
             gap: 15px;
         }
 
-        .search-container { flex-grow: 1; transition: all 0.3s ease; max-width: 250px; } /* max-width keeps it from blowing out */
+        .search-container { flex-grow: 1; transition: all 0.3s ease; max-width: 250px; }
         
         #searchBar { 
             padding: 8px 15px; 
