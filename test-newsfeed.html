@@ -42,19 +42,23 @@
         /* --- MODERNIZED TOP CONTROLS SECTION --- */
         .controls-container {
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* Changed to row for horizontal layout */
+            flex-wrap: wrap; /* Allows wrapping on smaller screens */
             gap: 15px;
-            padding: 20px;
+            padding: 12px 20px; /* Tightened padding to save space */
             background: #0A0A0a;
             border-bottom: 1px solid #1c2230;
+            align-items: center; /* Center items vertically */
+            justify-content: space-between;
         }
 
         .controls-row {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
             flex-wrap: wrap;
             gap: 15px;
+            flex: 1 1 auto; /* Allows this section to grow/shrink smoothly */
         }
 
         /* Large Audio Dashboard Module */
@@ -64,9 +68,9 @@
             background: #0d1117;
             border: 1px solid #1c2230;
             border-radius: 12px;
-            padding: 15px 25px;
+            padding: 10px 20px; /* Slightly reduced padding */
             flex-grow: 1;
-            max-width: 900px;
+            max-width: 700px; /* Adjusted to fit row */
             justify-content: space-between;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
             transition: all 0.3s ease;
@@ -82,7 +86,7 @@
         }
 
         .squawk-logo {
-            height: 40px;
+            height: 35px; /* Scaled down slightly */
             width: auto;
             object-fit: contain;
             transition: all 0.3s ease;
@@ -125,9 +129,9 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
-            height: 60px;
+            height: 45px; /* Shrunk height */
             flex-grow: 1;
-            padding: 0 30px;
+            padding: 0 15px;
             opacity: 0.15; 
             transition: all 0.4s ease;
         }
@@ -152,7 +156,7 @@
         .bar:nth-child(6), .bar:nth-child(12) { height: 24px; }
         .bar:nth-child(7), .bar:nth-child(11) { height: 14px; }
         .bar:nth-child(8), .bar:nth-child(10) { height: 35px; }
-        .bar:nth-child(9) { height: 50px; background: #fff; box-shadow: 0 0 15px #fff, 0 0 30px #00b4f9; }
+        .bar:nth-child(9) { height: 45px; background: #fff; box-shadow: 0 0 15px #fff, 0 0 30px #00b4f9; }
 
         /* Active animations mimicking speech */
         .squawk-visualizer.active .bar { animation: pulseWave 0.6s infinite alternate ease-in-out; }
@@ -162,11 +166,11 @@
 
         @keyframes pulseWave {
             0% { height: 4px; }
-            100% { height: 40px; box-shadow: 0 0 15px rgba(0, 180, 249, 1); }
+            100% { height: 35px; box-shadow: 0 0 15px rgba(0, 180, 249, 1); }
         }
         @keyframes centerPulse {
             0% { height: 20px; }
-            100% { height: 60px; box-shadow: 0 0 20px #fff, 0 0 40px #00b4f9; }
+            100% { height: 50px; box-shadow: 0 0 20px #fff, 0 0 40px #00b4f9; }
         }
 
         /* Integrated Volume & Test Control */
@@ -181,7 +185,7 @@
             transition: all 0.3s ease;
         }
         .vol-icon { font-size: 14px; opacity: 0.7; }
-        .vol-slider { -webkit-appearance: none; width: 100px; height: 4px; background: #30363d; border-radius: 2px; outline: none; }
+        .vol-slider { -webkit-appearance: none; width: 80px; height: 4px; background: #30363d; border-radius: 2px; outline: none; }
         .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #fff; border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
         
         .test-audio-btn {
@@ -202,17 +206,16 @@
         /* Modernized Bottom Filters & Tools */
         .bottom-controls {
             display: flex;
-            width: 100%;
-            justify-content: space-between;
+            flex: 1 1 auto; /* Allows section to grow/shrink on same row */
+            justify-content: flex-end; /* Push tools to the right */
             align-items: center;
-            background: #0d1117;
-            padding: 10px 15px;
-            border-radius: 12px;
-            border: 1px solid #1c2230;
+            background: transparent; /* Removed background box to blend into top bar */
+            padding: 0; 
+            border: none;
             gap: 15px;
         }
 
-        .search-container { flex-grow: 1; transition: all 0.3s ease; }
+        .search-container { flex-grow: 1; max-width: 250px; transition: all 0.3s ease; }
         
         #searchBar { 
             padding: 8px 15px; 
@@ -222,7 +225,6 @@
             color: #fff;
             transition: all 0.3s ease; 
             width: 100%; 
-            max-width: 250px;
             font-family: 'Inter', sans-serif;
             font-size: 13px;
         }
@@ -233,6 +235,7 @@
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         #mobileSearchToggle {
@@ -262,6 +265,7 @@
             font-size: 13px;
             font-weight: 500;
             transition: all 0.2s;
+            white-space: nowrap;
         }
         .filter-btn:hover { background: #161b22; color: #fff; }
         .filter-btn.active { 
@@ -284,6 +288,14 @@
         .custom-newsfeed-header { display: flex; align-items: center; padding: 10px 20px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 14px; border-bottom: 1px solid #1c2230; color: #8b949e; }
         .green-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 12px; box-shadow: 0 0 8px #22c55e; }
 
+        /* --- RESPONSIVE ADJUSTMENTS --- */
+        @media (max-width: 1200px) {
+            .controls-container { flex-direction: column; align-items: stretch; }
+            .bottom-controls { justify-content: space-between; }
+            .tools-col { justify-content: flex-start; }
+            .search-container { max-width: 100%; }
+        }
+
         /* --- MOBILE RESPONSIVE STYLES --- */
         @media (max-width: 950px) {
             .mobile-menu-btn { display: block; }
@@ -292,7 +304,7 @@
             .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
             
             /* Compact Audio Section */
-            .audio-dashboard { flex-direction: column; gap: 8px; padding: 12px 15px; }
+            .audio-dashboard { flex-direction: column; gap: 8px; padding: 12px 15px; width: 100%; max-width: 100%; }
             .audio-left { width: 100%; justify-content: space-between; align-items: center; }
             .squawk-logo { height: 26px; } /* Shrunk Logo */
             .audio-status-col button { font-size: 12px; }
@@ -306,7 +318,7 @@
             .test-audio-btn { font-size: 10px; padding: 4px 8px; }
             
             /* Expandable Search & Controls */
-            .bottom-controls { flex-wrap: wrap; gap: 10px; padding: 10px; }
+            .bottom-controls { flex-wrap: wrap; gap: 10px; padding: 0; }
             .search-container { 
                 display: none; /* Hidden by default */
                 width: 100%; 
@@ -317,7 +329,7 @@
             .search-container.active { display: block; }
             #searchBar { max-width: 100%; }
             
-            .tools-col { width: 100%; justify-content: space-between; order: 1; flex-wrap: nowrap; }
+            .tools-col { width: 100%; justify-content: space-between; order: 1; flex-wrap: nowrap; padding-top: 10px; }
             #mobileSearchToggle { display: flex; }
             .theme-divider { display: none; } /* Hide divider to save space */
             
@@ -406,6 +418,7 @@
 
                 <select id="mobileFilter" onchange="setFilter(this.value)">
                     <option value="all">All</option>
+                    <option value="core">Core Macro</option>
                     <option value="commodities">Commodities</option>
                     <option value="forex">Forex</option>
                     <option value="equities">Equities</option>
@@ -414,6 +427,7 @@
                 </select>
 
                 <button class="filter-btn active" data-type="all" onclick="setFilter('all')">All</button>
+                <button class="filter-btn" data-type="core" onclick="setFilter('core')">Core Macro</button>
                 <button class="filter-btn" data-type="commodities" onclick="setFilter('commodities')">Commodities</button>
                 <button class="filter-btn" data-type="forex" onclick="setFilter('forex')">Forex</button>
                 <button class="filter-btn" data-type="equities" onclick="setFilter('equities')">Equities</button>
@@ -626,6 +640,7 @@
         // --- UPGRADED CLEVER FILTER SYSTEM ---
         let currentFilter = 'all';
         const filters = { 
+            core: ['gold', 'australia', 'usa', 'usd', 'aud'],
             commodities: ['oil', 'gold', 'metal', 'copper', 'gas', 'brent', 'wti', 'silver'], 
             forex: ['usd', 'eur', 'jpy', 'gbp', 'chf', 'aud', 'cad', 'nzd', 'fx', 'forex', 'currency', 'yield'], 
             equities: ['stock', 'equity', 'sp500', 'nasdaq', 'dow', 'nikkei', 'shares'], 
