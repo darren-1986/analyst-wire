@@ -12,118 +12,475 @@
         /* Modern typography import */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-        /* Force box-sizing to prevent overflow/alignment issues */
         *, *:before, *:after { box-sizing: border-box; }
         
         body, .messenger__outer { transition: background 0.3s, color 0.3s; }
         body.dark, .dark .messenger__outer { background-color: #0A0A0a !important; color: #ffffff !important; }
-        body.light, .light .messenger__outer { background-color: #ffffff !important; color: #000000 !important; }
+        body.light, .light .messenger__outer { background-color: #f8fafc !important; color: #000000 !important; }
         body.dark .messenger__outer, .dark .messenger__outer * { color: #e2e8f0 !important; }
 
-        /* Newsfeed Content Styles - Compacted for Widget */
-        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; }
+        /* Base Layout for Widget */
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; background: transparent; }
         .messenger__outer { flex-grow: 1; overflow: hidden; }
         .messenger__outer .newsfeed__title { display: none !important; }
-        
-        .controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; padding: 8px 12px; background: #0A0A0a; border-bottom: 1px solid #1c2230; gap: 10px; }
-        
-        .left-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        
-        .filter-btn { padding: 4px 8px; cursor: pointer; border-radius: 4px; border: 1px solid #475569; background: #1e293b; color: white; font-size: 11px; transition: 0.2s; }
-        .filter-btn:hover { background: #334155; }
-        .filter-btn.active { background: #00b4f9; border-color: #00b4f9; }
-        
-        #searchBar { padding: 4px 8px; border-radius: 4px; border: 1px solid #475569; transition: all 0.3s ease; width: 140px; font-size: 11px; background: #1e293b; color: white; }
-        #searchBar:focus { outline: none; border-color: #00b4f9; }
-        
-        #mobileFilter { display: none; padding: 4px 8px; border-radius: 4px; border: 1px solid #475569; background: #1e293b; color: white; outline: none; cursor: pointer; font-size: 11px; }
 
-        .audio-container { display: flex; align-items: center; gap: 12px; }
-        /* Slightly increased image size */
-        .audio-container img { height: 26px; width: auto; }
-        .audio-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid #00b4f9; padding: 4px 10px; border-radius: 6px; background: #0A0A0a; }
-        #audioToggle { cursor: pointer; background: none; border: none; color: #f8fafc; font-weight: 500; display: flex; align-items: center; gap: 6px; min-width: 140px; font-size: 11px; padding: 0; }
-        .status-on { color: #22c55e !important; }
+        /* --- MODERNIZED TOP CONTROLS SECTION (GRID LAYOUT FIX) --- */
+        .controls-container {
+            display: grid;
+            grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); 
+            gap: 15px;
+            padding: 15px 20px;
+            background: #0A0A0a;
+            border-bottom: 1px solid #1c2230;
+            align-items: stretch;
+            width: 100%;
+        }
 
-        .vol-slider { -webkit-appearance: none; width: 60px; height: 4px; background: #334155; border-radius: 2px; outline: none; }
-        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: #00b4f9; border-radius: 50%; cursor: pointer; transition: background 0.2s; }
-        .vol-slider::-webkit-slider-thumb:hover { background: #ffffff; }
+        .controls-row {
+            display: flex;
+            min-width: 0; 
+            align-items: stretch;
+            width: 100%;
+        }
 
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; flex-shrink: 0; }
+        /* Large Audio Dashboard Module */
+        .audio-dashboard {
+            display: flex;
+            align-items: center;
+            background: #0d1117;
+            border: 1px solid #1c2230;
+            border-radius: 12px;
+            padding: 10px 15px;
+            justify-content: space-between;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        /* Logo & Status Left Panel */
+        .audio-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 160px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .squawk-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+            transition: all 0.3s ease;
+        }
+
+        /* Power Toggle & Status */
+        .audio-status-col {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .audio-status-col button {
+            background: none;
+            border: none;
+            color: #8b949e;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0;
+            transition: color 0.3s;
+        }
+        
+        .audio-status-col button:hover { color: #fff; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #475569; box-shadow: 0 0 5px #475569; transition: all 0.3s; }
+        .status-on .status-dot { background: #00b4f9; box-shadow: 0 0 12px #00b4f9; }
+        .status-on { color: #00b4f9 !important; }
+        
+        #timerText { font-size: 11px; color: #475569; margin-top: 4px; font-family: 'JetBrains Mono', monospace; min-height: 15px; }
+        .status-on ~ #timerText { color: #00b4f9; }
+
+        /* The Massive Audio Visualizer */
+        .squawk-visualizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            height: 40px; 
+            flex-grow: 1;
+            padding: 0 10px; 
+            opacity: 0.15; 
+            transition: all 0.4s ease;
+            min-width: 40px;
+            overflow: hidden; 
+        }
+        
+        .squawk-visualizer.active { opacity: 1; }
+        
+        .squawk-visualizer .bar {
+            width: 4px;
+            background: #00b4f9;
+            border-radius: 2px;
+            height: 4px; 
+            box-shadow: 0 0 10px rgba(0, 180, 249, 0.6);
+            transition: height 0.1s ease;
+        }
+
+        /* Resting waveform shape */
+        .bar:nth-child(1), .bar:nth-child(17) { height: 4px; }
+        .bar:nth-child(2), .bar:nth-child(16) { height: 8px; }
+        .bar:nth-child(3), .bar:nth-child(15) { height: 12px; }
+        .bar:nth-child(4), .bar:nth-child(14) { height: 6px; }
+        .bar:nth-child(5), .bar:nth-child(13) { height: 16px; }
+        .bar:nth-child(6), .bar:nth-child(12) { height: 24px; }
+        .bar:nth-child(7), .bar:nth-child(11) { height: 14px; }
+        .bar:nth-child(8), .bar:nth-child(10) { height: 25px; }
+        .bar:nth-child(9) { height: 35px; background: #fff; box-shadow: 0 0 15px #fff, 0 0 30px #00b4f9; }
+
+        /* Active animations mimicking speech */
+        .squawk-visualizer.active .bar { animation: pulseWave 0.6s infinite alternate ease-in-out; }
+        .squawk-visualizer.active .bar:nth-child(even) { animation-duration: 0.4s; animation-direction: alternate-reverse; }
+        .squawk-visualizer.active .bar:nth-child(3n) { animation-duration: 0.7s; }
+        .squawk-visualizer.active .bar:nth-child(9) { animation: centerPulse 0.4s infinite alternate ease-in-out; }
+
+        @keyframes pulseWave {
+            0% { height: 4px; }
+            100% { height: 28px; box-shadow: 0 0 15px rgba(0, 180, 249, 1); }
+        }
+        @keyframes centerPulse {
+            0% { height: 15px; }
+            100% { height: 40px; box-shadow: 0 0 20px #fff, 0 0 40px #00b4f9; }
+        }
+
+        /* Integrated Volume & Test Control */
+        .vol-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 10px;
+            border-radius: 20px;
+            border: 1px solid #1c2230;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        .vol-icon { font-size: 14px; opacity: 0.7; }
+        .vol-slider { -webkit-appearance: none; width: 80px; height: 4px; background: #30363d; border-radius: 2px; outline: none; }
+        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #fff; border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        
+        .test-audio-btn {
+            background: rgba(0, 180, 249, 0.1);
+            border: 1px solid #00b4f9;
+            color: #00b4f9;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 5px;
+        }
+        .test-audio-btn:hover { background: #00b4f9; color: #fff; box-shadow: 0 0 8px rgba(0, 180, 249, 0.4); }
+
+        .audio-settings-btn {
+            background: none;
+            border: none;
+            color: #8b949e;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+        .audio-settings-btn:hover { color: #fff; }
+        .audio-settings-btn svg { width: 18px; height: 18px; }
+
+        /* Audio Settings Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal-content {
+            background: #0d1117; border: 1px solid #30363d; border-radius: 12px;
+            width: 90%; max-width: 450px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            font-family: 'Inter', sans-serif;
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; border-bottom: 1px solid #1c2230; background: #161b22;
+        }
+        .modal-header h3 { margin: 0; font-size: 15px; color: #fff; font-weight: 600; }
+        .modal-header button {
+            background: none; border: none; color: #8b949e; font-size: 22px; cursor: pointer; transition: color 0.2s; padding: 0; line-height: 1;
+        }
+        .modal-header button:hover { color: #fff; }
+        .modal-body { padding: 20px; }
+        .setting-group { margin-bottom: 15px; }
+        .setting-group label.header-label { display: block; font-size: 11px; color: #8b949e; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .setting-group select, .setting-group input[type="text"] {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #30363d;
+            background: #0A0A0a; color: #fff; font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
+        }
+        .setting-group select:focus, .setting-group input[type="text"]:focus { border-color: #00b4f9; }
+        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .checkbox-grid label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #c9d1d9; cursor: pointer; }
+        .checkbox-grid input[type="checkbox"] { accent-color: #00b4f9; cursor: pointer; width: 14px; height: 14px; }
+        .modal-footer { padding: 15px 20px; background: #161b22; border-top: 1px solid #1c2230; text-align: right; }
+        .btn-save { background: #00b4f9; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s; }
+        .btn-save:hover { background: #0096d1; }
+
+        /* Modernized Bottom Filters & Tools */
+        .bottom-controls {
+            display: flex;
+            width: 100%;
+            min-width: 0; 
+            justify-content: space-between;
+            align-items: center;
+            background: #0d1117;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 1px solid #1c2230;
+            gap: 15px;
+        }
+
+        .search-container { 
+            flex-grow: 1; 
+            transition: all 0.3s ease; 
+            max-width: 250px; 
+            min-width: 60px; 
+        }
+        
+        #searchBar { 
+            padding: 8px 15px; 
+            border-radius: 20px; 
+            border: 1px solid #30363d; 
+            background: #0A0A0a;
+            color: #fff;
+            transition: all 0.3s ease; 
+            width: 100%; 
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            outline: none;
+        }
+        #searchBar:focus { border-color: #00b4f9; box-shadow: 0 0 10px rgba(0, 180, 249, 0.2); }
+        
+        .tools-col {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Unified Dropdown Filter */
+        #categoryFilter {
+            appearance: none;
+            -webkit-appearance: none;
+            padding: 8px 35px 8px 15px; 
+            border-radius: 20px; 
+            border: 1px solid #30363d; 
+            background: #0d1117 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b949e' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat calc(100% - 12px) center;
+            color: #8b949e; 
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        #categoryFilter:hover, #categoryFilter:focus {
+            border-color: #00b4f9;
+            color: #fff;
+            background-color: #161b22;
+            box-shadow: 0 0 10px rgba(0, 180, 249, 0.2);
+        }
+        
+        #categoryFilter option {
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
+
+        /* Theme Switcher */
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: "🌙"; font-size: 10px; display: flex; align-items: center; justify-content: center; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #00b4f9; }
-        input:checked + .slider:before { transform: translateX(20px); content: "☀️"; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #1c2230; transition: .4s; border-radius: 34px; border: 1px solid #30363d; }
+        .slider:before { position: absolute; content: "🌙"; font-size: 10px; display: flex; align-items: center; justify-content: center; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: #0d1117; color: #fff; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: rgba(0, 180, 249, 0.2); border-color: #00b4f9; }
+        input:checked + .slider:before { transform: translateX(22px); content: "☀️"; background-color: #00b4f9; }
+
+        .custom-newsfeed-header { display: flex; align-items: center; padding: 10px 20px; font-family: 'Inter', system-ui, sans-serif; font-weight: 700; text-transform: uppercase; font-size: 14px; border-bottom: 1px solid #1c2230; color: #8b949e; }
+        .green-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 12px; box-shadow: 0 0 8px #22c55e; }
 
         /* --- MOBILE RESPONSIVE STYLES --- */
-        @media (max-width: 850px) {
-            .filter-btn { display: none; }
-            #mobileFilter { display: block; }
-            
-            .controls { justify-content: flex-start; }
-            .audio-container { width: 100%; justify-content: space-between; order: -1; margin-bottom: 5px; }
-            #audioToggle { min-width: auto; }
-            
-            /* Expandable Search Bar */
-            #searchBar {
-                width: 32px;
-                padding: 4px;
-                color: transparent;
-                cursor: pointer;
-                background: #1e293b url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="%23ffffff" class="bi bi-search" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>') no-repeat center;
+        @media (max-width: 950px) {
+            /* Stacks the Grid securely */
+            .controls-container { 
+                grid-template-columns: 1fr; 
+                padding: 15px; 
             }
-            #searchBar::placeholder { color: transparent; }
-            #searchBar:focus {
-                width: 120px;
-                background-image: none;
-                color: white;
-                cursor: text;
-                padding-left: 8px;
+            .controls-row { width: 100%; flex: none; }
+            
+            .audio-dashboard { 
+                width: 100%; 
+                max-width: 100% !important; 
+                flex-direction: column; 
+                gap: 8px; 
+                padding: 12px 15px; 
             }
-            #searchBar:focus::placeholder { color: #94a3b8; }
+            .audio-left { width: 100%; justify-content: space-between; align-items: center; }
+            .squawk-logo { height: 26px; } 
+            .audio-status-col button { font-size: 12px; }
+            #timerText { font-size: 10px; margin-top: 0px; }
+            
+            /* Scale visualizer vertically and horizontally */
+            .squawk-visualizer { width: 100%; height: 35px; transform: scale(0.65); transform-origin: center; margin: -10px 0; }
+            
+            .vol-wrapper { width: 100%; justify-content: space-between; flex-wrap: nowrap; padding: 6px 12px; }
+            .vol-slider { flex-grow: 1; margin: 0 10px; }
+            .test-audio-btn { font-size: 10px; padding: 4px 8px; }
+            
+            /* Controls Layout */
+            .bottom-controls { flex-wrap: wrap; gap: 10px; padding: 10px; width: 100%; flex: none; }
+            .search-container { max-width: 100%; width: 100%; order: 2; margin-top: 10px; }
+            .tools-col { width: 100%; justify-content: space-between; order: 1; }
+            #categoryFilter { flex-grow: 1; margin-right: 15px; }
+            
+            .theme-divider { display: none; } 
         }
     </style>
 </head>
 <body class="dark">
 
-    <div class="controls">
-        <div class="left-group">
-            <input type="text" id="searchBar" placeholder="Search keywords..." onkeyup="filterFeed()">
-            
-            <!-- Mobile Dropdown Filter -->
-            <select id="mobileFilter" onchange="setFilter(this.value)">
-                <option value="all">All</option>
-                <option value="commodities">Commodities</option>
-                <option value="forex">Forex</option>
-                <option value="equities">Equities</option>
-                <option value="crypto">Crypto</option>
-                <option value="centralBanks">Central Banks</option>
-            </select>
+    <!-- NEW MODERNIZED CONTROLS -->
+    <div class="controls-container">
+        
+        <div class="controls-row">
+            <div class="audio-dashboard">
+                
+                <!-- Logo & Status Left Panel -->
+                <div class="audio-left">
+                    <img src="media/squawkimage.png" alt="Squawk" class="squawk-logo">
+                    <div class="audio-status-col">
+                        <button id="audioToggle" onclick="handleAudioToggle()">
+                            <div class="status-dot" id="statusDot"></div>
+                            <span id="audioLabel">Disconnected</span>
+                        </button>
+                        <div id="timerText"></div>
+                    </div>
+                </div>
 
-            <!-- Desktop Filter Buttons -->
-            <button class="filter-btn active" data-type="all" onclick="setFilter('all')">All</button>
-            <button class="filter-btn" data-type="commodities" onclick="setFilter('commodities')">Commodities</button>
-            <button class="filter-btn" data-type="forex" onclick="setFilter('forex')">Forex</button>
-            <button class="filter-btn" data-type="equities" onclick="setFilter('equities')">Equities</button>
-            <button class="filter-btn" data-type="crypto" onclick="setFilter('crypto')">Crypto</button>
-            <button class="filter-btn" data-type="centralBanks" onclick="setFilter('centralBanks')">Central Banks</button>
-            
-            <label class="switch">
-                <input type="checkbox" id="themeToggle" checked>
-                <span class="slider"></span>
-            </label>
+                <!-- Massive Visualizer -->
+                <div class="squawk-visualizer" id="squawkVisualizer">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div>
+                </div>
+
+                <div class="vol-wrapper">
+                    <span class="vol-icon">🔉</span>
+                    <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
+                    <button class="test-audio-btn" onclick="runAudioTest()">TEST</button>
+                    <!-- Audio Settings Slider Icon -->
+                    <button class="audio-settings-btn" onclick="openAudioModal()" title="Audio Settings">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="4" y1="6" x2="20" y2="6"></line>
+                            <line x1="14" y1="4" x2="14" y2="8"></line>
+                            <line x1="4" y1="12" x2="20" y2="12"></line>
+                            <line x1="8" y1="10" x2="8" y2="14"></line>
+                            <line x1="4" y1="18" x2="20" y2="18"></line>
+                            <line x1="16" y1="16" x2="16" y2="20"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <div class="audio-container">
-            <img src="media/squawkimage.png" alt="Logo" />
-            <div class="audio-wrapper">
-                <button id="audioToggle" onclick="handleAudioToggle()">🔊 <span id="audioLabel">Disconnected</span> <span id="timerText"></span></button>
-                <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
+        <div class="bottom-controls">
+            
+            <div class="search-container" id="searchContainer">
+                <input type="text" id="searchBar" placeholder="Search keywords..." onkeyup="filterFeed()">
+            </div>
+            
+            <div class="tools-col">
+                <!-- Styled Native Select Dropdown for Filtering -->
+                <select id="categoryFilter" onchange="setFilter(this.value)">
+                    <option value="all">All Categories</option>
+                    <option value="commodities">Commodities</option>
+                    <option value="forex">Forex</option>
+                    <option value="equities">Equities</option>
+                    <option value="crypto">Crypto</option>
+                    <option value="centralBanks">Central Banks</option>
+                </select>
+                
+                <div class="theme-divider" style="width: 1px; height: 20px; background: #30363d; margin: 0 5px;"></div>
+                
+                <label class="switch">
+                    <input type="checkbox" id="themeToggle" checked>
+                    <span class="slider"></span>
+                </label>
             </div>
         </div>
     </div>
 
+    <!-- AUDIO SETTINGS MODAL -->
+    <div id="audioSettingsModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Audio Squawk Settings</h3>
+                <button onclick="closeAudioModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label class="header-label">Filter Mode</label>
+                    <select id="squawkMode" onchange="toggleCustomSettings()">
+                        <option value="default">Analyst Wire Smart Filter (Default)</option>
+                        <option value="custom">Custom Squawk Filter</option>
+                    </select>
+                </div>
+                
+                <div id="customSettingsBlock" style="display: none; padding-top: 15px; border-top: 1px solid #30363d; margin-top: 15px;">
+                    <div class="setting-group">
+                        <label class="header-label">Watchlist Markets</label>
+                        <div class="checkbox-grid">
+                            <label><input type="checkbox" value="commodities" class="custom-cat-cb"> Commodities</label>
+                            <label><input type="checkbox" value="forex" class="custom-cat-cb"> Forex</label>
+                            <label><input type="checkbox" value="equities" class="custom-cat-cb"> Equities</label>
+                            <label><input type="checkbox" value="crypto" class="custom-cat-cb"> Crypto</label>
+                            <label><input type="checkbox" value="centralBanks" class="custom-cat-cb"> Central Banks</label>
+                        </div>
+                    </div>
+                    <div class="setting-group" style="margin-top: 20px;">
+                        <label class="header-label">Specific Assets / Keywords (Comma Separated)</label>
+                        <input type="text" id="customKeywords" placeholder="e.g. inflation, tariffs, yield">
+                    </div>
+                    <div class="setting-group" style="margin-top: 20px;">
+                        <label class="header-label">Squawk Strictness</label>
+                        <select id="squawkStrictness">
+                            <option value="loose">Loose (Read ALL headlines containing selections)</option>
+                            <option value="strict">Strict (Requires action verbs / shock words)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save" onclick="saveAudioSettings()">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="custom-newsfeed-header"><div class="green-dot"></div> LIVE FEED</div>
     <div class="messenger__outer" id="livesquawk_messenger_outer"></div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -131,9 +488,7 @@
         // --- HELPER FUNCTION: Bulletproof parsing for Arrays, Strings, and JSON ---
         function userHasAccess(userTags, requiredTag) {
             if (!userTags) return false;
-            
             let tagsArray = [];
-            
             if (Array.isArray(userTags)) {
                 tagsArray = userTags;
             } else if (typeof userTags === 'string') {
@@ -144,7 +499,6 @@
                     tagsArray = userTags.split(',').map(s => s.trim());
                 }
             }
-
             return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
         }
 
@@ -152,11 +506,13 @@
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
         async function init() {
-            // 1. Session check
             const { data: { session } } = await client.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
+            if (!session) { 
+                // If embedded as widget, window.top ensures the parent page redirects
+                window.top.location.href = 'index.html'; 
+                return; 
+            }
             
-            // 2. Fetch Profile Using Updated Schema
             const { data: profileArray, error: profileError } = await client
                 .from('profiles')
                 .select('admin, active_tags')
@@ -164,9 +520,7 @@
                 .limit(1);
                 
             if (profileError) {
-                alert("Database Error: " + profileError.message);
-                await client.auth.signOut();
-                window.location.href = 'index.html';
+                console.error("Database Error: " + profileError.message);
                 return;
             }
             
@@ -175,21 +529,9 @@
             const isAdmin = profile?.admin === true;
 
             if (!profile || tags.length === 0 || userHasAccess(tags, 'free')) {
-                alert("Your subscription is inactive. Redirecting to login.");
-                await client.auth.signOut();
-                window.location.href = 'index.html';
+                // Not authorized to view premium widget
+                document.body.innerHTML = '<div style="padding: 20px; text-align: center; color: #8b949e; font-family: sans-serif;">Subscription required to view live feed.</div>';
                 return;
-            }
-
-            // 3. HARD ROUTING (BOUNCER LOGIC)
-            if (!isAdmin && !userHasAccess(tags, 'pro') && !userHasAccess(tags, 'newsfeed') && !userHasAccess(tags, 'squawk')) {
-                if (userHasAccess(tags, 'courses') || userHasAccess(tags, 'course')) {
-                    window.location.href = 'courses.html';
-                    return;
-                } else {
-                    window.location.href = 'account.html';
-                    return;
-                }
             }
         }
 
@@ -197,44 +539,126 @@
         let audioEnabled = false, seconds = 0, timerInterval;
         let audioCtx = null; 
         
+        // --- CUSTOM AUDIO SETTINGS STATE ---
+        let userAudioConfig = {
+            mode: 'default',
+            categories: [],
+            keywords: [],
+            strictness: 'loose'
+        };
+
+        function openAudioModal() {
+            document.getElementById('audioSettingsModal').style.display = 'flex';
+            
+            // Populate modal with current state
+            document.getElementById('squawkMode').value = userAudioConfig.mode;
+            toggleCustomSettings();
+            
+            document.querySelectorAll('.custom-cat-cb').forEach(cb => {
+                cb.checked = userAudioConfig.categories.includes(cb.value);
+            });
+            document.getElementById('customKeywords').value = userAudioConfig.keywords.join(', ');
+            document.getElementById('squawkStrictness').value = userAudioConfig.strictness;
+        }
+        
+        function closeAudioModal() {
+            document.getElementById('audioSettingsModal').style.display = 'none';
+        }
+
+        function toggleCustomSettings() {
+            const mode = document.getElementById('squawkMode').value;
+            document.getElementById('customSettingsBlock').style.display = (mode === 'custom') ? 'block' : 'none';
+        }
+
+        function saveAudioSettings() {
+            userAudioConfig.mode = document.getElementById('squawkMode').value;
+            
+            if (userAudioConfig.mode === 'custom') {
+                userAudioConfig.categories = Array.from(document.querySelectorAll('.custom-cat-cb:checked')).map(cb => cb.value);
+                
+                const rawKws = document.getElementById('customKeywords').value;
+                userAudioConfig.keywords = rawKws.split(',').map(k => k.trim().toLowerCase()).filter(k => k.length > 0);
+                
+                userAudioConfig.strictness = document.getElementById('squawkStrictness').value;
+            }
+            
+            closeAudioModal();
+            // Provide feedback to user
+            const feedbackText = userAudioConfig.mode === 'default' ? 'Smart filter active.' : 'Custom squawk settings saved.';
+            alert(feedbackText);
+        }
+
         function initAudioContext() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
             }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
         }
 
         function playSynthesizedPing(volumeLevel) {
             if (!audioCtx) return;
+            const vol = parseFloat(volumeLevel);
+            if (vol <= 0) return;
+            
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             
             oscillator.type = 'sine';
             oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
-            
-            gainNode.gain.setValueAtTime(volumeLevel * 0.3, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(vol * 0.3, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
             
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 0.5);
+
+            const viz = document.getElementById('squawkVisualizer');
+            viz.classList.add('active');
+            setTimeout(() => viz.classList.remove('active'), 500);
         }
 
         function startTimer() { timerInterval = setInterval(() => { seconds++; const h = Math.floor(seconds/3600), m = Math.floor((seconds%3600)/60), s = seconds%60; document.getElementById('timerText').innerText = `(${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')})`; }, 1000); }
-        function speakText(text) { if (!audioEnabled) return; const u = new SpeechSynthesisUtterance(text); u.volume = document.getElementById('volSlider').value; window.speechSynthesis.speak(u); }
+        
+        function speakText(text) { 
+            if (!audioEnabled) return; 
+            const u = new SpeechSynthesisUtterance(text); 
+            
+            u.volume = parseFloat(document.getElementById('volSlider').value); 
+            
+            const viz = document.getElementById('squawkVisualizer');
+            u.onstart = () => viz.classList.add('active');
+            u.onend = () => viz.classList.remove('active');
+            u.onerror = () => viz.classList.remove('active'); 
+            
+            window.speechSynthesis.speak(u); 
+        }
+
+        function runAudioTest() {
+            if (!audioEnabled) {
+                alert("Please click 'Disconnected' to turn the audio system On Air before testing.");
+                return;
+            }
+            speakText("Audio system test complete. The visualizer is functioning correctly.");
+        }
+        
+        // Add real-time feedback when dragging the volume slider
+        document.getElementById('volSlider').addEventListener('change', function() {
+            if (audioEnabled) {
+                playSynthesizedPing(parseFloat(this.value));
+            }
+        });
         
         async function handleAudioToggle() {
             const btn = document.getElementById('audioToggle');
             const lbl = document.getElementById('audioLabel');
+            const btnEl = lbl.parentElement;
             btn.disabled = true;
             
             if (audioEnabled) { 
                 lbl.innerText = "Disconnecting..."; 
-                lbl.classList.remove('status-on'); 
+                btnEl.classList.remove('status-on'); 
                 await new Promise(r => setTimeout(r, 800)); 
                 clearInterval(timerInterval); 
                 audioEnabled = false; 
@@ -248,35 +672,110 @@
                 seconds = 0; 
                 startTimer(); 
                 lbl.innerText = "On Air"; 
-                lbl.classList.add('status-on'); 
+                btnEl.classList.add('status-on'); 
             }
             btn.disabled = false;
         }
 
-        // --- FILTER LOGIC ---
+        // --- UPGRADED CLEVER FILTER SYSTEM ---
         let currentFilter = 'all';
         const filters = { 
             commodities: ['oil', 'gold', 'metal', 'copper', 'gas', 'brent', 'wti', 'silver'], 
-            forex: ['usd', 'eur', 'jpy', 'gbp', 'fx', 'forex', 'currency', 'yield'], 
+            forex: ['usd', 'eur', 'jpy', 'gbp', 'chf', 'aud', 'cad', 'nzd', 'fx', 'forex', 'currency', 'yield'], 
             equities: ['stock', 'equity', 'sp500', 'nasdaq', 'dow', 'nikkei', 'shares'], 
             crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'coin'], 
-            centralBanks: ['fed', 'ecb', 'boj', 'bank of england', 'rba', 'central bank', 'interest rate', 'hike', 'cut'] 
+            centralBanks: ['fed', 'ecb', 'boj', 'boe', 'rba', 'boc', 'snb', 'rbnz', 'central bank', 'interest rate', 'hike', 'cut'] 
         };
-        const audioTriggerKeywords = ['hike', 'cut', 'pause', 'pivot', 'fed', 'ecb', 'boe', 'boj', 'tariff', 'sanctions', 'stimulus', 'buyout', 'merger', 'yield', 'opec', 'sec', 'etf', 'S&P Global Manufacturing', 'ISM Manufacturing', 'CPI', 'JOLTS', 'ADP', 'S&P Global Services', 'ISM Non-Manufacturing', 'Crude Oil Inventories', 'Initial Jobless Claims', 'New Home Sales', 'Average Hourly Earnings', 'Nonfarm Payrolls', 'Unemployment Rate', 'GDP', 'Core CPI', 'BoC Interest Rate Decision', 'BoJ Interest Rate Decision', 'Fed Interest Rate Decision', 'SNB Interest Rate Decision', 'BoE Interest Rate Decision', 'Retail Sales', 'Core Retail Sales', 'RBA Interest Rate Decision', 'Core PCE Price Index', 'Durable Goods Orders', 'Philadelphia Fed Manufacturing Index', '10-Year Note Auction', 'ECB Interest Rate Decision', 'PPI', 'German CPI', 'Manufacturing PMI', 'CB Consumer Confidence', 'Chicago PMI', 'HCOB Spain Manufacturing PMI', 'Yield Rises', 'Treasury Falls', 'Rate-Hike', 'Monetary Policy', 'Military Strikes', 'Missile Attack', 'Revokes', 'WTI Oil Jumps', 'Gold', 'Australia', 'AUD', 'US Military', 'Central Command', 'USA'];
+
+        // 0. The Anti-Noise Filter: Mutes recaps, previews, and technicals immediately
+        const muteList = ['market wrap', 'recap', 'preview', 'for the week', 'expected to', 'poll:', 'technical analysis', 'update:'];
+
+        // 1. Tier 1: Exact macro data points & specific shocks
+        const tier1ExactTriggers = [
+            's&p global manufacturing', 'ism manufacturing', 'cpi', 'jolts', 'adp', 's&p global services',
+            'ism non-manufacturing', 'crude oil inventories', 'initial jobless claims', 'new home sales',
+            'average hourly earnings', 'nonfarm payrolls', 'unemployment rate', 'gdp', 'core cpi',
+            'boc interest rate decision', 'boj interest rate decision', 'fed interest rate decision',
+            'snb interest rate decision', 'boe interest rate decision', 'retail sales', 'core retail sales',
+            'rba interest rate decision', 'core pce price index', 'durable goods orders',
+            'philadelphia fed manufacturing index', '10-year note auction', 'ecb interest rate decision',
+            'ppi', 'german cpi', 'manufacturing pmi', 'cb consumer confidence', 'chicago pmi',
+            'hcob spain manufacturing pmi', 'emergency rate cut', 'circuit breaker', 'opec+', 'nfp', 
+            'uk cpi', 'tokyo core cpi'
+        ];
+
+        // 2. Tier 2: Balanced Core Asset Matrix
+        const tier2Assets = ['usd', 'eur', 'gbp', 'chf', 'aud', 'cad', 'nzd', 'jpy', 'gold', 'oil', 'crude', 'brent', 'wti', 'treasury', 's&p', 'nasdaq', 'usa', 'australia', 'uk', 'europe', 'china'];
+        
+        // 3. Tier 3: Institutions and Major Central Bankers
+        const tier3Institutions = ['fed', 'ecb', 'boe', 'boj', 'rba', 'boc', 'snb', 'rbnz', 'sec', 'opec', 'etf', 'powell', 'lagarde', 'bailey', 'ueda', 'macklem', 'bullock'];
+        
+        // Extended Action Verbs (Velocity & Surprise built in)
+        const tier2Actions = ['surges', 'plummets', 'spikes', 'crashes', 'intervention', 'hike', 'cut', 'pause', 'pivot', 'breaks', 'tariff', 'sanctions', 'emergency', 'stimulus', 'buyout', 'merger', 'yield', 'revokes', 'jumps', 'rises', 'falls', 'soars', 'sinks', 'tumbles', 'drops', 'halts', 'suspended', 'unexpected', 'surprise', 'warns', 'inflation', 'rates'];
+        
+        // Extra Geopolitical & Systemic Shocks
+        const tier3Shocks = ['missile', 'military strike', 'war', 'attack', 'sanctions', 'resigns', 'assassination', 'terror', 'us military', 'central command'];
+
+        function shouldTriggerAudio(headlineText) {
+            const lower = headlineText.toLowerCase();
+
+            // 0. The Mute Filter: ALWAYS block known recap/noise formats
+            if (muteList.some(muteWord => lower.includes(muteWord))) {
+                return false;
+            }
+
+            // --- DEFAULT SMART FILTER LOGIC ---
+            if (userAudioConfig.mode === 'default') {
+                if (tier1ExactTriggers.some(trigger => lower.includes(trigger))) return true;
+                if (tier3Shocks.some(shock => lower.includes(shock))) return true;
+                if (lower.includes('monetary policy') || lower.includes('rate-hike') || lower.includes('basis points') || lower.includes('bps')) return true;
+
+                const hasAssetOrInstitution = tier2Assets.some(asset => lower.includes(asset)) || tier3Institutions.some(inst => lower.includes(inst));
+                const hasAction = tier2Actions.some(action => lower.includes(action));
+                
+                return (hasAssetOrInstitution && hasAction);
+            } 
+            // --- CUSTOM USER FILTER LOGIC ---
+            else {
+                let matchesSelection = false;
+
+                // Check Categories
+                for (const cat of userAudioConfig.categories) {
+                    if (filters[cat] && filters[cat].some(word => lower.includes(word))) {
+                        matchesSelection = true;
+                        break;
+                    }
+                }
+
+                // Check Specific Keywords
+                if (!matchesSelection && userAudioConfig.keywords.length > 0) {
+                    if (userAudioConfig.keywords.some(kw => lower.includes(kw))) {
+                        matchesSelection = true;
+                    }
+                }
+
+                // If headline doesn't mention their requested topics, ignore it entirely
+                if (!matchesSelection) return false;
+
+                // Strictness check
+                if (userAudioConfig.strictness === 'loose') {
+                    // Match found and strictness is loose -> Play audio
+                    return true;
+                } else {
+                    // Match found but strictness is high -> Require action/shock context
+                    const hasAction = tier2Actions.some(action => lower.includes(action));
+                    const isShock = tier3Shocks.some(shock => lower.includes(shock));
+                    return (hasAction || isShock);
+                }
+            }
+        }
         
         function setFilter(type) { 
             currentFilter = type; 
-            
-            document.querySelectorAll('.filter-btn').forEach(b => {
-                if (b.dataset.type === type) b.classList.add('active');
-                else b.classList.remove('active');
-            });
-            
-            const mobileSelect = document.getElementById('mobileFilter');
-            if (mobileSelect && mobileSelect.value !== type) {
-                mobileSelect.value = type;
+            const selectBox = document.getElementById('categoryFilter');
+            if (selectBox && selectBox.value !== type) { 
+                selectBox.value = type; 
             }
-            
             filterFeed(); 
         }
 
@@ -290,29 +789,18 @@
             }); 
         }
         
-        window.messenger_start_init = function() { 
-            if (typeof Messenger !== 'undefined') {
-                Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); 
-            }
-        };
-        
+        window.messenger_start_init = function() { if (typeof Messenger !== 'undefined') Messenger.init({ container: '#livesquawk_messenger_outer', product: 'forexanalytic' }); };
         document.getElementById('themeToggle').addEventListener('change', () => { document.body.classList.toggle('dark'); document.body.classList.toggle('light'); });
         
         const feedContainer = document.getElementById('livesquawk_messenger_outer');
         
-        // --- MUTATION OBSERVER (ALERT LOGIC) ---
         new MutationObserver((mutations) => { 
-            let shouldFilter = false;
             mutations.forEach(m => m.addedNodes.forEach(node => { 
                 if (node.classList && node.classList.contains('news__item__outer')) { 
-                    shouldFilter = true;
                     if (audioEnabled) {
                         const rawText = node.innerText;
-                        const lowerText = rawText.toLowerCase();
                         
-                        const hasKeyword = audioTriggerKeywords.some(kw => lowerText.includes(kw.toLowerCase()));
-                        
-                        if (hasKeyword) {
+                        if (shouldTriggerAudio(rawText)) {
                             speakText(rawText); 
                         } else {
                             const vol = parseFloat(document.getElementById('volSlider').value);
@@ -320,8 +808,7 @@
                         }
                     }
                 } 
-            }));
-            if (shouldFilter) filterFeed();
+            })); 
         }).observe(feedContainer, { childList: true, subtree: true });
         
         Object.defineProperty(window, 'self', { get: () => window.top });
