@@ -207,12 +207,15 @@
             background: none;
             border: none;
             color: #8b949e;
-            font-size: 16px;
             cursor: pointer;
-            padding: 2px 5px;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: color 0.2s;
         }
         .audio-settings-btn:hover { color: #fff; }
+        .audio-settings-btn svg { width: 18px; height: 18px; }
 
         /* Audio Settings Modal */
         .modal-overlay {
@@ -438,8 +441,17 @@
                     <span class="vol-icon">🔉</span>
                     <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
                     <button class="test-audio-btn" onclick="runAudioTest()">TEST</button>
-                    <!-- Settings Gear Icon -->
-                    <button class="audio-settings-btn" onclick="openAudioModal()" title="Audio Settings">⚙️</button>
+                    <!-- Updated Audio Settings Slider Icon -->
+                    <button class="audio-settings-btn" onclick="openAudioModal()" title="Audio Settings">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="4" y1="6" x2="20" y2="6"></line>
+                            <line x1="14" y1="4" x2="14" y2="8"></line>
+                            <line x1="4" y1="12" x2="20" y2="12"></line>
+                            <line x1="8" y1="10" x2="8" y2="14"></line>
+                            <line x1="4" y1="18" x2="20" y2="18"></line>
+                            <line x1="16" y1="16" x2="16" y2="20"></line>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
