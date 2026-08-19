@@ -163,6 +163,12 @@
             text-align: center; 
         }
 
+        /* Download Section Styles */
+        .download-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #1c2230; }
+        .download-item:last-child { border-bottom: none; }
+        .download-btn { background: #2962ff; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-weight: 500; font-size: 12px; transition: background 0.2s; }
+        .download-btn:hover { background: #1e4bd8; }
+
         /* Responsive Queries */
         @media (max-width: 900px) {
             .sidebar { width: 250px; min-width: 250px; }
@@ -251,6 +257,10 @@
             
             <h1 id="module-title" style="margin-top: 20px; font-weight: 600;">Select a Module</h1>
             <div id="lesson-ref-list" class="lesson-reference">Select a module to view lesson references.</div>
+
+            <!-- Downloadable Content Section Added Here -->
+            <h2 style="margin-top: 30px; font-weight: 600; font-size: 18px; width: 100%;">Downloadable Content</h2>
+            <div id="lesson-downloads-list" class="lesson-reference" style="margin-top: 10px;">Select a module to view downloads.</div>
         </div>
     </div>
 </div>
@@ -269,7 +279,11 @@
                 { title: "FX Participant Hierarchy", time: 2395 },
                 { title: "Master Market Moves", time: 2728 },
                 { title: "Market Sentiment Foundations", time: 3259 }
-            ] 
+            ],
+            downloads: [
+                // Replace with your actual file names and URLs
+                { name: "Module 1 Cheat Sheet (PDF)", url: "path/to/your/file.pdf" }
+            ]
         },
         { 
             title: "2. Module Two: Practical Economics (2 hours 3 minutes)", 
@@ -291,7 +305,8 @@
                 { title: "The Baseline Method", time: 6138 },
                 { title: "Data Volatility", time: 6681 },
                 { title: "Three-Step Analysis", time: 6981 }
-            ] 
+            ],
+            downloads: []
         },
         { 
             title: "3. Module Three: Central Banks (1 hour 41 minutes)", 
@@ -311,7 +326,8 @@
                 { title: "Trading the Shift", time: 4684 },
                 { title: "Policy Normalisation", time: 5192 },
                 { title: "The SNB Surprise", time: 5620 }
-            ] 
+            ],
+            downloads: []
         },
         { 
             title: "4. Module Four: Sentiment (44 minutes)", 
@@ -323,7 +339,8 @@
                 { title: "Mastering Risk Sentiment", time: 1324 },
                 { title: "Risk Sentiment", time: 1808 },
                 { title: "A Sentiment Trade", time: 2190 }
-            ] 
+            ],
+            downloads: []
         },
         { 
             title: "5. Module Five: Fixed Income (39 minutes)", 
@@ -335,7 +352,8 @@
                 { title: "Anatomy of a Yield Curve", time: 1053 },
                 { title: "Bonds and Yields", time: 1459 },
                 { title: "STIR Markets", time: 1784 }
-            ] 
+            ],
+            downloads: []
         },
         { 
             title: "6. Module Six: Foreign Exchange (2 hours)", 
@@ -357,7 +375,8 @@
                 { title: "Japanese Yen Profile", time: 5805 },
                 { title: "Canadian Dollar Profile", time: 6278 },
                 { title: "New Zealand Dollar Profile", time: 6794 }
-            ] 
+            ],
+            downloads: []
         },
         { 
             title: "7. Module Seven: Equities (49 minutes)", 
@@ -370,7 +389,8 @@
                 { title: "Equity Market Drivers", time: 1606 },
                 { title: "Risk Sentiment and Corrections", time: 2002 },
                 { title: "Equities and Cyclicality", time: 2506 }
-            ] 
+            ],
+            downloads: []
         },
         { 
             title: "8. Module Eight: Commodities (46 minutes)", 
@@ -383,7 +403,8 @@
                 { title: "Macro Drivers of Oil Prices", time: 1530 },
                 { title: "Decoding Futures Curve", time: 1974 },
                 { title: "Decoding Gold", time: 2326 }
-            ] 
+            ],
+            downloads: []
         },
         { 
             title: "9. Module Nine: Advanced tips and tools (1 hour 40 minutes)", 
@@ -402,7 +423,8 @@
                 { title: "Real Trades", time: 4571 },
                 { title: "Fundamental Swing Trades", time: 5038 },
                 { title: "Anatomy of Swing Trades", time: 5542 }
-            ] 
+            ],
+            downloads: []
         }
     ];
 
@@ -441,12 +463,26 @@
         player.src = `${mod.video}?wtime=${startTime}&resume=false&videoFoam=true&_t=${Date.now()}`;
         document.getElementById('module-title').innerText = mod.title;
         
+        // Render References
         const list = document.getElementById('lesson-ref-list');
         list.innerHTML = mod.lessons.map(l => `
             <div class="ref-item">
                 <span class="ref-time">${formatTime(l.time)}</span> <span><strong>${l.title}</strong></span>
             </div>
         `).join('');
+
+        // Render Downloads
+        const downloadsList = document.getElementById('lesson-downloads-list');
+        if (mod.downloads && mod.downloads.length > 0) {
+            downloadsList.innerHTML = mod.downloads.map(d => `
+                <div class="download-item">
+                    <span style="font-size: 14px; font-weight: 500;">${d.name}</span>
+                    <a href="${d.url}" class="download-btn" target="_blank" download>Download</a>
+                </div>
+            `).join('');
+        } else {
+            downloadsList.innerHTML = '<div style="color: #8b949e; font-size: 13px; padding: 10px 0;">No downloadable content currently available for this module.</div>';
+        }
     }
 
     function toggleMobileMenu() { 
