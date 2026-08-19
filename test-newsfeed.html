@@ -48,13 +48,13 @@
             padding: 15px 20px;
             background: #0A0A0a;
             border-bottom: 1px solid #1c2230;
-            align-items: stretch; /* Forces children to equal height */
+            align-items: stretch; /* Forces both modules to the exact same height */
         }
 
         .controls-row {
             display: flex;
             flex: 0 0 auto;
-            align-items: stretch; /* Inherit the stretch */
+            align-items: stretch; /* Inherits the stretch */
         }
 
         /* Large Audio Dashboard Module */
@@ -68,6 +68,8 @@
             justify-content: space-between;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
             transition: all 0.3s ease;
+            max-width: 550px;
+            width: 100%;
         }
 
         /* Logo & Status Left Panel */
@@ -289,7 +291,9 @@
             .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
             
             /* Compact Audio Section */
-            .audio-dashboard { flex-direction: column; gap: 8px; padding: 12px 15px; }
+            .controls-container { flex-direction: column; padding: 15px; align-items: stretch; }
+            .controls-row { width: 100%; }
+            .audio-dashboard { max-width: 100%; width: 100%; flex-direction: column; gap: 8px; padding: 12px 15px; }
             .audio-left { width: 100%; justify-content: space-between; align-items: center; }
             .squawk-logo { height: 26px; } 
             .audio-status-col button { font-size: 12px; }
@@ -303,10 +307,12 @@
             .test-audio-btn { font-size: 10px; padding: 4px 8px; }
             
             /* Controls Layout */
-            .bottom-controls { flex-wrap: wrap; gap: 10px; padding: 10px; }
+            .bottom-controls { flex-wrap: wrap; gap: 10px; padding: 10px; width: 100%; }
             .search-container { max-width: 100%; width: 100%; order: 2; margin-top: 10px; }
             .tools-col { width: 100%; justify-content: space-between; order: 1; }
             #categoryFilter { flex-grow: 1; margin-right: 15px; }
+            
+            #mobileSearchToggle { display: flex; }
             .theme-divider { display: none; } 
         }
     </style>
@@ -384,7 +390,6 @@
             </div>
             
             <div class="tools-col">
-                
                 <!-- Styled Native Select Dropdown for Filtering -->
                 <select id="categoryFilter" onchange="setFilter(this.value)">
                     <option value="all">All Categories</option>
@@ -503,6 +508,18 @@
         function toggleDropdown(event) { event.stopPropagation(); document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
         window.onclick = function(event) { if (!event.target.matches('.dropbtn')) { document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); } }
         document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+
+        // Toggle Mobile Search Functionality
+        function toggleMobileSearch() {
+            const container = document.getElementById('searchContainer');
+            const btn = document.getElementById('mobileSearchToggle');
+            container.classList.toggle('active');
+            btn.classList.toggle('active-btn');
+            
+            if (container.classList.contains('active')) {
+                document.getElementById('searchBar').focus();
+            }
+        }
 
         // --- AUDIO ENGINE ---
         let audioEnabled = false, seconds = 0, timerInterval;
