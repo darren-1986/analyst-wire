@@ -203,6 +203,52 @@
         }
         .test-audio-btn:hover { background: #00b4f9; color: #fff; box-shadow: 0 0 8px rgba(0, 180, 249, 0.4); }
 
+        .audio-settings-btn {
+            background: none;
+            border: none;
+            color: #8b949e;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 2px 5px;
+            transition: color 0.2s;
+        }
+        .audio-settings-btn:hover { color: #fff; }
+
+        /* Audio Settings Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal-content {
+            background: #0d1117; border: 1px solid #30363d; border-radius: 12px;
+            width: 90%; max-width: 450px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            font-family: 'Inter', sans-serif;
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; border-bottom: 1px solid #1c2230; background: #161b22;
+        }
+        .modal-header h3 { margin: 0; font-size: 15px; color: #fff; font-weight: 600; }
+        .modal-header button {
+            background: none; border: none; color: #8b949e; font-size: 22px; cursor: pointer; transition: color 0.2s; padding: 0; line-height: 1;
+        }
+        .modal-header button:hover { color: #fff; }
+        .modal-body { padding: 20px; }
+        .setting-group { margin-bottom: 15px; }
+        .setting-group label.header-label { display: block; font-size: 11px; color: #8b949e; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .setting-group select, .setting-group input[type="text"] {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #30363d;
+            background: #0A0A0a; color: #fff; font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
+        }
+        .setting-group select:focus, .setting-group input[type="text"]:focus { border-color: #00b4f9; }
+        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .checkbox-grid label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #c9d1d9; cursor: pointer; }
+        .checkbox-grid input[type="checkbox"] { accent-color: #00b4f9; cursor: pointer; width: 14px; height: 14px; }
+        .modal-footer { padding: 15px 20px; background: #161b22; border-top: 1px solid #1c2230; text-align: right; }
+        .btn-save { background: #00b4f9; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s; }
+        .btn-save:hover { background: #0096d1; }
+
         /* Modernized Bottom Filters & Tools */
         .bottom-controls {
             display: flex;
@@ -392,6 +438,8 @@
                     <span class="vol-icon">🔉</span>
                     <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
                     <button class="test-audio-btn" onclick="runAudioTest()">TEST</button>
+                    <!-- Settings Gear Icon -->
+                    <button class="audio-settings-btn" onclick="openAudioModal()" title="Audio Settings">⚙️</button>
                 </div>
             </div>
         </div>
@@ -421,7 +469,52 @@
                 </label>
             </div>
         </div>
+    </div>
 
+    <!-- AUDIO SETTINGS MODAL -->
+    <div id="audioSettingsModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Audio Squawk Settings</h3>
+                <button onclick="closeAudioModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label class="header-label">Filter Mode</label>
+                    <select id="squawkMode" onchange="toggleCustomSettings()">
+                        <option value="default">Analyst Wire Smart Filter (Default)</option>
+                        <option value="custom">Custom Squawk Filter</option>
+                    </select>
+                </div>
+                
+                <div id="customSettingsBlock" style="display: none; padding-top: 15px; border-top: 1px solid #30363d; margin-top: 15px;">
+                    <div class="setting-group">
+                        <label class="header-label">Watchlist Markets</label>
+                        <div class="checkbox-grid">
+                            <label><input type="checkbox" value="commodities" class="custom-cat-cb"> Commodities</label>
+                            <label><input type="checkbox" value="forex" class="custom-cat-cb"> Forex</label>
+                            <label><input type="checkbox" value="equities" class="custom-cat-cb"> Equities</label>
+                            <label><input type="checkbox" value="crypto" class="custom-cat-cb"> Crypto</label>
+                            <label><input type="checkbox" value="centralBanks" class="custom-cat-cb"> Central Banks</label>
+                        </div>
+                    </div>
+                    <div class="setting-group" style="margin-top: 20px;">
+                        <label class="header-label">Specific Assets / Keywords (Comma Separated)</label>
+                        <input type="text" id="customKeywords" placeholder="e.g. inflation, tariffs, yield">
+                    </div>
+                    <div class="setting-group" style="margin-top: 20px;">
+                        <label class="header-label">Squawk Strictness</label>
+                        <select id="squawkStrictness">
+                            <option value="loose">Loose (Read ALL headlines containing selections)</option>
+                            <option value="strict">Strict (Requires action verbs / shock words)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save" onclick="saveAudioSettings()">Save Settings</button>
+            </div>
+        </div>
     </div>
 
     <div class="custom-newsfeed-header"><div class="green-dot"></div> LIVE FEED</div>
@@ -538,6 +631,55 @@
         let audioEnabled = false, seconds = 0, timerInterval;
         let audioCtx = null; 
         
+        // --- CUSTOM AUDIO SETTINGS STATE ---
+        let userAudioConfig = {
+            mode: 'default',
+            categories: [],
+            keywords: [],
+            strictness: 'loose'
+        };
+
+        function openAudioModal() {
+            document.getElementById('audioSettingsModal').style.display = 'flex';
+            
+            // Populate modal with current state
+            document.getElementById('squawkMode').value = userAudioConfig.mode;
+            toggleCustomSettings();
+            
+            document.querySelectorAll('.custom-cat-cb').forEach(cb => {
+                cb.checked = userAudioConfig.categories.includes(cb.value);
+            });
+            document.getElementById('customKeywords').value = userAudioConfig.keywords.join(', ');
+            document.getElementById('squawkStrictness').value = userAudioConfig.strictness;
+        }
+        
+        function closeAudioModal() {
+            document.getElementById('audioSettingsModal').style.display = 'none';
+        }
+
+        function toggleCustomSettings() {
+            const mode = document.getElementById('squawkMode').value;
+            document.getElementById('customSettingsBlock').style.display = (mode === 'custom') ? 'block' : 'none';
+        }
+
+        function saveAudioSettings() {
+            userAudioConfig.mode = document.getElementById('squawkMode').value;
+            
+            if (userAudioConfig.mode === 'custom') {
+                userAudioConfig.categories = Array.from(document.querySelectorAll('.custom-cat-cb:checked')).map(cb => cb.value);
+                
+                const rawKws = document.getElementById('customKeywords').value;
+                userAudioConfig.keywords = rawKws.split(',').map(k => k.trim().toLowerCase()).filter(k => k.length > 0);
+                
+                userAudioConfig.strictness = document.getElementById('squawkStrictness').value;
+            }
+            
+            closeAudioModal();
+            // Provide feedback to user
+            const feedbackText = userAudioConfig.mode === 'default' ? 'Smart filter active.' : 'Custom squawk settings saved.';
+            alert(feedbackText);
+        }
+
         function initAudioContext() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -549,8 +691,6 @@
         function playSynthesizedPing(volumeLevel) {
             if (!audioCtx) return;
             const vol = parseFloat(volumeLevel);
-            
-            // Prevent attempting to play a negative or exact zero volume which can cause API glitches
             if (vol <= 0) return;
             
             const oscillator = audioCtx.createOscillator();
@@ -577,7 +717,6 @@
             if (!audioEnabled) return; 
             const u = new SpeechSynthesisUtterance(text); 
             
-            // Fixed: Parsed string value into a raw float so the browser engine actually respects it
             u.volume = parseFloat(document.getElementById('volSlider').value); 
             
             const viz = document.getElementById('squawkVisualizer');
@@ -672,35 +811,55 @@
         function shouldTriggerAudio(headlineText) {
             const lower = headlineText.toLowerCase();
 
-            // 0. The Mute Filter: Block known recap/noise formats
+            // 0. The Mute Filter: ALWAYS block known recap/noise formats
             if (muteList.some(muteWord => lower.includes(muteWord))) {
                 return false;
             }
 
-            // 1. Check Tier 1 Exact Strings
-            if (tier1ExactTriggers.some(trigger => lower.includes(trigger))) {
-                return true;
-            }
+            // --- DEFAULT SMART FILTER LOGIC ---
+            if (userAudioConfig.mode === 'default') {
+                if (tier1ExactTriggers.some(trigger => lower.includes(trigger))) return true;
+                if (tier3Shocks.some(shock => lower.includes(shock))) return true;
+                if (lower.includes('monetary policy') || lower.includes('rate-hike') || lower.includes('basis points') || lower.includes('bps')) return true;
 
-            // 2. Check Tier 3 Shocks
-            if (tier3Shocks.some(shock => lower.includes(shock))) {
-                return true;
-            }
+                const hasAssetOrInstitution = tier2Assets.some(asset => lower.includes(asset)) || tier3Institutions.some(inst => lower.includes(inst));
+                const hasAction = tier2Actions.some(action => lower.includes(action));
+                
+                return (hasAssetOrInstitution && hasAction);
+            } 
+            // --- CUSTOM USER FILTER LOGIC ---
+            else {
+                let matchesSelection = false;
 
-            // 3. Check specific high-impact policy phrasing
-            if (lower.includes('monetary policy') || lower.includes('rate-hike') || lower.includes('basis points') || lower.includes('bps')) {
-                return true;
-            }
+                // Check Categories
+                for (const cat of userAudioConfig.categories) {
+                    if (filters[cat] && filters[cat].some(word => lower.includes(word))) {
+                        matchesSelection = true;
+                        break;
+                    }
+                }
 
-            // 4. Check Tier 2 Compound Logic (Asset/Institution + Action pairing)
-            const hasAssetOrInstitution = tier2Assets.some(asset => lower.includes(asset)) || tier3Institutions.some(inst => lower.includes(inst));
-            const hasAction = tier2Actions.some(action => lower.includes(action));
-            
-            if (hasAssetOrInstitution && hasAction) {
-                return true;
-            }
+                // Check Specific Keywords
+                if (!matchesSelection && userAudioConfig.keywords.length > 0) {
+                    if (userAudioConfig.keywords.some(kw => lower.includes(kw))) {
+                        matchesSelection = true;
+                    }
+                }
 
-            return false;
+                // If headline doesn't mention their requested topics, ignore it entirely
+                if (!matchesSelection) return false;
+
+                // Strictness check
+                if (userAudioConfig.strictness === 'loose') {
+                    // Match found and strictness is loose -> Play audio
+                    return true;
+                } else {
+                    // Match found but strictness is high -> Require action/shock context
+                    const hasAction = tier2Actions.some(action => lower.includes(action));
+                    const isShock = tier3Shocks.some(shock => lower.includes(shock));
+                    return (hasAction || isShock);
+                }
+            }
         }
         
         function setFilter(type) { 
