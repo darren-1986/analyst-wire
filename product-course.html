@@ -19,81 +19,614 @@
             --success: #2ea043;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-base); color: var(--text-main); line-height: 1.6; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
 
-        /* Navigation */
-        header { position: fixed; top: 0; width: 100%; background-color: rgba(5, 7, 10, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 1000; }
-        .nav-container { max-width: 1200px; margin: 0 auto; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-        .logo-img { height: 38px; width: auto; }
-        .nav-links { display: flex; gap: 2rem; align-items: center; }
-        .btn-primary { background-color: var(--accent); color: #fff !important; padding: 0.6rem 1.5rem; border-radius: 6px; font-weight: 600; text-decoration: none; }
+        /* --- NAVIGATION --- */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: rgba(5, 7, 10, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+        }
 
-        /* Course Layout */
-        .course-hero { padding: 9rem 2rem 4rem; max-width: 1000px; margin: 0 auto; text-align: center; }
-        .video-container { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 3rem; }
-        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.8rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        /* Accordion Syllabus */
-        .syllabus-section { padding: 4rem 2rem; max-width: 1200px; margin: 0 auto; }
-        .modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; }
-        .module-card { background-color: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-        .module-header { padding: 1.2rem; background-color: #1a212c; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .module-header:hover { background-color: var(--bg-surface-hover); }
-        .lesson-list { display: none; list-style: none; border-top: 1px solid var(--border); }
-        .module-card.active .lesson-list { display: block; }
-        .lesson-item { display: flex; align-items: center; padding: 0.8rem 1.2rem; border-bottom: 1px solid rgba(48, 54, 61, 0.4); font-size: 0.9rem; color: var(--text-muted); }
-        .lesson-time { font-family: 'JetBrains Mono', monospace; background: rgba(41, 98, 255, 0.15); color: #58a6ff; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 10px; }
+        .logo-img {
+            height: 38px;
+            width: auto;
+            display: block;
+        }
 
-        /* Enrollment */
-        .enroll-box { text-align: center; margin: 5rem auto; padding: 3rem; border: 2px solid var(--accent); border-radius: 16px; max-width: 800px; }
-        .price-tag { font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem; }
-        .price-tag span { font-size: 1rem; color: var(--text-muted); }
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-main);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: #fff !important;
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        /* --- BURGER MENU --- */
+        .burger-menu {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .burger-menu span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: var(--text-main);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        /* --- HERO & VIDEO PREVIEW SECTION --- */
+        .course-hero {
+            padding: 9rem 2rem 4rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .course-hero span {
+            color: var(--accent);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .course-hero h1 {
+            font-size: 3rem;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .course-hero p {
+            color: var(--text-muted);
+            font-size: 1.15rem;
+            max-width: 800px;
+            margin: 0 auto 2.5rem;
+        }
+
+        /* Wistia Responsive Video Container */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            background: #0d1117;
+            margin-bottom: 3rem;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* --- SYLLABUS / MODULES SECTION (SIDE-BY-SIDE ACCORDION) --- */
+        .syllabus-section {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .module-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .module-header {
+            padding: 1.2rem 1.5rem;
+            background-color: #1a212c;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .module-header:hover {
+            background-color: var(--bg-surface-hover);
+        }
+
+        .toggle-icon {
+            font-size: 0.8rem;
+            color: var(--accent);
+            transition: transform 0.3s ease;
+        }
+
+        .module-card.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .module-card.active .module-header {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .lesson-list {
+            list-style: none;
+            display: none; /* Hidden initially */
+        }
+
+        .module-card.active .lesson-list {
+            display: block; /* Shown when active */
+        }
+
+        .lesson-item {
+            display: flex;
+            align-items: center;
+            padding: 0.9rem 1.5rem;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.4);
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            transition: background 0.2s;
+        }
+
+        .lesson-item:last-child {
+            border-bottom: none;
+        }
+
+        .lesson-item:hover {
+            background-color: var(--bg-surface-hover);
+            color: var(--text-main);
+        }
+
+        .lesson-time {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(41, 98, 255, 0.15);
+            color: #58a6ff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        /* --- ENROLLMENT BOX --- */
+        .enroll-box {
+            background: linear-gradient(135deg, #161b22, #0d1117);
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            max-width: 900px;
+            margin: 5rem auto 3rem;
+            box-shadow: 0 0 40px rgba(41, 98, 255, 0.2);
+        }
+
+        .enroll-box h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .enroll-box p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .price-tag {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1.5rem;
+        }
+
+        .price-tag span {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background-color: var(--bg-base);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .course-hero h1 { font-size: 2.2rem; }
+            .burger-menu { display: flex; }
+            .nav-links {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background-color: var(--bg-surface);
+                flex-direction: column;
+                padding: 2rem;
+                border-bottom: 1px solid var(--border);
+                transform: translateY(-150%);
+                opacity: 0;
+                transition: all 0.3s ease-in-out;
+                pointer-events: none;
+            }
+            .nav-links.nav-active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .nav-links a { font-size: 1.1rem; width: 100%; text-align: center; padding: 10px 0; }
+        }
     </style>
 </head>
 <body>
 
+    <!-- Header -->
     <header>
         <div class="nav-container">
-            <a href="index.html"><img src="media/logo.png" alt="Logo" class="logo-img"></a>
-            <nav class="nav-links">
+            <a href="index.html">
+                <img src="media/logo.png" alt="Analyst Wire Logo" class="logo-img">
+            </a>
+            <div class="burger-menu" id="burger-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <nav class="nav-links" id="nav-links">
+                <a href="index.html#features">Features</a>
+                <a href="index.html#analysis">Analysis</a>
+                <a href="index.html#education">Education</a>
                 <a href="index.html#pricing">Pricing</a>
+                <a href="index.html#contact">Contact</a>
                 <a href="login.html" class="btn-primary">Login</a>
             </nav>
         </div>
     </header>
 
+    <!-- Hero / Video Preview Section -->
     <section class="course-hero">
+        <span>Skill Building Program</span>
         <h1>Macro-Fundamental Analyst Program</h1>
+        <p>Take your market analysis from basic charts to institutional-grade comprehension. Watch the free introduction below to see how this 9-module framework transforms your trading.</p>
+        
+        <!-- Template Wistia Video Embed -->
         <div class="video-container">
-            <!-- Wistia embed placeholder -->
+            <script src="https://fast.wistia.com/embed/medias/TEMPLATE_HASH.jsonp" async></script>
+            <script src="https://fast.wistia.com/assets/external/E-v1.js" async></script>
+            <div class="wistia_responsive_padding" style="padding:56.25% 0 0 0;position:relative;">
+                <div class="wistia_responsive_wrapper" style="height:100%;left:0;position:absolute;top:0;width:100%;">
+                    <div class="wistia_embed wistia_async_TEMPLATE_HASH seo=true videoFoam=true" style="height:100%;position:relative;width:100%">
+                        <div class="wistia_swatch" style="height:100%;left:0;opacity:0;overflow:hidden;position:absolute;top:0;transition:opacity 200s;width:100%;">
+                            <img src="https://fast.wistia.com/embed/medias/TEMPLATE_HASH/swatch" style="filter:blur(5px);height:100%;object-fit:contain;width:100%;" alt="" onload="this.parentNode.style.opacity=1;" />
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
+    <!-- Complete Course Curriculum / Syllabus -->
     <section class="syllabus-section">
-        <div class="modules-grid" id="curriculum">
-            <!-- Example of one module structure -->
+        <div class="section-header">
+            <h2>Complete Course Curriculum</h2>
+            <p style="color: var(--text-muted);">9 Intensive Modules spanning over 10 hours of institutional insights.</p>
+        </div>
+
+        <div class="modules-grid">
+            <!-- Module 1 -->
             <div class="module-card">
-                <div class="module-header" onclick="this.parentElement.classList.toggle('active')">1. Trading Foundations <span>▼</span></div>
+                <div class="module-header">
+                    1. Module One: Trading Foundations
+                    <span class="toggle-icon">▼</span>
+                </div>
                 <ul class="lesson-list">
                     <li class="lesson-item"><span class="lesson-time">00:11</span> Financial Market</li>
-                    <!-- Add other lessons here -->
+                    <li class="lesson-item"><span class="lesson-time">08:17</span> Macro Connection</li>
+                    <li class="lesson-item"><span class="lesson-time">15:40</span> Intrinsic Compass</li>
+                    <li class="lesson-item"><span class="lesson-time">22:27</span> The Market Machine</li>
+                    <li class="lesson-item"><span class="lesson-time">32:42</span> Market Driver</li>
+                    <li class="lesson-item"><span class="lesson-time">39:55</span> FX Participant Hierarchy</li>
+                    <li class="lesson-item"><span class="lesson-time">45:28</span> Master Market Moves</li>
+                    <li class="lesson-item"><span class="lesson-time">54:19</span> Market Sentiment Foundations</li>
                 </ul>
             </div>
-            <!-- Repeat for modules 2-9 -->
+
+            <!-- Module 2 -->
+            <div class="module-card">
+                <div class="module-header">
+                    2. Module Two: Practical Economics
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <ul class="lesson-list">
+                    <li class="lesson-item"><span class="lesson-time">00:10</span> Introduction to Practical Economics</li>
+                    <li class="lesson-item"><span class="lesson-time">07:31</span> Navigating Economic Risk</li>
+                    <li class="lesson-item"><span class="lesson-time">15:13</span> Harnessing Volatility</li>
+                    <li class="lesson-item"><span class="lesson-time">23:22</span> Economic Cycles</li>
+                    <li class="lesson-item"><span class="lesson-time">31:15</span> Navigating Volatility</li>
+                    <li class="lesson-item"><span class="lesson-time">38:58</span> Navigating Eon Cycles</li>
+                    <li class="lesson-item"><span class="lesson-time">45:50</span> Economic Calendar Guide</li>
+                    <li class="lesson-item"><span class="lesson-time">54:09</span> Indicators: Show vs Dough</li>
+                    <li class="lesson-item"><span class="lesson-time">1:00:18</span> Navigating Indicators</li>
+                    <li class="lesson-item"><span class="lesson-time">1:09:17</span> Coincident Indicators</li>
+                    <li class="lesson-item"><span class="lesson-time">1:16:53</span> Lagging Indicators</li>
+                    <li class="lesson-item"><span class="lesson-time">1:26:25</span> Global Econ Indicators</li>
+                    <li class="lesson-item"><span class="lesson-time">1:32:34</span> Market Leading Indicators</li>
+                    <li class="lesson-item"><span class="lesson-time">1:42:18</span> The Baseline Method</li>
+                    <li class="lesson-item"><span class="lesson-time">1:51:21</span> Data Volatility</li>
+                    <li class="lesson-item"><span class="lesson-time">1:56:21</span> Three-Step Analysis</li>
+                </ul>
+            </div>
+
+            <!-- Module 3 -->
+            <div class="module-card">
+                <div class="module-header">
+                    3. Module Three: Central Banks
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <ul class="lesson-list">
+                    <li class="lesson-item"><span class="lesson-time">00:10</span> Foundations of Central Banking</li>
+                    <li class="lesson-item"><span class="lesson-time">05:22</span> Central Bank Regimes</li>
+                    <li class="lesson-item"><span class="lesson-time">12:13</span> Central Bank Policy</li>
+                    <li class="lesson-item"><span class="lesson-time">17:28</span> The Ripple Effect of Central Bank Decisions</li>
+                    <li class="lesson-item"><span class="lesson-time">23:37</span> Current, Neutral and Terminal</li>
+                    <li class="lesson-item"><span class="lesson-time">30:57</span> Quantitative Easing</li>
+                    <li class="lesson-item"><span class="lesson-time">38:26</span> Mechanics of QT</li>
+                    <li class="lesson-item"><span class="lesson-time">43:55</span> Global Central Banks</li>
+                    <li class="lesson-item"><span class="lesson-time">52:18</span> Central Bank Forecasts</li>
+                    <li class="lesson-item"><span class="lesson-time">59:41</span> The 2% Sweet Spot</li>
+                    <li class="lesson-item"><span class="lesson-time">1:08:57</span> Illusion of Control</li>
+                    <li class="lesson-item"><span class="lesson-time">1:18:04</span> Trading the Shift</li>
+                    <li class="lesson-item"><span class="lesson-time">1:26:32</span> Policy Normalisation</li>
+                    <li class="lesson-item"><span class="lesson-time">1:33:40</span> The SNB Surprise</li>
+                </ul>
+            </div>
+
+            <!-- Module 4 -->
+            <div class="module-card">
+                <div class="module-header">
+                    4. Module Four: Sentiment
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <ul class="lesson-list">
+                    <li class="lesson-item"><span class="lesson-time">00:10</span> Mastering Market Sentiment</li>
+                    <li class="lesson-item"><span class="lesson-time">06:37</span> Power of Sentiment</li>
+                    <li class="lesson-item"><span class="lesson-time">14:09</span> Market Sentiment</li>
+                    <li class="lesson-item"><span class="lesson-time">22:04</span> Mastering Risk Sentiment</li>
+                    <li class="lesson-item"><span class="lesson-time">30:08</span> Risk Sentiment</li>
+                    <li class="lesson-item"><span class="lesson-time">36:30</span> A Sentiment Trade</li>
+                </ul>
+            </div>
+
+            <!-- Module 5 -->
+            <div class="module-card">
+                <div class="module-header">
+                    5. Module Five: Fixed Income
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <ul class="lesson-list">
+                    <li class="lesson-item"><span class="lesson-time">00:10</span> Demystifying Bonds</li>
+                    <li class="lesson-item"><span class="lesson-time">06:15</span> Decoding Bond Markets</li>
+                    <li class="lesson-item"><span class="lesson-time">17:33</span> Bond Market Rule</li>
+                    <li class="lesson-item"><span class="lesson-time">17:33</span> Anatomy of a Yield Curve</li>
+                    <li class="lesson-item"><span class="lesson-time">24:19</span> Bonds and Yields</li>
+                    <li class="lesson-item"><span class="lesson-time">29:44</span> STIR Markets</li>
+                </ul>
+            </div>
+
+            <!-- Module 6 -->
+            <div class="module-card">
+                <div class="module-header">
+                    6. Module Six: Foreign Exchange
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <ul class="lesson-list">
+                    <li class="lesson-item"><span class="lesson-time">00:10</span> FX Market Fundamentals</li>
+                    <li class="lesson-item"><span class="lesson-time">08:23</span> Relative Momentum</li>
+                    <li class="lesson-item"><span class="lesson-time">15:14</span> Trading The Gap</li>
+                    <li class="lesson-item"><span class="lesson-time">21:13</span> Monetary Policy and Currency</li>
+                    <li class="lesson-item"><span class="lesson-time">28:11</span> Currency Trading and Policy</li>
+                    <li class="lesson-item"><span class="lesson-time">36:05</span> Short-Term Policy Divergence</li>
+                    <li class="lesson-item"><span class="lesson-time">41:59</span> Global Macro Themes</li>
+                    <li class="lesson-item"><span class="lesson-time">49:32</span> Geopolitics</li>
+                    <li class="lesson-item"><span class="lesson-time">56:20</span> Global Reserve Currency</li>
+                    <li class="lesson-item"><span class="lesson-time">1:04:11</span> Euro Profile</li>
+                    <li class="lesson-item"><span class="lesson-time">1:13:42</span> British Pound Profile</li>
+                    <li class="lesson-item"><span class="lesson-time">1:21:23</span> Australian Dollar Profile</li>
+                    <li class="lesson-item"><span class="lesson-time">1:29:56</span> Swiss Franc Profile</li>
+                    <li class="lesson-item"><span class="lesson-time">1:36:45</span> Japanese Yen Profile</li>
+                    <li class="lesson-item"><span class="lesson-time">1:44:38</span> Canadian Dollar Profile</li>
+                    <li class="lesson-item"><span class="lesson-time">1:53:14</span> New Zealand Dollar Profile</li>
+                </ul>
+            </div>
+
+            <!-- Module 7 -->
+            <div class="module-card">
+                <div class="module-header">
+                    7. Module Seven: Equities
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <ul class="lesson-list">
+                    <li class="lesson-item"><span class="lesson-time">00:10</span> Introduction to Equity Markets</li>
+                    <li class="lesson-item"><span class="lesson-time">05:38</span> Macro Fundamentals</li>
+                    <li class="lesson-item"><span class="lesson-time">12:27</span> Index Weighting Dynamics</li>
+                    <li class="lesson-item"><span class="lesson-time">18:46</span> Global Equity Indices</li>
+                    <li class="lesson-item"><span class="lesson-time">26:46</span> Equity Market Drivers</li>
+                    <li class="lesson-item"><span class="lesson-time">33:22</span> Risk Sentiment and Corrections</li>
+                    <li class="lesson-item"><span class="lesson-time">41:46</span> Equities and Cyclicality</li>
+                </ul>
+            </div>
+
+            <!-- Module 8 -->
+            <div class="module-card">
+                <div class="module-header">
+                    8. Module Eight: Commodities
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <ul class="lesson-list">
+                    <li class="lesson-item"><span class="lesson-time">00:10</span> Introduction to Global Commodities</li>
+                    <li class="lesson-item"><span class="lesson-time">04:59</span> Commodity Drivers</li>
+                    <li class="lesson-item"><span class="lesson-time">11:54</span> Oil Drivers</li>
+                    <li class="lesson-item"><span class="lesson-time">18:37</span> 4 Pillars of Oil Supply</li>
+                    <li class="lesson-item"><span class="lesson-time">25:30</span> Macro Drivers of Oil Prices</li>
+                    <li class="lesson-item"><span class="lesson-time">32:54</span> Decoding Futures Curve</li>
+                    <li class="lesson-item"><span class="lesson-time">38:46</span> Decoding Gold</li>
+                </ul>
+            </div>
+
+            <!-- Module 9 -->
+            <div class="module-card">
+                <div class="module-header">
+                    9. Module Nine: Advanced tips and tools
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <ul class="lesson-list">
+                    <li class="lesson-item"><span class="lesson-time">00:10</span> Introduction to FX Risk Reversals</li>
+                    <li class="lesson-item"><span class="lesson-time">08:03</span> Implied Volatility</li>
+                    <li class="lesson-item"><span class="lesson-time">15:29</span> Mastering Implied Volatility</li>
+                    <li class="lesson-item"><span class="lesson-time">26:00</span> Central Bank Policy</li>
+                    <li class="lesson-item"><span class="lesson-time">35:24</span> Buy Rumor, Sell Fact</li>
+                    <li class="lesson-item"><span class="lesson-time">39:02</span> Decoding Market Positioning</li>
+                    <li class="lesson-item"><span class="lesson-time">45:37</span> Predicting Volatility</li>
+                    <li class="lesson-item"><span class="lesson-time">53:05</span> The Calendar Effect</li>
+                    <li class="lesson-item"><span class="lesson-time">1:00:30</span> OPEX and Quad Witching</li>
+                    <li class="lesson-item"><span class="lesson-time">1:09:11</span> Day Trading</li>
+                    <li class="lesson-item"><span class="lesson-time">1:16:11</span> Real Trades</li>
+                    <li class="lesson-item"><span class="lesson-time">1:23:58</span> Fundamental Swing Trades</li>
+                    <li class="lesson-item"><span class="lesson-time">1:32:22</span> Anatomy of Swing Trades</li>
+                </ul>
+            </div>
         </div>
     </section>
 
+    <!-- Checkout / Order Box -->
     <div class="enroll-box">
         <h3>Ready to Master Macro Economics?</h3>
+        <p>Get instant access to all 9 comprehensive modules, 10+ hours of video material, and structural framework insights.</p>
         <div class="price-tag">$200 <span>/ 12 months access</span></div>
-        <a href="#" class="btn-primary">Enroll in the Program Now</a>
+        <br>
+        <a href="#" class="btn-primary" style="padding: 1rem 3rem; font-size: 1.1rem;">Enroll in the Program Now</a>
     </div>
 
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Analyst Wire. All rights reserved. Data provided for informational purposes.</p>
+    </footer>
+
     <script>
-        // Simple script to handle accordion toggle if needed, 
-        // or just rely on the CSS 'active' class toggle via onclick as shown above.
+        // Mobile Menu Toggle logic
+        const burger = document.getElementById('burger-menu');
+        const nav = document.getElementById('nav-links');
+
+        burger.addEventListener('click', () => {
+            nav.classList.toggle('nav-active');
+            burger.classList.toggle('toggle');
+        });
+
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (nav.classList.contains('nav-active')) {
+                    nav.classList.remove('nav-active');
+                    burger.classList.remove('toggle');
+                }
+            });
+        });
+
+        // Accordion Toggle Logic
+        document.querySelectorAll('.module-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const card = header.parentElement;
+                // Optional: Close other modules when one opens
+                // document.querySelectorAll('.module-card').forEach(c => {
+                //     if(c !== card) c.classList.remove('active');
+                // });
+                card.classList.toggle('active');
+            });
+        });
     </script>
 </body>
 </html>
