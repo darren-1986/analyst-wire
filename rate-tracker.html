@@ -48,14 +48,16 @@
 
         /* Tab Content Area */
         .tab-content-area { flex-grow: 1; padding: 20px; overflow-y: auto; background: #0A0A0a; position: relative; }
-        .tab-pane { display: none; width: 100%; }
-        .tab-pane.active-pane { display: block; }
+        
+        /* FIX: Ensure display: none always overrides grid for inactive tabs */
+        .tab-pane { display: none !important; width: 100%; }
+        .tab-pane.active-pane { display: grid !important; }
 
         /* Empty State Fallback */
         .empty-state { text-align: center; padding: 40px 20px; color: #8b949e; font-family: 'Inter', sans-serif; font-size: 14px; border: 1px dashed #1c2230; border-radius: 12px; margin-top: 20px; }
 
         /* Card & Table Styling */
-        .rates-container { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
+        .rates-container { grid-template-columns: 1fr; gap: 20px; width: 100%; align-content: start; }
         .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
         .bank-card-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: #e2e8f0; display: flex; justify-content: space-between; }
         
@@ -158,7 +160,7 @@
         // --- AUTH & CONFIG ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-        const CACHE_KEY = 'analyst_wire_rate_probabilities_v3';
+        const CACHE_KEY = 'analyst_wire_rate_probabilities_v4';
         const REFRESH_INTERVAL = 1000 * 60 * 60 * 2; // 2 hours
         
         let chartInstances = {};
@@ -204,18 +206,11 @@
             if (isAdminUser && navElements.upload) navElements.upload.style.display = 'block';
 
             setupTabs();
-            
-            // 1. Try Loading Local Cache First
             loadCachedData();
-
-            // 2. Fetch Fresh Data
             await fetchRateData();
-
-            // 3. Auto-refresh
             setInterval(fetchRateData, REFRESH_INTERVAL);
         }
 
-        // --- CACHE MANAGEMENT ---
         function loadCachedData() {
             const cachedString = localStorage.getItem(CACHE_KEY);
             if (!cachedString) return false;
@@ -235,7 +230,6 @@
                     return true;
                 }
             } catch (e) {
-                console.error("Cache read error:", e);
                 localStorage.removeItem(CACHE_KEY);
             }
             return false;
@@ -246,7 +240,6 @@
             if (loader) loader.style.display = 'none';
         }
 
-        // --- TABS SWITCHING ---
         function setupTabs() {
             document.getElementById('mainTabs').addEventListener('click', (e) => {
                 const btn = e.target.closest('.tab-btn');
@@ -261,9 +254,8 @@
             });
         }
 
-        // --- FETCHING & PROXY WATERFALL ---
         const banksToFetch = [
-            { id: 'main', url: '/', title: 'Next Meeting Overview (All Banks)' },
+            { id: 'main', url: '/', title: 'Next Meeting Overview' },
             { id: 'fed', url: '/fed', title: 'Federal Reserve (USA)' },
             { id: 'ecb', url: '/ecb', title: 'European Central Bank (ECB)' },
             { id: 'boe', url: '/boe', title: 'Bank of England (BOE)' },
@@ -278,36 +270,33 @@
             let successCount = 0;
             let freshBankData = [];
 
-            // Robust Proxy Waterfall with explicit JSON handling for allorigins
+            // Expanded and Robust Proxy Waterfall
             async function fetchHTML(targetUrl) {
                 const encodedUrl = encodeURIComponent(targetUrl);
                 const proxies = [
-                    { url: `https://api.allorigins.win/get?url=${encodedUrl}`, type: 'json' }, // Safest fallback
-                    { url: `https://api.codetabs.com/v1/proxy?quest=${targetUrl}`, type: 'text' },
-                    { url: `https://corsproxy.io/?${encodedUrl}`, type: 'text' }
+                    `https://api.cors.lol/?url=${encodedUrl}`,
+                    `https://api.allorigins.win/raw?url=${encodedUrl}`,
+                    `https://api.codetabs.com/v1/proxy?quest=${targetUrl}`,
+                    `https://corsproxy.io/?${encodedUrl}`
                 ];
 
                 for (const proxy of proxies) {
                     try {
                         const controller = new AbortController();
-                        // Increased timeout to 15 seconds! Free proxies are notoriously slow.
-                        const timeoutId = setTimeout(() => controller.abort(), 15000); 
+                        const timeoutId = setTimeout(() => controller.abort(), 12000); 
 
-                        const response = await fetch(proxy.url, { signal: controller.signal });
+                        const response = await fetch(proxy, { 
+                            signal: controller.signal,
+                            headers: { 'Accept': 'text/html' } 
+                        });
                         clearTimeout(timeoutId);
 
                         if (!response.ok) continue;
 
-                        let htmlText = '';
-                        if (proxy.type === 'json') {
-                            const data = await response.json();
-                            htmlText = data.contents; // allorigins stores HTML in .contents
-                        } else {
-                            htmlText = await response.text();
-                        }
+                        const htmlText = await response.text();
 
-                        // Detect Cloudflare / Bot blocks
-                        if (!htmlText || htmlText.includes('Just a moment...') || htmlText.includes('cf-browser-verification')) {
+                        // Detect Cloudflare blocks
+                        if (!htmlText || htmlText.includes('Just a moment...') || htmlText.includes('cf-browser-verification') || htmlText.includes('Cloudflare')) {
                             continue;
                         }
                         return htmlText;
@@ -336,7 +325,6 @@
                         const cells = row.querySelectorAll('td');
                         if (cells.length >= 4) {
                             if (bank.id === 'main') {
-                                // Overview Table Parsing
                                 const bankName = cells[1]?.innerText.trim();
                                 if (bankName && bankName !== '') {
                                     parsedRows.push({
@@ -344,11 +332,11 @@
                                         bank: bankName,
                                         current: cells[2]?.innerText.trim(),
                                         prob: cells[3]?.innerText.trim(),
-                                        delta: cells[4]?.innerText.trim()
+                                        // Forgiving column selection depending on table render
+                                        delta: cells[5]?.innerText.trim() || cells[4]?.innerText.trim()
                                     });
                                 }
                             } else {
-                                // Specific Bank Table Parsing (Meeting Path)
                                 const date = cells[0]?.innerText.trim();
                                 if (date && date !== '—' && !date.includes('Meeting')) {
                                     parsedRows.push({
@@ -368,11 +356,9 @@
                         successCount++;
                     }
 
-                    // Brief delay to avoid proxy rate limits
                     await new Promise(r => setTimeout(r, 600));
                 }
 
-                // If new data was pulled successfully
                 if (freshBankData.length > 0) {
                     const newCacheObj = {
                         lastUpdated: Date.now(),
@@ -385,7 +371,6 @@
                         localStorage.setItem(CACHE_KEY, JSON.stringify(newCacheObj));
                         cachedDataObj = newCacheObj;
 
-                        // Re-render UI with updated values
                         freshBankData.forEach(item => {
                             const config = banksToFetch.find(b => b.id === item.id);
                             if (config) renderBankTab(config, item.rows);
@@ -396,10 +381,10 @@
                     statusIndicator.innerText = `Live | Updated ${timeStr}`;
                     statusIndicator.style.color = "#8b949e";
                 } else if (!cachedDataObj) {
-                    // Inject a friendly empty state if absolutely everything fails
+                    // Safe Fallback Injection
                     banksToFetch.forEach(bank => {
                         const container = document.getElementById(`${bank.id}-pane`);
-                        if (container) container.innerHTML = `<div class="empty-state">Unable to pull live pricing data for ${bank.title} right now. The source may be temporarily blocking connections. Please try again later.</div>`;
+                        if (container) container.innerHTML = `<div class="empty-state">Unable to pull live pricing data for ${bank.title}. The source is temporarily blocking connections. Please try again later.</div>`;
                     });
                     statusIndicator.innerText = "DATA TEMPORARILY UNAVAILABLE";
                     statusIndicator.style.color = "#f85149";
@@ -408,12 +393,10 @@
             } catch (err) {
                 console.error("Fetch rate data error:", err);
             } finally {
-                // ALWAYS DISMISS LOADER AT THE END OF THE PROCESS
                 hideLoader();
             }
         }
 
-        // --- RENDER TABLES & CHARTS ---
         function renderBankTab(bank, dataRows) {
             if (!dataRows || dataRows.length === 0) return;
             const container = document.getElementById(`${bank.id}-pane`);
@@ -421,7 +404,7 @@
 
             container.innerHTML = '';
 
-            // 1. Render Line Chart for Individual Banks
+            // Chart Render
             if (bank.id !== 'main') {
                 const chartId = `${bank.id}-chart`;
                 const chartCard = document.createElement('div');
@@ -436,12 +419,10 @@
                     </div>
                 `;
                 container.appendChild(chartCard);
-
-                // Render Chart after DOM paints
                 setTimeout(() => reconstructChart(chartId, dataRows, bank.title), 50);
             }
 
-            // 2. Render Table
+            // Table Render
             const tableCard = document.createElement('div');
             tableCard.className = 'bank-card';
             
@@ -470,14 +451,11 @@
             container.appendChild(tableCard);
         }
 
-        // --- CHART.JS LINE GRAPH RECONSTRUCTION ---
         function reconstructChart(chartId, dataRows, bankTitle) {
             const canvas = document.getElementById(chartId);
             if (!canvas) return;
 
-            if (chartInstances[chartId]) {
-                chartInstances[chartId].destroy();
-            }
+            if (chartInstances[chartId]) { chartInstances[chartId].destroy(); }
 
             const dates = dataRows.map(row => row.date);
             const rates = dataRows.map(row => {
