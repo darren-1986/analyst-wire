@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="media/favicon.png">
+    <title>Central Bank Rates | Analyst Wire</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        *, *:before, *:after { box-sizing: border-box; }
+        
+        body { margin: 0; padding-top: 55px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; background-color: #0A0A0a; color: #ffffff; }
+
+        /* Navigation */
+        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%; font-family: 'Inter', sans-serif; }
+        .nav-links { display: flex; align-items: center; gap: 5px; }
+        .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
+        .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .nav-links a.active { color: #00b4f9; font-weight: 600; background: rgba(0, 180, 249, 0.1); }
+        .mobile-menu-btn { display: none; font-size: 24px; color: #8b949e; cursor: pointer; background: none; border: none; }
+
+        .dropdown { position: relative; margin-left: 10px; }
+        .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
+        .dropbtn:hover { color: #fff; }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
+        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; font-family: 'Inter', sans-serif; }
+        .dropdown-content a:hover { background-color: #21262d; color: #fff; }
+
+        /* Dashboard Layout */
+        .dashboard-wrapper { padding: 20px; overflow-y: auto; flex-grow: 1; }
+        .header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #1c2230; padding-bottom: 15px; }
+        .header-controls h1 { font-family: 'Inter', sans-serif; font-size: 20px; margin: 0; color: #fff; display: flex; align-items: center; gap: 10px; }
+        .live-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e; animation: pulse 2s infinite; }
+        
+        .status-text { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8b949e; }
+
+        /* Table Styling */
+        .rates-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; }
+        .bank-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 15px; color: #e2e8f0; display: flex; justify-content: space-between; }
+        
+        table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 13px; }
+        th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid #1c2230; }
+        th { color: #8b949e; font-weight: 500; font-size: 12px; text-transform: uppercase; }
+        td { color: #c9d1d9; }
+        tr:last-child td { border-bottom: none; }
+        .highlight-green { color: #22c55e; }
+        .highlight-blue { color: #00b4f9; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        @media (max-width: 950px) {
+            .mobile-menu-btn { display: block; }
+            .nav-links { display: none; position: absolute; top: 55px; left: 0; width: 100%; background: #0d1117; flex-direction: column; align-items: flex-start; padding: 10px 20px; border-bottom: 1px solid #1c2230; z-index: 1001; }
+            .nav-links.active-nav { display: flex; }
+            .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
+            .header-controls { flex-direction: column; align-items: flex-start; gap: 10px; }
+        }
+    </style>
+</head>
+<body class="dark">
+
+    <div class="top-nav">
+       <div style="height: 50px; display: flex; align-items: center;">
+            <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px;">
+       </div>
+       
+       <button class="mobile-menu-btn" onclick="toggleNav()">☰</button>
+       
+       <div class="nav-links" id="navLinks">
+            <a href="terminal.html" id="nav-dashboard" style="display: none;">Dashboard</a>
+            <a href="/newsfeed" id="nav-newsfeed" style="display: none;">Newsfeed</a>
+            <a href="rates.html" id="nav-rates" class="active">Rates Pricing</a>
+            <a href="key-levels.html" id="nav-key-levels" style="display: none;">Key Levels</a>
+            <a href="analysis.html" id="nav-analysis" style="display: none;">Analysis</a>
+            <a href="profile.html" id="nav-profile" style="display: none;">Network</a>
+            <a href="courses.html" id="nav-courses" style="display: none;">Courses</a>
+            
+            <div class="dropdown">
+                <button class="dropbtn" onclick="toggleDropdown(event)">⚙️</button>
+                <div id="settingsDropdown" class="dropdown-content">
+                    <a href="account.html">Account</a>
+                    <a href="support.html" class="sub-link">Support</a>
+                    <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                    <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
+                    <a id="logoutBtn" style="color: #f85149; cursor: pointer;">Logout</a>
+                </div>
+            </div>
+       </div>
+    </div>
+
+    <div class="dashboard-wrapper">
+        <div class="header-controls">
+            <h1><div class="live-dot"></div> Implied Central Bank Rate Paths</h1>
+            <div class="status-text" id="status-indicator">Initializing Scraper...</div>
+        </div>
+        
+        <div class="rates-grid" id="rates-container">
+            <!-- Data will be injected here -->
+        </div>
+    </div>
+
+    <script>
+        // --- AUTH & PERMISSION CHECK ---
+        const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+
+        function userHasAccess(userTags, requiredTag) {
+            if (!userTags) return false;
+            let tagsArray = [];
+            if (Array.isArray(userTags)) {
+                tagsArray = userTags;
+            } else if (typeof userTags === 'string') {
+                try {
+                    let parsed = JSON.parse(userTags);
+                    tagsArray = Array.isArray(parsed) ? parsed : [userTags];
+                } catch (e) {
+                    tagsArray = userTags.split(',').map(s => s.trim());
+                }
+            }
+            return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
+        }
+
+        async function init() {
+            const { data: { session } } = await client.auth.getSession();
+            if (!session) { window.location.href = 'index.html'; return; }
+            
+            const { data: profileArray, error: profileError } = await client
+                .from('profiles')
+                .select('admin, active_tags')
+                .eq('id', session.user.id)
+                .limit(1);
+                
+            if (profileError) {
+                alert("Database Error: " + profileError.message);
+                await client.auth.signOut();
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            const profile = profileArray && profileArray.length > 0 ? profileArray[0] : null;
+            const tags = profile?.active_tags ? profile.active_tags : [];
+            const isAdmin = profile?.admin === true;
+
+            // Security Rule: ONLY Admin or Pro can access this page
+            if (!isAdmin && !userHasAccess(tags, 'pro')) {
+                window.location.href = 'account.html'; return;
+            }
+
+            const navElements = {
+                dashboard: document.getElementById('nav-dashboard'),
+                newsfeed: document.getElementById('nav-newsfeed'),
+                keyLevels: document.getElementById('nav-key-levels'),
+                analysis: document.getElementById('nav-analysis'),
+                profile: document.getElementById('nav-profile'),
+                courses: document.getElementById('nav-courses'),
+                admin: document.getElementById('nav-admin'),
+                upload: document.getElementById('nav-upload')
+            };
+
+            // Set up navigation for Pro/Admin
+            if (navElements.dashboard) navElements.dashboard.style.display = 'block';
+            if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
+            if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
+            if (navElements.analysis) navElements.analysis.style.display = 'block';
+            if (navElements.profile) navElements.profile.style.display = 'block';
+            if (navElements.courses) navElements.courses.style.display = 'block';
+            
+            if (isAdmin) {
+                if (navElements.admin) navElements.admin.style.display = 'block';
+                if (navElements.upload) navElements.upload.style.display = 'block';
+            }
+
+            // Start Data Extraction
+            fetchRateData();
+        }
+
+        function toggleNav() { document.getElementById("navLinks").classList.toggle("active-nav"); }
+        function toggleDropdown(event) { event.stopPropagation(); document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
+        window.onclick = function(event) { if (!event.target.matches('.dropbtn')) { document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); } }
+        document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+
+        // --- SCRAPER LOGIC ---
+        const banksToFetch = [
+            { id: 'main', url: '/', title: 'Next Meeting Overview (All Banks)' },
+            { id: 'fed', url: '/fed', title: 'Federal Reserve (USA)' },
+            { id: 'rba', url: '/rba', title: 'Reserve Bank of Australia (AUD)' },
+            { id: 'boj', url: '/boj', title: 'Bank of Japan (BOJ)' },
+            { id: 'ecb', url: '/ecb', title: 'European Central Bank (ECB)' },
+            { id: 'boe', url: '/boe', title: 'Bank of England (BOE)' },
+            { id: 'boc', url: '/boc', title: 'Bank of Canada (BOC)' }
+        ];
+
+        async function fetchRateData() {
+            const proxyUrl = 'https://api.allorigins.win/get?url=';
+            const baseUrl = 'https://rateprobability.com';
+            const container = document.getElementById('rates-container');
+            const statusIndicator = document.getElementById('status-indicator');
+
+            for (const bank of banksToFetch) {
+                try {
+                    statusIndicator.innerText = `Fetching ${bank.title}...`;
+                    const response = await fetch(proxyUrl + encodeURIComponent(baseUrl + bank.url));
+                    const data = await response.json();
+                    
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(data.contents, 'text/html');
+                    const rows = doc.querySelectorAll('table tbody tr');
+                    const parsedRows = [];
+
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('td');
+                        if (cells.length > 0) {
+                            if (bank.id === 'main') {
+                                const bankName = cells[1]?.innerText.trim();
+                                if (bankName) {
+                                    parsedRows.push({
+                                        col1: cells[0]?.innerText.trim(), // Date
+                                        col2: bankName, // Bank
+                                        col3: cells[2]?.innerText.trim(), // Current Rate
+                                        col4: cells[3]?.innerText.trim(), // Probability
+                                        col5: cells[4]?.innerText.trim()  // Delta
+                                    });
+                                }
+                            } else {
+                                const date = cells[0]?.innerText.trim();
+                                if (date && date !== '—') {
+                                    parsedRows.push({
+                                        col1: date,
+                                        col2: cells[1]?.innerText.trim(), // Implied Rate
+                                        col3: cells[2]?.innerText.trim(), // Delta vs Current
+                                        col4: cells[3]?.innerText.trim(), // # Hikes/Cuts
+                                        col5: cells[4]?.innerText.trim() || '-' // Prob (if available)
+                                    });
+                                }
+                            }
+                        }
+                    });
+
+                    renderBankTable(bank, parsedRows, container);
+                    await new Promise(resolve => setTimeout(resolve, 800)); // Delay to prevent proxy throttling
+
+                } catch (error) {
+                    console.error(`Failed to fetch ${bank.title}:`, error);
+                }
+            }
+            statusIndicator.innerText = `Live | Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+
+        function renderBankTable(bank, dataRows, container) {
+            if (dataRows.length === 0) return;
+
+            const card = document.createElement('div');
+            card.className = 'bank-card';
+            
+            let tableHTML = `
+                <div class="bank-header">
+                    <span>${bank.title}</span>
+                </div>
+                <table>
+                    <thead>
+            `;
+
+            if (bank.id === 'main') {
+                tableHTML += `<tr><th>Next Meeting</th><th>Bank</th><th>Current Rate</th><th>Probability</th><th>Δ vs Current (bps)</th></tr></thead><tbody>`;
+            } else {
+                tableHTML += `<tr><th>Meeting</th><th>Implied Rate</th><th>Δ vs Current (bps)</th><th># of Hikes(Cuts)</th><th>Probability</th></tr></thead><tbody>`;
+            }
+
+            dataRows.forEach(row => {
+                tableHTML += `
+                    <tr>
+                        <td>${row.col1}</td>
+                        <td class="highlight-blue">${row.col2}</td>
+                        <td>${row.col3}</td>
+                        <td>${row.col4}</td>
+                        <td class="highlight-green">${row.col5}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `</tbody></table>`;
+            card.innerHTML = tableHTML;
+            container.appendChild(card);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
