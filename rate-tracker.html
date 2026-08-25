@@ -51,6 +51,9 @@
         .tab-pane { display: none; width: 100%; }
         .tab-pane.active-pane { display: block; }
 
+        /* Empty State Fallback */
+        .empty-state { text-align: center; padding: 40px 20px; color: #8b949e; font-family: 'Inter', sans-serif; font-size: 14px; border: 1px dashed #1c2230; border-radius: 12px; margin-top: 20px; }
+
         /* Card & Table Styling */
         .rates-container { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
         .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
@@ -155,10 +158,10 @@
         // --- AUTH & CONFIG ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-        const CACHE_KEY = 'analyst_wire_rate_probabilities_v2';
+        const CACHE_KEY = 'analyst_wire_rate_probabilities_v3';
         const REFRESH_INTERVAL = 1000 * 60 * 60 * 2; // 2 hours
         
-        let chartInstances = {}; // Store Chart.js instances to destroy/update properly
+        let chartInstances = {};
         let isAdminUser = false;
         let cachedDataObj = null;
 
@@ -184,7 +187,6 @@
 
             if (!isAdminUser && !userHasAccess(tags, 'pro')) { window.location.href = 'account.html'; return; }
 
-            // Admin specific loading feedback
             if (isAdminUser) {
                 const adminMsg = document.getElementById('loader-admin-msg');
                 if (adminMsg) adminMsg.style.display = 'block';
@@ -204,12 +206,12 @@
             setupTabs();
             
             // 1. Try Loading Local Cache First
-            const cacheLoaded = loadCachedData();
+            loadCachedData();
 
-            // 2. Fetch Fresh Data in Background (or foreground if no cache)
+            // 2. Fetch Fresh Data
             await fetchRateData();
 
-            // 3. Auto-refresh every 2 hours
+            // 3. Auto-refresh
             setInterval(fetchRateData, REFRESH_INTERVAL);
         }
 
@@ -226,7 +228,6 @@
                         if (config) { renderBankTab(config, bankData.rows); }
                     });
 
-                    // Hide loader immediately since we have cached data
                     hideLoader();
                     
                     const timeStr = new Date(cachedDataObj.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -277,29 +278,36 @@
             let successCount = 0;
             let freshBankData = [];
 
-            // Robust Proxy Waterfall
+            // Robust Proxy Waterfall with explicit JSON handling for allorigins
             async function fetchHTML(targetUrl) {
                 const encodedUrl = encodeURIComponent(targetUrl);
                 const proxies = [
-                    `https://api.allorigins.win/raw?url=${encodedUrl}`,
-                    `https://api.codetabs.com/v1/proxy?quest=${targetUrl}`,
-                    `https://corsproxy.io/?${encodedUrl}`,
-                    `https://thingproxy.freeboard.io/fetch/${targetUrl}`
+                    { url: `https://api.allorigins.win/get?url=${encodedUrl}`, type: 'json' }, // Safest fallback
+                    { url: `https://api.codetabs.com/v1/proxy?quest=${targetUrl}`, type: 'text' },
+                    { url: `https://corsproxy.io/?${encodedUrl}`, type: 'text' }
                 ];
 
                 for (const proxy of proxies) {
                     try {
                         const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout per proxy
+                        // Increased timeout to 15 seconds! Free proxies are notoriously slow.
+                        const timeoutId = setTimeout(() => controller.abort(), 15000); 
 
-                        const response = await fetch(proxy, { signal: controller.signal });
+                        const response = await fetch(proxy.url, { signal: controller.signal });
                         clearTimeout(timeoutId);
 
                         if (!response.ok) continue;
-                        const htmlText = await response.text();
+
+                        let htmlText = '';
+                        if (proxy.type === 'json') {
+                            const data = await response.json();
+                            htmlText = data.contents; // allorigins stores HTML in .contents
+                        } else {
+                            htmlText = await response.text();
+                        }
 
                         // Detect Cloudflare / Bot blocks
-                        if (htmlText.includes('Just a moment...') || htmlText.includes('cf-browser-verification') || htmlText.includes('Cloudflare')) {
+                        if (!htmlText || htmlText.includes('Just a moment...') || htmlText.includes('cf-browser-verification')) {
                             continue;
                         }
                         return htmlText;
@@ -330,7 +338,7 @@
                             if (bank.id === 'main') {
                                 // Overview Table Parsing
                                 const bankName = cells[1]?.innerText.trim();
-                                if (bankName) {
+                                if (bankName && bankName !== '') {
                                     parsedRows.push({
                                         date: cells[0]?.innerText.trim(),
                                         bank: bankName,
@@ -371,7 +379,6 @@
                         banks: freshBankData
                     };
 
-                    // Check if data actually changed compared to current cache
                     const dataChanged = !cachedDataObj || JSON.stringify(cachedDataObj.banks) !== JSON.stringify(freshBankData);
 
                     if (dataChanged) {
@@ -389,7 +396,12 @@
                     statusIndicator.innerText = `Live | Updated ${timeStr}`;
                     statusIndicator.style.color = "#8b949e";
                 } else if (!cachedDataObj) {
-                    statusIndicator.innerText = "Data temporarily unavailable";
+                    // Inject a friendly empty state if absolutely everything fails
+                    banksToFetch.forEach(bank => {
+                        const container = document.getElementById(`${bank.id}-pane`);
+                        if (container) container.innerHTML = `<div class="empty-state">Unable to pull live pricing data for ${bank.title} right now. The source may be temporarily blocking connections. Please try again later.</div>`;
+                    });
+                    statusIndicator.innerText = "DATA TEMPORARILY UNAVAILABLE";
                     statusIndicator.style.color = "#f85149";
                 }
 
@@ -407,7 +419,6 @@
             const container = document.getElementById(`${bank.id}-pane`);
             if (!container) return;
 
-            // Clear existing elements in tab
             container.innerHTML = '';
 
             // 1. Render Line Chart for Individual Banks
@@ -464,7 +475,6 @@
             const canvas = document.getElementById(chartId);
             if (!canvas) return;
 
-            // Destroy previous instance if re-rendering
             if (chartInstances[chartId]) {
                 chartInstances[chartId].destroy();
             }
