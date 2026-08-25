@@ -4,17 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="media/favicon.png">
-    <title>Central Bank Rates | Analyst Wire</title>
+    <title>Central Bank Rates Dashboard | Analyst Wire</title>
+    <!-- Supabase for Auth/Permissions -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <!-- Chart.js for reconstructing the paths -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
         *, *:before, *:after { box-sizing: border-box; }
         
-        body { margin: 0; padding-top: 55px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; background-color: #0A0A0a; color: #ffffff; }
+        body { margin: 0; padding-top: 55px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; background-color: #0A0A0a; color: #ffffff; overflow: hidden; }
 
-        /* Navigation */
+        /* Navigation (Standard Pro/Admin Nav) */
         .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%; font-family: 'Inter', sans-serif; }
         .nav-links { display: flex; align-items: center; gap: 5px; }
         .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
@@ -29,35 +32,56 @@
         .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; font-family: 'Inter', sans-serif; }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
-        /* Dashboard Layout */
-        .dashboard-wrapper { padding: 20px; overflow-y: auto; flex-grow: 1; }
-        .header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #1c2230; padding-bottom: 15px; }
-        .header-controls h1 { font-family: 'Inter', sans-serif; font-size: 20px; margin: 0; color: #fff; display: flex; align-items: center; gap: 10px; }
-        .live-dot { width: 10px; height: 10px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e; animation: pulse 2s infinite; }
+        /* Dashboard Wrapper (Tabs & Content) */
+        .dashboard-wrapper { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0; }
         
-        .status-text { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8b949e; }
+        /* Dashboard Header (Fetch Status) */
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; border-bottom: 1px solid #1c2230; background: #0d1117; flex-shrink: 0; }
+        .dashboard-header h1 { font-family: 'Inter', sans-serif; font-size: 16px; margin: 0; color: #fff; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .status-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8b949e; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* Table Styling */
-        .rates-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; }
-        .bank-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 15px; color: #e2e8f0; display: flex; justify-content: space-between; }
+        /* Tabs Navigation */
+        .tabs-nav { display: flex; background: #161b22; border-bottom: 1px solid #1c2230; padding: 10px 20px 0 20px; gap: 5px; flex-shrink: 0; overflow-x: auto; }
+        .tab-btn { background: none; border: 1px solid #1c2230; border-bottom: none; color: #8b949e; padding: 10px 16px; border-radius: 8px 8px 0 0; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.2s; position: relative; bottom: -1px; }
+        .tab-btn:hover { background: rgba(255,255,255,0.03); color: #fff; }
+        .tab-btn.active-tab { background: #0A0A0a; color: #00b4f9; border-color: #1c2230; font-weight: 600; border-bottom: 1px solid #0A0A0a; }
+
+        /* Tab Content Area */
+        .tab-content-area { flex-grow: 1; padding: 20px; overflow-y: auto; background: #0A0A0a; }
+        .tab-pane { display: none; width: 100%; height: 100%; }
+        .tab-pane.active-pane { display: block; }
+
+        /* Modernized Table Styling */
+        .rates-container { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
+        
+        .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+        .bank-card-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: #e2e8f0; display: flex; justify-content: space-between; }
         
         table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 13px; }
         th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid #1c2230; }
-        th { color: #8b949e; font-weight: 500; font-size: 12px; text-transform: uppercase; }
+        th { color: #8b949e; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { color: #c9d1d9; }
         tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
         .highlight-green { color: #22c55e; }
         .highlight-blue { color: #00b4f9; }
 
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        /* Chart Canvas Holder */
+        .chart-holder { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid #1c2230; height: 250px; width: 100%; }
+
+        /* GLOBAL LOADING STATE (The "anti-placeholder" solution) */
+        #global-loader { display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0A0A0a; z-index: 100; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
+        .spinner { border: 3px solid #161b22; border-top: 3px solid #00b4f9; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        .loading-text { color: #fff; font-size: 15px; font-weight: 600; }
+        .cf-warning { color: #8b949e; font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 10px; max-width: 300px; text-align: center; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 950px) {
             .mobile-menu-btn { display: block; }
             .nav-links { display: none; position: absolute; top: 55px; left: 0; width: 100%; background: #0d1117; flex-direction: column; align-items: flex-start; padding: 10px 20px; border-bottom: 1px solid #1c2230; z-index: 1001; }
             .nav-links.active-nav { display: flex; }
             .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
-            .header-controls { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .chart-holder { height: 180px; padding: 10px; }
         }
     </style>
 </head>
@@ -93,13 +117,38 @@
     </div>
 
     <div class="dashboard-wrapper">
-        <div class="header-controls">
-            <h1><div class="live-dot"></div> Implied Central Bank Rate Paths</h1>
-            <div class="status-text" id="status-indicator">Initializing Scraper...</div>
+        <div class="dashboard-header">
+            <h1>Rate Probability Dashboard</h1>
+            <div class="status-text" id="status-indicator">Initializing...</div>
         </div>
-        
-        <div class="rates-grid" id="rates-container">
-            <!-- Data will be injected here -->
+
+        <div class="tabs-nav" id="mainTabs">
+            <button class="tab-btn active-tab" data-tab="main">Overview</button>
+            <button class="tab-btn" data-tab="fed">USA (FED)</button>
+            <button class="tab-btn" data-tab="ecb">Europe (ECB)</button>
+            <button class="tab-btn" data-tab="boe">UK (BOE)</button>
+            <button class="tab-btn" data-tab="boj">Japan (BOJ)</button>
+            <button class="tab-btn" data-tab="boc">Canada (BOC)</button>
+            <button class="tab-btn" data-tab="rba">Australia (RBA)</button>
+        </div>
+
+        <div class="tab-content-area" id="tabContent">
+            
+            <!-- GLOBAL LOADING SCREEN (Active until fetch finishes or fails) -->
+            <div id="global-loader">
+                <div class="spinner"></div>
+                <div class="loading-text">Fetching live data...</div>
+                <div class="cf-warning">Attempting to bypass Cloudflare bot protection using proxy waterfall. This might take a moment.</div>
+            </div>
+
+            <!-- Tab Panes (Container holds data when fetched) -->
+            <div id="main-pane" class="tab-pane active-pane rates-container"></div>
+            <div id="fed-pane" class="tab-pane rates-container"></div>
+            <div id="ecb-pane" class="tab-pane rates-container"></div>
+            <div id="boe-pane" class="tab-pane rates-container"></div>
+            <div id="boj-pane" class="tab-pane rates-container"></div>
+            <div id="boc-pane" class="tab-pane rates-container"></div>
+            <div id="rba-pane" class="tab-pane rates-container"></div>
         </div>
     </div>
 
@@ -109,17 +158,8 @@
 
         function userHasAccess(userTags, requiredTag) {
             if (!userTags) return false;
-            let tagsArray = [];
-            if (Array.isArray(userTags)) {
-                tagsArray = userTags;
-            } else if (typeof userTags === 'string') {
-                try {
-                    let parsed = JSON.parse(userTags);
-                    tagsArray = Array.isArray(parsed) ? parsed : [userTags];
-                } catch (e) {
-                    tagsArray = userTags.split(',').map(s => s.trim());
-                }
-            }
+            let tagsArray = Array.isArray(userTags) ? userTags : [];
+            if (typeof userTags === 'string') { try { let parsed = JSON.parse(userTags); tagsArray = Array.isArray(parsed) ? parsed : [userTags]; } catch (e) { tagsArray = userTags.split(',').map(s => s.trim()); } }
             return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
         }
 
@@ -127,78 +167,65 @@
             const { data: { session } } = await client.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
             
-            const { data: profileArray, error: profileError } = await client
-                .from('profiles')
-                .select('admin, active_tags')
-                .eq('id', session.user.id)
-                .limit(1);
-                
-            if (profileError) {
-                alert("Database Error: " + profileError.message);
-                await client.auth.signOut();
-                window.location.href = 'index.html';
-                return;
-            }
+            const { data: profileArray, error: profileError } = await client.from('profiles').select('admin, active_tags').eq('id', session.user.id).limit(1);
+            if (profileError || !profileArray.length) { await client.auth.signOut(); window.location.href = 'index.html'; return; }
             
-            const profile = profileArray && profileArray.length > 0 ? profileArray[0] : null;
-            const tags = profile?.active_tags ? profile.active_tags : [];
-            const isAdmin = profile?.admin === true;
+            const profile = profileArray[0], tags = profile?.active_tags || [], isAdmin = profile?.admin === true;
+            if (!isAdmin && !userHasAccess(tags, 'pro')) { window.location.href = 'account.html'; return; }
 
-            if (!isAdmin && !userHasAccess(tags, 'pro')) {
-                window.location.href = 'account.html'; return;
-            }
-
-            const navElements = {
-                dashboard: document.getElementById('nav-dashboard'),
-                newsfeed: document.getElementById('nav-newsfeed'),
-                keyLevels: document.getElementById('nav-key-levels'),
-                analysis: document.getElementById('nav-analysis'),
-                profile: document.getElementById('nav-profile'),
-                courses: document.getElementById('nav-courses'),
-                admin: document.getElementById('nav-admin'),
-                upload: document.getElementById('nav-upload')
-            };
-
+            const navElements = ['dashboard', 'newsfeed', 'key-levels', 'analysis', 'profile', 'courses', 'admin', 'upload'].reduce((acc, id) => { acc[id] = document.getElementById(`nav-${id}`); return acc; }, {});
             if (navElements.dashboard) navElements.dashboard.style.display = 'block';
             if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
             if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
             if (navElements.analysis) navElements.analysis.style.display = 'block';
             if (navElements.profile) navElements.profile.style.display = 'block';
             if (navElements.courses) navElements.courses.style.display = 'block';
-            
-            if (isAdmin) {
-                if (navElements.admin) navElements.admin.style.display = 'block';
-                if (navElements.upload) navElements.upload.style.display = 'block';
-            }
+            if (isAdmin && navElements.admin) navElements.admin.style.display = 'block';
+            if (isAdmin && navElements.upload) navElements.upload.style.display = 'block';
 
+            setupTabs();
+            // Start Fetch AFTER Auth Check
             fetchRateData();
         }
 
-        function toggleNav() { document.getElementById("navLinks").classList.toggle("active-nav"); }
-        function toggleDropdown(event) { event.stopPropagation(); document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
-        window.onclick = function(event) { if (!event.target.matches('.dropbtn')) { document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); } }
-        document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+        // --- TABS LOGIC ---
+        function setupTabs() {
+            document.getElementById('mainTabs').addEventListener('click', (e) => {
+                const btn = e.target.closest('.tab-btn');
+                if (!btn || btn.classList.contains('active-tab')) return;
 
-        // --- SCRAPER LOGIC WITH PROXY WATERFALL ---
+                // Update Active Button
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab'));
+                btn.classList.add('active-tab');
+
+                // Update Active Pane
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active-pane'));
+                const paneId = `${btn.dataset.tab}-pane`;
+                const activePane = document.getElementById(paneId);
+                if (activePane) { activePane.classList.add('active-pane'); }
+            });
+        }
+
+        // --- SCRAPER LOGIC & PROXY WATERFALL ---
         const banksToFetch = [
             { id: 'main', url: '/', title: 'Next Meeting Overview (All Banks)' },
             { id: 'fed', url: '/fed', title: 'Federal Reserve (USA)' },
-            { id: 'rba', url: '/rba', title: 'Reserve Bank of Australia (AUD)' },
-            { id: 'boj', url: '/boj', title: 'Bank of Japan (BOJ)' },
             { id: 'ecb', url: '/ecb', title: 'European Central Bank (ECB)' },
             { id: 'boe', url: '/boe', title: 'Bank of England (BOE)' },
-            { id: 'boc', url: '/boc', title: 'Bank of Canada (BOC)' }
+            { id: 'boj', url: '/boj', title: 'Bank of Japan (BOJ)' },
+            { id: 'boc', url: '/boc', title: 'Bank of Canada (BOC)' },
+            { id: 'rba', url: '/rba', title: 'Reserve Bank of Australia (AUD)' }
         ];
 
         async function fetchRateData() {
             const baseUrl = 'https://rateprobability.com';
-            const container = document.getElementById('rates-container');
             const statusIndicator = document.getElementById('status-indicator');
+            let successCount = 0;
 
-            container.innerHTML = ''; 
-            let anySuccess = false;
+            // Clear containers
+            banksToFetch.forEach(bank => { const pane = document.getElementById(`${bank.id}-pane`); if (pane) pane.innerHTML = ''; });
 
-            // Rotate through free proxies to bypass bot protection
+            // Helper to Waterfall through multiple proxies
             async function fetchHTML(targetUrl) {
                 const encodedUrl = encodeURIComponent(targetUrl);
                 const proxies = [
@@ -212,18 +239,11 @@
                     try {
                         const response = await fetch(proxy);
                         if (!response.ok) continue; 
-                        
                         const htmlText = await response.text();
-                        
-                        // Check if we hit a security wall
-                        if (htmlText.includes('Just a moment...') || htmlText.includes('cf-browser-verification') || htmlText.includes('Cloudflare')) {
-                            console.warn(`Blocked by proxy: ${proxy}`);
-                            continue; 
-                        }
+                        // Detect bot block
+                        if (htmlText.includes('Just a moment...') || htmlText.includes('cf-browser-verification') || htmlText.includes('Cloudflare')) { continue; }
                         return htmlText; 
-                    } catch (e) {
-                        console.warn(`Proxy failed: ${proxy}`);
-                    }
+                    } catch (e) { console.warn(`Proxy failed: ${proxy}`); }
                 }
                 return null; 
             }
@@ -231,14 +251,9 @@
             for (const bank of banksToFetch) {
                 try {
                     statusIndicator.innerText = `Fetching ${bank.title}...`;
-                    statusIndicator.style.color = "#8b949e";
-                    
                     const htmlText = await fetchHTML(baseUrl + bank.url);
                     
-                    if (!htmlText) {
-                        console.error(`All proxies failed for ${bank.title}`);
-                        continue;
-                    }
+                    if (!htmlText) { console.error(`All proxies failed for ${bank.title}`); continue; }
 
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlText, 'text/html');
@@ -247,64 +262,66 @@
 
                     rows.forEach(row => {
                         const cells = row.querySelectorAll('td');
-                        
                         if (cells.length >= 4) {
                             if (bank.id === 'main') {
                                 const bankName = cells[1]?.innerText.trim();
                                 if (bankName && bankName !== '') {
-                                    parsedRows.push({
-                                        col1: cells[0]?.innerText.trim(), 
-                                        col2: bankName, 
-                                        col3: cells[2]?.innerText.trim(), 
-                                        col4: cells[3]?.innerText.trim(), 
-                                        col5: cells[4]?.innerText.trim()  
-                                    });
+                                    parsedRows.push({ date: cells[0]?.innerText.trim(), bank: bankName, current: cells[2]?.innerText.trim(), prob: cells[3]?.innerText.trim(), delta: cells[4]?.innerText.trim() });
                                 }
                             } else {
                                 const date = cells[0]?.innerText.trim();
                                 if (date && date !== '—' && !date.includes('Meeting')) {
-                                    parsedRows.push({
-                                        col1: date,
-                                        col2: cells[1]?.innerText.trim(), 
-                                        col3: cells[2]?.innerText.trim(), 
-                                        col4: cells[3]?.innerText.trim(), 
-                                        col5: cells[4]?.innerText.trim() || '-' 
-                                    });
+                                    parsedRows.push({ date: date, implied: cells[1]?.innerText.trim(), delta: cells[2]?.innerText.trim(), hikes: cells[3]?.innerText.trim(), prob: cells[4]?.innerText.trim() });
                                 }
                             }
                         }
                     });
 
                     if (parsedRows.length > 0) {
-                        renderBankTable(bank, parsedRows, container);
-                        anySuccess = true;
+                        renderBankTab(bank, parsedRows);
+                        successCount++;
                     }
 
+                    // 1s delay to prevent throttling
                     await new Promise(resolve => setTimeout(resolve, 1000));
 
-                } catch (error) {
-                    console.error(`Error processing ${bank.title}:`, error);
-                }
+                } catch (error) { console.error(`Error processing ${bank.title}:`, error); }
             }
             
-            if (!anySuccess) {
-                statusIndicator.innerText = "Error: All free proxies are currently blocked.";
+            // REMOVE GLOBAL LOADING SCREEN ONLY WHEN COMPLETE
+            document.getElementById('global-loader').style.display = 'none';
+
+            if (successCount === 0) {
+                statusIndicator.innerText = "Error: All proxies blocked by Cloudflare. Check Console.";
                 statusIndicator.style.color = "#f85149";
             } else {
                 statusIndicator.innerText = `Live | Last updated: ${new Date().toLocaleTimeString()}`;
-                statusIndicator.style.color = "#8b949e";
             }
         }
 
-        function renderBankTable(bank, dataRows, container) {
+        // --- RENDER LOGIC (TABLES & CHARTS) ---
+        function renderBankTab(bank, dataRows) {
             if (dataRows.length === 0) return;
+            const container = document.getElementById(`${bank.id}-pane`);
+            if (!container) return;
 
+            // 1. Reconstruct Chart Data (For individual banks)
+            if (bank.id !== 'main') {
+                const chartId = `${bank.id}-chart`;
+                const chartHTML = `<div class="bank-card"><div class="bank-card-header"><span>Priced Rate Path</span><span class="highlight-blue">${bank.title}</span></div><div class="chart-holder"><canvas id="${chartId}"></canvas></div></div>`;
+                container.innerHTML += chartHTML;
+
+                // JS delay to ensure canvas is in DOM before init
+                setTimeout(() => { reconstructChart(chartId, dataRows, bank.id); }, 100);
+            }
+
+            // 2. Render Table Data
             const card = document.createElement('div');
             card.className = 'bank-card';
             
             let tableHTML = `
-                <div class="bank-header">
-                    <span>${bank.title}</span>
+                <div class="bank-card-header">
+                    <span>PATH OF OVERNIGHT RATE TARGET: MARKET EXPECTATION</span>
                 </div>
                 <table>
                     <thead>
@@ -312,27 +329,78 @@
 
             if (bank.id === 'main') {
                 tableHTML += `<tr><th>Next Meeting</th><th>Bank</th><th>Current Rate</th><th>Probability</th><th>Δ vs Current (bps)</th></tr></thead><tbody>`;
+                dataRows.forEach(row => { tableHTML += `<tr><td>${row.date}</td><td class="highlight-blue">${row.bank}</td><td>${row.current}</td><td>${row.prob}</td><td class="highlight-green">${row.delta}</td></tr>`; });
             } else {
                 tableHTML += `<tr><th>Meeting</th><th>Implied Rate</th><th>Δ vs Current (bps)</th><th># of Hikes(Cuts)</th><th>Probability</th></tr></thead><tbody>`;
+                dataRows.forEach(row => { tableHTML += `<tr><td>${row.date}</td><td class="highlight-blue">${row.implied}</td><td class="highlight-green">${row.delta}</td><td>${row.hikes}</td><td>${row.prob}</td></tr>`; });
             }
-
-            dataRows.forEach(row => {
-                tableHTML += `
-                    <tr>
-                        <td>${row.col1}</td>
-                        <td class="highlight-blue">${row.col2}</td>
-                        <td>${row.col3}</td>
-                        <td>${row.col4}</td>
-                        <td class="highlight-green">${row.col5}</td>
-                    </tr>
-                `;
-            });
 
             tableHTML += `</tbody></table>`;
             card.innerHTML = tableHTML;
             container.appendChild(card);
         }
 
+        // --- RECONSTRUCT PATH CHART ---
+        function reconstructChart(chartId, dataRows, bankId) {
+            const ctx = document.getElementById(chartId);
+            if (!ctx) return;
+
+            const dates = dataRows.map(row => row.date);
+            const rates = dataRows.map(row => parseFloat(row.implied.replace('%', '')));
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Implied Rate Target',
+                        data: rates,
+                        borderColor: '#00b4f9',
+                        backgroundColor: 'rgba(0, 180, 249, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2,
+                        pointBackgroundColor: '#0A0A0a',
+                        pointBorderColor: '#00b4f9',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: { 
+                            title: { display: true, text: 'Implied Rate (%)', color: '#c9d1d9', font: { family: 'Inter', size: 10 } },
+                            grid: { color: 'rgba(28, 34, 48, 0.5)' },
+                            ticks: { color: '#8b949e', callback: value => value.toFixed(2) + '%', font: { family: 'JetBrains Mono', size: 9 } }
+                        },
+                        x: { 
+                            title: { display: true, text: 'Meeting Date', color: '#c9d1d9', font: { family: 'Inter', size: 10 } },
+                            grid: { display: false },
+                            ticks: { color: '#8b949e', font: { family: 'JetBrains Mono', size: 9 }, maxRotation: 45, minRotation: 45 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { 
+                            font: { family: 'Inter', size: 12 },
+                            callbacks: { label: context => ` Implied Rate: ${context.parsed.y.toFixed(2)}%` }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Toggle Mobile Nav
+        function toggleNav() { document.getElementById("navLinks").classList.toggle("active-nav"); }
+        // Toggle Dropdown
+        function toggleDropdown(event) { event.stopPropagation(); document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
+        // Sign Out
+        document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
+        // Start Init AFTER DOM Ready
         window.onload = init;
     </script>
 </body>
