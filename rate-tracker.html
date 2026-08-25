@@ -144,7 +144,6 @@
             const tags = profile?.active_tags ? profile.active_tags : [];
             const isAdmin = profile?.admin === true;
 
-            // Security Rule: ONLY Admin or Pro can access this page
             if (!isAdmin && !userHasAccess(tags, 'pro')) {
                 window.location.href = 'account.html'; return;
             }
@@ -160,7 +159,6 @@
                 upload: document.getElementById('nav-upload')
             };
 
-            // Set up navigation for Pro/Admin
             if (navElements.dashboard) navElements.dashboard.style.display = 'block';
             if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
             if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
@@ -173,7 +171,6 @@
                 if (navElements.upload) navElements.upload.style.display = 'block';
             }
 
-            // Start Data Extraction
             fetchRateData();
         }
 
@@ -182,7 +179,7 @@
         window.onclick = function(event) { if (!event.target.matches('.dropbtn')) { document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); } }
         document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
 
-        // --- SCRAPER LOGIC ---
+        // --- SCRAPER LOGIC WITH PROXY WATERFALL ---
         const banksToFetch = [
             { id: 'main', url: '/', title: 'Next Meeting Overview (All Banks)' },
             { id: 'fed', url: '/fed', title: 'Federal Reserve (USA)' },
@@ -194,8 +191,6 @@
         ];
 
         async function fetchRateData() {
-            // Swapped to CodeTabs proxy: returns raw HTML and bypasses basic bot-checks better
-            const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
             const baseUrl = 'https://rateprobability.com';
             const container = document.getElementById('rates-container');
             const statusIndicator = document.getElementById('status-indicator');
@@ -203,30 +198,56 @@
             container.innerHTML = ''; 
             let anySuccess = false;
 
+            // Rotate through free proxies to bypass bot protection
+            async function fetchHTML(targetUrl) {
+                const encodedUrl = encodeURIComponent(targetUrl);
+                const proxies = [
+                    `https://api.allorigins.win/raw?url=${encodedUrl}`,
+                    `https://api.codetabs.com/v1/proxy?quest=${targetUrl}`,
+                    `https://corsproxy.io/?${encodedUrl}`,
+                    `https://thingproxy.freeboard.io/fetch/${targetUrl}`
+                ];
+
+                for (const proxy of proxies) {
+                    try {
+                        const response = await fetch(proxy);
+                        if (!response.ok) continue; 
+                        
+                        const htmlText = await response.text();
+                        
+                        // Check if we hit a security wall
+                        if (htmlText.includes('Just a moment...') || htmlText.includes('cf-browser-verification') || htmlText.includes('Cloudflare')) {
+                            console.warn(`Blocked by proxy: ${proxy}`);
+                            continue; 
+                        }
+                        return htmlText; 
+                    } catch (e) {
+                        console.warn(`Proxy failed: ${proxy}`);
+                    }
+                }
+                return null; 
+            }
+
             for (const bank of banksToFetch) {
                 try {
                     statusIndicator.innerText = `Fetching ${bank.title}...`;
+                    statusIndicator.style.color = "#8b949e";
                     
-                    const response = await fetch(proxyUrl + encodeURIComponent(baseUrl + bank.url));
-                    const htmlText = await response.text();
+                    const htmlText = await fetchHTML(baseUrl + bank.url);
                     
-                    // 1. Detect if Cloudflare intercepted the proxy request
-                    if (htmlText.includes('Just a moment...') || htmlText.includes('Cloudflare')) {
-                        console.warn(`Cloudflare blocked proxy on ${bank.title}`);
-                        continue; 
+                    if (!htmlText) {
+                        console.error(`All proxies failed for ${bank.title}`);
+                        continue;
                     }
 
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlText, 'text/html');
-                    
-                    // 2. Relaxed selector: target ALL rows, ignoring the tbody requirement
                     const rows = doc.querySelectorAll('tr');
                     const parsedRows = [];
 
                     rows.forEach(row => {
                         const cells = row.querySelectorAll('td');
                         
-                        // Only process rows that actually have 4+ data columns
                         if (cells.length >= 4) {
                             if (bank.id === 'main') {
                                 const bankName = cells[1]?.innerText.trim();
@@ -241,7 +262,6 @@
                                 }
                             } else {
                                 const date = cells[0]?.innerText.trim();
-                                // Ensure we aren't accidentally grabbing header rows
                                 if (date && date !== '—' && !date.includes('Meeting')) {
                                     parsedRows.push({
                                         col1: date,
@@ -260,20 +280,19 @@
                         anySuccess = true;
                     }
 
-                    // 1-second delay so the proxy doesn't rate-limit us
                     await new Promise(resolve => setTimeout(resolve, 1000));
 
                 } catch (error) {
-                    console.error(`Failed to fetch ${bank.title}:`, error);
+                    console.error(`Error processing ${bank.title}:`, error);
                 }
             }
             
-            // Visual feedback if the proxy completely failed
             if (!anySuccess) {
-                statusIndicator.innerText = "Error: Proxy blocked or table structure changed.";
+                statusIndicator.innerText = "Error: All free proxies are currently blocked.";
                 statusIndicator.style.color = "#f85149";
             } else {
                 statusIndicator.innerText = `Live | Last updated: ${new Date().toLocaleTimeString()}`;
+                statusIndicator.style.color = "#8b949e";
             }
         }
 
