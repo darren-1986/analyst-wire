@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="media/favicon.png">
-    <title>Central Bank Rates Dashboard | Analyst Wire</title>
-    <!-- Supabase for Auth/Permissions -->
+    <title>Central Bank Rates | Analyst Wire</title>
+    <!-- Supabase for Auth -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
-    <!-- Chart.js for reconstructing the paths -->
+    <!-- Chart.js for reconstructing path visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -69,11 +69,10 @@
         /* Chart Canvas Holder */
         .chart-holder { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid #1c2230; height: 250px; width: 100%; }
 
-        /* GLOBAL LOADING STATE (The "anti-placeholder" solution) */
+        /* GLOBAL LOADING STATE (Anti-placeholder: Shown on page load) */
         #global-loader { display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0A0A0a; z-index: 100; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
         .spinner { border: 3px solid #161b22; border-top: 3px solid #00b4f9; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         .loading-text { color: #fff; font-size: 15px; font-weight: 600; }
-        .cf-warning { color: #8b949e; font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-top: 10px; max-width: 300px; text-align: center; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 950px) {
@@ -134,11 +133,10 @@
 
         <div class="tab-content-area" id="tabContent">
             
-            <!-- GLOBAL LOADING SCREEN (Active until fetch finishes or fails) -->
+            <!-- GLOBAL LOADING SCREEN (Active on page load until auth is confirmed) -->
             <div id="global-loader">
                 <div class="spinner"></div>
                 <div class="loading-text">Fetching live data...</div>
-                <div class="cf-warning">Attempting to bypass Cloudflare bot protection using proxy waterfall. This might take a moment.</div>
             </div>
 
             <!-- Tab Panes (Container holds data when fetched) -->
@@ -155,6 +153,11 @@
     <script>
         // --- AUTH & PERMISSION CHECK ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
+
+        // CACHING STATE
+        let cachedDataObj = null; 
+        const CACHE_KEY = 'analyst_wire_rate_probabilities';
+        const UPDATE_FREQUENCY = 1000 * 60 * 60 * 2; // 2 hours in ms
 
         function userHasAccess(userTags, requiredTag) {
             if (!userTags) return false;
@@ -173,6 +176,7 @@
             const profile = profileArray[0], tags = profile?.active_tags || [], isAdmin = profile?.admin === true;
             if (!isAdmin && !userHasAccess(tags, 'pro')) { window.location.href = 'account.html'; return; }
 
+            // NAV Permissions (standard)
             const navElements = ['dashboard', 'newsfeed', 'key-levels', 'analysis', 'profile', 'courses', 'admin', 'upload'].reduce((acc, id) => { acc[id] = document.getElementById(`nav-${id}`); return acc; }, {});
             if (navElements.dashboard) navElements.dashboard.style.display = 'block';
             if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
@@ -184,8 +188,33 @@
             if (isAdmin && navElements.upload) navElements.upload.style.display = 'block';
 
             setupTabs();
+            // --- LOAD CACHE FIRST ---
+            loadCachedData();
             // Start Fetch AFTER Auth Check
             fetchRateData();
+            // Start 2 Hour Auto-Refresh
+            setInterval(fetchRateData, UPDATE_FREQUENCY);
+        }
+
+        // --- CACHING & INSTANT LOAD ---
+        function loadCachedData() {
+            const cachedString = localStorage.getItem(CACHE_KEY);
+            if (cachedString) {
+                try {
+                    cachedDataObj = JSON.parse(cachedString);
+                    if (cachedDataObj.banks && cachedDataObj.banks.length > 0) {
+                        // REMOVE LOADING SCREEN INSTANTLY IF CACHE EXISTS
+                        document.getElementById('global-loader').style.display = 'none';
+                        // RENDER ALL TABS FROM CACHE
+                        cachedDataObj.banks.forEach(bankData => {
+                            const bankConfig = banksToFetch.find(b => b.id === bankData.id);
+                            if (bankConfig) { renderBankTab(bankConfig, bankData.rows, true); } // 'true' means 'is cached'
+                        });
+                        const timestamp = document.getElementById('status-indicator');
+                        timestamp.innerText = `Cached Data | Last Update: ${new Date(cachedDataObj.lastUpdated).toLocaleTimeString()}`;
+                    }
+                } catch (e) { console.error("Error parsing cache:", e); cachedDataObj = null; }
+            }
         }
 
         // --- TABS LOGIC ---
@@ -220,27 +249,24 @@
         async function fetchRateData() {
             const baseUrl = 'https://rateprobability.com';
             const statusIndicator = document.getElementById('status-indicator');
-            let successCount = 0;
+            let anySuccess = false;
+            let finalUpdateTimestamp = cachedDataObj ? cachedDataObj.lastUpdated : null;
+            let newDataForStorage = { lastUpdated: null, banks: [] };
 
-            // Clear containers
-            banksToFetch.forEach(bank => { const pane = document.getElementById(`${bank.id}-pane`); if (pane) pane.innerHTML = ''; });
-
-            // Helper to Waterfall through multiple proxies
+            // Waterfall multiple proxies
             async function fetchHTML(targetUrl) {
                 const encodedUrl = encodeURIComponent(targetUrl);
                 const proxies = [
-                    `https://api.allorigins.win/raw?url=${encodedUrl}`,
                     `https://api.codetabs.com/v1/proxy?quest=${targetUrl}`,
                     `https://corsproxy.io/?${encodedUrl}`,
+                    `https://api.allorigins.win/raw?url=${encodedUrl}`,
                     `https://thingproxy.freeboard.io/fetch/${targetUrl}`
                 ];
-
                 for (const proxy of proxies) {
                     try {
                         const response = await fetch(proxy);
                         if (!response.ok) continue; 
                         const htmlText = await response.text();
-                        // Detect bot block
                         if (htmlText.includes('Just a moment...') || htmlText.includes('cf-browser-verification') || htmlText.includes('Cloudflare')) { continue; }
                         return htmlText; 
                     } catch (e) { console.warn(`Proxy failed: ${proxy}`); }
@@ -260,15 +286,18 @@
                     const rows = doc.querySelectorAll('tr');
                     const parsedRows = [];
 
+                    // Scrape unique data based on page type
                     rows.forEach(row => {
                         const cells = row.querySelectorAll('td');
                         if (cells.length >= 4) {
                             if (bank.id === 'main') {
+                                // Overview Scraper
                                 const bankName = cells[1]?.innerText.trim();
                                 if (bankName && bankName !== '') {
                                     parsedRows.push({ date: cells[0]?.innerText.trim(), bank: bankName, current: cells[2]?.innerText.trim(), prob: cells[3]?.innerText.trim(), delta: cells[4]?.innerText.trim() });
                                 }
                             } else {
+                                // Individual Bank Scraper (granular probabilities)
                                 const date = cells[0]?.innerText.trim();
                                 if (date && date !== '—' && !date.includes('Meeting')) {
                                     parsedRows.push({ date: date, implied: cells[1]?.innerText.trim(), delta: cells[2]?.innerText.trim(), hikes: cells[3]?.innerText.trim(), prob: cells[4]?.innerText.trim() });
@@ -278,36 +307,65 @@
                     });
 
                     if (parsedRows.length > 0) {
-                        renderBankTab(bank, parsedRows);
-                        successCount++;
+                        anySuccess = true;
+                        // Deep Change Detection: Compare parsed data with current tab content
+                        let hasChanged = false;
+                        if (cachedDataObj) {
+                            const cachedBankData = cachedDataObj.banks.find(b => b.id === bank.id);
+                            if (cachedBankData) {
+                                // Basic array check, robust check needed for production (e.g., deep compare)
+                                if (JSON.stringify(cachedBankData.rows) !== JSON.stringify(parsedRows)) { hasChanged = true; }
+                            } else { hasChanged = true; } // New bank
+                        } else { hasChanged = true; } // No cache
+
+                        // Save new data for storage even if not rendering instantly
+                        newDataForStorage.banks.push({ id: bank.id, rows: parsedRows });
+                        
+                        // Render if data changed OR if there was no cache initially
+                        if (hasChanged || !cachedDataObj) { renderBankTab(bank, parsedRows, false); } // 'false' means 'not cached, fresh'
                     }
 
-                    // 1s delay to prevent throttling
+                    // 1s delay per bank fetch
                     await new Promise(resolve => setTimeout(resolve, 1000));
 
                 } catch (error) { console.error(`Error processing ${bank.title}:`, error); }
             }
             
-            // REMOVE GLOBAL LOADING SCREEN ONLY WHEN COMPLETE
-            document.getElementById('global-loader').style.display = 'none';
+            // REMOVE LOADING SCREEN ONLY IF FETCH WORKED AT LEAST ONCE
+            if (anySuccess) { document.getElementById('global-loader').style.display = 'none'; }
 
-            if (successCount === 0) {
-                statusIndicator.innerText = "Error: All proxies blocked by Cloudflare. Check Console.";
-                statusIndicator.style.color = "#f85149";
+            // --- SAVE NEW CACHE IF DATA UPDATED ---
+            if (newDataForStorage.banks.length > 0) {
+                // If any data is successfully fetched, update timestamp to NOW
+                finalUpdateTimestamp = Date.now();
+                newDataForStorage.lastUpdated = finalUpdateTimestamp;
+                localStorage.setItem(CACHE_KEY, JSON.stringify(newDataForStorage));
+                cachedDataObj = newDataForStorage; // Update local state
+
+                statusIndicator.innerText = `Live | Last Update: ${new Date(finalUpdateTimestamp).toLocaleTimeString()}`;
+            } else if (cachedDataObj) {
+                statusIndicator.innerText = `Fetch failed. Cached Data | Last Update: ${new Date(cachedDataObj.lastUpdated).toLocaleTimeString()}`;
             } else {
-                statusIndicator.innerText = `Live | Last updated: ${new Date().toLocaleTimeString()}`;
+                statusIndicator.innerText = "Error: All proxies blocked. Reload to retry.";
+                statusIndicator.style.color = "#f85149";
             }
         }
 
         // --- RENDER LOGIC (TABLES & CHARTS) ---
-        function renderBankTab(bank, dataRows) {
+        function renderBankTab(bank, dataRows, isCached) {
             if (dataRows.length === 0) return;
             const container = document.getElementById(`${bank.id}-pane`);
             if (!container) return;
 
-            // 1. Reconstruct Chart Data (For individual banks)
+            // CLEAR CURRENT CONTENT FIRST (fixes duplicated comparison table bug)
+            container.innerHTML = '';
+
+            const timestampPrefix = isCached ? 'Cached Data' : 'Live Data';
+            
+            // 1. Reconstruct Chart Data (For individual banks only: FED, ECB, etc.)
             if (bank.id !== 'main') {
                 const chartId = `${bank.id}-chart`;
+                // Add Chart Card
                 const chartHTML = `<div class="bank-card"><div class="bank-card-header"><span>Priced Rate Path</span><span class="highlight-blue">${bank.title}</span></div><div class="chart-holder"><canvas id="${chartId}"></canvas></div></div>`;
                 container.innerHTML += chartHTML;
 
@@ -315,7 +373,7 @@
                 setTimeout(() => { reconstructChart(chartId, dataRows, bank.id); }, 100);
             }
 
-            // 2. Render Table Data
+            // 2. Render Granular Path Table (Individual banks get detailed rows, Main gets comparison rows)
             const card = document.createElement('div');
             card.className = 'bank-card';
             
@@ -331,6 +389,7 @@
                 tableHTML += `<tr><th>Next Meeting</th><th>Bank</th><th>Current Rate</th><th>Probability</th><th>Δ vs Current (bps)</th></tr></thead><tbody>`;
                 dataRows.forEach(row => { tableHTML += `<tr><td>${row.date}</td><td class="highlight-blue">${row.bank}</td><td>${row.current}</td><td>${row.prob}</td><td class="highlight-green">${row.delta}</td></tr>`; });
             } else {
+                // DETAILED Scraper output: Date, Implied Rate, Delta, Hikes/Cuts Priced, Prob
                 tableHTML += `<tr><th>Meeting</th><th>Implied Rate</th><th>Δ vs Current (bps)</th><th># of Hikes(Cuts)</th><th>Probability</th></tr></thead><tbody>`;
                 dataRows.forEach(row => { tableHTML += `<tr><td>${row.date}</td><td class="highlight-blue">${row.implied}</td><td class="highlight-green">${row.delta}</td><td>${row.hikes}</td><td>${row.prob}</td></tr>`; });
             }
@@ -345,9 +404,11 @@
             const ctx = document.getElementById(chartId);
             if (!ctx) return;
 
+            // Process data for Chart.js
             const dates = dataRows.map(row => row.date);
             const rates = dataRows.map(row => parseFloat(row.implied.replace('%', '')));
 
+            // Initialize Chart.js Instance
             new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -394,11 +455,9 @@
             });
         }
 
-        // Toggle Mobile Nav
+        // Standard helpers
         function toggleNav() { document.getElementById("navLinks").classList.toggle("active-nav"); }
-        // Toggle Dropdown
         function toggleDropdown(event) { event.stopPropagation(); document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
-        // Sign Out
         document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
         // Start Init AFTER DOM Ready
         window.onload = init;
