@@ -7,7 +7,7 @@
     <title>Central Bank Rates | Analyst Wire</title>
     <!-- Supabase for Auth -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
-    <!-- Chart.js for reconstructing path visualizations -->
+    <!-- Chart.js for path visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -17,7 +17,7 @@
         
         body { margin: 0; padding-top: 55px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; background-color: #0A0A0a; color: #ffffff; overflow: hidden; }
 
-        /* Navigation (Standard Pro/Admin Nav) */
+        /* Navigation */
         .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%; font-family: 'Inter', sans-serif; }
         .nav-links { display: flex; align-items: center; gap: 5px; }
         .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
@@ -32,11 +32,11 @@
         .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; font-family: 'Inter', sans-serif; }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
-        /* Dashboard Wrapper (Tabs & Content) */
-        .dashboard-wrapper { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+        /* Dashboard Wrapper */
+        .dashboard-wrapper { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0; position: relative; }
         
-        /* Dashboard Header (Fetch Status) */
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; border-bottom: 1px solid #1c2230; background: #0d1117; flex-shrink: 0; }
+        /* Dashboard Header */
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #1c2230; background: #0d1117; flex-shrink: 0; }
         .dashboard-header h1 { font-family: 'Inter', sans-serif; font-size: 16px; margin: 0; color: #fff; display: flex; align-items: center; gap: 8px; font-weight: 600; }
         .status-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8b949e; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
@@ -47,13 +47,12 @@
         .tab-btn.active-tab { background: #0A0A0a; color: #00b4f9; border-color: #1c2230; font-weight: 600; border-bottom: 1px solid #0A0A0a; }
 
         /* Tab Content Area */
-        .tab-content-area { flex-grow: 1; padding: 20px; overflow-y: auto; background: #0A0A0a; }
-        .tab-pane { display: none; width: 100%; height: 100%; }
+        .tab-content-area { flex-grow: 1; padding: 20px; overflow-y: auto; background: #0A0A0a; position: relative; }
+        .tab-pane { display: none; width: 100%; }
         .tab-pane.active-pane { display: block; }
 
-        /* Modernized Table Styling */
+        /* Card & Table Styling */
         .rates-container { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
-        
         .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
         .bank-card-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: #e2e8f0; display: flex; justify-content: space-between; }
         
@@ -67,12 +66,13 @@
         .highlight-blue { color: #00b4f9; }
 
         /* Chart Canvas Holder */
-        .chart-holder { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid #1c2230; height: 250px; width: 100%; }
+        .chart-holder { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid #1c2230; height: 260px; width: 100%; position: relative; }
 
-        /* GLOBAL LOADING STATE (Anti-placeholder: Shown on page load) */
-        #global-loader { display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0A0A0a; z-index: 100; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
-        .spinner { border: 3px solid #161b22; border-top: 3px solid #00b4f9; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        .loading-text { color: #fff; font-size: 15px; font-weight: 600; }
+        /* LOADING OVERLAY */
+        #global-loader { display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0A0A0a; z-index: 50; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; transition: opacity 0.3s; }
+        .spinner { border: 3px solid #161b22; border-top: 3px solid #00b4f9; border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
+        .loading-text { color: #c9d1d9; font-size: 14px; font-weight: 500; }
+        .admin-text { color: #8b949e; font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-top: 8px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 950px) {
@@ -80,7 +80,7 @@
             .nav-links { display: none; position: absolute; top: 55px; left: 0; width: 100%; background: #0d1117; flex-direction: column; align-items: flex-start; padding: 10px 20px; border-bottom: 1px solid #1c2230; z-index: 1001; }
             .nav-links.active-nav { display: flex; }
             .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
-            .chart-holder { height: 180px; padding: 10px; }
+            .chart-holder { height: 200px; padding: 10px; }
         }
     </style>
 </head>
@@ -117,7 +117,7 @@
 
     <div class="dashboard-wrapper">
         <div class="dashboard-header">
-            <h1>Rate Probability Dashboard</h1>
+            <h1>Central Bank Rate Expectations</h1>
             <div class="status-text" id="status-indicator">Initializing...</div>
         </div>
 
@@ -133,13 +133,14 @@
 
         <div class="tab-content-area" id="tabContent">
             
-            <!-- GLOBAL LOADING SCREEN (Active on page load until auth is confirmed) -->
+            <!-- LOADING SCREEN -->
             <div id="global-loader">
                 <div class="spinner"></div>
-                <div class="loading-text">Fetching live data...</div>
+                <div class="loading-text" id="loader-primary-msg">Updating central bank rate paths...</div>
+                <div class="admin-text" id="loader-admin-msg" style="display: none;">Proxy Waterfall Active (Admin Mode)</div>
             </div>
 
-            <!-- Tab Panes (Container holds data when fetched) -->
+            <!-- Tab Panes -->
             <div id="main-pane" class="tab-pane active-pane rates-container"></div>
             <div id="fed-pane" class="tab-pane rates-container"></div>
             <div id="ecb-pane" class="tab-pane rates-container"></div>
@@ -151,18 +152,23 @@
     </div>
 
     <script>
-        // --- AUTH & PERMISSION CHECK ---
+        // --- AUTH & CONFIG ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-        // CACHING STATE
-        let cachedDataObj = null; 
-        const CACHE_KEY = 'analyst_wire_rate_probabilities';
-        const UPDATE_FREQUENCY = 1000 * 60 * 60 * 2; // 2 hours in ms
+        const CACHE_KEY = 'analyst_wire_rate_probabilities_v2';
+        const REFRESH_INTERVAL = 1000 * 60 * 60 * 2; // 2 hours
+        
+        let chartInstances = {}; // Store Chart.js instances to destroy/update properly
+        let isAdminUser = false;
+        let cachedDataObj = null;
 
         function userHasAccess(userTags, requiredTag) {
             if (!userTags) return false;
             let tagsArray = Array.isArray(userTags) ? userTags : [];
-            if (typeof userTags === 'string') { try { let parsed = JSON.parse(userTags); tagsArray = Array.isArray(parsed) ? parsed : [userTags]; } catch (e) { tagsArray = userTags.split(',').map(s => s.trim()); } }
+            if (typeof userTags === 'string') { 
+                try { let parsed = JSON.parse(userTags); tagsArray = Array.isArray(parsed) ? parsed : [userTags]; } 
+                catch (e) { tagsArray = userTags.split(',').map(s => s.trim()); } 
+            }
             return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
         }
 
@@ -173,10 +179,18 @@
             const { data: profileArray, error: profileError } = await client.from('profiles').select('admin, active_tags').eq('id', session.user.id).limit(1);
             if (profileError || !profileArray.length) { await client.auth.signOut(); window.location.href = 'index.html'; return; }
             
-            const profile = profileArray[0], tags = profile?.active_tags || [], isAdmin = profile?.admin === true;
-            if (!isAdmin && !userHasAccess(tags, 'pro')) { window.location.href = 'account.html'; return; }
+            const profile = profileArray[0], tags = profile?.active_tags || [];
+            isAdminUser = profile?.admin === true;
 
-            // NAV Permissions (standard)
+            if (!isAdminUser && !userHasAccess(tags, 'pro')) { window.location.href = 'account.html'; return; }
+
+            // Admin specific loading feedback
+            if (isAdminUser) {
+                const adminMsg = document.getElementById('loader-admin-msg');
+                if (adminMsg) adminMsg.style.display = 'block';
+            }
+
+            // Setup Navigation
             const navElements = ['dashboard', 'newsfeed', 'key-levels', 'analysis', 'profile', 'courses', 'admin', 'upload'].reduce((acc, id) => { acc[id] = document.getElementById(`nav-${id}`); return acc; }, {});
             if (navElements.dashboard) navElements.dashboard.style.display = 'block';
             if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
@@ -184,58 +198,69 @@
             if (navElements.analysis) navElements.analysis.style.display = 'block';
             if (navElements.profile) navElements.profile.style.display = 'block';
             if (navElements.courses) navElements.courses.style.display = 'block';
-            if (isAdmin && navElements.admin) navElements.admin.style.display = 'block';
-            if (isAdmin && navElements.upload) navElements.upload.style.display = 'block';
+            if (isAdminUser && navElements.admin) navElements.admin.style.display = 'block';
+            if (isAdminUser && navElements.upload) navElements.upload.style.display = 'block';
 
             setupTabs();
-            // --- LOAD CACHE FIRST ---
-            loadCachedData();
-            // Start Fetch AFTER Auth Check
-            fetchRateData();
-            // Start 2 Hour Auto-Refresh
-            setInterval(fetchRateData, UPDATE_FREQUENCY);
+            
+            // 1. Try Loading Local Cache First
+            const cacheLoaded = loadCachedData();
+
+            // 2. Fetch Fresh Data in Background (or foreground if no cache)
+            await fetchRateData();
+
+            // 3. Auto-refresh every 2 hours
+            setInterval(fetchRateData, REFRESH_INTERVAL);
         }
 
-        // --- CACHING & INSTANT LOAD ---
+        // --- CACHE MANAGEMENT ---
         function loadCachedData() {
             const cachedString = localStorage.getItem(CACHE_KEY);
-            if (cachedString) {
-                try {
-                    cachedDataObj = JSON.parse(cachedString);
-                    if (cachedDataObj.banks && cachedDataObj.banks.length > 0) {
-                        // REMOVE LOADING SCREEN INSTANTLY IF CACHE EXISTS
-                        document.getElementById('global-loader').style.display = 'none';
-                        // RENDER ALL TABS FROM CACHE
-                        cachedDataObj.banks.forEach(bankData => {
-                            const bankConfig = banksToFetch.find(b => b.id === bankData.id);
-                            if (bankConfig) { renderBankTab(bankConfig, bankData.rows, true); } // 'true' means 'is cached'
-                        });
-                        const timestamp = document.getElementById('status-indicator');
-                        timestamp.innerText = `Cached Data | Last Update: ${new Date(cachedDataObj.lastUpdated).toLocaleTimeString()}`;
-                    }
-                } catch (e) { console.error("Error parsing cache:", e); cachedDataObj = null; }
+            if (!cachedString) return false;
+
+            try {
+                cachedDataObj = JSON.parse(cachedString);
+                if (cachedDataObj && cachedDataObj.banks && cachedDataObj.banks.length > 0) {
+                    cachedDataObj.banks.forEach(bankData => {
+                        const config = banksToFetch.find(b => b.id === bankData.id);
+                        if (config) { renderBankTab(config, bankData.rows); }
+                    });
+
+                    // Hide loader immediately since we have cached data
+                    hideLoader();
+                    
+                    const timeStr = new Date(cachedDataObj.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    document.getElementById('status-indicator').innerText = `Cached (${timeStr}) | Updating...`;
+                    return true;
+                }
+            } catch (e) {
+                console.error("Cache read error:", e);
+                localStorage.removeItem(CACHE_KEY);
             }
+            return false;
         }
 
-        // --- TABS LOGIC ---
+        function hideLoader() {
+            const loader = document.getElementById('global-loader');
+            if (loader) loader.style.display = 'none';
+        }
+
+        // --- TABS SWITCHING ---
         function setupTabs() {
             document.getElementById('mainTabs').addEventListener('click', (e) => {
                 const btn = e.target.closest('.tab-btn');
                 if (!btn || btn.classList.contains('active-tab')) return;
 
-                // Update Active Button
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab'));
                 btn.classList.add('active-tab');
 
-                // Update Active Pane
                 document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active-pane'));
-                const paneId = `${btn.dataset.tab}-pane`;
-                const activePane = document.getElementById(paneId);
-                if (activePane) { activePane.classList.add('active-pane'); }
+                const activePane = document.getElementById(`${btn.dataset.tab}-pane`);
+                if (activePane) activePane.classList.add('active-pane');
             });
         }
 
-        // --- SCRAPER LOGIC & PROXY WATERFALL ---
+        // --- FETCHING & PROXY WATERFALL ---
         const banksToFetch = [
             { id: 'main', url: '/', title: 'Next Meeting Overview (All Banks)' },
             { id: 'fed', url: '/fed', title: 'Federal Reserve (USA)' },
@@ -249,137 +274,169 @@
         async function fetchRateData() {
             const baseUrl = 'https://rateprobability.com';
             const statusIndicator = document.getElementById('status-indicator');
-            let anySuccess = false;
-            let finalUpdateTimestamp = cachedDataObj ? cachedDataObj.lastUpdated : null;
-            let newDataForStorage = { lastUpdated: null, banks: [] };
+            let successCount = 0;
+            let freshBankData = [];
 
-            // Waterfall multiple proxies
+            // Robust Proxy Waterfall
             async function fetchHTML(targetUrl) {
                 const encodedUrl = encodeURIComponent(targetUrl);
                 const proxies = [
+                    `https://api.allorigins.win/raw?url=${encodedUrl}`,
                     `https://api.codetabs.com/v1/proxy?quest=${targetUrl}`,
                     `https://corsproxy.io/?${encodedUrl}`,
-                    `https://api.allorigins.win/raw?url=${encodedUrl}`,
                     `https://thingproxy.freeboard.io/fetch/${targetUrl}`
                 ];
+
                 for (const proxy of proxies) {
                     try {
-                        const response = await fetch(proxy);
-                        if (!response.ok) continue; 
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout per proxy
+
+                        const response = await fetch(proxy, { signal: controller.signal });
+                        clearTimeout(timeoutId);
+
+                        if (!response.ok) continue;
                         const htmlText = await response.text();
-                        if (htmlText.includes('Just a moment...') || htmlText.includes('cf-browser-verification') || htmlText.includes('Cloudflare')) { continue; }
-                        return htmlText; 
-                    } catch (e) { console.warn(`Proxy failed: ${proxy}`); }
+
+                        // Detect Cloudflare / Bot blocks
+                        if (htmlText.includes('Just a moment...') || htmlText.includes('cf-browser-verification') || htmlText.includes('Cloudflare')) {
+                            continue;
+                        }
+                        return htmlText;
+                    } catch (e) {
+                        // Fail silently and try next proxy
+                    }
                 }
-                return null; 
+                return null;
             }
 
-            for (const bank of banksToFetch) {
-                try {
-                    statusIndicator.innerText = `Fetching ${bank.title}...`;
+            try {
+                for (const bank of banksToFetch) {
+                    if (isAdminUser) {
+                        statusIndicator.innerText = `Fetching ${bank.title}...`;
+                    }
+
                     const htmlText = await fetchHTML(baseUrl + bank.url);
-                    
-                    if (!htmlText) { console.error(`All proxies failed for ${bank.title}`); continue; }
+                    if (!htmlText) continue;
 
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlText, 'text/html');
                     const rows = doc.querySelectorAll('tr');
                     const parsedRows = [];
 
-                    // Scrape unique data based on page type
                     rows.forEach(row => {
                         const cells = row.querySelectorAll('td');
                         if (cells.length >= 4) {
                             if (bank.id === 'main') {
-                                // Overview Scraper
+                                // Overview Table Parsing
                                 const bankName = cells[1]?.innerText.trim();
-                                if (bankName && bankName !== '') {
-                                    parsedRows.push({ date: cells[0]?.innerText.trim(), bank: bankName, current: cells[2]?.innerText.trim(), prob: cells[3]?.innerText.trim(), delta: cells[4]?.innerText.trim() });
+                                if (bankName) {
+                                    parsedRows.push({
+                                        date: cells[0]?.innerText.trim(),
+                                        bank: bankName,
+                                        current: cells[2]?.innerText.trim(),
+                                        prob: cells[3]?.innerText.trim(),
+                                        delta: cells[4]?.innerText.trim()
+                                    });
                                 }
                             } else {
-                                // Individual Bank Scraper (granular probabilities)
+                                // Specific Bank Table Parsing (Meeting Path)
                                 const date = cells[0]?.innerText.trim();
                                 if (date && date !== '—' && !date.includes('Meeting')) {
-                                    parsedRows.push({ date: date, implied: cells[1]?.innerText.trim(), delta: cells[2]?.innerText.trim(), hikes: cells[3]?.innerText.trim(), prob: cells[4]?.innerText.trim() });
+                                    parsedRows.push({
+                                        date: date,
+                                        implied: cells[1]?.innerText.trim(),
+                                        delta: cells[2]?.innerText.trim(),
+                                        hikes: cells[3]?.innerText.trim(),
+                                        prob: cells[4]?.innerText.trim() || '-'
+                                    });
                                 }
                             }
                         }
                     });
 
                     if (parsedRows.length > 0) {
-                        anySuccess = true;
-                        // Deep Change Detection: Compare parsed data with current tab content
-                        let hasChanged = false;
-                        if (cachedDataObj) {
-                            const cachedBankData = cachedDataObj.banks.find(b => b.id === bank.id);
-                            if (cachedBankData) {
-                                // Basic array check, robust check needed for production (e.g., deep compare)
-                                if (JSON.stringify(cachedBankData.rows) !== JSON.stringify(parsedRows)) { hasChanged = true; }
-                            } else { hasChanged = true; } // New bank
-                        } else { hasChanged = true; } // No cache
-
-                        // Save new data for storage even if not rendering instantly
-                        newDataForStorage.banks.push({ id: bank.id, rows: parsedRows });
-                        
-                        // Render if data changed OR if there was no cache initially
-                        if (hasChanged || !cachedDataObj) { renderBankTab(bank, parsedRows, false); } // 'false' means 'not cached, fresh'
+                        freshBankData.push({ id: bank.id, rows: parsedRows });
+                        successCount++;
                     }
 
-                    // 1s delay per bank fetch
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    // Brief delay to avoid proxy rate limits
+                    await new Promise(r => setTimeout(r, 600));
+                }
 
-                } catch (error) { console.error(`Error processing ${bank.title}:`, error); }
-            }
-            
-            // REMOVE LOADING SCREEN ONLY IF FETCH WORKED AT LEAST ONCE
-            if (anySuccess) { document.getElementById('global-loader').style.display = 'none'; }
+                // If new data was pulled successfully
+                if (freshBankData.length > 0) {
+                    const newCacheObj = {
+                        lastUpdated: Date.now(),
+                        banks: freshBankData
+                    };
 
-            // --- SAVE NEW CACHE IF DATA UPDATED ---
-            if (newDataForStorage.banks.length > 0) {
-                // If any data is successfully fetched, update timestamp to NOW
-                finalUpdateTimestamp = Date.now();
-                newDataForStorage.lastUpdated = finalUpdateTimestamp;
-                localStorage.setItem(CACHE_KEY, JSON.stringify(newDataForStorage));
-                cachedDataObj = newDataForStorage; // Update local state
+                    // Check if data actually changed compared to current cache
+                    const dataChanged = !cachedDataObj || JSON.stringify(cachedDataObj.banks) !== JSON.stringify(freshBankData);
 
-                statusIndicator.innerText = `Live | Last Update: ${new Date(finalUpdateTimestamp).toLocaleTimeString()}`;
-            } else if (cachedDataObj) {
-                statusIndicator.innerText = `Fetch failed. Cached Data | Last Update: ${new Date(cachedDataObj.lastUpdated).toLocaleTimeString()}`;
-            } else {
-                statusIndicator.innerText = "Error: All proxies blocked. Reload to retry.";
-                statusIndicator.style.color = "#f85149";
+                    if (dataChanged) {
+                        localStorage.setItem(CACHE_KEY, JSON.stringify(newCacheObj));
+                        cachedDataObj = newCacheObj;
+
+                        // Re-render UI with updated values
+                        freshBankData.forEach(item => {
+                            const config = banksToFetch.find(b => b.id === item.id);
+                            if (config) renderBankTab(config, item.rows);
+                        });
+                    }
+
+                    const timeStr = new Date(newCacheObj.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    statusIndicator.innerText = `Live | Updated ${timeStr}`;
+                    statusIndicator.style.color = "#8b949e";
+                } else if (!cachedDataObj) {
+                    statusIndicator.innerText = "Data temporarily unavailable";
+                    statusIndicator.style.color = "#f85149";
+                }
+
+            } catch (err) {
+                console.error("Fetch rate data error:", err);
+            } finally {
+                // ALWAYS DISMISS LOADER AT THE END OF THE PROCESS
+                hideLoader();
             }
         }
 
-        // --- RENDER LOGIC (TABLES & CHARTS) ---
-        function renderBankTab(bank, dataRows, isCached) {
-            if (dataRows.length === 0) return;
+        // --- RENDER TABLES & CHARTS ---
+        function renderBankTab(bank, dataRows) {
+            if (!dataRows || dataRows.length === 0) return;
             const container = document.getElementById(`${bank.id}-pane`);
             if (!container) return;
 
-            // CLEAR CURRENT CONTENT FIRST (fixes duplicated comparison table bug)
+            // Clear existing elements in tab
             container.innerHTML = '';
 
-            const timestampPrefix = isCached ? 'Cached Data' : 'Live Data';
-            
-            // 1. Reconstruct Chart Data (For individual banks only: FED, ECB, etc.)
+            // 1. Render Line Chart for Individual Banks
             if (bank.id !== 'main') {
                 const chartId = `${bank.id}-chart`;
-                // Add Chart Card
-                const chartHTML = `<div class="bank-card"><div class="bank-card-header"><span>Priced Rate Path</span><span class="highlight-blue">${bank.title}</span></div><div class="chart-holder"><canvas id="${chartId}"></canvas></div></div>`;
-                container.innerHTML += chartHTML;
+                const chartCard = document.createElement('div');
+                chartCard.className = 'bank-card';
+                chartCard.innerHTML = `
+                    <div class="bank-card-header">
+                        <span>IMPLIED RATE PATH (MARKET EXPECTATION)</span>
+                        <span class="highlight-blue">${bank.title}</span>
+                    </div>
+                    <div class="chart-holder">
+                        <canvas id="${chartId}"></canvas>
+                    </div>
+                `;
+                container.appendChild(chartCard);
 
-                // JS delay to ensure canvas is in DOM before init
-                setTimeout(() => { reconstructChart(chartId, dataRows, bank.id); }, 100);
+                // Render Chart after DOM paints
+                setTimeout(() => reconstructChart(chartId, dataRows, bank.title), 50);
             }
 
-            // 2. Render Granular Path Table (Individual banks get detailed rows, Main gets comparison rows)
-            const card = document.createElement('div');
-            card.className = 'bank-card';
+            // 2. Render Table
+            const tableCard = document.createElement('div');
+            tableCard.className = 'bank-card';
             
             let tableHTML = `
                 <div class="bank-card-header">
-                    <span>PATH OF OVERNIGHT RATE TARGET: MARKET EXPECTATION</span>
+                    <span>${bank.id === 'main' ? 'UPCOMING CENTRAL BANK MEETINGS' : 'MEETING-BY-MEETING RATE PATH'}</span>
                 </div>
                 <table>
                     <thead>
@@ -387,41 +444,52 @@
 
             if (bank.id === 'main') {
                 tableHTML += `<tr><th>Next Meeting</th><th>Bank</th><th>Current Rate</th><th>Probability</th><th>Δ vs Current (bps)</th></tr></thead><tbody>`;
-                dataRows.forEach(row => { tableHTML += `<tr><td>${row.date}</td><td class="highlight-blue">${row.bank}</td><td>${row.current}</td><td>${row.prob}</td><td class="highlight-green">${row.delta}</td></tr>`; });
+                dataRows.forEach(row => { 
+                    tableHTML += `<tr><td>${row.date}</td><td class="highlight-blue">${row.bank}</td><td>${row.current}</td><td>${row.prob}</td><td class="highlight-green">${row.delta}</td></tr>`; 
+                });
             } else {
-                // DETAILED Scraper output: Date, Implied Rate, Delta, Hikes/Cuts Priced, Prob
                 tableHTML += `<tr><th>Meeting</th><th>Implied Rate</th><th>Δ vs Current (bps)</th><th># of Hikes(Cuts)</th><th>Probability</th></tr></thead><tbody>`;
-                dataRows.forEach(row => { tableHTML += `<tr><td>${row.date}</td><td class="highlight-blue">${row.implied}</td><td class="highlight-green">${row.delta}</td><td>${row.hikes}</td><td>${row.prob}</td></tr>`; });
+                dataRows.forEach(row => { 
+                    tableHTML += `<tr><td>${row.date}</td><td class="highlight-blue">${row.implied}</td><td class="highlight-green">${row.delta}</td><td>${row.hikes}</td><td>${row.prob}</td></tr>`; 
+                });
             }
 
             tableHTML += `</tbody></table>`;
-            card.innerHTML = tableHTML;
-            container.appendChild(card);
+            tableCard.innerHTML = tableHTML;
+            container.appendChild(tableCard);
         }
 
-        // --- RECONSTRUCT PATH CHART ---
-        function reconstructChart(chartId, dataRows, bankId) {
-            const ctx = document.getElementById(chartId);
-            if (!ctx) return;
+        // --- CHART.JS LINE GRAPH RECONSTRUCTION ---
+        function reconstructChart(chartId, dataRows, bankTitle) {
+            const canvas = document.getElementById(chartId);
+            if (!canvas) return;
 
-            // Process data for Chart.js
+            // Destroy previous instance if re-rendering
+            if (chartInstances[chartId]) {
+                chartInstances[chartId].destroy();
+            }
+
             const dates = dataRows.map(row => row.date);
-            const rates = dataRows.map(row => parseFloat(row.implied.replace('%', '')));
+            const rates = dataRows.map(row => {
+                const clean = row.implied.replace('%', '').trim();
+                return parseFloat(clean) || 0;
+            });
 
-            // Initialize Chart.js Instance
-            new Chart(ctx, {
+            const ctx = canvas.getContext('2d');
+            
+            chartInstances[chartId] = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: dates,
                     datasets: [{
-                        label: 'Implied Rate Target',
+                        label: 'Implied Rate Target (%)',
                         data: rates,
                         borderColor: '#00b4f9',
-                        backgroundColor: 'rgba(0, 180, 249, 0.1)',
+                        backgroundColor: 'rgba(0, 180, 249, 0.08)',
                         borderWidth: 2,
                         fill: true,
-                        tension: 0.2,
-                        pointBackgroundColor: '#0A0A0a',
+                        tension: 0.25,
+                        pointBackgroundColor: '#0d1117',
                         pointBorderColor: '#00b4f9',
                         pointBorderWidth: 2,
                         pointRadius: 4,
@@ -434,20 +502,19 @@
                     interaction: { mode: 'index', intersect: false },
                     scales: {
                         y: { 
-                            title: { display: true, text: 'Implied Rate (%)', color: '#c9d1d9', font: { family: 'Inter', size: 10 } },
-                            grid: { color: 'rgba(28, 34, 48, 0.5)' },
-                            ticks: { color: '#8b949e', callback: value => value.toFixed(2) + '%', font: { family: 'JetBrains Mono', size: 9 } }
+                            title: { display: true, text: 'Implied Rate (%)', color: '#8b949e', font: { family: 'Inter', size: 10 } },
+                            grid: { color: 'rgba(28, 34, 48, 0.6)' },
+                            ticks: { color: '#c9d1d9', callback: v => v.toFixed(2) + '%', font: { family: 'JetBrains Mono', size: 10 } }
                         },
                         x: { 
-                            title: { display: true, text: 'Meeting Date', color: '#c9d1d9', font: { family: 'Inter', size: 10 } },
                             grid: { display: false },
-                            ticks: { color: '#8b949e', font: { family: 'JetBrains Mono', size: 9 }, maxRotation: 45, minRotation: 45 }
+                            ticks: { color: '#8b949e', font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 45 }
                         }
                     },
                     plugins: {
                         legend: { display: false },
                         tooltip: { 
-                            font: { family: 'Inter', size: 12 },
+                            padding: 10,
                             callbacks: { label: context => ` Implied Rate: ${context.parsed.y.toFixed(2)}%` }
                         }
                     }
@@ -455,11 +522,12 @@
             });
         }
 
-        // Standard helpers
+        // Standard Navigation Helpers
         function toggleNav() { document.getElementById("navLinks").classList.toggle("active-nav"); }
         function toggleDropdown(event) { event.stopPropagation(); document.getElementById("settingsDropdown").style.display = (document.getElementById("settingsDropdown").style.display === "block" ? "none" : "block"); }
+        window.onclick = function(event) { if (!event.target.matches('.dropbtn')) { document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); } };
         document.getElementById('logoutBtn').addEventListener('click', async () => { await client.auth.signOut(); window.location.href = 'index.html'; });
-        // Start Init AFTER DOM Ready
+
         window.onload = init;
     </script>
 </body>
