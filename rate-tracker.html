@@ -49,7 +49,7 @@
         /* Tab Content Area */
         .tab-content-area { flex-grow: 1; padding: 20px; overflow-y: auto; background: #0A0A0a; position: relative; }
         
-        /* FIX: Ensure display: none always overrides grid for inactive tabs */
+        /* CRITICAL FIX: Ensure display: none always overrides grid for inactive tabs */
         .tab-pane { display: none !important; width: 100%; }
         .tab-pane.active-pane { display: grid !important; }
 
@@ -142,7 +142,7 @@
             <div id="global-loader">
                 <div class="spinner"></div>
                 <div class="loading-text" id="loader-primary-msg">Updating central bank rate paths...</div>
-                <div class="admin-text" id="loader-admin-msg" style="display: none;">Proxy Waterfall Active (Admin Mode)</div>
+                <div class="admin-text" id="loader-admin-msg" style="display: none;">Proxy Active (Admin Mode)</div>
             </div>
 
             <!-- Tab Panes -->
@@ -160,7 +160,7 @@
         // --- AUTH & CONFIG ---
         const client = supabase.createClient('https://fgidelsazisdqjfckerd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY');
 
-        const CACHE_KEY = 'analyst_wire_rate_probabilities_v4';
+        const CACHE_KEY = 'analyst_wire_rate_probabilities_v6';
         const REFRESH_INTERVAL = 1000 * 60 * 60 * 2; // 2 hours
         
         let chartInstances = {};
@@ -270,39 +270,22 @@
             let successCount = 0;
             let freshBankData = [];
 
-            // Expanded and Robust Proxy Waterfall
+            // We are strictly going back to the JSON allorigins proxy that worked for you initially
             async function fetchHTML(targetUrl) {
-                const encodedUrl = encodeURIComponent(targetUrl);
-                const proxies = [
-                    `https://api.cors.lol/?url=${encodedUrl}`,
-                    `https://api.allorigins.win/raw?url=${encodedUrl}`,
-                    `https://api.codetabs.com/v1/proxy?quest=${targetUrl}`,
-                    `https://corsproxy.io/?${encodedUrl}`
-                ];
-
-                for (const proxy of proxies) {
-                    try {
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 12000); 
-
-                        const response = await fetch(proxy, { 
-                            signal: controller.signal,
-                            headers: { 'Accept': 'text/html' } 
-                        });
-                        clearTimeout(timeoutId);
-
-                        if (!response.ok) continue;
-
-                        const htmlText = await response.text();
-
-                        // Detect Cloudflare blocks
-                        if (!htmlText || htmlText.includes('Just a moment...') || htmlText.includes('cf-browser-verification') || htmlText.includes('Cloudflare')) {
-                            continue;
-                        }
-                        return htmlText;
-                    } catch (e) {
-                        // Fail silently and try next proxy
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+                
+                try {
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) return null;
+                    
+                    const data = await response.json();
+                    
+                    // Verify Cloudflare didn't block it inside the JSON wrapper
+                    if (data.contents && !data.contents.includes('Just a moment...') && !data.contents.includes('cf-browser-verification')) {
+                        return data.contents;
                     }
+                } catch (e) {
+                    console.warn("Proxy attempt failed");
                 }
                 return null;
             }
@@ -314,49 +297,50 @@
                     }
 
                     const htmlText = await fetchHTML(baseUrl + bank.url);
-                    if (!htmlText) continue;
+                    
+                    if (htmlText) {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(htmlText, 'text/html');
+                        const rows = doc.querySelectorAll('tr');
+                        const parsedRows = [];
 
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(htmlText, 'text/html');
-                    const rows = doc.querySelectorAll('tr');
-                    const parsedRows = [];
-
-                    rows.forEach(row => {
-                        const cells = row.querySelectorAll('td');
-                        if (cells.length >= 4) {
-                            if (bank.id === 'main') {
-                                const bankName = cells[1]?.innerText.trim();
-                                if (bankName && bankName !== '') {
-                                    parsedRows.push({
-                                        date: cells[0]?.innerText.trim(),
-                                        bank: bankName,
-                                        current: cells[2]?.innerText.trim(),
-                                        prob: cells[3]?.innerText.trim(),
-                                        // Forgiving column selection depending on table render
-                                        delta: cells[5]?.innerText.trim() || cells[4]?.innerText.trim()
-                                    });
-                                }
-                            } else {
-                                const date = cells[0]?.innerText.trim();
-                                if (date && date !== '—' && !date.includes('Meeting')) {
-                                    parsedRows.push({
-                                        date: date,
-                                        implied: cells[1]?.innerText.trim(),
-                                        delta: cells[2]?.innerText.trim(),
-                                        hikes: cells[3]?.innerText.trim(),
-                                        prob: cells[4]?.innerText.trim() || '-'
-                                    });
+                        rows.forEach(row => {
+                            const cells = row.querySelectorAll('td');
+                            if (cells.length >= 4) {
+                                if (bank.id === 'main') {
+                                    const bankName = cells[1]?.innerText.trim();
+                                    if (bankName && bankName !== '') {
+                                        parsedRows.push({
+                                            date: cells[0]?.innerText.trim(),
+                                            bank: bankName,
+                                            current: cells[2]?.innerText.trim(),
+                                            prob: cells[3]?.innerText.trim(),
+                                            delta: cells[5]?.innerText.trim() || cells[4]?.innerText.trim()
+                                        });
+                                    }
+                                } else {
+                                    const date = cells[0]?.innerText.trim();
+                                    if (date && date !== '—' && !date.includes('Meeting')) {
+                                        parsedRows.push({
+                                            date: date,
+                                            implied: cells[1]?.innerText.trim(),
+                                            delta: cells[2]?.innerText.trim(),
+                                            hikes: cells[3]?.innerText.trim(),
+                                            prob: cells[4]?.innerText.trim() || '-'
+                                        });
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
 
-                    if (parsedRows.length > 0) {
-                        freshBankData.push({ id: bank.id, rows: parsedRows });
-                        successCount++;
+                        if (parsedRows.length > 0) {
+                            freshBankData.push({ id: bank.id, rows: parsedRows });
+                            successCount++;
+                        }
                     }
 
-                    await new Promise(r => setTimeout(r, 600));
+                    // CRITICAL FIX: 2.5 second delay. We must mimic slow human navigation or the proxy burns.
+                    await new Promise(r => setTimeout(r, 2500));
                 }
 
                 if (freshBankData.length > 0) {
@@ -381,7 +365,7 @@
                     statusIndicator.innerText = `Live | Updated ${timeStr}`;
                     statusIndicator.style.color = "#8b949e";
                 } else if (!cachedDataObj) {
-                    // Safe Fallback Injection
+                    // Inject Fallback UI safely into the specific panes
                     banksToFetch.forEach(bank => {
                         const container = document.getElementById(`${bank.id}-pane`);
                         if (container) container.innerHTML = `<div class="empty-state">Unable to pull live pricing data for ${bank.title}. The source is temporarily blocking connections. Please try again later.</div>`;
