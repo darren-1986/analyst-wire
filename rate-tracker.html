@@ -1,10 +1,166 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="media/favicon.png">
+    <title>Central Bank Rates | Analyst Wire</title>
+    <!-- 1. Supabase Library (This fixes your console error) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <!-- 2. Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        *, *:before, *:after { box-sizing: border-box; }
+        
+        body { margin: 0; padding-top: 55px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; background-color: #0A0A0a; color: #ffffff; overflow: hidden; }
+
+        /* Navigation */
+        .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%; font-family: 'Inter', sans-serif; }
+        .nav-links { display: flex; align-items: center; gap: 5px; }
+        .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
+        .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .nav-links a.active { color: #00b4f9; font-weight: 600; background: rgba(0, 180, 249, 0.1); }
+        .mobile-menu-btn { display: none; font-size: 24px; color: #8b949e; cursor: pointer; background: none; border: none; }
+
+        .dropdown { position: relative; margin-left: 10px; }
+        .dropbtn { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 18px; padding: 5px; transition: color 0.2s; }
+        .dropbtn:hover { color: #fff; }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 35px; background-color: #161b22; min-width: 160px; border: 1px solid #30363d; z-index: 1000; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
+        .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; font-family: 'Inter', sans-serif; }
+        .dropdown-content a:hover { background-color: #21262d; color: #fff; }
+
+        /* Dashboard Wrapper */
+        .dashboard-wrapper { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0; position: relative; }
+        
+        /* Dashboard Header */
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #1c2230; background: #0d1117; flex-shrink: 0; }
+        .dashboard-header h1 { font-family: 'Inter', sans-serif; font-size: 16px; margin: 0; color: #fff; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .status-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8b949e; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Tabs Navigation */
+        .tabs-nav { display: flex; background: #161b22; border-bottom: 1px solid #1c2230; padding: 10px 20px 0 20px; gap: 5px; flex-shrink: 0; overflow-x: auto; }
+        .tab-btn { background: none; border: 1px solid #1c2230; border-bottom: none; color: #8b949e; padding: 10px 16px; border-radius: 8px 8px 0 0; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.2s; position: relative; bottom: -1px; }
+        .tab-btn:hover { background: rgba(255,255,255,0.03); color: #fff; }
+        .tab-btn.active-tab { background: #0A0A0a; color: #00b4f9; border-color: #1c2230; font-weight: 600; border-bottom: 1px solid #0A0A0a; }
+
+        /* Tab Content Area */
+        .tab-content-area { flex-grow: 1; padding: 20px; overflow-y: auto; background: #0A0A0a; position: relative; }
+        .tab-pane { display: none !important; width: 100%; }
+        .tab-pane.active-pane { display: grid !important; }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 40px 20px; color: #8b949e; font-family: 'Inter', sans-serif; font-size: 14px; border: 1px dashed #1c2230; border-radius: 12px; margin-top: 20px; }
+
+        /* Card & Table Styling */
+        .rates-container { grid-template-columns: 1fr; gap: 20px; width: 100%; align-content: start; }
+        .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+        .bank-card-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: #e2e8f0; display: flex; justify-content: space-between; }
+        
+        table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 13px; }
+        th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid #1c2230; }
+        th { color: #8b949e; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { color: #c9d1d9; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        .highlight-green { color: #22c55e; }
+        .highlight-blue { color: #00b4f9; }
+
+        /* Chart Canvas Holder */
+        .chart-holder { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid #1c2230; height: 260px; width: 100%; position: relative; }
+
+        /* LOADING OVERLAY */
+        #global-loader { display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0A0A0a; z-index: 50; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; transition: opacity 0.3s; }
+        .spinner { border: 3px solid #161b22; border-top: 3px solid #00b4f9; border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
+        .loading-text { color: #c9d1d9; font-size: 14px; font-weight: 500; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 950px) {
+            .mobile-menu-btn { display: block; }
+            .nav-links { display: none; position: absolute; top: 55px; left: 0; width: 100%; background: #0d1117; flex-direction: column; align-items: flex-start; padding: 10px 20px; border-bottom: 1px solid #1c2230; z-index: 1001; }
+            .nav-links.active-nav { display: flex; }
+            .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
+            .chart-holder { height: 200px; padding: 10px; }
+        }
+    </style>
+</head>
+<body class="dark">
+
+    <div class="top-nav">
+       <div style="height: 50px; display: flex; align-items: center;">
+            <img src="assets/logo.png" alt="Analyst Wire" style="height: 35px;" onerror="this.style.display='none'">
+       </div>
+       
+       <button class="mobile-menu-btn" onclick="toggleNav()">☰</button>
+       
+       <div class="nav-links" id="navLinks">
+            <a href="terminal.html" id="nav-dashboard" style="display: none;">Dashboard</a>
+            <a href="/newsfeed" id="nav-newsfeed" style="display: none;">Newsfeed</a>
+            <a href="rates.html" id="nav-rates" class="active">Rates Pricing</a>
+            <a href="key-levels.html" id="nav-key-levels" style="display: none;">Key Levels</a>
+            <a href="analysis.html" id="nav-analysis" style="display: none;">Analysis</a>
+            <a href="profile.html" id="nav-profile" style="display: none;">Network</a>
+            <a href="courses.html" id="nav-courses" style="display: none;">Courses</a>
+            
+            <div class="dropdown">
+                <button class="dropbtn" onclick="toggleDropdown(event)">⚙️</button>
+                <div id="settingsDropdown" class="dropdown-content">
+                    <a href="account.html">Account</a>
+                    <a href="support.html" class="sub-link">Support</a>
+                    <a id="nav-admin" style="display: none;" href="admin.html">Admin</a>
+                    <a id="nav-upload" style="display: none;" href="admin_upload.html">Upload Data</a>
+                    <a id="logoutBtn" style="color: #f85149; cursor: pointer;">Logout</a>
+                </div>
+            </div>
+       </div>
+    </div>
+
+    <div class="dashboard-wrapper">
+        <div class="dashboard-header">
+            <h1>Central Bank Rate Expectations</h1>
+            <div class="status-text" id="status-indicator">Connecting to Database...</div>
+        </div>
+
+        <div class="tabs-nav" id="mainTabs">
+            <button class="tab-btn active-tab" data-tab="main">Overview</button>
+            <button class="tab-btn" data-tab="fed">USA (FED)</button>
+            <button class="tab-btn" data-tab="ecb">Europe (ECB)</button>
+            <button class="tab-btn" data-tab="boe">UK (BOE)</button>
+            <button class="tab-btn" data-tab="boj">Japan (BOJ)</button>
+            <button class="tab-btn" data-tab="boc">Canada (BOC)</button>
+            <button class="tab-btn" data-tab="rba">Australia (RBA)</button>
+        </div>
+
+        <div class="tab-content-area" id="tabContent">
+            
+            <!-- LOADING SCREEN -->
+            <div id="global-loader">
+                <div class="spinner"></div>
+                <div class="loading-text" id="loader-primary-msg">Loading database...</div>
+            </div>
+
+            <!-- Tab Panes -->
+            <div id="main-pane" class="tab-pane active-pane rates-container"></div>
+            <div id="fed-pane" class="tab-pane rates-container"></div>
+            <div id="ecb-pane" class="tab-pane rates-container"></div>
+            <div id="boe-pane" class="tab-pane rates-container"></div>
+            <div id="boj-pane" class="tab-pane rates-container"></div>
+            <div id="boc-pane" class="tab-pane rates-container"></div>
+            <div id="rba-pane" class="tab-pane rates-container"></div>
+        </div>
+    </div>
+
+    <script>
         // --- MULTI-DATABASE CONFIGURATION ---
+        // 1. Auth Database (Original Project)
         const authClient = supabase.createClient(
             'https://fgidelsazisdqjfckerd.supabase.co', 
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY'
         );
         
+        // 2. Data Database (New Project)
         const dataClient = supabase.createClient(
             'https://nayucfhbnecwhtzuaiur.supabase.co', 
             'sb_publishable_yNK-_0-3ZI2ssYfbSvw75g_RXLD_R-A'
@@ -38,6 +194,7 @@
 
         // --- INITIALIZATION ---
         async function init() {
+            // Check auth state
             const { data: { session } } = await authClient.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
             
@@ -279,5 +436,8 @@
         window.onclick = function(event) { if (!event.target.matches('.dropbtn')) { document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); } };
         document.getElementById('logoutBtn').addEventListener('click', async () => { await authClient.auth.signOut(); window.location.href = 'index.html'; });
 
+        // Start everything when the page loads
         window.onload = init;
     </script>
+</body>
+</html>
