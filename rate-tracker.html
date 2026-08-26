@@ -303,11 +303,14 @@
 
             container.innerHTML = '';
 
+            // FILTER: Only use the 'current' dataset for the physical table and summary cards
+            // Fallback to dataRows if dataset tagging hasn't populated yet
+            let currentData = dataRows.filter(r => r.dataset === 'current');
+            if (currentData.length === 0) { currentData = dataRows; }
+            
             let currentRate = "0.00%";
             
-            // Build Summary Cards & Chart for specific banks
             if (bank.id !== 'main') {
-                // Extract Current Rate perfectly from the 'main' overview table stored in memory
                 const mainData = globalBankData.find(d => d.bank_id === 'main');
                 if (mainData && mainData.rows) {
                     const targetNames = {
@@ -319,10 +322,10 @@
                     if (mainRow) currentRate = mainRow.current;
                 }
 
-                const firstMtg = dataRows[0] || {};
-                const lastMtg = dataRows[dataRows.length - 1] || {};
+                // Summary cards now strictly read from currentData, ignoring historical blocks
+                const firstMtg = currentData[0] || {};
+                const lastMtg = currentData[currentData.length - 1] || {};
 
-                // Summary Cards HTML Injection
                 const summaryHTML = `
                 <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
@@ -332,7 +335,7 @@
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Next Meeting Pricing</div>
                         <div style="font-size: 20px; font-weight: 700; color: #22c55e;">${firstMtg.prob || 'N/A'}</div>
-                        <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">${firstMtg.delta > 0 ? '+' : ''}${firstMtg.delta || '0'} bps</div>
+                        <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">${firstMtg.delta && !firstMtg.delta.includes('-') && !firstMtg.delta.includes('(') ? '+' : ''}${firstMtg.delta || '0'} bps</div>
                     </div>
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Current Rate</div>
@@ -340,7 +343,7 @@
                     </div>
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">12-Month Outlook</div>
-                        <div style="font-size: 20px; font-weight: 700; color: #00b4f9;">${lastMtg.delta > 0 ? '+' : ''}${lastMtg.delta || '0'} bps</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #00b4f9;">${lastMtg.delta && !lastMtg.delta.includes('-') && !lastMtg.delta.includes('(') ? '+' : ''}${lastMtg.delta || '0'} bps</div>
                     </div>
                 </div>
                 `;
@@ -360,10 +363,10 @@
                 
                 container.innerHTML = summaryHTML;
                 container.appendChild(chartCard);
+                // Pass ALL dataRows to the chart so it can plot the comparison lines
                 setTimeout(() => reconstructChart(chartId, dataRows, currentRate), 50);
             }
 
-            // Table Render - Fixed column mapping and highlights
             const tableCard = document.createElement('div');
             tableCard.className = 'bank-card';
             
@@ -377,23 +380,23 @@
 
             if (bank.id === 'main') {
                 tableHTML += `<tr><th>Next Meeting</th><th>Bank</th><th>Current Rate</th><th>Probability</th><th>Hike/Cut</th><th>Δ vs Current (bps)</th></tr></thead><tbody>`;
-                dataRows.forEach(row => { 
+                currentData.forEach(row => { 
                     tableHTML += `<tr>
                         <td>${row.date}</td>
                         <td class="highlight-blue">${row.bank}</td>
                         <td>${row.current}</td>
                         <td>${row.prob}</td>
                         <td>${row.hike_cut}</td>
-                        <td class="highlight-green">${row.delta > 0 ? '+'+row.delta : row.delta}</td>
+                        <td class="highlight-green">${row.delta && !row.delta.includes('-') && !row.delta.includes('(') ? '+'+row.delta : row.delta}</td>
                     </tr>`; 
                 });
             } else {
                 tableHTML += `<tr><th>Meeting</th><th>Implied Rate (Post-Meeting)</th><th>Δ vs Current (bps)</th><th># of Hikes(Cuts)</th><th>Probability of Hike(Cut)</th></tr></thead><tbody>`;
-                dataRows.forEach(row => { 
+                currentData.forEach(row => { 
                     tableHTML += `<tr>
                         <td>${row.date}</td>
                         <td class="highlight-blue">${row.implied}</td>
-                        <td class="highlight-green">${row.delta > 0 ? '+'+row.delta : row.delta}</td>
+                        <td class="highlight-green">${row.delta && !row.delta.includes('-') && !row.delta.includes('(') ? '+'+row.delta : row.delta}</td>
                         <td>${row.hikes}</td>
                         <td>${row.prob}</td>
                     </tr>`; 
@@ -408,44 +411,57 @@
         function reconstructChart(chartId, dataRows, currentRateStr) {
             const canvas = document.getElementById(chartId);
             if (!canvas) return;
-
             if (chartInstances[chartId]) { chartInstances[chartId].destroy(); }
 
-            // Start the chart with the Current point
-            const dates = ['Current', ...dataRows.map(row => row.date)];
+            // Extract datasets safely
+            let currentData = dataRows.filter(r => r.dataset === 'current');
+            if (currentData.length === 0) { currentData = dataRows; } // Fallback
+            const w1Data = dataRows.filter(r => r.dataset === '1w_ago');
+
+            const dates = ['Current', ...currentData.map(row => row.date)];
             
             let currentVal = parseFloat(currentRateStr.replace('%', ''));
-            if (isNaN(currentVal)) {
-                // Failsafe: calculate backwards if main tab current rate failed to parse
-                currentVal = parseFloat(dataRows[0].implied.replace('%', '')) - (parseFloat(dataRows[0].delta) / 100);
+            if (isNaN(currentVal)) currentVal = parseFloat(currentData[0]?.implied.replace('%', '')) || 0;
+
+            const currentRates = [currentVal, ...currentData.map(row => parseFloat(row.implied?.replace('%', '')) || 0)];
+            const w1Rates = w1Data.length > 0 ? [currentVal, ...w1Data.map(row => parseFloat(row.implied?.replace('%', '')) || 0)] : [];
+
+            const datasets = [{
+                label: 'Current Pricing',
+                data: currentRates,
+                borderColor: '#00b4f9',
+                backgroundColor: 'rgba(0, 180, 249, 0.08)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.25,
+                pointBackgroundColor: '#0d1117',
+                pointBorderColor: '#00b4f9',
+                pointBorderWidth: 2,
+                pointRadius: 4
+            }];
+
+            // Plot 1 week ago comparison line if data exists in Supabase
+            if (w1Rates.length > 0) {
+                datasets.push({
+                    label: '1 Week Ago',
+                    data: w1Rates,
+                    borderColor: '#8b949e',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.25,
+                    pointBackgroundColor: '#0d1117',
+                    pointBorderColor: '#8b949e',
+                    pointBorderWidth: 2,
+                    pointRadius: 3
+                });
             }
 
-            const rates = [currentVal, ...dataRows.map(row => {
-                const clean = row.implied.replace('%', '').trim();
-                return parseFloat(clean) || 0;
-            })];
-
             const ctx = canvas.getContext('2d');
-            
             chartInstances[chartId] = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: 'Implied Rate Target (%)',
-                        data: rates,
-                        borderColor: '#00b4f9',
-                        backgroundColor: 'rgba(0, 180, 249, 0.08)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.25,
-                        pointBackgroundColor: '#0d1117',
-                        pointBorderColor: '#00b4f9',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
+                data: { labels: dates, datasets: datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -462,10 +478,10 @@
                         }
                     },
                     plugins: {
-                        legend: { display: false },
+                        legend: { display: true, labels: { color: '#c9d1d9', font: { family: 'Inter', size: 11 } } },
                         tooltip: { 
                             padding: 10,
-                            callbacks: { label: context => ` Implied Rate: ${context.parsed.y.toFixed(2)}%` }
+                            callbacks: { label: context => ` ${context.dataset.label}: ${context.parsed.y.toFixed(2)}%` }
                         }
                     }
                 }
