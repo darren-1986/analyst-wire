@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="media/favicon.png">
     <title>Central Bank Rates | Analyst Wire</title>
-    <!-- 1. Supabase Library (This fixes your console error) -->
+    <!-- 1. Supabase Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     <!-- 2. Chart.js for visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -49,13 +49,12 @@
         /* Tab Content Area */
         .tab-content-area { flex-grow: 1; padding: 20px; overflow-y: auto; background: #0A0A0a; position: relative; }
         .tab-pane { display: none !important; width: 100%; }
-        .tab-pane.active-pane { display: grid !important; }
+        .tab-pane.active-pane { display: block !important; }
 
         /* Empty State */
         .empty-state { text-align: center; padding: 40px 20px; color: #8b949e; font-family: 'Inter', sans-serif; font-size: 14px; border: 1px dashed #1c2230; border-radius: 12px; margin-top: 20px; }
 
         /* Card & Table Styling */
-        .rates-container { grid-template-columns: 1fr; gap: 20px; width: 100%; align-content: start; }
         .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
         .bank-card-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: #e2e8f0; display: flex; justify-content: space-between; }
         
@@ -142,35 +141,33 @@
             </div>
 
             <!-- Tab Panes -->
-            <div id="main-pane" class="tab-pane active-pane rates-container"></div>
-            <div id="fed-pane" class="tab-pane rates-container"></div>
-            <div id="ecb-pane" class="tab-pane rates-container"></div>
-            <div id="boe-pane" class="tab-pane rates-container"></div>
-            <div id="boj-pane" class="tab-pane rates-container"></div>
-            <div id="boc-pane" class="tab-pane rates-container"></div>
-            <div id="rba-pane" class="tab-pane rates-container"></div>
+            <div id="main-pane" class="tab-pane active-pane"></div>
+            <div id="fed-pane" class="tab-pane"></div>
+            <div id="ecb-pane" class="tab-pane"></div>
+            <div id="boe-pane" class="tab-pane"></div>
+            <div id="boj-pane" class="tab-pane"></div>
+            <div id="boc-pane" class="tab-pane"></div>
+            <div id="rba-pane" class="tab-pane"></div>
         </div>
     </div>
 
     <script>
         // --- MULTI-DATABASE CONFIGURATION ---
-        // 1. Auth Database (Original Project)
         const authClient = supabase.createClient(
             'https://fgidelsazisdqjfckerd.supabase.co', 
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnaWRlbHNhemlzZHFqZmNrZXJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Mjk0NzU4NCwiZXhwIjoyMDk4NTIzNTg0fQ.2UkKkgfJ6oERQrp2VOtiL9YP2MXKVWARAdoEkB5YJbY'
         );
         
-        // 2. Data Database (New Project)
         const dataClient = supabase.createClient(
             'https://nayucfhbnecwhtzuaiur.supabase.co', 
             'sb_publishable_yNK-_0-3ZI2ssYfbSvw75g_RXLD_R-A'
         );
 
         let chartInstances = {};
+        let globalBankData = []; // Store global data to access 'main' overview stats across all tabs
         
-        // CACHE SETTINGS
         const CACHE_KEY = 'aw_central_bank_rates_cache';
-        const CACHE_LIFESPAN_MS = 1000 * 60 * 60 * 3; // 3 Hours in milliseconds
+        const CACHE_LIFESPAN_MS = 1000 * 60 * 60 * 3; // 3 Hours
 
         const banksToFetch = [
             { id: 'main', title: 'Next Meeting Overview' },
@@ -192,9 +189,7 @@
             return tagsArray.some(tag => String(tag).toLowerCase() === requiredTag.toLowerCase());
         }
 
-        // --- INITIALIZATION ---
         async function init() {
-            // Check auth state
             const { data: { session } } = await authClient.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
             
@@ -206,7 +201,6 @@
 
             if (!isAdminUser && !userHasAccess(tags, 'pro')) { window.location.href = 'account.html'; return; }
 
-            // Navigation Permissions
             const navElements = ['dashboard', 'newsfeed', 'key-levels', 'analysis', 'profile', 'courses', 'admin', 'upload'].reduce((acc, id) => { acc[id] = document.getElementById(`nav-${id}`); return acc; }, {});
             if (navElements.dashboard) navElements.dashboard.style.display = 'block';
             if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
@@ -218,52 +212,37 @@
             if (isAdminUser && navElements.upload) navElements.upload.style.display = 'block';
 
             setupTabs();
-            
-            // Initiate data loading (checks cache first, falls back to DB)
             await loadData();
         }
 
-        // --- SMART LOADING: CACHE VS DATABASE ---
         async function loadData() {
             const statusIndicator = document.getElementById('status-indicator');
             const cachedString = localStorage.getItem(CACHE_KEY);
             
-            // 1. CHECK BROWSER CACHE FIRST
             if (cachedString) {
                 try {
                     const cacheObj = JSON.parse(cachedString);
                     const ageInMs = Date.now() - cacheObj.savedAt;
 
-                    // If cache is less than 3 hours old, use it and STOP
                     if (ageInMs < CACHE_LIFESPAN_MS) {
                         renderAllData(cacheObj.data);
-                        
-                        // Display DB timestamp, but indicate it loaded locally
                         const dbTimeStr = new Date(cacheObj.dbTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         statusIndicator.innerText = `Loaded from Cache | DB Data from: ${dbTimeStr}`;
                         document.getElementById('global-loader').style.display = 'none';
-                        return; // Exit function, don't query Supabase
+                        return; 
                     }
-                } catch (e) {
-                    console.warn("Invalid cache found, ignoring.");
-                }
+                } catch (e) { console.warn("Invalid cache found, ignoring."); }
             }
 
-            // 2. FETCH FROM SUPABASE (Only happens if cache is missing or expired)
             try {
                 statusIndicator.innerText = "Checking database for updates...";
                 
-                const { data, error } = await dataClient
-                    .from('central_bank_rates')
-                    .select('*');
-
+                const { data, error } = await dataClient.from('central_bank_rates').select('*');
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    // Find latest timestamp across the db records
                     const latestTimestamp = Math.max(...data.map(d => new Date(d.updated_at).getTime()));
                     
-                    // Save the fresh data into browser Local Storage
                     const newCacheObj = {
                         savedAt: Date.now(),
                         dbTimestamp: latestTimestamp,
@@ -288,8 +267,8 @@
             }
         }
 
-        // Helper to render all tabs once data is secured
         function renderAllData(dataArray) {
+            globalBankData = dataArray; // Store globally so child tabs can read 'main' overview rates
             dataArray.forEach(item => {
                 const config = banksToFetch.find(b => b.id === item.bank_id);
                 if (config) { renderBankTab(config, item.rows); }
@@ -303,7 +282,6 @@
             });
         }
 
-        // --- RENDER UI ---
         function setupTabs() {
             document.getElementById('mainTabs').addEventListener('click', (e) => {
                 const btn = e.target.closest('.tab-btn');
@@ -325,8 +303,48 @@
 
             container.innerHTML = '';
 
-            // Chart Render
+            let currentRate = "0.00%";
+            
+            // Build Summary Cards & Chart for specific banks
             if (bank.id !== 'main') {
+                // Extract Current Rate perfectly from the 'main' overview table stored in memory
+                const mainData = globalBankData.find(d => d.bank_id === 'main');
+                if (mainData && mainData.rows) {
+                    const targetNames = {
+                        'fed': 'Federal Reserve', 'ecb': 'European Central Bank',
+                        'boe': 'Bank of England', 'boj': 'Bank of Japan',
+                        'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia'
+                    };
+                    const mainRow = mainData.rows.find(r => r.bank && r.bank.includes(targetNames[bank.id]));
+                    if (mainRow) currentRate = mainRow.current;
+                }
+
+                const firstMtg = dataRows[0] || {};
+                const lastMtg = dataRows[dataRows.length - 1] || {};
+
+                // Summary Cards HTML Injection
+                const summaryHTML = `
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Next Decision</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #fff;">${firstMtg.date || 'N/A'}</div>
+                    </div>
+                    <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Next Meeting Pricing</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #22c55e;">${firstMtg.prob || 'N/A'}</div>
+                        <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">${firstMtg.delta > 0 ? '+' : ''}${firstMtg.delta || '0'} bps</div>
+                    </div>
+                    <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Current Rate</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #fff;">${currentRate}</div>
+                    </div>
+                    <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">12-Month Outlook</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #00b4f9;">${lastMtg.delta > 0 ? '+' : ''}${lastMtg.delta || '0'} bps</div>
+                    </div>
+                </div>
+                `;
+
                 const chartId = `${bank.id}-chart`;
                 const chartCard = document.createElement('div');
                 chartCard.className = 'bank-card';
@@ -339,11 +357,13 @@
                         <canvas id="${chartId}"></canvas>
                     </div>
                 `;
+                
+                container.innerHTML = summaryHTML;
                 container.appendChild(chartCard);
-                setTimeout(() => reconstructChart(chartId, dataRows, bank.title), 50);
+                setTimeout(() => reconstructChart(chartId, dataRows, currentRate), 50);
             }
 
-            // Table Render
+            // Table Render - Fixed column mapping and highlights
             const tableCard = document.createElement('div');
             tableCard.className = 'bank-card';
             
@@ -356,14 +376,27 @@
             `;
 
             if (bank.id === 'main') {
-                tableHTML += `<tr><th>Next Meeting</th><th>Bank</th><th>Current Rate</th><th>Probability</th><th>Δ vs Current (bps)</th></tr></thead><tbody>`;
+                tableHTML += `<tr><th>Next Meeting</th><th>Bank</th><th>Current Rate</th><th>Probability</th><th>Hike/Cut</th><th>Δ vs Current (bps)</th></tr></thead><tbody>`;
                 dataRows.forEach(row => { 
-                    tableHTML += `<tr><td>${row.date}</td><td class="highlight-blue">${row.bank}</td><td>${row.current}</td><td>${row.prob}</td><td class="highlight-green">${row.delta}</td></tr>`; 
+                    tableHTML += `<tr>
+                        <td>${row.date}</td>
+                        <td class="highlight-blue">${row.bank}</td>
+                        <td>${row.current}</td>
+                        <td>${row.prob}</td>
+                        <td>${row.hike_cut}</td>
+                        <td class="highlight-green">${row.delta > 0 ? '+'+row.delta : row.delta}</td>
+                    </tr>`; 
                 });
             } else {
-                tableHTML += `<tr><th>Meeting</th><th>Implied Rate</th><th>Δ vs Current (bps)</th><th># of Hikes(Cuts)</th><th>Probability</th></tr></thead><tbody>`;
+                tableHTML += `<tr><th>Meeting</th><th>Implied Rate (Post-Meeting)</th><th>Δ vs Current (bps)</th><th># of Hikes(Cuts)</th><th>Probability of Hike(Cut)</th></tr></thead><tbody>`;
                 dataRows.forEach(row => { 
-                    tableHTML += `<tr><td>${row.date}</td><td class="highlight-blue">${row.implied}</td><td class="highlight-green">${row.delta}</td><td>${row.hikes}</td><td>${row.prob}</td></tr>`; 
+                    tableHTML += `<tr>
+                        <td>${row.date}</td>
+                        <td class="highlight-blue">${row.implied}</td>
+                        <td class="highlight-green">${row.delta > 0 ? '+'+row.delta : row.delta}</td>
+                        <td>${row.hikes}</td>
+                        <td>${row.prob}</td>
+                    </tr>`; 
                 });
             }
 
@@ -372,17 +405,25 @@
             container.appendChild(tableCard);
         }
 
-        function reconstructChart(chartId, dataRows, bankTitle) {
+        function reconstructChart(chartId, dataRows, currentRateStr) {
             const canvas = document.getElementById(chartId);
             if (!canvas) return;
 
             if (chartInstances[chartId]) { chartInstances[chartId].destroy(); }
 
-            const dates = dataRows.map(row => row.date);
-            const rates = dataRows.map(row => {
+            // Start the chart with the Current point
+            const dates = ['Current', ...dataRows.map(row => row.date)];
+            
+            let currentVal = parseFloat(currentRateStr.replace('%', ''));
+            if (isNaN(currentVal)) {
+                // Failsafe: calculate backwards if main tab current rate failed to parse
+                currentVal = parseFloat(dataRows[0].implied.replace('%', '')) - (parseFloat(dataRows[0].delta) / 100);
+            }
+
+            const rates = [currentVal, ...dataRows.map(row => {
                 const clean = row.implied.replace('%', '').trim();
                 return parseFloat(clean) || 0;
-            });
+            })];
 
             const ctx = canvas.getContext('2d');
             
@@ -436,7 +477,6 @@
         window.onclick = function(event) { if (!event.target.matches('.dropbtn')) { document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none'); } };
         document.getElementById('logoutBtn').addEventListener('click', async () => { await authClient.auth.signOut(); window.location.href = 'index.html'; });
 
-        // Start everything when the page loads
         window.onload = init;
     </script>
 </body>
