@@ -257,7 +257,6 @@
             }
         }
 
-        // Live Countdown Logic
         function startCountdowns() {
             if (countdownTimerId) clearInterval(countdownTimerId);
             countdownTimerId = setInterval(() => {
@@ -265,7 +264,6 @@
                     const dateStr = el.getAttribute('data-date');
                     if (!dateStr || dateStr === 'N/A') return;
                     
-                    // Setup Target: Treat dates as 14:00:00 (2:00 PM EDT)
                     let targetDate = new Date(dateStr + " 14:00:00 EDT").getTime();
                     if (isNaN(targetDate)) {
                         targetDate = new Date(dateStr).getTime() + (14 * 60 * 60 * 1000); 
@@ -320,11 +318,14 @@
             });
         }
 
-        window.toggleDataset = function(chartId, datasetIndex, btn) {
+        window.toggleDatasetByLabel = function(chartId, datasetLabel, btn) {
             const chart = chartInstances[chartId];
             if(!chart) return;
-            const meta = chart.getDatasetMeta(datasetIndex);
-            meta.hidden = meta.hidden === null ? !chart.data.datasets[datasetIndex].hidden : null;
+            const dsIndex = chart.data.datasets.findIndex(ds => ds.label === datasetLabel);
+            if (dsIndex === -1) return;
+            
+            const meta = chart.getDatasetMeta(dsIndex);
+            meta.hidden = meta.hidden === null ? !chart.data.datasets[dsIndex].hidden : null;
             chart.update();
             btn.classList.toggle('active-toggle');
         };
@@ -430,17 +431,30 @@
                 const chartCard = document.createElement('div');
                 chartCard.className = 'bank-card';
                 
+                // Dynamically build the toggles based on what data actually exists in your DB
+                const dsConfigs = [
+                    { key: 'current', label: 'Current' },
+                    { key: '1w_ago', label: '1w ago' },
+                    { key: '3w_ago', label: '3w ago' },
+                    { key: '6w_ago', label: '6w ago' },
+                    { key: '10w_ago', label: '10w ago' }
+                ];
+                
+                let toggleButtonsHTML = '';
+                dsConfigs.forEach(conf => {
+                    const exists = dataRows.some(r => r.dataset === conf.key) || conf.key === 'current';
+                    if (exists) {
+                        toggleButtonsHTML += `<button class="ds-btn active-toggle" onclick="toggleDatasetByLabel('${chartId}', '${conf.label}', this)">${conf.label}</button>`;
+                    }
+                });
+
                 chartCard.innerHTML = `
                     <div class="bank-card-header" style="border-bottom: none;">
                         <span>IMPLIED RATE PATH (MARKET EXPECTATION)</span>
                         <span class="highlight-blue">${bank.title}</span>
                     </div>
                     <div style="display:flex; gap:8px; padding:0 20px 12px 20px; background:#161b22; border-bottom:1px solid #1c2230;">
-                        <button class="ds-btn active-toggle" onclick="toggleDataset('${chartId}', 0, this)">Current</button>
-                        <button class="ds-btn active-toggle" onclick="toggleDataset('${chartId}', 1, this)">1w ago</button>
-                        <button class="ds-btn active-toggle" onclick="toggleDataset('${chartId}', 2, this)">3w ago</button>
-                        <button class="ds-btn active-toggle" onclick="toggleDataset('${chartId}', 3, this)">6w ago</button>
-                        <button class="ds-btn active-toggle" onclick="toggleDataset('${chartId}', 4, this)">10w ago</button>
+                        ${toggleButtonsHTML}
                     </div>
                     <div class="chart-holder">
                         <canvas id="${chartId}"></canvas>
@@ -579,17 +593,8 @@
                 const rowData = dataRows.filter(r => r.dataset === config.key).map(r => getCorrectedRow(r));
                 
                 if (rowData.length > 0 || config.key === 'current') {
-                    // CRITICAL FIX: Math correction for historical chart plotting
-                    const plotRates = [currentVal, ...rowData.map(row => {
-                        if (config.key === 'current') {
-                            return parseFloat(String(row.implied).replace('%', '')) || 0;
-                        } else {
-                            // The scraper saved historical Delta under the 'implied' key
-                            // Formula: Current Rate + (Delta in bps / 100)
-                            const deltaBps = parseBps(row.implied);
-                            return currentVal + (deltaBps / 100);
-                        }
-                    })];
+                    // THE FIX: Stop manipulating the data. Plot the raw implied rate directly from the database.
+                    const plotRates = [currentVal, ...rowData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
                     
                     datasets.push({
                         label: config.label,
