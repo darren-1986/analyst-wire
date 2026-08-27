@@ -67,8 +67,13 @@
         .highlight-green { color: #22c55e; }
         .highlight-blue { color: #00b4f9; }
 
+        /* Custom Toggle Buttons */
+        .ds-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.2s; }
+        .ds-btn.active-toggle { color: #fff; border-color: #00b4f9; background: rgba(0, 180, 249, 0.1); }
+        .ds-btn:hover { border-color: #8b949e; }
+
         /* Chart Canvas Holder */
-        .chart-holder { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid #1c2230; height: 260px; width: 100%; position: relative; }
+        .chart-holder { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid #1c2230; height: 350px; width: 100%; position: relative; }
 
         /* LOADING OVERLAY */
         #global-loader { display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0A0A0a; z-index: 50; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; transition: opacity 0.3s; }
@@ -81,7 +86,7 @@
             .nav-links { display: none; position: absolute; top: 55px; left: 0; width: 100%; background: #0d1117; flex-direction: column; align-items: flex-start; padding: 10px 20px; border-bottom: 1px solid #1c2230; z-index: 1001; }
             .nav-links.active-nav { display: flex; }
             .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
-            .chart-holder { height: 200px; padding: 10px; }
+            .chart-holder { height: 250px; padding: 10px; }
         }
     </style>
 </head>
@@ -172,6 +177,25 @@
             { id: 'rba', title: 'Reserve Bank of Australia (AUD)' }
         ];
 
+        // Safely parse Basis Points
+        function parseBps(str) {
+            if (!str) return 0;
+            let clean = String(str).replace(/[^\d.-]/g, '');
+            if (String(str).includes('(')) clean = '-' + clean;
+            return parseFloat(clean) || 0;
+        }
+
+        // AUTO-CORRECTOR: Flips Probability and Delta if the scraper accidentally swapped them
+        function getCorrectedRow(row) {
+            if (!row) return {};
+            let probStr = row.prob || '';
+            let deltaStr = row.delta || '';
+            if (String(deltaStr).includes('%') && !String(probStr).includes('%')) {
+                return { ...row, prob: deltaStr, delta: probStr };
+            }
+            return row;
+        }
+
         function userHasAccess(userTags, requiredTag) {
             if (!userTags) return false;
             let tagsArray = Array.isArray(userTags) ? userTags : [];
@@ -253,7 +277,7 @@
                 const config = banksToFetch.find(b => b.id === item.bank_id);
                 if (config) { renderBankTab(config, item.rows); }
             });
-            drawOverviewChart(); // Draw the multi-bank unified chart on the main page
+            drawOverviewCharts(); // Draw both Relative and Level charts on main tab
         }
 
         function renderEmptyStates(message) {
@@ -277,6 +301,16 @@
             });
         }
 
+        // Toggle Chart.js datasets dynamically
+        window.toggleDataset = function(chartId, datasetIndex, btn) {
+            const chart = chartInstances[chartId];
+            if(!chart) return;
+            const meta = chart.getDatasetMeta(datasetIndex);
+            meta.hidden = meta.hidden === null ? !chart.data.datasets[datasetIndex].hidden : null;
+            chart.update();
+            btn.classList.toggle('active-toggle');
+        };
+
         function renderBankTab(bank, dataRows) {
             if (!dataRows || dataRows.length === 0) return;
             const container = document.getElementById(`${bank.id}-pane`);
@@ -284,44 +318,58 @@
 
             container.innerHTML = '';
             
-            // Strictly enforce ONLY using the current timeline data
             let currentData = dataRows.filter(r => r.dataset === 'current');
             if (currentData.length === 0) currentData = dataRows; 
             
             if (bank.id === 'main') {
-                const firstMtg = currentData[0] || {};
+                // Find the absolute closest meeting across all banks for the "Up Next" widget
+                const sortedMainData = [...currentData].sort((a, b) => new Date(a.date) - new Date(b.date));
+                const absoluteNextMtg = getCorrectedRow(sortedMainData[0] || {});
+
+                let actionMain = 'HIKE';
+                let parsedDeltaMain = parseBps(absoluteNextMtg.delta);
+                if (parsedDeltaMain < 0) actionMain = 'CUT';
+                if (parsedDeltaMain === 0) actionMain = 'HOLD';
+                if (absoluteNextMtg.hike_cut) actionMain = absoluteNextMtg.hike_cut.toUpperCase();
+                
+                // Properly format & round the percentage
+                let probValMain = Math.round(parseFloat(absoluteNextMtg.prob || 0));
+
                 const summaryHTML = `
                 <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Up Next</div>
-                        <div style="font-size: 20px; font-weight: 700; color: #fff;">${firstMtg.bank || 'N/A'}</div>
-                        <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">${firstMtg.date || ''}</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #fff;">${absoluteNextMtg.bank || 'N/A'}</div>
+                        <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">${absoluteNextMtg.date || ''}</div>
                     </div>
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Pricing</div>
-                        <div style="font-size: 20px; font-weight: 700; color: #22c55e;">${firstMtg.prob || '0%'} ${firstMtg.hike_cut || 'HIKE'}</div>
-                        <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">${firstMtg.delta && !firstMtg.delta.includes('-') && !firstMtg.delta.includes('(') ? '+' : ''}${firstMtg.delta || '0'} bps</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #22c55e;">${probValMain}% ${actionMain}</div>
+                        <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">${parsedDeltaMain > 0 ? '+' : ''}${absoluteNextMtg.delta || '0'} bps</div>
                     </div>
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Current Rate</div>
-                        <div style="font-size: 20px; font-weight: 700; color: #fff;">${firstMtg.current || '0.00%'}</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #fff;">${absoluteNextMtg.current || '0.00%'}</div>
                     </div>
                 </div>
                 `;
 
-                // Add the container for the multi-bank unified chart
+                // Render BOTH overview charts side by side
                 const overviewChartHTML = `
-                <div class="bank-card">
-                    <div class="bank-card-header">
-                        <span>IMPLIED POLICY RATE PATHS: RELATIVE TO CURRENT</span>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div class="bank-card" style="flex: 1; min-width: 300px; margin-bottom: 20px;">
+                        <div class="bank-card-header"><span>IMPLIED POLICY RATE PATHS: RELATIVE</span></div>
+                        <div class="chart-holder" style="height: 350px;"><canvas id="main-relative-chart"></canvas></div>
                     </div>
-                    <div class="chart-holder" style="height: 300px;">
-                        <canvas id="main-overview-chart"></canvas>
+                    <div class="bank-card" style="flex: 1; min-width: 300px; margin-bottom: 20px;">
+                        <div class="bank-card-header"><span>IMPLIED POLICY RATE PATHS: LEVEL</span></div>
+                        <div class="chart-holder" style="height: 350px;"><canvas id="main-level-chart"></canvas></div>
                     </div>
                 </div>
                 `;
                 
                 container.innerHTML = summaryHTML + overviewChartHTML;
+
             } else {
                 let currentRate = "0.00%";
                 const mainData = globalBankData.find(d => d.bank_id === 'main');
@@ -331,8 +379,14 @@
                     if (mainRow) currentRate = mainRow.current;
                 }
 
-                const firstMtg = currentData[0] || {};
-                const lastMtg = currentData[currentData.length - 1] || {};
+                const firstMtg = getCorrectedRow(currentData[0] || {});
+                const lastMtg = getCorrectedRow(currentData[currentData.length - 1] || {});
+
+                let actionBank = 'HIKE';
+                let parsedDeltaBank = parseBps(firstMtg.delta);
+                if (parsedDeltaBank < 0) actionBank = 'CUT';
+                if (parsedDeltaBank === 0) actionBank = 'HOLD';
+                let probValBank = Math.round(parseFloat(firstMtg.prob || 0));
 
                 const summaryHTML = `
                 <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
@@ -342,8 +396,8 @@
                     </div>
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Next Meeting Pricing</div>
-                        <div style="font-size: 20px; font-weight: 700; color: #22c55e;">${firstMtg.prob || 'N/A'}</div>
-                        <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">${firstMtg.delta && !firstMtg.delta.includes('-') && !firstMtg.delta.includes('(') ? '+' : ''}${firstMtg.delta || '0'} bps</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #22c55e;">${probValBank}% ${actionBank}</div>
+                        <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">${parsedDeltaBank > 0 ? '+' : ''}${firstMtg.delta || '0'} bps</div>
                     </div>
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Current Rate</div>
@@ -351,7 +405,7 @@
                     </div>
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">12-Month Outlook</div>
-                        <div style="font-size: 20px; font-weight: 700; color: #00b4f9;">${lastMtg.delta && !lastMtg.delta.includes('-') && !lastMtg.delta.includes('(') ? '+' : ''}${lastMtg.delta || '0'} bps</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #00b4f9;">${parseBps(lastMtg.delta) > 0 ? '+' : ''}${lastMtg.delta || '0'} bps</div>
                     </div>
                 </div>
                 `;
@@ -359,10 +413,19 @@
                 const chartId = `${bank.id}-chart`;
                 const chartCard = document.createElement('div');
                 chartCard.className = 'bank-card';
+                
+                // Inject the historical toggle buttons
                 chartCard.innerHTML = `
-                    <div class="bank-card-header">
+                    <div class="bank-card-header" style="border-bottom: none;">
                         <span>IMPLIED RATE PATH (MARKET EXPECTATION)</span>
                         <span class="highlight-blue">${bank.title}</span>
+                    </div>
+                    <div style="display:flex; gap:8px; padding:0 20px 12px 20px; background:#161b22; border-bottom:1px solid #1c2230;">
+                        <button class="ds-btn active-toggle" onclick="toggleDataset('${chartId}', 0, this)">Current</button>
+                        <button class="ds-btn active-toggle" onclick="toggleDataset('${chartId}', 1, this)">1w ago</button>
+                        <button class="ds-btn active-toggle" onclick="toggleDataset('${chartId}', 2, this)">3w ago</button>
+                        <button class="ds-btn active-toggle" onclick="toggleDataset('${chartId}', 3, this)">6w ago</button>
+                        <button class="ds-btn active-toggle" onclick="toggleDataset('${chartId}', 4, this)">10w ago</button>
                     </div>
                     <div class="chart-holder">
                         <canvas id="${chartId}"></canvas>
@@ -371,8 +434,9 @@
                 
                 container.innerHTML = summaryHTML;
                 container.appendChild(chartCard);
-                // EXPLICITLY PASS ONLY currentData SO THE CHART NEVER SHOWS COMPARISON DATA
-                setTimeout(() => reconstructChart(chartId, currentData, currentRate), 50);
+                
+                // Pass ALL dataRows so reconstructChart can map all the historical lines
+                setTimeout(() => reconstructIndividualChart(chartId, dataRows, currentRate), 50);
             }
 
             const tableCard = document.createElement('div');
@@ -382,26 +446,28 @@
 
             if (bank.id === 'main') {
                 tableHTML += `<tr><th>Next Meeting</th><th>Bank</th><th>Current Rate</th><th>Probability</th><th>Hike/Cut</th><th>Δ vs Current (bps)</th><th>12-Month Outlook</th></tr></thead><tbody>`;
-                currentData.forEach(row => { 
+                currentData.forEach(r => { 
+                    const row = getCorrectedRow(r);
                     tableHTML += `<tr>
                         <td>${row.date}</td>
                         <td class="highlight-blue">${row.bank}</td>
                         <td>${row.current}</td>
                         <td>${row.prob}</td>
                         <td>${row.hike_cut}</td>
-                        <td class="highlight-green">${row.delta && !row.delta.includes('-') && !row.delta.includes('(') ? '+'+row.delta : row.delta}</td>
+                        <td class="highlight-green">${parseBps(row.delta) > 0 ? '+'+row.delta : row.delta}</td>
                         <td>${row.outlook || ''}</td>
                     </tr>`; 
                 });
             } else {
-                tableHTML += `<tr><th>Meeting</th><th>Implied Rate (Post-Meeting)</th><th>Δ vs Current (bps)</th><th># of Hikes(Cuts)</th><th>Probability of Hike(Cut)</th></tr></thead><tbody>`;
-                currentData.forEach(row => { 
+                tableHTML += `<tr><th>Meeting</th><th>Implied Rate (Post-Meeting)</th><th>Probability of Hike(Cut)</th><th># of Hikes(Cuts)</th><th>Δ vs Current (bps)</th></tr></thead><tbody>`;
+                currentData.forEach(r => { 
+                    const row = getCorrectedRow(r);
                     tableHTML += `<tr>
                         <td>${row.date}</td>
                         <td class="highlight-blue">${row.implied}</td>
-                        <td class="highlight-green">${row.delta && !row.delta.includes('-') && !row.delta.includes('(') ? '+'+row.delta : row.delta}</td>
-                        <td>${row.hikes}</td>
                         <td>${row.prob}</td>
+                        <td>${row.hikes}</td>
+                        <td class="highlight-green">${parseBps(row.delta) > 0 ? '+'+row.delta : row.delta}</td>
                     </tr>`; 
                 });
             }
@@ -411,96 +477,144 @@
             container.appendChild(tableCard);
         }
 
-        function drawOverviewChart() {
-            const canvas = document.getElementById('main-overview-chart');
-            if (!canvas) return;
-            if (chartInstances['main-overview-chart']) { chartInstances['main-overview-chart'].destroy(); }
+        // Draws the dual Relative and Level charts on the Overview Page
+        function drawOverviewCharts() {
+            const relCanvas = document.getElementById('main-relative-chart');
+            const lvlCanvas = document.getElementById('main-level-chart');
+            if (!relCanvas || !lvlCanvas) return;
 
-            // Extract the Fed's timeline to serve as the unified x-axis
+            if (chartInstances['main-relative-chart']) chartInstances['main-relative-chart'].destroy();
+            if (chartInstances['main-level-chart']) chartInstances['main-level-chart'].destroy();
+
+            // Extract the Fed's timeline as the baseline unified x-axis
             const fedDataObj = globalBankData.find(d => d.bank_id === 'fed');
             if (!fedDataObj) return;
             const fedCurrent = fedDataObj.rows.filter(r => r.dataset === 'current');
             const dates = ['Current', ...fedCurrent.map(row => row.date)];
 
-            const datasets = [];
-            const colors = { 'fed': '#00b4f9', 'ecb': '#22c55e', 'boe': '#f59e0b', 'boj': '#ef4444', 'boc': '#a855f7', 'rba': '#ec4899' };
+            const relDatasets = [];
+            const lvlDatasets = [];
+            
+            const colors = { 'fed': '#00b4f9', 'ecb': '#ec4899', 'boe': '#ef4444', 'boj': '#eab308', 'boc': '#8b5cf6', 'rba': '#10b981' };
             const names = { 'fed': 'FED', 'ecb': 'ECB', 'boe': 'BOE', 'boj': 'BOJ', 'boc': 'BOC', 'rba': 'RBA' };
 
-            // We plot the Delta (relative change in bps) so they can all share the same Y axis
             ['fed', 'ecb', 'boe', 'boj', 'boc', 'rba'].forEach(bankId => {
                 const bankDataObj = globalBankData.find(d => d.bank_id === bankId);
                 if (bankDataObj && bankDataObj.rows) {
-                    const bData = bankDataObj.rows.filter(r => r.dataset === 'current');
-                    const deltas = [0, ...bData.map(row => {
-                        let cleanDelta = row.delta.replace(/[^\d.-]/g, '');
-                        if (row.delta.includes('(')) cleanDelta = '-' + cleanDelta;
-                        return parseFloat(cleanDelta) || 0;
-                    })];
+                    const bData = bankDataObj.rows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
                     
-                    datasets.push({
+                    // Relative Y-Axis (Delta in bps)
+                    const deltas = [0, ...bData.map(row => parseBps(row.delta))];
+                    
+                    // Level Y-Axis (Implied Policy Rate %)
+                    let currentRate = 0;
+                    const mainData = globalBankData.find(d => d.bank_id === 'main');
+                    if (mainData) {
+                        const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
+                        const mainRow = mainData.rows.find(r => r.bank && r.bank.includes(targetNames[bankId]));
+                        if (mainRow) currentRate = parseFloat(String(mainRow.current).replace('%', '')) || 0;
+                    }
+                    const levels = [currentRate, ...bData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
+
+                    const baseConfig = {
                         label: names[bankId],
-                        data: deltas,
                         borderColor: colors[bankId],
                         backgroundColor: 'transparent',
                         borderWidth: 2,
                         tension: 0.3,
-                        pointRadius: 2
+                        pointRadius: 2,
+                        pointHoverRadius: 5
+                    };
+
+                    relDatasets.push({ ...baseConfig, data: deltas });
+                    lvlDatasets.push({ ...baseConfig, data: levels });
+                }
+            });
+
+            const commonOptions = {
+                responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'top', labels: { color: '#c9d1d9', boxWidth: 12, font: {family: 'Inter'} } } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#8b949e', font: {family: 'JetBrains Mono', size: 10}, maxRotation: 45 } }
+                }
+            };
+
+            const relCtx = relCanvas.getContext('2d');
+            chartInstances['main-relative-chart'] = new Chart(relCtx, {
+                type: 'line',
+                data: { labels: dates, datasets: relDatasets },
+                options: { ...commonOptions, scales: { ...commonOptions.scales, y: { title: { display: true, text: 'Δ vs Current (bps)', color: '#8b949e' }, grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9' } } } }
+            });
+
+            const lvlCtx = lvlCanvas.getContext('2d');
+            chartInstances['main-level-chart'] = new Chart(lvlCtx, {
+                type: 'line',
+                data: { labels: dates, datasets: lvlDatasets },
+                options: { ...commonOptions, scales: { ...commonOptions.scales, y: { title: { display: true, text: 'Policy Rate (%)', color: '#8b949e' }, grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9', callback: v => v.toFixed(2) + '%' } } } }
+            });
+        }
+
+        // Draws the multi-dataset chart for Individual Bank Tabs
+        function reconstructIndividualChart(chartId, dataRows, currentRateStr) {
+            const canvas = document.getElementById(chartId);
+            if (!canvas) return;
+            if (chartInstances[chartId]) { chartInstances[chartId].destroy(); }
+
+            // Config for all possible datasets from Supabase
+            const dsConfigs = [
+                { key: 'current', label: 'Current', color: '#00b4f9' },
+                { key: '1w_ago', label: '1w ago', color: '#a8a29e' },
+                { key: '3w_ago', label: '3w ago', color: '#fbbf24' },
+                { key: '6w_ago', label: '6w ago', color: '#94a3b8' },
+                { key: '10w_ago', label: '10w ago', color: '#e2e8f0' },
+            ];
+
+            const currentData = dataRows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
+            const dates = ['Current', ...currentData.map(row => row.date)];
+            
+            let currentVal = parseFloat(String(currentRateStr).replace('%', ''));
+            if (isNaN(currentVal)) currentVal = parseFloat(String(currentData[0]?.implied).replace('%', '')) || 0;
+
+            const datasets = [];
+
+            dsConfigs.forEach((config) => {
+                const rowData = dataRows.filter(r => r.dataset === config.key).map(r => getCorrectedRow(r));
+                
+                // Only plot the line if the scraper actually found and saved that dataset
+                if (rowData.length > 0 || config.key === 'current') {
+                    const plotRates = [currentVal, ...rowData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
+                    
+                    datasets.push({
+                        label: config.label,
+                        data: plotRates,
+                        borderColor: config.color,
+                        backgroundColor: config.key === 'current' ? 'rgba(0, 180, 249, 0.05)' : 'transparent',
+                        borderWidth: 2,
+                        fill: config.key === 'current',
+                        tension: 0.25,
+                        pointBackgroundColor: '#0d1117',
+                        pointBorderColor: config.color,
+                        pointBorderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 6
                     });
                 }
             });
 
             const ctx = canvas.getContext('2d');
-            chartInstances['main-overview-chart'] = new Chart(ctx, {
+            chartInstances[chartId] = new Chart(ctx, {
                 type: 'line',
                 data: { labels: dates, datasets: datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
                     scales: {
-                        y: { title: { display: true, text: 'Δ vs Current (bps)', color: '#8b949e' }, grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9' } },
-                        x: { grid: { display: false }, ticks: { color: '#8b949e', maxRotation: 45 } }
+                        y: { title: { display: true, text: 'Implied Rate (%)', color: '#8b949e', font: {family: 'Inter', size: 10} }, grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9', callback: v => v.toFixed(2) + '%', font: {family: 'JetBrains Mono', size: 10} } },
+                        x: { grid: { display: false }, ticks: { color: '#8b949e', font: {family: 'JetBrains Mono', size: 10}, maxRotation: 45 } }
                     },
-                    plugins: { legend: { position: 'top', labels: { color: '#c9d1d9', boxWidth: 12 } } }
-                }
-            });
-        }
-
-        function reconstructChart(chartId, currentData, currentRateStr) {
-            const canvas = document.getElementById(chartId);
-            if (!canvas) return;
-            if (chartInstances[chartId]) { chartInstances[chartId].destroy(); }
-
-            const dates = ['Current', ...currentData.map(row => row.date)];
-            let currentVal = parseFloat(currentRateStr.replace('%', ''));
-            if (isNaN(currentVal)) currentVal = parseFloat(currentData[0]?.implied.replace('%', '')) || 0;
-
-            const currentRates = [currentVal, ...currentData.map(row => parseFloat(row.implied?.replace('%', '')) || 0)];
-
-            const ctx = canvas.getContext('2d');
-            chartInstances[chartId] = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: 'Implied Rate Target (%)',
-                        data: currentRates,
-                        borderColor: '#00b4f9',
-                        backgroundColor: 'rgba(0, 180, 249, 0.08)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.25,
-                        pointBackgroundColor: '#0d1117',
-                        pointBorderColor: '#00b4f9',
-                        pointBorderWidth: 2,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-                    scales: {
-                        y: { title: { display: true, text: 'Implied Rate (%)', color: '#8b949e' }, grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9', callback: v => v.toFixed(2) + '%' } },
-                        x: { grid: { display: false }, ticks: { color: '#8b949e', maxRotation: 45 } }
-                    },
-                    plugins: { legend: { display: false }, tooltip: { padding: 10, callbacks: { label: context => ` Implied Rate: ${context.parsed.y.toFixed(2)}%` } } }
+                    plugins: { 
+                        legend: { display: false }, // We use our custom HTML toggles instead
+                        tooltip: { padding: 10, callbacks: { label: context => ` ${context.dataset.label}: ${context.parsed.y.toFixed(2)}%` } } 
+                    }
                 }
             });
         }
