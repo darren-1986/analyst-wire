@@ -155,16 +155,6 @@
         const CACHE_KEY = 'aw_central_bank_rates_cache';
         const CACHE_LIFESPAN_MS = 1000 * 60 * 60 * 3; 
 
-        const banksToFetch = [
-            { id: 'main', title: 'Next Meeting Overview' },
-            { id: 'fed', title: 'Federal Reserve (USA)' },
-            { id: 'ecb', title: 'European Central Bank (ECB)' },
-            { id: 'boe', title: 'Bank of England (BOE)' },
-            { id: 'boj', title: 'Bank of Japan (BOJ)' },
-            { id: 'boc', title: 'Bank of Canada (BOC)' },
-            { id: 'rba', title: 'Reserve Bank of Australia (AUD)' }
-        ];
-
         function parseBps(str) {
             if (!str) return 0;
             let clean = String(str).replace(/[^\d.-]/g, '');
@@ -322,7 +312,7 @@
             const chart = chartInstances[chartId];
             if(!chart) return;
             const dsIndex = chart.data.datasets.findIndex(ds => ds.label === datasetLabel);
-            if (dsIndex === -1) return;
+            if (dsIndex === -1) return; // Safely ignore if data doesn't exist for this specific toggle
             
             const meta = chart.getDatasetMeta(dsIndex);
             meta.hidden = meta.hidden === null ? !chart.data.datasets[dsIndex].hidden : null;
@@ -431,30 +421,18 @@
                 const chartCard = document.createElement('div');
                 chartCard.className = 'bank-card';
                 
-                // Dynamically build the toggles based on what data actually exists in your DB
-                const dsConfigs = [
-                    { key: 'current', label: 'Current' },
-                    { key: '1w_ago', label: '1w ago' },
-                    { key: '3w_ago', label: '3w ago' },
-                    { key: '6w_ago', label: '6w ago' },
-                    { key: '10w_ago', label: '10w ago' }
-                ];
-                
-                let toggleButtonsHTML = '';
-                dsConfigs.forEach(conf => {
-                    const exists = dataRows.some(r => r.dataset === conf.key) || conf.key === 'current';
-                    if (exists) {
-                        toggleButtonsHTML += `<button class="ds-btn active-toggle" onclick="toggleDatasetByLabel('${chartId}', '${conf.label}', this)">${conf.label}</button>`;
-                    }
-                });
-
+                // HARDCODED BUTTONS: So they never randomly disappear again.
                 chartCard.innerHTML = `
                     <div class="bank-card-header" style="border-bottom: none;">
                         <span>IMPLIED RATE PATH (MARKET EXPECTATION)</span>
                         <span class="highlight-blue">${bank.title}</span>
                     </div>
                     <div style="display:flex; gap:8px; padding:0 20px 12px 20px; background:#161b22; border-bottom:1px solid #1c2230;">
-                        ${toggleButtonsHTML}
+                        <button class="ds-btn active-toggle" onclick="toggleDatasetByLabel('${chartId}', 'Current', this)">Current</button>
+                        <button class="ds-btn active-toggle" onclick="toggleDatasetByLabel('${chartId}', '1w ago', this)">1w ago</button>
+                        <button class="ds-btn active-toggle" onclick="toggleDatasetByLabel('${chartId}', '3w ago', this)">3w ago</button>
+                        <button class="ds-btn active-toggle" onclick="toggleDatasetByLabel('${chartId}', '6w ago', this)">6w ago</button>
+                        <button class="ds-btn active-toggle" onclick="toggleDatasetByLabel('${chartId}', '10w ago', this)">10w ago</button>
                     </div>
                     <div class="chart-holder">
                         <canvas id="${chartId}"></canvas>
@@ -593,8 +571,28 @@
                 const rowData = dataRows.filter(r => r.dataset === config.key).map(r => getCorrectedRow(r));
                 
                 if (rowData.length > 0 || config.key === 'current') {
-                    // THE FIX: Stop manipulating the data. Plot the raw implied rate directly from the database.
-                    const plotRates = [currentVal, ...rowData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
+                    // SMART PARSER: Perfectly translates the raw Supabase data, whether it is stored as a % or a delta.
+                    const plotRates = [currentVal, ...rowData.map(row => {
+                        if (config.key === 'current') {
+                            return parseFloat(String(row.implied).replace('%', '')) || 0;
+                        } else {
+                            let valStr = String(row.implied || '');
+                            let rawVal = parseBps(valStr); 
+                            
+                            // If the raw data is formatted as negative, uses bps, or is a large integer (>10), 
+                            // it is mathematically a basis point delta. Calculate it flawlessly.
+                            if (Math.abs(rawVal) > 10 || valStr.includes('bps') || valStr.includes('(')) {
+                                return currentVal + (rawVal / 100);
+                            } 
+                            // Otherwise, it is already a clean implied rate. Plot it cleanly.
+                            else if (rawVal !== 0 && Math.abs(rawVal) <= 10) {
+                                return rawVal;
+                            }
+                            
+                            // Absolute fallback: calculate using the delta column directly
+                            return currentVal + (parseBps(row.delta) / 100);
+                        }
+                    })];
                     
                     datasets.push({
                         label: config.label,
