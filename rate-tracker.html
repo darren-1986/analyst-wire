@@ -5,19 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="media/favicon.png">
     <title>Central Bank Rates | Analyst Wire</title>
-    <!-- 1. Supabase Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
-    <!-- 2. Chart.js for visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
         *, *:before, *:after { box-sizing: border-box; }
         
         body { margin: 0; padding-top: 55px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; background-color: #0A0A0a; color: #ffffff; overflow: hidden; }
 
-        /* Navigation */
         .top-nav { background: #0d1117; padding: 0 20px; height: 55px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1c2230; z-index: 1000; position: fixed; top: 0; left: 0; width: 100%; font-family: 'Inter', sans-serif; }
         .nav-links { display: flex; align-items: center; gap: 5px; }
         .nav-links a { color: #8b949e; text-decoration: none; margin-left: 15px; font-size: 13px; font-weight: 500; cursor: pointer; transition: color 0.2s; padding: 6px 12px; border-radius: 6px; }
@@ -32,29 +29,22 @@
         .dropdown-content a { color: #c9d1d9; padding: 10px 16px; text-decoration: none; display: block; font-size: 13px; font-family: 'Inter', sans-serif; }
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
-        /* Dashboard Wrapper */
         .dashboard-wrapper { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0; position: relative; }
-        
-        /* Dashboard Header */
         .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #1c2230; background: #0d1117; flex-shrink: 0; }
         .dashboard-header h1 { font-family: 'Inter', sans-serif; font-size: 16px; margin: 0; color: #fff; display: flex; align-items: center; gap: 8px; font-weight: 600; }
         .status-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8b949e; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* Tabs Navigation */
         .tabs-nav { display: flex; background: #161b22; border-bottom: 1px solid #1c2230; padding: 10px 20px 0 20px; gap: 5px; flex-shrink: 0; overflow-x: auto; }
         .tab-btn { background: none; border: 1px solid #1c2230; border-bottom: none; color: #8b949e; padding: 10px 16px; border-radius: 8px 8px 0 0; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.2s; position: relative; bottom: -1px; }
         .tab-btn:hover { background: rgba(255,255,255,0.03); color: #fff; }
         .tab-btn.active-tab { background: #0A0A0a; color: #00b4f9; border-color: #1c2230; font-weight: 600; border-bottom: 1px solid #0A0A0a; }
 
-        /* Tab Content Area */
         .tab-content-area { flex-grow: 1; padding: 20px; overflow-y: auto; background: #0A0A0a; position: relative; }
         .tab-pane { display: none !important; width: 100%; }
         .tab-pane.active-pane { display: block !important; }
 
-        /* Empty State */
         .empty-state { text-align: center; padding: 40px 20px; color: #8b949e; font-family: 'Inter', sans-serif; font-size: 14px; border: 1px dashed #1c2230; border-radius: 12px; margin-top: 20px; }
 
-        /* Card & Table Styling */
         .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
         .bank-card-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: #e2e8f0; display: flex; justify-content: space-between; }
         
@@ -67,15 +57,12 @@
         .highlight-green { color: #22c55e; }
         .highlight-blue { color: #00b4f9; }
 
-        /* Custom Toggle Buttons */
         .ds-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.2s; }
         .ds-btn.active-toggle { color: #fff; border-color: #00b4f9; background: rgba(0, 180, 249, 0.1); }
         .ds-btn:hover { border-color: #8b949e; }
 
-        /* Chart Canvas Holder */
         .chart-holder { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid #1c2230; height: 350px; width: 100%; position: relative; }
 
-        /* LOADING OVERLAY */
         #global-loader { display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0A0A0a; z-index: 50; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; transition: opacity 0.3s; }
         .spinner { border: 3px solid #161b22; border-top: 3px solid #00b4f9; border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
         .loading-text { color: #c9d1d9; font-size: 14px; font-weight: 500; }
@@ -163,6 +150,7 @@
 
         let chartInstances = {};
         let globalBankData = []; 
+        let countdownTimerId = null;
         
         const CACHE_KEY = 'aw_central_bank_rates_cache';
         const CACHE_LIFESPAN_MS = 1000 * 60 * 60 * 3; 
@@ -177,7 +165,6 @@
             { id: 'rba', title: 'Reserve Bank of Australia (AUD)' }
         ];
 
-        // Safely parse Basis Points
         function parseBps(str) {
             if (!str) return 0;
             let clean = String(str).replace(/[^\d.-]/g, '');
@@ -185,7 +172,6 @@
             return parseFloat(clean) || 0;
         }
 
-        // AUTO-CORRECTOR: Flips Probability and Delta if the scraper accidentally swapped them
         function getCorrectedRow(row) {
             if (!row) return {};
             let probStr = row.prob || '';
@@ -271,13 +257,46 @@
             }
         }
 
+        // Live Countdown Logic
+        function startCountdowns() {
+            if (countdownTimerId) clearInterval(countdownTimerId);
+            countdownTimerId = setInterval(() => {
+                document.querySelectorAll('.countdown-timer').forEach(el => {
+                    const dateStr = el.getAttribute('data-date');
+                    if (!dateStr || dateStr === 'N/A') return;
+                    
+                    // Setup Target: Treat dates as 14:00:00 (2:00 PM EDT)
+                    let targetDate = new Date(dateStr + " 14:00:00 EDT").getTime();
+                    if (isNaN(targetDate)) {
+                        targetDate = new Date(dateStr).getTime() + (14 * 60 * 60 * 1000); 
+                    }
+
+                    const now = new Date().getTime();
+                    const diff = targetDate - now;
+
+                    if (diff < 0) {
+                        el.innerHTML = "Meeting Started";
+                        return;
+                    }
+
+                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    el.innerHTML = `${d}d ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                });
+            }, 1000);
+        }
+
         function renderAllData(dataArray) {
             globalBankData = dataArray; 
             dataArray.forEach(item => {
                 const config = banksToFetch.find(b => b.id === item.bank_id);
                 if (config) { renderBankTab(config, item.rows); }
             });
-            drawOverviewCharts(); // Draw both Relative and Level charts on main tab
+            drawOverviewCharts();
+            startCountdowns();
         }
 
         function renderEmptyStates(message) {
@@ -301,7 +320,6 @@
             });
         }
 
-        // Toggle Chart.js datasets dynamically
         window.toggleDataset = function(chartId, datasetIndex, btn) {
             const chart = chartInstances[chartId];
             if(!chart) return;
@@ -322,7 +340,6 @@
             if (currentData.length === 0) currentData = dataRows; 
             
             if (bank.id === 'main') {
-                // Find the absolute closest meeting across all banks for the "Up Next" widget
                 const sortedMainData = [...currentData].sort((a, b) => new Date(a.date) - new Date(b.date));
                 const absoluteNextMtg = getCorrectedRow(sortedMainData[0] || {});
 
@@ -331,16 +348,15 @@
                 if (parsedDeltaMain < 0) actionMain = 'CUT';
                 if (parsedDeltaMain === 0) actionMain = 'HOLD';
                 if (absoluteNextMtg.hike_cut) actionMain = absoluteNextMtg.hike_cut.toUpperCase();
-                
-                // Properly format & round the percentage
                 let probValMain = Math.round(parseFloat(absoluteNextMtg.prob || 0));
 
                 const summaryHTML = `
                 <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Up Next</div>
-                        <div style="font-size: 20px; font-weight: 700; color: #fff;">${absoluteNextMtg.bank || 'N/A'}</div>
-                        <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">${absoluteNextMtg.date || ''}</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 5px;">${absoluteNextMtg.bank || 'N/A'}</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;" class="countdown-timer" data-date="${absoluteNextMtg.date}">--d --:--:--</div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${absoluteNextMtg.date || ''} - 2:00 PM EDT</div>
                     </div>
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Pricing</div>
@@ -354,7 +370,6 @@
                 </div>
                 `;
 
-                // Render BOTH overview charts side by side
                 const overviewChartHTML = `
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                     <div class="bank-card" style="flex: 1; min-width: 300px; margin-bottom: 20px;">
@@ -391,8 +406,9 @@
                 const summaryHTML = `
                 <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
-                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Next Decision</div>
-                        <div style="font-size: 20px; font-weight: 700; color: #fff;">${firstMtg.date || 'N/A'}</div>
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Next Decision in</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;" class="countdown-timer" data-date="${firstMtg.date}">--d --:--:--</div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${firstMtg.date || ''} - 2:00 PM EDT</div>
                     </div>
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Next Meeting Pricing</div>
@@ -414,7 +430,6 @@
                 const chartCard = document.createElement('div');
                 chartCard.className = 'bank-card';
                 
-                // Inject the historical toggle buttons
                 chartCard.innerHTML = `
                     <div class="bank-card-header" style="border-bottom: none;">
                         <span>IMPLIED RATE PATH (MARKET EXPECTATION)</span>
@@ -435,7 +450,6 @@
                 container.innerHTML = summaryHTML;
                 container.appendChild(chartCard);
                 
-                // Pass ALL dataRows so reconstructChart can map all the historical lines
                 setTimeout(() => reconstructIndividualChart(chartId, dataRows, currentRate), 50);
             }
 
@@ -477,7 +491,6 @@
             container.appendChild(tableCard);
         }
 
-        // Draws the dual Relative and Level charts on the Overview Page
         function drawOverviewCharts() {
             const relCanvas = document.getElementById('main-relative-chart');
             const lvlCanvas = document.getElementById('main-level-chart');
@@ -486,7 +499,6 @@
             if (chartInstances['main-relative-chart']) chartInstances['main-relative-chart'].destroy();
             if (chartInstances['main-level-chart']) chartInstances['main-level-chart'].destroy();
 
-            // Extract the Fed's timeline as the baseline unified x-axis
             const fedDataObj = globalBankData.find(d => d.bank_id === 'fed');
             if (!fedDataObj) return;
             const fedCurrent = fedDataObj.rows.filter(r => r.dataset === 'current');
@@ -503,10 +515,8 @@
                 if (bankDataObj && bankDataObj.rows) {
                     const bData = bankDataObj.rows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
                     
-                    // Relative Y-Axis (Delta in bps)
                     const deltas = [0, ...bData.map(row => parseBps(row.delta))];
                     
-                    // Level Y-Axis (Implied Policy Rate %)
                     let currentRate = 0;
                     const mainData = globalBankData.find(d => d.bank_id === 'main');
                     if (mainData) {
@@ -516,15 +526,7 @@
                     }
                     const levels = [currentRate, ...bData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
 
-                    const baseConfig = {
-                        label: names[bankId],
-                        borderColor: colors[bankId],
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        pointRadius: 2,
-                        pointHoverRadius: 5
-                    };
+                    const baseConfig = { label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, pointHoverRadius: 5 };
 
                     relDatasets.push({ ...baseConfig, data: deltas });
                     lvlDatasets.push({ ...baseConfig, data: levels });
@@ -534,9 +536,7 @@
             const commonOptions = {
                 responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
                 plugins: { legend: { position: 'top', labels: { color: '#c9d1d9', boxWidth: 12, font: {family: 'Inter'} } } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { color: '#8b949e', font: {family: 'JetBrains Mono', size: 10}, maxRotation: 45 } }
-                }
+                scales: { x: { grid: { display: false }, ticks: { color: '#8b949e', font: {family: 'JetBrains Mono', size: 10}, maxRotation: 45 } } }
             };
 
             const relCtx = relCanvas.getContext('2d');
@@ -554,19 +554,17 @@
             });
         }
 
-        // Draws the multi-dataset chart for Individual Bank Tabs
         function reconstructIndividualChart(chartId, dataRows, currentRateStr) {
             const canvas = document.getElementById(chartId);
             if (!canvas) return;
             if (chartInstances[chartId]) { chartInstances[chartId].destroy(); }
 
-            // Config for all possible datasets from Supabase
             const dsConfigs = [
                 { key: 'current', label: 'Current', color: '#00b4f9' },
                 { key: '1w_ago', label: '1w ago', color: '#a8a29e' },
                 { key: '3w_ago', label: '3w ago', color: '#fbbf24' },
                 { key: '6w_ago', label: '6w ago', color: '#94a3b8' },
-                { key: '10w_ago', label: '10w ago', color: '#e2e8f0' },
+                { key: '10w_ago', label: '10w ago', color: '#e2e8f0' }
             ];
 
             const currentData = dataRows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
@@ -580,9 +578,18 @@
             dsConfigs.forEach((config) => {
                 const rowData = dataRows.filter(r => r.dataset === config.key).map(r => getCorrectedRow(r));
                 
-                // Only plot the line if the scraper actually found and saved that dataset
                 if (rowData.length > 0 || config.key === 'current') {
-                    const plotRates = [currentVal, ...rowData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
+                    // CRITICAL FIX: Math correction for historical chart plotting
+                    const plotRates = [currentVal, ...rowData.map(row => {
+                        if (config.key === 'current') {
+                            return parseFloat(String(row.implied).replace('%', '')) || 0;
+                        } else {
+                            // The scraper saved historical Delta under the 'implied' key
+                            // Formula: Current Rate + (Delta in bps / 100)
+                            const deltaBps = parseBps(row.implied);
+                            return currentVal + (deltaBps / 100);
+                        }
+                    })];
                     
                     datasets.push({
                         label: config.label,
@@ -612,7 +619,7 @@
                         x: { grid: { display: false }, ticks: { color: '#8b949e', font: {family: 'JetBrains Mono', size: 10}, maxRotation: 45 } }
                     },
                     plugins: { 
-                        legend: { display: false }, // We use our custom HTML toggles instead
+                        legend: { display: false }, 
                         tooltip: { padding: 10, callbacks: { label: context => ` ${context.dataset.label}: ${context.parsed.y.toFixed(2)}%` } } 
                     }
                 }
