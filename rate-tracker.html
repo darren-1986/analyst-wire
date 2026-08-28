@@ -431,18 +431,18 @@
                 const chartCard = document.createElement('div');
                 chartCard.className = 'bank-card';
                 
-                // Dynamically build the toggles based on what data actually exists in your DB
+                // Match both potential Supabase string formats strictly (with and without underscore)
                 const dsConfigs = [
-                    { key: 'current', label: 'Current' },
-                    { key: '1w_ago', label: '1w ago' },
-                    { key: '3w_ago', label: '3w ago' },
-                    { key: '6w_ago', label: '6w ago' },
-                    { key: '10w_ago', label: '10w ago' }
+                    { key: 'current', dbKeys: ['current'], label: 'Current' },
+                    { key: '1w_ago', dbKeys: ['1w_ago', '1w ago'], label: '1w ago' },
+                    { key: '3w_ago', dbKeys: ['3w_ago', '3w ago'], label: '3w ago' },
+                    { key: '6w_ago', dbKeys: ['6w_ago', '6w ago'], label: '6w ago' },
+                    { key: '10w_ago', dbKeys: ['10w_ago', '10w ago'], label: '10w ago' }
                 ];
                 
                 let toggleButtonsHTML = '';
                 dsConfigs.forEach(conf => {
-                    const exists = dataRows.some(r => r.dataset === conf.key) || conf.key === 'current';
+                    const exists = dataRows.some(r => r.dataset && conf.dbKeys.includes(r.dataset.trim().toLowerCase())) || conf.key === 'current';
                     if (exists) {
                         toggleButtonsHTML += `<button class="ds-btn active-toggle" onclick="toggleDatasetByLabel('${chartId}', '${conf.label}', this)">${conf.label}</button>`;
                     }
@@ -573,12 +573,13 @@
             if (!canvas) return;
             if (chartInstances[chartId]) { chartInstances[chartId].destroy(); }
 
+            // Match both potential Supabase string formats strictly (with and without underscore)
             const dsConfigs = [
-                { key: 'current', label: 'Current', color: '#00b4f9' },
-                { key: '1w_ago', label: '1w ago', color: '#a8a29e' },
-                { key: '3w_ago', label: '3w ago', color: '#fbbf24' },
-                { key: '6w_ago', label: '6w ago', color: '#94a3b8' },
-                { key: '10w_ago', label: '10w ago', color: '#e2e8f0' }
+                { key: 'current', dbKeys: ['current'], label: 'Current', color: '#00b4f9' },
+                { key: '1w_ago', dbKeys: ['1w_ago', '1w ago'], label: '1w ago', color: '#a8a29e' },
+                { key: '3w_ago', dbKeys: ['3w_ago', '3w ago'], label: '3w ago', color: '#fbbf24' },
+                { key: '6w_ago', dbKeys: ['6w_ago', '6w ago'], label: '6w ago', color: '#94a3b8' },
+                { key: '10w_ago', dbKeys: ['10w_ago', '10w ago'], label: '10w ago', color: '#e2e8f0' }
             ];
 
             const currentData = dataRows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
@@ -590,11 +591,15 @@
             const datasets = [];
 
             dsConfigs.forEach((config) => {
-                const rowData = dataRows.filter(r => r.dataset === config.key).map(r => getCorrectedRow(r));
+                const rowData = dataRows.filter(r => r.dataset && config.dbKeys.includes(r.dataset.trim().toLowerCase())).map(r => getCorrectedRow(r));
                 
                 if (rowData.length > 0 || config.key === 'current') {
-                    // THE FIX: Stop manipulating the data. Plot the raw implied rate directly from the database.
-                    const plotRates = [currentVal, ...rowData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
+                    // THE CHART PLOT FIX: Historical lines do not have a point at the 'Current' X-axis label. 
+                    // Supplying null explicitly skips the first tick, aligning the start of historical lines to the first meeting date.
+                    const parsedRates = rowData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0);
+                    const plotRates = config.key === 'current' 
+                        ? [currentVal, ...parsedRates]
+                        : [null, ...parsedRates];
                     
                     datasets.push({
                         label: config.label,
@@ -604,6 +609,7 @@
                         borderWidth: 2,
                         fill: config.key === 'current',
                         tension: 0.25,
+                        spanGaps: true,
                         pointBackgroundColor: '#0d1117',
                         pointBorderColor: config.color,
                         pointBorderWidth: 2,
