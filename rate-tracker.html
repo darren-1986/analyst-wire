@@ -370,20 +370,20 @@
                 let probValMain = Math.round(parseFloat(absoluteNextMtg.prob || 0));
 
                 const summaryHTML = `
-                <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-                    <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                    <div class="bank-card" style="margin-bottom: 0; padding: 15px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Up Next</div>
                         <div style="font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 5px;">${absoluteNextMtg.bank || 'N/A'}</div>
-                        <div style="font-size: 24px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;" class="countdown-timer" data-date="${absoluteNextMtg.date}">--d --:--:--</div>
+                        <div style="font-size: 22px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;" class="countdown-timer" data-date="${absoluteNextMtg.date}">--d --:--:--</div>
                         <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${absoluteNextMtg.date || ''} - 2:00 PM EDT</div>
                     </div>
-                    <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
+                    <div class="bank-card" style="margin-bottom: 0; padding: 15px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Pricing</div>
                         <div style="font-size: 20px; font-weight: 700; color: #22c55e;">${probValMain}% ${actionMain}</div>
                         <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">${parsedDeltaMain > 0 ? '+' : ''}${absoluteNextMtg.delta || '0'} bps</div>
                     </div>
-                    <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
-                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Current Rate</div>
+                    <div class="bank-card" style="margin-bottom: 0; padding: 15px;">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Current Base Rate</div>
                         <div style="font-size: 20px; font-weight: 700; color: #fff;">${absoluteNextMtg.current || '0.00%'}</div>
                     </div>
                 </div>
@@ -422,25 +422,137 @@
                 if (parsedDeltaBank === 0) actionBank = 'HOLD';
                 let probValBank = Math.round(parseFloat(firstMtg.prob || 0));
 
+                // 1. TERMINAL RATE (PEAK/TROUGH) CALCULATION
+                let currentVal = parseFloat(String(currentRate).replace('%', ''));
+                if (isNaN(currentVal)) currentVal = parseFloat(String(currentData[0]?.implied || '').replace('%', '')) || 0;
+
+                let maxRate = -Infinity, minRate = Infinity;
+                let maxDate = 'N/A', minDate = 'N/A';
+
+                currentData.forEach(r => {
+                    const row = getCorrectedRow(r);
+                    const imp = parseFloat(String(row.implied || '').replace('%', ''));
+                    if (!isNaN(imp)) {
+                        if (imp > maxRate) { maxRate = imp; maxDate = row.date; }
+                        if (imp < minRate) { minRate = imp; minDate = row.date; }
+                    }
+                });
+
+                const lastDelta = currentData.length > 0 ? parseBps(getCorrectedRow(currentData[currentData.length - 1]).delta) : 0;
+                let terminalLabel = "Cycle Peak";
+                let terminalRate = maxRate !== -Infinity ? maxRate.toFixed(2) + '%' : currentRate;
+                let terminalDate = maxDate;
+
+                if (lastDelta < 0 && minRate !== Infinity) {
+                    terminalLabel = "Cycle Trough";
+                    terminalRate = minRate.toFixed(2) + '%';
+                    terminalDate = minDate;
+                }
+
+                // 2. FIRST 25BPS MILESTONE TRACKER
+                let milestoneText = "None Priced";
+                let milestoneColor = "#8b949e";
+
+                for (let r of currentData) {
+                    const row = getCorrectedRow(r);
+                    const hikesVal = parseFloat(row.hikes || 0);
+                    const deltaVal = parseBps(row.delta);
+                    if (hikesVal >= 1.0 || deltaVal >= 25) {
+                        milestoneText = `1st Hike: ${row.date}`;
+                        milestoneColor = "#22c55e";
+                        break;
+                    }
+                    if (hikesVal <= -1.0 || deltaVal <= -25) {
+                        milestoneText = `1st Cut: ${row.date}`;
+                        milestoneColor = "#ef4444";
+                        break;
+                    }
+                }
+
+                // 3. 7-DAY REPRICING VELOCITY CALCULATION
+                const weekAgoSnapshot = getHistoricalSnapshot(snapshots, 7);
+                let velocityHTML = `<span style="color: #8b949e;">Building History</span>`;
+                let velocitySub = `Snapshot baseline set (${snapshots.length} day${snapshots.length > 1 ? 's' : ''})`;
+
+                if (weekAgoSnapshot && weekAgoSnapshot.rows) {
+                    const weekAgoRows = weekAgoSnapshot.rows.map(r => getCorrectedRow(r));
+                    const lastCurrentDelta = currentData.length > 0 ? parseBps(getCorrectedRow(currentData[currentData.length - 1]).delta) : 0;
+                    const lastWeekDelta = weekAgoRows.length > 0 ? parseBps(getCorrectedRow(weekAgoRows[weekAgoRows.length - 1]).delta) : 0;
+                    
+                    const diff = lastCurrentDelta - lastWeekDelta;
+                    const diffStr = (diff > 0 ? '+' : '') + diff.toFixed(1) + ' bps';
+                    
+                    if (diff > 0.5) {
+                        velocityHTML = `<span style="color: #22c55e;">${diffStr}</span>`;
+                        velocitySub = `Hawkish shift over 7d`;
+                    } else if (diff < -0.5) {
+                        velocityHTML = `<span style="color: #ef4444;">${diffStr}</span>`;
+                        velocitySub = `Dovish shift over 7d`;
+                    } else {
+                        velocityHTML = `<span style="color: #c9d1d9;">0.0 bps</span>`;
+                        velocitySub = `Unchanged over 7d`;
+                    }
+                }
+
+                // 4. FORWARD FX SPREAD DIFFERENTIAL (VS FED / USD)
+                let spreadHTML = `<span style="color: #8b949e;">--</span>`;
+                let spreadSub = `vs FED (USD)`;
+
+                const fedSnapshots = globalGroupedSnapshots['fed'] || [];
+                if (fedSnapshots.length > 0 && fedSnapshots[0].rows) {
+                    const fedCurrentRows = fedSnapshots[0].rows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
+                    if (fedCurrentRows.length > 0) {
+                        const lastFedImplied = parseFloat(String(fedCurrentRows[fedCurrentRows.length - 1].implied || '').replace('%', '')) || 0;
+                        const lastBankImplied = parseFloat(String(currentData[currentData.length - 1]?.implied || '').replace('%', '')) || 0;
+                        
+                        if (bank.id === 'fed') {
+                            spreadHTML = `<span style="color: #00b4f9;">Benchmark</span>`;
+                            spreadSub = `US Dollar Base Rate`;
+                        } else {
+                            const spreadBps = Math.round((lastBankImplied - lastFedImplied) * 100);
+                            const spreadStr = (spreadBps > 0 ? '+' : '') + spreadBps + ' bps';
+                            const color = spreadBps >= 0 ? '#22c55e' : '#ef4444';
+                            spreadHTML = `<span style="color: ${color};">${spreadStr}</span>`;
+                            spreadSub = `12M Spread vs FED (USD)`;
+                        }
+                    }
+                }
+
                 const summaryHTML = `
-                <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-                    <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
-                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Next Decision in</div>
-                        <div style="font-size: 24px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;" class="countdown-timer" data-date="${firstMtg.date}">--d --:--:--</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                    <div class="bank-card" style="margin-bottom: 0; padding: 14px;">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">Next Decision in</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;" class="countdown-timer" data-date="${firstMtg.date}">--d --:--:--</div>
                         <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${firstMtg.date || ''} - 2:00 PM EDT</div>
                     </div>
-                    <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
-                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Next Meeting Pricing</div>
-                        <div style="font-size: 20px; font-weight: 700; color: #22c55e;">${probValBank}% ${actionBank}</div>
-                        <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">${parsedDeltaBank > 0 ? '+' : ''}${firstMtg.delta || '0'} bps</div>
+                    <div class="bank-card" style="margin-bottom: 0; padding: 14px;">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">Next Meeting Pricing</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #22c55e;">${probValBank}% ${actionBank}</div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${parsedDeltaBank > 0 ? '+' : ''}${firstMtg.delta || '0'} bps</div>
                     </div>
-                    <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
-                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Current Rate</div>
-                        <div style="font-size: 20px; font-weight: 700; color: #fff;">${currentRate}</div>
+                    <div class="bank-card" style="margin-bottom: 0; padding: 14px;">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">Current Rate</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #fff;">${currentRate}</div>
                     </div>
-                    <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
-                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">12-Month Outlook</div>
-                        <div style="font-size: 20px; font-weight: 700; color: #00b4f9;">${parseBps(lastMtg.delta) > 0 ? '+' : ''}${lastMtg.delta || '0'} bps</div>
+                    <div class="bank-card" style="margin-bottom: 0; padding: 14px;">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">${terminalLabel}</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #00b4f9;">${terminalRate}</div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">Expected in ${terminalDate}</div>
+                    </div>
+                    <div class="bank-card" style="margin-bottom: 0; padding: 14px;">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">1st 25bps Milestone</div>
+                        <div style="font-size: 16px; font-weight: 700; color: ${milestoneColor};">${milestoneText}</div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">First full 25bps priced</div>
+                    </div>
+                    <div class="bank-card" style="margin-bottom: 0; padding: 14px;">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">7-Day Velocity</div>
+                        <div style="font-size: 16px; font-weight: 700;">${velocityHTML}</div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${velocitySub}</div>
+                    </div>
+                    <div class="bank-card" style="margin-bottom: 0; padding: 14px;">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">12M FX Rate Spread</div>
+                        <div style="font-size: 16px; font-weight: 700;">${spreadHTML}</div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${spreadSub}</div>
                     </div>
                 </div>
                 `;
@@ -570,7 +682,6 @@
                     }
                     const levels = [currentRate, ...bData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
 
-                    // Config for standard Line Chart (Reverted back from Bar)
                     relDatasets.push({
                         label: names[bankId], 
                         borderColor: colors[bankId], 
@@ -582,7 +693,6 @@
                         data: deltas 
                     });
 
-                    // Config for standard Line Chart
                     lvlDatasets.push({ 
                         label: names[bankId], 
                         borderColor: colors[bankId], 
@@ -618,7 +728,7 @@
         }
 
         function getHistoricalSnapshot(snapshots, targetDaysAgo) {
-            if (snapshots.length <= 1) return null;
+            if (!snapshots || snapshots.length <= 1) return null;
             const nowMs = new Date(snapshots[0].updated_at).getTime();
             const targetMs = nowMs - (targetDaysAgo * 24 * 60 * 60 * 1000);
             
@@ -721,7 +831,6 @@
                 }
             });
 
-            // 1. Draw the Main Line Chart
             const ctx = canvas.getContext('2d');
             chartInstances[chartId] = new Chart(ctx, {
                 type: 'line',
@@ -739,7 +848,6 @@
                 }
             });
 
-            // 2. Draw the Individual Implied Points Bar Chart
             const barCtx = barCanvas.getContext('2d');
             const deltas = currentRows.map(row => parseBps(row.delta));
             
