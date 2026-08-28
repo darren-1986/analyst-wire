@@ -290,8 +290,12 @@
         function renderAllData(dataArray) {
             globalBankData = dataArray; 
             dataArray.forEach(item => {
+                let parsedRows = item.rows;
+                if (typeof parsedRows === 'string') {
+                    try { parsedRows = JSON.parse(parsedRows); } catch(e) {}
+                }
                 const config = banksToFetch.find(b => b.id === item.bank_id);
-                if (config) { renderBankTab(config, item.rows); }
+                if (config) { renderBankTab(config, parsedRows || []); }
             });
             drawOverviewCharts();
             startCountdowns();
@@ -389,10 +393,14 @@
             } else {
                 let currentRate = "0.00%";
                 const mainData = globalBankData.find(d => d.bank_id === 'main');
-                if (mainData && mainData.rows) {
-                    const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
-                    const mainRow = mainData.rows.find(r => r.bank && r.bank.includes(targetNames[bank.id]));
-                    if (mainRow) currentRate = mainRow.current;
+                if (mainData) {
+                    let mainRows = mainData.rows;
+                    if (typeof mainRows === 'string') { try { mainRows = JSON.parse(mainRows); } catch(e){} }
+                    if (Array.isArray(mainRows)) {
+                        const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
+                        const mainRow = mainRows.find(r => r.bank && r.bank.includes(targetNames[bank.id]));
+                        if (mainRow) currentRate = mainRow.current;
+                    }
                 }
 
                 const firstMtg = getCorrectedRow(currentData[0] || {});
@@ -431,7 +439,6 @@
                 const chartCard = document.createElement('div');
                 chartCard.className = 'bank-card';
                 
-                // FIXED: Unconditionally hardcode all 5 buttons so they never disappear from the UI
                 const toggleButtonsHTML = `
                     <button class="ds-btn active-toggle" onclick="toggleDatasetByLabel('${chartId}', 'Current', this)">Current</button>
                     <button class="ds-btn active-toggle" onclick="toggleDatasetByLabel('${chartId}', '1w ago', this)">1w ago</button>
@@ -507,7 +514,11 @@
 
             const fedDataObj = globalBankData.find(d => d.bank_id === 'fed');
             if (!fedDataObj) return;
-            const fedCurrent = fedDataObj.rows.filter(r => r.dataset === 'current');
+            let fedRows = fedDataObj.rows;
+            if (typeof fedRows === 'string') { try { fedRows = JSON.parse(fedRows); } catch(e){} }
+            if (!Array.isArray(fedRows)) return;
+
+            const fedCurrent = fedRows.filter(r => r.dataset === 'current');
             const dates = ['Current', ...fedCurrent.map(row => row.date)];
 
             const relDatasets = [];
@@ -518,24 +529,32 @@
 
             ['fed', 'ecb', 'boe', 'boj', 'boc', 'rba'].forEach(bankId => {
                 const bankDataObj = globalBankData.find(d => d.bank_id === bankId);
-                if (bankDataObj && bankDataObj.rows) {
-                    const bData = bankDataObj.rows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
-                    
-                    const deltas = [0, ...bData.map(row => parseBps(row.delta))];
-                    
-                    let currentRate = 0;
-                    const mainData = globalBankData.find(d => d.bank_id === 'main');
-                    if (mainData) {
-                        const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
-                        const mainRow = mainData.rows.find(r => r.bank && r.bank.includes(targetNames[bankId]));
-                        if (mainRow) currentRate = parseFloat(String(mainRow.current).replace('%', '')) || 0;
+                if (bankDataObj) {
+                    let bRows = bankDataObj.rows;
+                    if (typeof bRows === 'string') { try { bRows = JSON.parse(bRows); } catch(e){} }
+                    if (Array.isArray(bRows)) {
+                        const bData = bRows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
+                        
+                        const deltas = [0, ...bData.map(row => parseBps(row.delta))];
+                        
+                        let currentRate = 0;
+                        const mainData = globalBankData.find(d => d.bank_id === 'main');
+                        if (mainData) {
+                            let mRows = mainData.rows;
+                            if (typeof mRows === 'string') { try { mRows = JSON.parse(mRows); } catch(e){} }
+                            if (Array.isArray(mRows)) {
+                                const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
+                                const mainRow = mRows.find(r => r.bank && r.bank.includes(targetNames[bankId]));
+                                if (mainRow) currentRate = parseFloat(String(mainRow.current).replace('%', '')) || 0;
+                            }
+                        }
+                        const levels = [currentRate, ...bData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
+
+                        const baseConfig = { label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, pointHoverRadius: 5 };
+
+                        relDatasets.push({ ...baseConfig, data: deltas });
+                        lvlDatasets.push({ ...baseConfig, data: levels });
                     }
-                    const levels = [currentRate, ...bData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
-
-                    const baseConfig = { label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, pointHoverRadius: 5 };
-
-                    relDatasets.push({ ...baseConfig, data: deltas });
-                    lvlDatasets.push({ ...baseConfig, data: levels });
                 }
             });
 
@@ -573,35 +592,77 @@
                 { key: '10w_ago', label: '10w ago', color: '#e2e8f0' }
             ];
 
-            const currentData = dataRows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
-            const dates = ['Current', ...currentData.map(row => row.date)];
+            const currentRows = dataRows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
+            
+            const meetingDates = currentRows.map(row => row.date);
+            const xLabels = ['Current', ...meetingDates];
             
             let currentVal = parseFloat(String(currentRateStr).replace('%', ''));
-            if (isNaN(currentVal)) currentVal = parseFloat(String(currentData[0]?.implied).replace('%', '')) || 0;
+            if (isNaN(currentVal)) currentVal = parseFloat(String(currentRows[0]?.implied || '').replace('%', '')) || 0;
 
             const datasets = [];
 
             dsConfigs.forEach((config) => {
-                // FIXED: Flexible database search. Replaces underscores with spaces so "1w_ago" and "1w ago" both pull flawlessly from Supabase
-                const searchLabel = config.label.toLowerCase(); 
-                const rowData = dataRows.filter(r => {
+                const keyClean = config.key.replace(/_/g, ' ').trim().toLowerCase();
+                const altKeyClean = config.key.trim().toLowerCase();
+
+                const datasetRows = dataRows.filter(r => {
                     if (!r.dataset) return false;
-                    const dsName = String(r.dataset).toLowerCase().replace(/_/g, ' ').trim();
-                    return dsName === searchLabel || dsName === config.key.replace(/_/g, ' ').trim();
+                    const ds = String(r.dataset).trim().toLowerCase().replace(/_/g, ' ');
+                    return ds === keyClean || ds === altKeyClean;
                 }).map(r => getCorrectedRow(r));
-                
-                if (rowData.length > 0 || config.key === 'current') {
-                    // This is your EXACT plotting array from your working code. No math manipulation.
-                    const plotRates = [currentVal, ...rowData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
-                    
+
+                if (config.key === 'current') {
+                    const plotRates = [currentVal, ...currentRows.map(row => parseFloat(String(row.implied || '').replace('%', '')) || 0)];
                     datasets.push({
                         label: config.label,
                         data: plotRates,
                         borderColor: config.color,
-                        backgroundColor: config.key === 'current' ? 'rgba(0, 180, 249, 0.05)' : 'transparent',
+                        backgroundColor: 'rgba(0, 180, 249, 0.05)',
                         borderWidth: 2,
-                        fill: config.key === 'current',
+                        fill: true,
                         tension: 0.25,
+                        pointBackgroundColor: '#0d1117',
+                        pointBorderColor: config.color,
+                        pointBorderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 6
+                    });
+                } else {
+                    // Match historical points to exact meeting dates using timestamp comparison
+                    const plotRates = xLabels.map((xLabel, idx) => {
+                        if (idx === 0) return null;
+
+                        const labelTime = new Date(xLabel).getTime();
+                        
+                        const matchedRow = datasetRows.find(r => {
+                            if (!r.date) return false;
+                            const rowTime = new Date(r.date).getTime();
+                            if (!isNaN(labelTime) && !isNaN(rowTime)) {
+                                return labelTime === rowTime;
+                            }
+                            return String(r.date).trim().toLowerCase() === String(xLabel).trim().toLowerCase();
+                        });
+
+                        if (matchedRow && matchedRow.implied) {
+                            const val = parseFloat(String(matchedRow.implied).replace('%', ''));
+                            return isNaN(val) ? null : val;
+                        }
+                        return null;
+                    });
+
+                    const hasData = plotRates.some(v => v !== null);
+
+                    datasets.push({
+                        label: config.label,
+                        data: plotRates,
+                        borderColor: config.color,
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.25,
+                        spanGaps: true,
+                        hidden: !hasData,
                         pointBackgroundColor: '#0d1117',
                         pointBorderColor: config.color,
                         pointBorderWidth: 2,
@@ -614,7 +675,7 @@
             const ctx = canvas.getContext('2d');
             chartInstances[chartId] = new Chart(ctx, {
                 type: 'line',
-                data: { labels: dates, datasets: datasets },
+                data: { labels: xLabels, datasets: datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
                     scales: {
@@ -623,7 +684,7 @@
                     },
                     plugins: { 
                         legend: { display: false }, 
-                        tooltip: { padding: 10, callbacks: { label: context => ` ${context.dataset.label}: ${context.parsed.y.toFixed(2)}%` } } 
+                        tooltip: { padding: 10, callbacks: { label: context => context.parsed.y !== null ? ` ${context.dataset.label}: ${context.parsed.y.toFixed(2)}%` : '' } } 
                     }
                 }
             });
