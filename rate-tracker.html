@@ -241,7 +241,6 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    // NEW: Group rows by bank_id and sort from newest to oldest to build our snapshot history
                     const groupedData = {};
                     let latestTimestamp = 0;
                     
@@ -356,7 +355,6 @@
 
             container.innerHTML = '';
             
-            // The absolute newest DB snapshot is index 0
             const currentSnapshot = snapshots[0];
             const currentData = currentSnapshot.rows.filter(r => r.dataset === 'current');
             
@@ -481,12 +479,16 @@
             const tableCard = document.createElement('div');
             tableCard.className = 'bank-card';
             
-            let tableHTML = `<div class="bank-card-header"><span>${bank.id === 'main' ? 'UPCOMING CENTRAL BANK MEETINGS' : 'MEETING-BY-MEETING RATE PATH'}</span></div><table><thead>`;
-
             if (bank.id === 'main') {
-                tableHTML += `<tr><th>Next Meeting</th><th>Bank</th><th>Current Rate</th><th>Probability</th><th>Hike/Cut</th><th>Δ vs Current (bps)</th><th>12-Month Outlook</th></tr></thead><tbody>`;
+                let tableHTML = `<div class="bank-card-header"><span>UPCOMING CENTRAL BANK MEETINGS</span></div><table><thead>`;
+                tableHTML += `<tr><th>Next Meeting</th><th>Bank</th><th>Current Rate</th><th>Probability</th><th>Hike/Cut</th><th>Δ vs Current (bps)</th><th>Implied Outcome</th><th>12-Month Outlook (bps)</th></tr></thead><tbody>`;
                 currentData.forEach(r => { 
                     const row = getCorrectedRow(r);
+                    let outcomeColor = '#8b949e';
+                    const ocText = (row.implied_outcome || '').toUpperCase();
+                    if (ocText === 'HIKE') outcomeColor = '#22c55e';
+                    if (ocText === 'CUT') outcomeColor = '#ef4444';
+
                     tableHTML += `<tr>
                         <td>${row.date}</td>
                         <td class="highlight-blue">${row.bank}</td>
@@ -494,10 +496,14 @@
                         <td>${row.prob}</td>
                         <td>${row.hike_cut}</td>
                         <td class="highlight-green">${parseBps(row.delta) > 0 ? '+'+row.delta : row.delta}</td>
+                        <td style="color: ${outcomeColor}; font-weight: 600;">${ocText}</td>
                         <td>${row.outlook || ''}</td>
                     </tr>`; 
                 });
+                tableHTML += `</tbody></table>`;
+                tableCard.innerHTML = tableHTML;
             } else {
+                let tableHTML = `<div class="bank-card-header"><span>MEETING-BY-MEETING RATE PATH</span></div><table><thead>`;
                 tableHTML += `<tr><th>Meeting</th><th>Implied Rate (Post-Meeting)</th><th>Probability of Hike(Cut)</th><th># of Hikes(Cuts)</th><th>Δ vs Current (bps)</th></tr></thead><tbody>`;
                 currentData.forEach(r => { 
                     const row = getCorrectedRow(r);
@@ -509,10 +515,9 @@
                         <td class="highlight-green">${parseBps(row.delta) > 0 ? '+'+row.delta : row.delta}</td>
                     </tr>`; 
                 });
+                tableHTML += `</tbody></table>`;
+                tableCard.innerHTML = tableHTML;
             }
-
-            tableHTML += `</tbody></table>`;
-            tableCard.innerHTML = tableHTML;
             container.appendChild(tableCard);
         }
 
@@ -551,10 +556,27 @@
                     }
                     const levels = [currentRate, ...bData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
 
-                    const baseConfig = { label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, pointHoverRadius: 5 };
+                    // Config for grouped Bar Chart
+                    relDatasets.push({
+                        label: names[bankId],
+                        backgroundColor: colors[bankId], 
+                        borderColor: colors[bankId],
+                        borderWidth: 1,
+                        borderRadius: 4, 
+                        data: deltas 
+                    });
 
-                    relDatasets.push({ ...baseConfig, data: deltas });
-                    lvlDatasets.push({ ...baseConfig, data: levels });
+                    // Config for standard Line Chart
+                    lvlDatasets.push({ 
+                        label: names[bankId], 
+                        borderColor: colors[bankId], 
+                        backgroundColor: 'transparent', 
+                        borderWidth: 2, 
+                        tension: 0.3, 
+                        pointRadius: 2, 
+                        pointHoverRadius: 5, 
+                        data: levels 
+                    });
                 }
             });
 
@@ -566,7 +588,7 @@
 
             const relCtx = relCanvas.getContext('2d');
             chartInstances['main-relative-chart'] = new Chart(relCtx, {
-                type: 'line',
+                type: 'bar',
                 data: { labels: dates, datasets: relDatasets },
                 options: { ...commonOptions, scales: { ...commonOptions.scales, y: { title: { display: true, text: 'Δ vs Current (bps)', color: '#8b949e' }, grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9' } } } }
             });
@@ -579,7 +601,6 @@
             });
         }
 
-        // Helper function to find the database row closest to X days ago
         function getHistoricalSnapshot(snapshots, targetDaysAgo) {
             if (snapshots.length <= 1) return null;
             const nowMs = new Date(snapshots[0].updated_at).getTime();
@@ -591,7 +612,6 @@
             for (let i = 1; i < snapshots.length; i++) {
                 const rowMs = new Date(snapshots[i].updated_at).getTime();
                 const diff = Math.abs(rowMs - targetMs);
-                // Allow a 48-hour tolerance in case the scraper missed a weekend run
                 if (diff < minDiff && diff <= (2 * 24 * 60 * 60 * 1000)) {
                     minDiff = diff;
                     closest = snapshots[i];
@@ -605,7 +625,6 @@
             if (!canvas) return;
             if (chartInstances[chartId]) { chartInstances[chartId].destroy(); }
 
-            // Define target timelines for the buttons
             const dsConfigs = [
                 { label: 'Current', color: '#00b4f9', daysAgo: 0 },
                 { label: '1w ago', color: '#a8a29e', daysAgo: 7 },
@@ -650,7 +669,6 @@
                         pointHoverRadius: 6
                     });
                 } else {
-                    // If no historical snapshot exists for this timeframe yet, populate with nulls so the chart degrades gracefully
                     const historicalRows = targetSnapshot ? targetSnapshot.rows.map(r => getCorrectedRow(r)) : [];
                     
                     const plotRates = xLabels.map((xLabel, idx) => {
@@ -674,7 +692,7 @@
                         fill: false,
                         tension: 0.25,
                         spanGaps: true,
-                        hidden: !hasData, // Automatically hides line if database hasn't lived long enough to have this data yet
+                        hidden: !hasData, 
                         pointBackgroundColor: '#0d1117',
                         pointBorderColor: config.color,
                         pointBorderWidth: 2,
