@@ -149,7 +149,7 @@
         );
 
         let chartInstances = {};
-        let globalBankData = []; 
+        let globalGroupedSnapshots = {}; 
         let countdownTimerId = null;
         
         const CACHE_KEY = 'aw_central_bank_rates_cache';
@@ -241,9 +241,28 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    const latestTimestamp = Math.max(...data.map(d => new Date(d.updated_at).getTime()));
-                    localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), dbTimestamp: latestTimestamp, data: data }));
-                    renderAllData(data);
+                    // NEW: Group rows by bank_id and sort from newest to oldest to build our snapshot history
+                    const groupedData = {};
+                    let latestTimestamp = 0;
+                    
+                    data.forEach(item => {
+                        const rowTime = new Date(item.updated_at).getTime();
+                        if (rowTime > latestTimestamp) latestTimestamp = rowTime;
+
+                        if (!groupedData[item.bank_id]) groupedData[item.bank_id] = [];
+                        let parsedRows = item.rows;
+                        if (typeof parsedRows === 'string') {
+                            try { parsedRows = JSON.parse(parsedRows); } catch(e) {}
+                        }
+                        groupedData[item.bank_id].push({ ...item, rows: parsedRows || [] });
+                    });
+
+                    Object.keys(groupedData).forEach(bankId => {
+                        groupedData[bankId].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+                    });
+
+                    localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), dbTimestamp: latestTimestamp, data: groupedData }));
+                    renderAllData(groupedData);
                     statusIndicator.innerText = `Synced | Data Updated: ${new Date(latestTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
                 } else {
                     renderEmptyStates("Awaiting initial data sync from the automated background process.");
@@ -287,15 +306,11 @@
             }, 1000);
         }
 
-        function renderAllData(dataArray) {
-            globalBankData = dataArray; 
-            dataArray.forEach(item => {
-                let parsedRows = item.rows;
-                if (typeof parsedRows === 'string') {
-                    try { parsedRows = JSON.parse(parsedRows); } catch(e) {}
-                }
-                const config = banksToFetch.find(b => b.id === item.bank_id);
-                if (config) { renderBankTab(config, parsedRows || []); }
+        function renderAllData(groupedData) {
+            globalGroupedSnapshots = groupedData; 
+            banksToFetch.forEach(bank => {
+                const bankSnapshots = groupedData[bank.id] || [];
+                renderBankTab(bank, bankSnapshots);
             });
             drawOverviewCharts();
             startCountdowns();
@@ -334,15 +349,16 @@
             btn.classList.toggle('active-toggle');
         };
 
-        function renderBankTab(bank, dataRows) {
-            if (!dataRows || dataRows.length === 0) return;
+        function renderBankTab(bank, snapshots) {
+            if (!snapshots || snapshots.length === 0) return;
             const container = document.getElementById(`${bank.id}-pane`);
             if (!container) return;
 
             container.innerHTML = '';
             
-            let currentData = dataRows.filter(r => r.dataset === 'current');
-            if (currentData.length === 0) currentData = dataRows; 
+            // The absolute newest DB snapshot is index 0
+            const currentSnapshot = snapshots[0];
+            const currentData = currentSnapshot.rows.filter(r => r.dataset === 'current');
             
             if (bank.id === 'main') {
                 const sortedMainData = [...currentData].sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -392,15 +408,11 @@
 
             } else {
                 let currentRate = "0.00%";
-                const mainData = globalBankData.find(d => d.bank_id === 'main');
-                if (mainData) {
-                    let mainRows = mainData.rows;
-                    if (typeof mainRows === 'string') { try { mainRows = JSON.parse(mainRows); } catch(e){} }
-                    if (Array.isArray(mainRows)) {
-                        const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
-                        const mainRow = mainRows.find(r => r.bank && r.bank.includes(targetNames[bank.id]));
-                        if (mainRow) currentRate = mainRow.current;
-                    }
+                const mainSnapshots = globalGroupedSnapshots['main'] || [];
+                if (mainSnapshots.length > 0) {
+                    const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
+                    const mainRow = mainSnapshots[0].rows.find(r => r.bank && r.bank.includes(targetNames[bank.id]));
+                    if (mainRow) currentRate = mainRow.current;
                 }
 
                 const firstMtg = getCorrectedRow(currentData[0] || {});
@@ -463,7 +475,7 @@
                 container.innerHTML = summaryHTML;
                 container.appendChild(chartCard);
                 
-                setTimeout(() => reconstructIndividualChart(chartId, dataRows, currentRate), 50);
+                setTimeout(() => reconstructIndividualChart(chartId, snapshots, currentRate), 50);
             }
 
             const tableCard = document.createElement('div');
@@ -512,13 +524,10 @@
             if (chartInstances['main-relative-chart']) chartInstances['main-relative-chart'].destroy();
             if (chartInstances['main-level-chart']) chartInstances['main-level-chart'].destroy();
 
-            const fedDataObj = globalBankData.find(d => d.bank_id === 'fed');
-            if (!fedDataObj) return;
-            let fedRows = fedDataObj.rows;
-            if (typeof fedRows === 'string') { try { fedRows = JSON.parse(fedRows); } catch(e){} }
-            if (!Array.isArray(fedRows)) return;
-
-            const fedCurrent = fedRows.filter(r => r.dataset === 'current');
+            const fedSnapshots = globalGroupedSnapshots['fed'] || [];
+            if (fedSnapshots.length === 0) return;
+            
+            const fedCurrent = fedSnapshots[0].rows.filter(r => r.dataset === 'current');
             const dates = ['Current', ...fedCurrent.map(row => row.date)];
 
             const relDatasets = [];
@@ -528,33 +537,24 @@
             const names = { 'fed': 'FED', 'ecb': 'ECB', 'boe': 'BOE', 'boj': 'BOJ', 'boc': 'BOC', 'rba': 'RBA' };
 
             ['fed', 'ecb', 'boe', 'boj', 'boc', 'rba'].forEach(bankId => {
-                const bankDataObj = globalBankData.find(d => d.bank_id === bankId);
-                if (bankDataObj) {
-                    let bRows = bankDataObj.rows;
-                    if (typeof bRows === 'string') { try { bRows = JSON.parse(bRows); } catch(e){} }
-                    if (Array.isArray(bRows)) {
-                        const bData = bRows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
-                        
-                        const deltas = [0, ...bData.map(row => parseBps(row.delta))];
-                        
-                        let currentRate = 0;
-                        const mainData = globalBankData.find(d => d.bank_id === 'main');
-                        if (mainData) {
-                            let mRows = mainData.rows;
-                            if (typeof mRows === 'string') { try { mRows = JSON.parse(mRows); } catch(e){} }
-                            if (Array.isArray(mRows)) {
-                                const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
-                                const mainRow = mRows.find(r => r.bank && r.bank.includes(targetNames[bankId]));
-                                if (mainRow) currentRate = parseFloat(String(mainRow.current).replace('%', '')) || 0;
-                            }
-                        }
-                        const levels = [currentRate, ...bData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
-
-                        const baseConfig = { label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, pointHoverRadius: 5 };
-
-                        relDatasets.push({ ...baseConfig, data: deltas });
-                        lvlDatasets.push({ ...baseConfig, data: levels });
+                const bankSnapshots = globalGroupedSnapshots[bankId] || [];
+                if (bankSnapshots.length > 0) {
+                    const bData = bankSnapshots[0].rows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
+                    const deltas = [0, ...bData.map(row => parseBps(row.delta))];
+                    
+                    let currentRate = 0;
+                    const mainSnapshots = globalGroupedSnapshots['main'] || [];
+                    if (mainSnapshots.length > 0) {
+                        const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
+                        const mainRow = mainSnapshots[0].rows.find(r => r.bank && r.bank.includes(targetNames[bankId]));
+                        if (mainRow) currentRate = parseFloat(String(mainRow.current).replace('%', '')) || 0;
                     }
+                    const levels = [currentRate, ...bData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
+
+                    const baseConfig = { label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, pointHoverRadius: 5 };
+
+                    relDatasets.push({ ...baseConfig, data: deltas });
+                    lvlDatasets.push({ ...baseConfig, data: levels });
                 }
             });
 
@@ -579,21 +579,43 @@
             });
         }
 
-        function reconstructIndividualChart(chartId, dataRows, currentRateStr) {
+        // Helper function to find the database row closest to X days ago
+        function getHistoricalSnapshot(snapshots, targetDaysAgo) {
+            if (snapshots.length <= 1) return null;
+            const nowMs = new Date(snapshots[0].updated_at).getTime();
+            const targetMs = nowMs - (targetDaysAgo * 24 * 60 * 60 * 1000);
+            
+            let closest = null;
+            let minDiff = Infinity;
+            
+            for (let i = 1; i < snapshots.length; i++) {
+                const rowMs = new Date(snapshots[i].updated_at).getTime();
+                const diff = Math.abs(rowMs - targetMs);
+                // Allow a 48-hour tolerance in case the scraper missed a weekend run
+                if (diff < minDiff && diff <= (2 * 24 * 60 * 60 * 1000)) {
+                    minDiff = diff;
+                    closest = snapshots[i];
+                }
+            }
+            return closest;
+        }
+
+        function reconstructIndividualChart(chartId, bankSnapshots, currentRateStr) {
             const canvas = document.getElementById(chartId);
             if (!canvas) return;
             if (chartInstances[chartId]) { chartInstances[chartId].destroy(); }
 
+            // Define target timelines for the buttons
             const dsConfigs = [
-                { key: 'current', label: 'Current', color: '#00b4f9' },
-                { key: '1w_ago', label: '1w ago', color: '#a8a29e' },
-                { key: '3w_ago', label: '3w ago', color: '#fbbf24' },
-                { key: '6w_ago', label: '6w ago', color: '#94a3b8' },
-                { key: '10w_ago', label: '10w ago', color: '#e2e8f0' }
+                { label: 'Current', color: '#00b4f9', daysAgo: 0 },
+                { label: '1w ago', color: '#a8a29e', daysAgo: 7 },
+                { label: '3w ago', color: '#fbbf24', daysAgo: 21 },
+                { label: '6w ago', color: '#94a3b8', daysAgo: 42 },
+                { label: '10w ago', color: '#e2e8f0', daysAgo: 70 }
             ];
 
-            const currentRows = dataRows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
-            
+            const currentSnapshot = bankSnapshots[0];
+            const currentRows = currentSnapshot.rows.map(r => getCorrectedRow(r));
             const meetingDates = currentRows.map(row => row.date);
             const xLabels = ['Current', ...meetingDates];
             
@@ -603,16 +625,15 @@
             const datasets = [];
 
             dsConfigs.forEach((config) => {
-                const keyClean = config.key.replace(/_/g, ' ').trim().toLowerCase();
-                const altKeyClean = config.key.trim().toLowerCase();
+                let targetSnapshot = null;
+                
+                if (config.daysAgo === 0) {
+                    targetSnapshot = currentSnapshot;
+                } else {
+                    targetSnapshot = getHistoricalSnapshot(bankSnapshots, config.daysAgo);
+                }
 
-                const datasetRows = dataRows.filter(r => {
-                    if (!r.dataset) return false;
-                    const ds = String(r.dataset).trim().toLowerCase().replace(/_/g, ' ');
-                    return ds === keyClean || ds === altKeyClean;
-                }).map(r => getCorrectedRow(r));
-
-                if (config.key === 'current') {
+                if (config.daysAgo === 0) {
                     const plotRates = [currentVal, ...currentRows.map(row => parseFloat(String(row.implied || '').replace('%', '')) || 0)];
                     datasets.push({
                         label: config.label,
@@ -629,21 +650,12 @@
                         pointHoverRadius: 6
                     });
                 } else {
-                    // Match historical points to exact meeting dates using timestamp comparison
+                    // If no historical snapshot exists for this timeframe yet, populate with nulls so the chart degrades gracefully
+                    const historicalRows = targetSnapshot ? targetSnapshot.rows.map(r => getCorrectedRow(r)) : [];
+                    
                     const plotRates = xLabels.map((xLabel, idx) => {
                         if (idx === 0) return null;
-
-                        const labelTime = new Date(xLabel).getTime();
-                        
-                        const matchedRow = datasetRows.find(r => {
-                            if (!r.date) return false;
-                            const rowTime = new Date(r.date).getTime();
-                            if (!isNaN(labelTime) && !isNaN(rowTime)) {
-                                return labelTime === rowTime;
-                            }
-                            return String(r.date).trim().toLowerCase() === String(xLabel).trim().toLowerCase();
-                        });
-
+                        const matchedRow = historicalRows.find(r => r.date && r.date.trim().toLowerCase() === xLabel.trim().toLowerCase());
                         if (matchedRow && matchedRow.implied) {
                             const val = parseFloat(String(matchedRow.implied).replace('%', ''));
                             return isNaN(val) ? null : val;
@@ -662,7 +674,7 @@
                         fill: false,
                         tension: 0.25,
                         spanGaps: true,
-                        hidden: !hasData,
+                        hidden: !hasData, // Automatically hides line if database hasn't lived long enough to have this data yet
                         pointBackgroundColor: '#0d1117',
                         pointBorderColor: config.color,
                         pointBorderWidth: 2,
