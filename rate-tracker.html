@@ -155,7 +155,6 @@
         const CACHE_KEY = 'aw_central_bank_rates_cache';
         const CACHE_LIFESPAN_MS = 1000 * 60 * 60 * 3; 
 
-        // Safely parse Basis Points without throwing errors
         function parseBps(str) {
             if (!str) return 0;
             let clean = String(str).replace(/[^\d.-]/g, '');
@@ -163,9 +162,8 @@
             return parseFloat(clean) || 0;
         }
 
-        // Failsafe row normalizer
         function getCorrectedRow(row) {
-            if (!row || typeof row !== 'object') return {};
+            if (!row) return {};
             let probStr = row.prob || '';
             let deltaStr = row.delta || '';
             if (String(deltaStr).includes('%') && !String(probStr).includes('%')) {
@@ -185,34 +183,29 @@
         }
 
         async function init() {
-            try {
-                const { data: { session } } = await authClient.auth.getSession();
-                if (!session) { window.location.href = 'index.html'; return; }
-                
-                const { data: profileArray, error: profileError } = await authClient.from('profiles').select('admin, active_tags').eq('id', session.user.id).limit(1);
-                if (profileError || !profileArray.length) { await authClient.auth.signOut(); window.location.href = 'index.html'; return; }
-                
-                const profile = profileArray[0], tags = profile?.active_tags || [];
-                const isAdminUser = profile?.admin === true;
+            const { data: { session } } = await authClient.auth.getSession();
+            if (!session) { window.location.href = 'index.html'; return; }
+            
+            const { data: profileArray, error: profileError } = await authClient.from('profiles').select('admin, active_tags').eq('id', session.user.id).limit(1);
+            if (profileError || !profileArray.length) { await authClient.auth.signOut(); window.location.href = 'index.html'; return; }
+            
+            const profile = profileArray[0], tags = profile?.active_tags || [];
+            const isAdminUser = profile?.admin === true;
 
-                if (!isAdminUser && !userHasAccess(tags, 'pro')) { window.location.href = 'account.html'; return; }
+            if (!isAdminUser && !userHasAccess(tags, 'pro')) { window.location.href = 'account.html'; return; }
 
-                const navElements = ['dashboard', 'newsfeed', 'key-levels', 'analysis', 'profile', 'courses', 'admin', 'upload'].reduce((acc, id) => { acc[id] = document.getElementById(`nav-${id}`); return acc; }, {});
-                if (navElements.dashboard) navElements.dashboard.style.display = 'block';
-                if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
-                if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
-                if (navElements.analysis) navElements.analysis.style.display = 'block';
-                if (navElements.profile) navElements.profile.style.display = 'block';
-                if (navElements.courses) navElements.courses.style.display = 'block';
-                if (isAdminUser && navElements.admin) navElements.admin.style.display = 'block';
-                if (isAdminUser && navElements.upload) navElements.upload.style.display = 'block';
+            const navElements = ['dashboard', 'newsfeed', 'key-levels', 'analysis', 'profile', 'courses', 'admin', 'upload'].reduce((acc, id) => { acc[id] = document.getElementById(`nav-${id}`); return acc; }, {});
+            if (navElements.dashboard) navElements.dashboard.style.display = 'block';
+            if (navElements.newsfeed) navElements.newsfeed.style.display = 'block';
+            if (navElements.keyLevels) navElements.keyLevels.style.display = 'block';
+            if (navElements.analysis) navElements.analysis.style.display = 'block';
+            if (navElements.profile) navElements.profile.style.display = 'block';
+            if (navElements.courses) navElements.courses.style.display = 'block';
+            if (isAdminUser && navElements.admin) navElements.admin.style.display = 'block';
+            if (isAdminUser && navElements.upload) navElements.upload.style.display = 'block';
 
-                setupTabs();
-                await loadData();
-            } catch (err) {
-                console.error("Initialization error:", err);
-                document.getElementById('status-indicator').innerText = "App Initialization Failed";
-            }
+            setupTabs();
+            await loadData();
         }
 
         async function loadData() {
@@ -222,19 +215,14 @@
             if (cachedString) {
                 try {
                     const cacheObj = JSON.parse(cachedString);
-                    if (cacheObj && cacheObj.data && (Date.now() - cacheObj.savedAt) < CACHE_LIFESPAN_MS) {
+                    if ((Date.now() - cacheObj.savedAt) < CACHE_LIFESPAN_MS) {
                         renderAllData(cacheObj.data);
-                        let dbTimeStr = "Unknown Time";
-                        if (!isNaN(cacheObj.dbTimestamp) && cacheObj.dbTimestamp > 0) {
-                            dbTimeStr = new Date(cacheObj.dbTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        }
+                        const dbTimeStr = new Date(cacheObj.dbTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         statusIndicator.innerText = `Loaded from Cache | DB Data from: ${dbTimeStr}`;
                         document.getElementById('global-loader').style.display = 'none';
                         return; 
                     }
-                } catch (e) {
-                    console.error("Cache parsing error ignored:", e);
-                }
+                } catch (e) {}
             }
 
             try {
@@ -242,35 +230,23 @@
                 const { data, error } = await dataClient.from('central_bank_rates').select('*');
                 if (error) throw error;
 
-                if (data && Array.isArray(data) && data.length > 0) {
-                    // Bulletproof date calculation to prevent RangeError crashes
-                    let validTimestamps = data.map(d => new Date(d.updated_at || 0).getTime()).filter(t => !isNaN(t));
-                    const latestTimestamp = validTimestamps.length > 0 ? Math.max(...validTimestamps) : Date.now();
-                    
+                if (data && data.length > 0) {
+                    const latestTimestamp = Math.max(...data.map(d => new Date(d.updated_at).getTime()));
                     localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), dbTimestamp: latestTimestamp, data: data }));
-                    
                     renderAllData(data);
-                    
-                    let timeStr = "Unknown time";
-                    if (!isNaN(latestTimestamp) && latestTimestamp > 0) {
-                        timeStr = new Date(latestTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    }
-                    statusIndicator.innerText = `Synced | Data Updated: ${timeStr}`;
+                    statusIndicator.innerText = `Synced | Data Updated: ${new Date(latestTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
                 } else {
                     renderEmptyStates("Awaiting initial data sync from the automated background process.");
                     statusIndicator.innerText = "Database Empty";
                 }
             } catch (err) {
-                console.error("Critical rendering or fetch error:", err);
-                renderEmptyStates("Data rendering failed: " + err.message);
+                renderEmptyStates("Error connecting to database.");
                 statusIndicator.innerText = "Connection Error";
             } finally {
-                const loader = document.getElementById('global-loader');
-                if(loader) loader.style.display = 'none';
+                document.getElementById('global-loader').style.display = 'none';
             }
         }
 
-        // Live Countdown Logic
         function startCountdowns() {
             if (countdownTimerId) clearInterval(countdownTimerId);
             countdownTimerId = setInterval(() => {
@@ -282,7 +258,6 @@
                     if (isNaN(targetDate)) {
                         targetDate = new Date(dateStr).getTime() + (14 * 60 * 60 * 1000); 
                     }
-                    if (isNaN(targetDate)) return;
 
                     const now = new Date().getTime();
                     const diff = targetDate - now;
@@ -303,10 +278,10 @@
         }
 
         function renderAllData(dataArray) {
-            globalBankData = Array.isArray(dataArray) ? dataArray : []; 
-            globalBankData.forEach(item => {
+            globalBankData = dataArray; 
+            dataArray.forEach(item => {
                 const config = banksToFetch.find(b => b.id === item.bank_id);
-                if (config) { renderBankTab(config, item.rows || []); }
+                if (config) { renderBankTab(config, item.rows); }
             });
             drawOverviewCharts();
             startCountdowns();
@@ -315,7 +290,7 @@
         function renderEmptyStates(message) {
             banksToFetch.forEach(bank => {
                 const container = document.getElementById(`${bank.id}-pane`);
-                if (container) container.innerHTML = `<div class="empty-state">${message || "No data available."}</div>`;
+                if (container) container.innerHTML = `<div class="empty-state">${message}</div>`;
             });
         }
 
@@ -337,7 +312,7 @@
             const chart = chartInstances[chartId];
             if(!chart) return;
             const dsIndex = chart.data.datasets.findIndex(ds => ds.label === datasetLabel);
-            if (dsIndex === -1) return;
+            if (dsIndex === -1) return; // Safely ignore if data doesn't exist for this specific toggle
             
             const meta = chart.getDatasetMeta(dsIndex);
             meta.hidden = meta.hidden === null ? !chart.data.datasets[dsIndex].hidden : null;
@@ -346,7 +321,7 @@
         };
 
         function renderBankTab(bank, dataRows) {
-            if (!Array.isArray(dataRows) || dataRows.length === 0) return;
+            if (!dataRows || dataRows.length === 0) return;
             const container = document.getElementById(`${bank.id}-pane`);
             if (!container) return;
 
@@ -356,16 +331,14 @@
             if (currentData.length === 0) currentData = dataRows; 
             
             if (bank.id === 'main') {
-                const sortedMainData = [...currentData].sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+                const sortedMainData = [...currentData].sort((a, b) => new Date(a.date) - new Date(b.date));
                 const absoluteNextMtg = getCorrectedRow(sortedMainData[0] || {});
 
                 let actionMain = 'HIKE';
                 let parsedDeltaMain = parseBps(absoluteNextMtg.delta);
                 if (parsedDeltaMain < 0) actionMain = 'CUT';
                 if (parsedDeltaMain === 0) actionMain = 'HOLD';
-                if (absoluteNextMtg.hike_cut && typeof absoluteNextMtg.hike_cut === 'string') {
-                    actionMain = absoluteNextMtg.hike_cut.toUpperCase();
-                }
+                if (absoluteNextMtg.hike_cut) actionMain = absoluteNextMtg.hike_cut.toUpperCase();
                 let probValMain = Math.round(parseFloat(absoluteNextMtg.prob || 0));
 
                 const summaryHTML = `
@@ -373,7 +346,7 @@
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Up Next</div>
                         <div style="font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 5px;">${absoluteNextMtg.bank || 'N/A'}</div>
-                        <div style="font-size: 24px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;" class="countdown-timer" data-date="${absoluteNextMtg.date || 'N/A'}">--d --:--:--</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;" class="countdown-timer" data-date="${absoluteNextMtg.date}">--d --:--:--</div>
                         <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${absoluteNextMtg.date || ''} - 2:00 PM EDT</div>
                     </div>
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
@@ -406,10 +379,10 @@
             } else {
                 let currentRate = "0.00%";
                 const mainData = globalBankData.find(d => d.bank_id === 'main');
-                if (mainData && Array.isArray(mainData.rows)) {
+                if (mainData && mainData.rows) {
                     const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
-                    const mainRow = mainData.rows.find(r => r.bank && typeof r.bank === 'string' && r.bank.includes(targetNames[bank.id]));
-                    if (mainRow) currentRate = mainRow.current || "0.00%";
+                    const mainRow = mainData.rows.find(r => r.bank && r.bank.includes(targetNames[bank.id]));
+                    if (mainRow) currentRate = mainRow.current;
                 }
 
                 const firstMtg = getCorrectedRow(currentData[0] || {});
@@ -425,7 +398,7 @@
                 <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Next Decision in</div>
-                        <div style="font-size: 24px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;" class="countdown-timer" data-date="${firstMtg.date || 'N/A'}">--d --:--:--</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;" class="countdown-timer" data-date="${firstMtg.date}">--d --:--:--</div>
                         <div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${firstMtg.date || ''} - 2:00 PM EDT</div>
                     </div>
                     <div class="bank-card" style="margin-bottom: 0; padding: 15px; flex: 1; min-width: 200px;">
@@ -448,6 +421,7 @@
                 const chartCard = document.createElement('div');
                 chartCard.className = 'bank-card';
                 
+                // HARDCODED BUTTONS: So they never randomly disappear again.
                 chartCard.innerHTML = `
                     <div class="bank-card-header" style="border-bottom: none;">
                         <span>IMPLIED RATE PATH (MARKET EXPECTATION)</span>
@@ -468,11 +442,7 @@
                 container.innerHTML = summaryHTML;
                 container.appendChild(chartCard);
                 
-                // Wrap chart rendering in try-catch to guarantee it never unspools the main thread
-                setTimeout(() => {
-                    try { reconstructIndividualChart(chartId, dataRows, currentRate); } 
-                    catch(e) { console.error("Chart Render Error:", e); }
-                }, 50);
+                setTimeout(() => reconstructIndividualChart(chartId, dataRows, currentRate), 50);
             }
 
             const tableCard = document.createElement('div');
@@ -485,12 +455,12 @@
                 currentData.forEach(r => { 
                     const row = getCorrectedRow(r);
                     tableHTML += `<tr>
-                        <td>${row.date || '-'}</td>
-                        <td class="highlight-blue">${row.bank || '-'}</td>
-                        <td>${row.current || '-'}</td>
-                        <td>${row.prob || '-'}</td>
-                        <td>${row.hike_cut || '-'}</td>
-                        <td class="highlight-green">${parseBps(row.delta) > 0 ? '+'+(row.delta||0) : (row.delta||0)}</td>
+                        <td>${row.date}</td>
+                        <td class="highlight-blue">${row.bank}</td>
+                        <td>${row.current}</td>
+                        <td>${row.prob}</td>
+                        <td>${row.hike_cut}</td>
+                        <td class="highlight-green">${parseBps(row.delta) > 0 ? '+'+row.delta : row.delta}</td>
                         <td>${row.outlook || ''}</td>
                     </tr>`; 
                 });
@@ -499,11 +469,11 @@
                 currentData.forEach(r => { 
                     const row = getCorrectedRow(r);
                     tableHTML += `<tr>
-                        <td>${row.date || '-'}</td>
-                        <td class="highlight-blue">${row.implied || '-'}</td>
-                        <td>${row.prob || '-'}</td>
-                        <td>${row.hikes || '-'}</td>
-                        <td class="highlight-green">${parseBps(row.delta) > 0 ? '+'+(row.delta||0) : (row.delta||0)}</td>
+                        <td>${row.date}</td>
+                        <td class="highlight-blue">${row.implied}</td>
+                        <td>${row.prob}</td>
+                        <td>${row.hikes}</td>
+                        <td class="highlight-green">${parseBps(row.delta) > 0 ? '+'+row.delta : row.delta}</td>
                     </tr>`; 
                 });
             }
@@ -514,70 +484,66 @@
         }
 
         function drawOverviewCharts() {
-            try {
-                const relCanvas = document.getElementById('main-relative-chart');
-                const lvlCanvas = document.getElementById('main-level-chart');
-                if (!relCanvas || !lvlCanvas) return;
+            const relCanvas = document.getElementById('main-relative-chart');
+            const lvlCanvas = document.getElementById('main-level-chart');
+            if (!relCanvas || !lvlCanvas) return;
 
-                if (chartInstances['main-relative-chart']) chartInstances['main-relative-chart'].destroy();
-                if (chartInstances['main-level-chart']) chartInstances['main-level-chart'].destroy();
+            if (chartInstances['main-relative-chart']) chartInstances['main-relative-chart'].destroy();
+            if (chartInstances['main-level-chart']) chartInstances['main-level-chart'].destroy();
 
-                const fedDataObj = globalBankData.find(d => d.bank_id === 'fed');
-                if (!fedDataObj || !Array.isArray(fedDataObj.rows)) return;
-                const fedCurrent = fedDataObj.rows.filter(r => r.dataset === 'current');
-                const dates = ['Current', ...fedCurrent.map(row => row.date || '')];
+            const fedDataObj = globalBankData.find(d => d.bank_id === 'fed');
+            if (!fedDataObj) return;
+            const fedCurrent = fedDataObj.rows.filter(r => r.dataset === 'current');
+            const dates = ['Current', ...fedCurrent.map(row => row.date)];
 
-                const relDatasets = [];
-                const lvlDatasets = [];
-                
-                const colors = { 'fed': '#00b4f9', 'ecb': '#ec4899', 'boe': '#ef4444', 'boj': '#eab308', 'boc': '#8b5cf6', 'rba': '#10b981' };
-                const names = { 'fed': 'FED', 'ecb': 'ECB', 'boe': 'BOE', 'boj': 'BOJ', 'boc': 'BOC', 'rba': 'RBA' };
+            const relDatasets = [];
+            const lvlDatasets = [];
+            
+            const colors = { 'fed': '#00b4f9', 'ecb': '#ec4899', 'boe': '#ef4444', 'boj': '#eab308', 'boc': '#8b5cf6', 'rba': '#10b981' };
+            const names = { 'fed': 'FED', 'ecb': 'ECB', 'boe': 'BOE', 'boj': 'BOJ', 'boc': 'BOC', 'rba': 'RBA' };
 
-                ['fed', 'ecb', 'boe', 'boj', 'boc', 'rba'].forEach(bankId => {
-                    const bankDataObj = globalBankData.find(d => d.bank_id === bankId);
-                    if (bankDataObj && Array.isArray(bankDataObj.rows)) {
-                        const bData = bankDataObj.rows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
-                        
-                        const deltas = [0, ...bData.map(row => parseBps(row.delta))];
-                        
-                        let currentRate = 0;
-                        const mainData = globalBankData.find(d => d.bank_id === 'main');
-                        if (mainData && Array.isArray(mainData.rows)) {
-                            const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
-                            const mainRow = mainData.rows.find(r => r.bank && typeof r.bank === 'string' && r.bank.includes(targetNames[bankId]));
-                            if (mainRow) currentRate = parseFloat(String(mainRow.current || '').replace('%', '')) || 0;
-                        }
-                        const levels = [currentRate, ...bData.map(row => parseFloat(String(row.implied || '').replace('%', '')) || 0)];
-
-                        const baseConfig = { label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, pointHoverRadius: 5 };
-
-                        relDatasets.push({ ...baseConfig, data: deltas });
-                        lvlDatasets.push({ ...baseConfig, data: levels });
+            ['fed', 'ecb', 'boe', 'boj', 'boc', 'rba'].forEach(bankId => {
+                const bankDataObj = globalBankData.find(d => d.bank_id === bankId);
+                if (bankDataObj && bankDataObj.rows) {
+                    const bData = bankDataObj.rows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
+                    
+                    const deltas = [0, ...bData.map(row => parseBps(row.delta))];
+                    
+                    let currentRate = 0;
+                    const mainData = globalBankData.find(d => d.bank_id === 'main');
+                    if (mainData) {
+                        const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
+                        const mainRow = mainData.rows.find(r => r.bank && r.bank.includes(targetNames[bankId]));
+                        if (mainRow) currentRate = parseFloat(String(mainRow.current).replace('%', '')) || 0;
                     }
-                });
+                    const levels = [currentRate, ...bData.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
 
-                const commonOptions = {
-                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-                    plugins: { legend: { position: 'top', labels: { color: '#c9d1d9', boxWidth: 12, font: {family: 'Inter'} } } },
-                    scales: { x: { grid: { display: false }, ticks: { color: '#8b949e', font: {family: 'JetBrains Mono', size: 10}, maxRotation: 45 } } }
-                };
+                    const baseConfig = { label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, pointHoverRadius: 5 };
 
-                const relCtx = relCanvas.getContext('2d');
-                chartInstances['main-relative-chart'] = new Chart(relCtx, {
-                    type: 'line',
-                    data: { labels: dates, datasets: relDatasets },
-                    options: { ...commonOptions, scales: { ...commonOptions.scales, y: { title: { display: true, text: 'Δ vs Current (bps)', color: '#8b949e' }, grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9' } } } }
-                });
+                    relDatasets.push({ ...baseConfig, data: deltas });
+                    lvlDatasets.push({ ...baseConfig, data: levels });
+                }
+            });
 
-                const lvlCtx = lvlCanvas.getContext('2d');
-                chartInstances['main-level-chart'] = new Chart(lvlCtx, {
-                    type: 'line',
-                    data: { labels: dates, datasets: lvlDatasets },
-                    options: { ...commonOptions, scales: { ...commonOptions.scales, y: { title: { display: true, text: 'Policy Rate (%)', color: '#8b949e' }, grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9', callback: v => v.toFixed(2) + '%' } } } }
-                });
-            } catch (e) {
-                console.error("Overview charts failed:", e);
-            }
+            const commonOptions = {
+                responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'top', labels: { color: '#c9d1d9', boxWidth: 12, font: {family: 'Inter'} } } },
+                scales: { x: { grid: { display: false }, ticks: { color: '#8b949e', font: {family: 'JetBrains Mono', size: 10}, maxRotation: 45 } } }
+            };
+
+            const relCtx = relCanvas.getContext('2d');
+            chartInstances['main-relative-chart'] = new Chart(relCtx, {
+                type: 'line',
+                data: { labels: dates, datasets: relDatasets },
+                options: { ...commonOptions, scales: { ...commonOptions.scales, y: { title: { display: true, text: 'Δ vs Current (bps)', color: '#8b949e' }, grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9' } } } }
+            });
+
+            const lvlCtx = lvlCanvas.getContext('2d');
+            chartInstances['main-level-chart'] = new Chart(lvlCtx, {
+                type: 'line',
+                data: { labels: dates, datasets: lvlDatasets },
+                options: { ...commonOptions, scales: { ...commonOptions.scales, y: { title: { display: true, text: 'Policy Rate (%)', color: '#8b949e' }, grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9', callback: v => v.toFixed(2) + '%' } } } }
+            });
         }
 
         function reconstructIndividualChart(chartId, dataRows, currentRateStr) {
@@ -594,10 +560,10 @@
             ];
 
             const currentData = dataRows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
-            const dates = ['Current', ...currentData.map(row => row.date || '')];
+            const dates = ['Current', ...currentData.map(row => row.date)];
             
             let currentVal = parseFloat(String(currentRateStr).replace('%', ''));
-            if (isNaN(currentVal)) currentVal = parseFloat(String(currentData[0]?.implied || '').replace('%', '')) || 0;
+            if (isNaN(currentVal)) currentVal = parseFloat(String(currentData[0]?.implied).replace('%', '')) || 0;
 
             const datasets = [];
 
@@ -605,9 +571,27 @@
                 const rowData = dataRows.filter(r => r.dataset === config.key).map(r => getCorrectedRow(r));
                 
                 if (rowData.length > 0 || config.key === 'current') {
-                    // Strictly parse the literal implied string value from Supabase
+                    // SMART PARSER: Perfectly translates the raw Supabase data, whether it is stored as a % or a delta.
                     const plotRates = [currentVal, ...rowData.map(row => {
-                        return parseFloat(String(row.implied || '').replace('%', '')) || 0;
+                        if (config.key === 'current') {
+                            return parseFloat(String(row.implied).replace('%', '')) || 0;
+                        } else {
+                            let valStr = String(row.implied || '');
+                            let rawVal = parseBps(valStr); 
+                            
+                            // If the raw data is formatted as negative, uses bps, or is a large integer (>10), 
+                            // it is mathematically a basis point delta. Calculate it flawlessly.
+                            if (Math.abs(rawVal) > 10 || valStr.includes('bps') || valStr.includes('(')) {
+                                return currentVal + (rawVal / 100);
+                            } 
+                            // Otherwise, it is already a clean implied rate. Plot it cleanly.
+                            else if (rawVal !== 0 && Math.abs(rawVal) <= 10) {
+                                return rawVal;
+                            }
+                            
+                            // Absolute fallback: calculate using the delta column directly
+                            return currentVal + (parseBps(row.delta) / 100);
+                        }
                     })];
                     
                     datasets.push({
