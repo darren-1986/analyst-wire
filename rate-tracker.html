@@ -45,12 +45,12 @@
 
         .empty-state { text-align: center; padding: 40px 20px; color: #8b949e; font-family: 'Inter', sans-serif; font-size: 14px; border: 1px dashed #1c2230; border-radius: 12px; margin-top: 20px; }
 
-        /* Responsive KPI Bar Grid Fix */
-        .kpi-container { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; width: 100%; }
-        .kpi-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 10px; padding: 14px 16px; flex: 1 1 170px; min-width: 160px; display: flex; flex-direction: column; justify-content: space-between; }
+        /* UNIFORM & CENTERED KPI GRID */
+        .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, 175px); justify-content: center; gap: 14px; margin-bottom: 24px; width: 100%; }
+        .kpi-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
 
-        .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
-        .bank-card-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; display: flex; flex-direction: column; }
+        .bank-card-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         
         table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 13px; }
         th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid #1c2230; }
@@ -65,20 +65,20 @@
         .ds-btn.active-toggle { color: #fff; border-color: #00b4f9; background: rgba(0, 180, 249, 0.1); }
         .ds-btn:hover { border-color: #8b949e; }
 
-        .chart-holder { padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid #1c2230; height: 350px; width: 100%; position: relative; }
+        .chart-holder { padding: 20px; background: rgba(0,0,0,0.3); width: 100%; position: relative; flex-grow: 1; min-height: 250px; }
 
         /* Guide & Matrix Styling */
-        .guide-box { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; padding: 20px; margin-top: 20px; font-family: 'Inter', sans-serif; }
-        .guide-header { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #1c2230; padding-bottom: 10px; }
-        .guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 14px; }
-        .guide-card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 14px; }
-        .guide-title { font-size: 13px; font-weight: 600; color: #00b4f9; margin-bottom: 6px; }
-        .guide-desc { font-size: 12px; color: #8b949e; line-height: 1.5; }
+        .guide-box { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; padding: 24px; margin-top: 24px; font-family: 'Inter', sans-serif; }
+        .guide-header { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 18px; }
+        .guide-card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .guide-title { font-size: 14px; font-weight: 600; color: #00b4f9; }
+        .guide-desc { font-size: 13px; color: #8b949e; line-height: 1.6; }
 
-        .quarter-matrix { display: flex; flex-wrap: wrap; gap: 10px; padding: 16px 20px; background: rgba(0,0,0,0.2); border-bottom: 1px solid #1c2230; }
-        .quarter-chip { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 14px; flex: 1 1 120px; text-align: center; }
+        .quarter-matrix { display: flex; flex-wrap: wrap; gap: 10px; padding: 16px 20px; background: rgba(0,0,0,0.2); border-top: 1px solid #1c2230; flex-shrink: 0; }
+        .quarter-chip { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 10px 14px; flex: 1 1 120px; text-align: center; }
         .quarter-lbl { font-size: 11px; color: #8b949e; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
-        .quarter-val { font-size: 14px; font-weight: 700; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+        .quarter-val { font-size: 15px; font-weight: 700; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 
         #global-loader { display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0A0A0a; z-index: 50; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; transition: opacity 0.3s; }
         .spinner { border: 3px solid #161b22; border-top: 3px solid #00b4f9; border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
@@ -90,7 +90,6 @@
             .nav-links { display: none; position: absolute; top: 55px; left: 0; width: 100%; background: #0d1117; flex-direction: column; align-items: flex-start; padding: 10px 20px; border-bottom: 1px solid #1c2230; z-index: 1001; }
             .nav-links.active-nav { display: flex; }
             .nav-links a { margin: 5px 0; width: 100%; text-align: left; padding-left: 0; }
-            .chart-holder { height: 250px; padding: 10px; }
         }
     </style>
 </head>
@@ -182,41 +181,42 @@
             { id: 'rba', title: 'Reserve Bank of Australia (AUD)' }
         ];
 
+        // Deep Macro Playbook Data
         const bankMacroContext = {
             main: {
-                role: "Global Central Bank Divergence Matrix",
-                focus: "Compare relative curves across all 6 central banks to spot broad macro trends.",
-                impact: "Divergence in forward paths creates long-term structural trends in FX pairs."
+                role: "Global Divergence Matrix",
+                focus: "Compare relative rate curves across all 6 major central banks to identify broad macro liquidity trends.",
+                impact: "Divergence in forward paths creates long-term structural trends in FX pairs. When one bank is projected to hike while another is priced to cut, capital flows rapidly toward the higher yield over time, driving sustained currency trends."
             },
             fed: {
                 role: "The World's Reserve Currency Anchor",
-                focus: "Monitor 12M FX Spread and 7-Day Velocity closely.",
-                impact: "Fed repricing directly drives global liquidity, US Treasury yields, and USD dominance."
+                focus: "The US Federal Reserve dictates global liquidity. Its rate path serves as the baseline constraint for all other central banks. Track the 7-Day Velocity closely to spot sudden macro regime shifts.",
+                impact: "Aggressive hawkish Fed repricing sucks liquidity from global markets, strengthens the USD (DXY), raises US Treasury yields, and puts intense pressure on foreign central banks to keep up to defend their own currencies."
             },
             ecb: {
                 role: "Eurozone Monetary Policy Driver",
-                focus: "Watch Cycle Peak/Trough relative to the Fed.",
-                impact: "ECB divergence from the Fed heavily influences EUR/USD and European bond spreads."
+                focus: "Monitor the ECB's Cycle Peak relative to the Fed. The ECB often lags the Fed's cycle due to the fragmented nature of the European bond market and sluggish growth.",
+                impact: "When the ECB's rate path diverges significantly from the Fed, it becomes the primary driver for EUR/USD. The ECB is highly sensitive to German manufacturing data and localized Eurozone inflation prints."
             },
             boe: {
                 role: "UK Interest Rate Anchor",
-                focus: "Track the 1st 25bps Milestone and Next Meeting Pricing.",
-                impact: "GBP is exceptionally sensitive to UK inflation prints shifting short-term rate paths."
+                focus: "Track the 1st 25bps Milestone and Next Meeting Pricing. The UK economy is highly financialized with floating-rate mortgages, making the BOE extremely sensitive to domestic inflation.",
+                impact: "GBP is heavily reactive to shifting short-term rate paths. A sudden increase in BOE pricing velocity often creates outsized, volatile swings in GBP/USD and EUR/GBP."
             },
             boj: {
                 role: "Global Low-Yield / Carry Trade Origin",
-                focus: "Monitor Implied Points (Bps) and Base Rate shifts.",
-                impact: "Even small rate increases trigger massive JPY carry-trade unwinds worldwide."
+                focus: "Monitor the Implied Points (Bps) bar chart closely. The BOJ has maintained near-zero rates for decades. Any expectation of a rate hike is a major macro event.",
+                impact: "Because the Yen is the world's primary funding currency, even small expected rate increases (e.g., +10 bps) can trigger massive, violent unwinds of global carry trades, sparking risk-off sentiment in equities."
             },
             boc: {
                 role: "High-Beta Commodity & Housing Proxy",
-                focus: "Watch 12M FX Spread vs FED (USD).",
-                impact: "BOC policy shifts impact USD/CAD, influenced by household leverage and oil markets."
+                focus: "Watch the 12M FX Spread vs the US Fed. The Canadian economy is deeply integrated with the US, but heavily exposed to crude oil prices and highly leveraged household debt.",
+                impact: "BOC policy shifts directly impact USD/CAD. If the BOC cuts rates faster than the Fed due to domestic housing stress, CAD will depreciate rapidly. Oil price shocks also heavily influence this curve."
             },
             rba: {
-                role: "Commodity & China Growth Barometer",
-                focus: "Track 7-Day Velocity and Cycle Peak.",
-                impact: "RBA rates drive AUD/USD and reflect global industrial demand and housing markets."
+                role: "Commodity & Asian Growth Barometer",
+                focus: "Track 7-Day Velocity and the Quarterly Matrix. The RBA's rate path is heavily influenced by global industrial demand, iron ore exports, and the health of the Chinese economy.",
+                impact: "The RBA drives AUD/USD. If China stimulates its economy, the RBA rate path often shifts hawkish. Conversely, domestic mortgage cliffs in Australia can force sudden dovish repricing regardless of global trends."
             }
         };
 
@@ -413,7 +413,7 @@
                 
                 const qKey = `Q${Math.floor(d.getMonth() / 3) + 1} ${d.getFullYear()}`;
                 const deltaVal = parseBps(row.delta);
-                quarters[qKey] = deltaVal; // Stores latest cumulative delta for that quarter
+                quarters[qKey] = deltaVal; 
             });
 
             let html = `<div class="quarter-matrix">`;
@@ -461,31 +461,38 @@
                 <div class="kpi-container">
                     <div class="kpi-card">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Up Next</div>
-                        <div style="font-size: 18px; font-weight: 700; color: #fff; margin-top: 4px;">${absoluteNextMtg.bank || 'N/A'}</div>
-                        <div style="font-size: 20px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; margin-top: 2px;" class="countdown-timer" data-date="${absoluteNextMtg.date}">--d --:--:--</div>
-                        <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">${absoluteNextMtg.date || ''} - 2:00 PM EDT</div>
+                        <div>
+                            <div style="font-size: 18px; font-weight: 700; color: #fff; margin-top: 6px;">${absoluteNextMtg.bank || 'N/A'}</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; margin-top: 4px;" class="countdown-timer" data-date="${absoluteNextMtg.date}">--d --:--:--</div>
+                        </div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">${absoluteNextMtg.date || ''} - 2:00 PM EDT</div>
                     </div>
                     <div class="kpi-card">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Next Meeting Pricing</div>
-                        <div style="font-size: 18px; font-weight: 700; color: #22c55e; margin-top: 4px;">${probValMain}% ${actionMain}</div>
-                        <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">${parsedDeltaMain > 0 ? '+' : ''}${absoluteNextMtg.delta || '0'} bps</div>
+                        <div>
+                            <div style="font-size: 18px; font-weight: 700; color: #22c55e; margin-top: 6px;">${probValMain}% ${actionMain}</div>
+                        </div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">${parsedDeltaMain > 0 ? '+' : ''}${absoluteNextMtg.delta || '0'} bps</div>
                     </div>
                     <div class="kpi-card">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Current Base Rate</div>
-                        <div style="font-size: 18px; font-weight: 700; color: #fff; margin-top: 4px;">${absoluteNextMtg.current || '0.00%'}</div>
+                        <div>
+                            <div style="font-size: 18px; font-weight: 700; color: #fff; margin-top: 6px;">${absoluteNextMtg.current || '0.00%'}</div>
+                        </div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">Target Rate</div>
                     </div>
                 </div>
                 `;
 
                 const overviewChartHTML = `
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    <div class="bank-card" style="flex: 1; min-width: 300px; margin-bottom: 20px;">
+                    <div class="bank-card" style="flex: 1; min-width: 320px; margin-bottom: 20px;">
                         <div class="bank-card-header"><span>IMPLIED POLICY RATE PATHS: RELATIVE</span></div>
-                        <div class="chart-holder" style="height: 350px;"><canvas id="main-relative-chart"></canvas></div>
+                        <div class="chart-holder" style="height: 450px;"><canvas id="main-relative-chart"></canvas></div>
                     </div>
-                    <div class="bank-card" style="flex: 1; min-width: 300px; margin-bottom: 20px;">
+                    <div class="bank-card" style="flex: 1; min-width: 320px; margin-bottom: 20px;">
                         <div class="bank-card-header"><span>IMPLIED POLICY RATE PATHS: LEVEL</span></div>
-                        <div class="chart-holder" style="height: 350px;"><canvas id="main-level-chart"></canvas></div>
+                        <div class="chart-holder" style="height: 450px;"><canvas id="main-level-chart"></canvas></div>
                     </div>
                 </div>
                 `;
@@ -502,17 +509,12 @@
                 }
 
                 const firstMtg = getCorrectedRow(currentData[0] || {});
-                const lastMtg = getCorrectedRow(currentData[currentData.length - 1] || {});
-
+                
                 let actionBank = 'HIKE';
                 let parsedDeltaBank = parseBps(firstMtg.delta);
                 if (parsedDeltaBank < 0) actionBank = 'CUT';
                 if (parsedDeltaBank === 0) actionBank = 'HOLD';
                 let probValBank = Math.round(parseFloat(firstMtg.prob || 0));
-
-                // 1. TERMINAL RATE (PEAK/TROUGH)
-                let currentVal = parseFloat(String(currentRate).replace('%', ''));
-                if (isNaN(currentVal)) currentVal = parseFloat(String(currentData[0]?.implied || '').replace('%', '')) || 0;
 
                 let maxRate = -Infinity, minRate = Infinity;
                 let maxDate = 'N/A', minDate = 'N/A';
@@ -537,7 +539,6 @@
                     terminalDate = minDate;
                 }
 
-                // 2. POLICY STANCE MATRIX
                 let stanceLabel = "Neutral";
                 let stanceColor = "#8b949e";
                 if (lastDelta >= 50) { stanceLabel = "Aggressive Hawk"; stanceColor = "#22c55e"; }
@@ -545,7 +546,6 @@
                 else if (lastDelta <= -50) { stanceLabel = "Aggressive Dove"; stanceColor = "#ef4444"; }
                 else if (lastDelta <= -12.5) { stanceLabel = "Mild Dove"; stanceColor = "#f87171"; }
 
-                // 3. FIRST 25BPS MILESTONE
                 let milestoneText = "None Priced";
                 let milestoneColor = "#8b949e";
 
@@ -565,7 +565,6 @@
                     }
                 }
 
-                // 4. 7-DAY REPRICING VELOCITY
                 const weekAgoSnapshot = getHistoricalSnapshot(snapshots, 7);
                 let velocityHTML = `<span style="color: #8b949e;">Building History</span>`;
                 let velocitySub = `Snapshot baseline set`;
@@ -590,7 +589,6 @@
                     }
                 }
 
-                // 5. FORWARD FX SPREAD DIFFERENTIAL
                 let spreadHTML = `<span style="color: #8b949e;">--</span>`;
                 let spreadSub = `vs FED (USD)`;
 
@@ -618,38 +616,52 @@
                 <div class="kpi-container">
                     <div class="kpi-card">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Next Decision in</div>
-                        <div style="font-size: 18px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; margin-top: 4px;" class="countdown-timer" data-date="${firstMtg.date}">--d --:--:--</div>
-                        <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">${firstMtg.date || ''} - 2:00 PM EDT</div>
+                        <div>
+                            <div style="font-size: 16px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; margin-top: 6px;" class="countdown-timer" data-date="${firstMtg.date}">--d --:--:--</div>
+                        </div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">${firstMtg.date || ''}</div>
                     </div>
                     <div class="kpi-card">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Next Meeting Pricing</div>
-                        <div style="font-size: 16px; font-weight: 700; color: #22c55e; margin-top: 4px;">${probValBank}% ${actionBank}</div>
-                        <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">${parsedDeltaBank > 0 ? '+' : ''}${firstMtg.delta || '0'} bps</div>
+                        <div>
+                            <div style="font-size: 16px; font-weight: 700; color: #22c55e; margin-top: 6px;">${probValBank}% ${actionBank}</div>
+                        </div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">${parsedDeltaBank > 0 ? '+' : ''}${firstMtg.delta || '0'} bps</div>
                     </div>
                     <div class="kpi-card">
-                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Current Rate & Stance</div>
-                        <div style="font-size: 16px; font-weight: 700; color: #fff; margin-top: 4px;">${currentRate}</div>
-                        <div style="font-size: 11px; color: ${stanceColor}; font-weight: 600; margin-top: 2px;">${stanceLabel}</div>
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Current Rate</div>
+                        <div>
+                            <div style="font-size: 16px; font-weight: 700; color: #fff; margin-top: 6px;">${currentRate}</div>
+                        </div>
+                        <div style="font-size: 11px; color: ${stanceColor}; font-weight: 600; margin-top: 8px;">${stanceLabel}</div>
                     </div>
                     <div class="kpi-card">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">${terminalLabel}</div>
-                        <div style="font-size: 16px; font-weight: 700; color: #00b4f9; margin-top: 4px;">${terminalRate}</div>
-                        <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">Expected ${terminalDate}</div>
+                        <div>
+                            <div style="font-size: 16px; font-weight: 700; color: #00b4f9; margin-top: 6px;">${terminalRate}</div>
+                        </div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">Expected ${terminalDate}</div>
                     </div>
                     <div class="kpi-card">
-                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">1st 25bps Milestone</div>
-                        <div style="font-size: 14px; font-weight: 700; color: ${milestoneColor}; margin-top: 4px;">${milestoneText}</div>
-                        <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">First full move</div>
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">1st Milestone</div>
+                        <div>
+                            <div style="font-size: 14px; font-weight: 700; color: ${milestoneColor}; margin-top: 6px;">${milestoneText}</div>
+                        </div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">First full 25bps move</div>
                     </div>
                     <div class="kpi-card">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">7-Day Velocity</div>
-                        <div style="font-size: 14px; font-weight: 700; margin-top: 4px;">${velocityHTML}</div>
-                        <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">${velocitySub}</div>
+                        <div>
+                            <div style="font-size: 14px; font-weight: 700; margin-top: 6px;">${velocityHTML}</div>
+                        </div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">${velocitySub}</div>
                     </div>
                     <div class="kpi-card">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">12M FX Spread</div>
-                        <div style="font-size: 14px; font-weight: 700; margin-top: 4px;">${spreadHTML}</div>
-                        <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">${spreadSub}</div>
+                        <div>
+                            <div style="font-size: 14px; font-weight: 700; margin-top: 6px;">${spreadHTML}</div>
+                        </div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">${spreadSub}</div>
                     </div>
                 </div>
                 `;
@@ -670,8 +682,10 @@
                 chartsWrapper.style.gap = '20px';
                 chartsWrapper.style.flexWrap = 'wrap';
                 
+                // Adjusted Flex ratios: 1 for the Line Chart (slimmer), 1.2 for the Bar chart (wider)
+                // Adjusted Heights: Line chart is taller (450px). Bar chart fills its space above the matrix.
                 chartsWrapper.innerHTML = `
-                    <div class="bank-card" style="flex: 2; min-width: 380px; margin-bottom: 20px;">
+                    <div class="bank-card" style="flex: 1; min-width: 320px; margin-bottom: 20px; display: flex; flex-direction: column;">
                         <div class="bank-card-header" style="border-bottom: none;">
                             <span>IMPLIED RATE PATH (MARKET EXPECTATION)</span>
                             <span class="highlight-blue">${bank.title}</span>
@@ -679,15 +693,15 @@
                         <div style="display:flex; gap:8px; padding:0 20px 12px 20px; background:#161b22; border-bottom:1px solid #1c2230;">
                             ${toggleButtonsHTML}
                         </div>
-                        <div class="chart-holder">
+                        <div class="chart-holder" style="flex-grow: 1; height: 450px;">
                             <canvas id="${chartId}"></canvas>
                         </div>
                     </div>
-                    <div class="bank-card" style="flex: 1; min-width: 280px; margin-bottom: 20px;">
+                    <div class="bank-card" style="flex: 1.2; min-width: 320px; margin-bottom: 20px; display: flex; flex-direction: column;">
                         <div class="bank-card-header">
                             <span>IMPLIED POINTS (BPS)</span>
                         </div>
-                        <div class="chart-holder">
+                        <div class="chart-holder" style="flex-grow: 1; min-height: 320px;">
                             <canvas id="${barChartId}"></canvas>
                         </div>
                         ${calculateQuarterlyMatrix(currentData)}
@@ -744,31 +758,44 @@
             }
             container.appendChild(tableCard);
 
-            // DYNAMIC EXPLAINER SECTION (SPECIFIC TO EACH TAB)
+            // INSTITUTIONAL MASTER GUIDE
             const guideCard = document.createElement('div');
             guideCard.className = 'guide-box';
             guideCard.innerHTML = `
                 <div class="guide-header">
-                    <span>📘 Master Guide: ${bank.title} Rate Tracker</span>
+                    <span>📘 Master Guide & Trading Playbook: ${bank.title}</span>
                 </div>
-                <div style="font-size: 13px; color: #c9d1d9; font-weight: 600; margin-bottom: 4px;">Macro Profile: ${macro.role}</div>
-                <div style="font-size: 12px; color: #8b949e; margin-bottom: 14px;">${macro.focus} ${macro.impact}</div>
+                <div style="font-size: 14px; color: #c9d1d9; font-weight: 600; margin-bottom: 6px; margin-top: 10px;">Macro Profile: ${macro.role}</div>
+                <div style="font-size: 13px; color: #8b949e; margin-bottom: 18px; line-height: 1.6;">${macro.focus} ${macro.impact}</div>
+                
+                <div style="border-top: 1px solid #1c2230; padding-top: 16px; margin-top: 8px;">
+                    <span style="font-size: 13px; font-weight: 600; color: #e2e8f0; text-transform: uppercase; letter-spacing: 0.5px;">How to Trade the Dashboard Data</span>
+                </div>
+
                 <div class="guide-grid">
                     <div class="guide-card">
-                        <div class="guide-title">1. Next Decision & Pricing</div>
-                        <div class="guide-desc">Shows the market's implied percentage chance of a 25 bps move at the very next meeting. A probability above 70% indicates a move is heavily priced in.</div>
+                        <div class="guide-title">1. Next Meeting Pricing Edge</div>
+                        <div class="guide-desc">
+                            Don't just look at the percentage—trade the gap against consensus. A probability <strong>below 60%</strong> means the market is highly uncertain, making the meeting a massive volatility event. If it sits <strong>above 80%</strong>, the decision is fully priced in, meaning the real market reaction will come strictly from the press conference tone (forward guidance), not the rate decision itself.
+                        </div>
                     </div>
                     <div class="guide-card">
-                        <div class="guide-title">2. Cycle Peak / Trough</div>
-                        <div class="guide-desc">Identifies the highest or lowest rate level the futures market expects over the next 12 months, along with the specific meeting date when policy reaches its terminal rate.</div>
+                        <div class="guide-title">2. Cycle Peak (Terminal Rate)</div>
+                        <div class="guide-desc">
+                            This is the most important structural indicator. It tells you the exact ceiling (or floor) the market believes policy will reach. <strong>Trade Signal:</strong> If the Cycle Peak shifts higher by +25bps after an inflation report, it provides a strong structural tailwind to buy the domestic currency, even if short-term rates don't move immediately.
+                        </div>
                     </div>
                     <div class="guide-card">
-                        <div class="guide-title">3. 7-Day Velocity</div>
-                        <div class="guide-desc">Measures how much the 12-month outlook has shifted in basis points over the past week. A positive value indicates hawkish repricing, while a negative value shows dovish shifts.</div>
+                        <div class="guide-title">3. 7-Day Repricing Velocity</div>
+                        <div class="guide-desc">
+                            Markets are driven by the <em>rate of change</em>, not the absolute level. The 7-Day Velocity strips away the noise and shows pure momentum. <strong>Trade Signal:</strong> A rapid hawkish shift (e.g., +15 bps in a week) indicates bond traders are panic-pricing new, hot economic data. Follow the momentum until the velocity stabilizes back near 0.0 bps.
+                        </div>
                     </div>
                     <div class="guide-card">
-                        <div class="guide-title">4. 12M FX Rate Spread</div>
-                        <div class="guide-desc">Calculates the yield differential between this central bank's expected 12-month policy rate and the US Fed rate. Higher yield spreads attract capital and strengthen currency exchange rates.</div>
+                        <div class="guide-title">4. 12M FX Spread vs USD</div>
+                        <div class="guide-desc">
+                            Currencies are fundamentally driven by yield differentials (the Carry Trade). This metric calculates the forward 1-year premium of holding this currency vs the US Dollar. <strong>Trade Signal:</strong> As this spread widens into the positive (green), institutional capital will flow heavily into the domestic currency, establishing strong, multi-month uptrends against the USD.
+                        </div>
                     </div>
                 </div>
             `;
