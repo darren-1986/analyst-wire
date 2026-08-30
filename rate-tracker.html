@@ -80,6 +80,24 @@
         .quarter-lbl { font-size: 11px; color: #8b949e; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
         .quarter-val { font-size: 15px; font-weight: 700; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 
+        /* Advanced Overview Components Styling */
+        .timeline-container { position: relative; width: 100%; height: 80px; margin: 20px 0 40px 0; padding: 0 40px; }
+        .timeline-track { position: absolute; top: 40px; left: 40px; right: 40px; height: 2px; background: #30363d; }
+        .timeline-node { position: absolute; top: 31px; width: 20px; height: 20px; border-radius: 50%; background: #8b5cf6; border: 4px solid #0d1117; transform: translateX(-50%); z-index: 2; transition: all 0.2s; box-shadow: 0 0 10px rgba(139, 92, 246, 0.5); }
+        .timeline-node:hover { transform: translateX(-50%) scale(1.2); }
+        .timeline-lbl-top { position: absolute; top: 0; transform: translateX(-50%); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #c9d1d9; width: 80px; }
+        .timeline-lbl-btm { position: absolute; top: 55px; transform: translateX(-50%); text-align: center; font-size: 11px; color: #8b949e; font-weight: 500; width: 80px; }
+        
+        .conviction-row { display: flex; align-items: center; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; }
+        .conv-lbl { width: 130px; font-size: 12px; color: #c9d1d9; flex-shrink: 0; }
+        .conv-track { flex-grow: 1; height: 4px; background: #30363d; border-radius: 2px; position: relative; margin: 0 20px; }
+        .conv-dot { position: absolute; top: -4px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transform: translateX(-50%); }
+        .conv-score { width: 30px; text-align: right; font-size: 13px; font-weight: 700; color: #fff; margin-right: 15px; }
+        .conv-badge { width: 80px; padding: 4px 0; text-align: center; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; border: 1px solid; }
+
+        .matrix-table th { text-align: center; }
+        .matrix-table td { border: 1px solid #1c2230; font-family: 'JetBrains Mono', monospace; font-weight: 600; padding: 15px 10px; }
+
         #global-loader { display: flex; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0A0A0a; z-index: 50; flex-direction: column; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; transition: opacity 0.3s; }
         .spinner { border: 3px solid #161b22; border-top: 3px solid #00b4f9; border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
         .loading-text { color: #c9d1d9; font-size: 14px; font-weight: 500; }
@@ -181,7 +199,8 @@
             { id: 'rba', title: 'Reserve Bank of Australia (AUD)' }
         ];
 
-        // Deep Macro Playbook Data
+        const fxMap = { 'fed': 'USD', 'ecb': 'EUR', 'boe': 'GBP', 'boj': 'JPY', 'boc': 'CAD', 'rba': 'AUD' };
+
         const bankMacroContext = {
             main: {
                 role: "Global Divergence Matrix",
@@ -403,6 +422,13 @@
             btn.classList.toggle('active-toggle');
         };
 
+        window.toggleMatrix = function(type) {
+            document.querySelectorAll('.matrix-btn').forEach(b => b.classList.remove('active-toggle'));
+            event.target.classList.add('active-toggle');
+            document.getElementById('matrix-current').style.display = type === 'current' ? 'table' : 'none';
+            document.getElementById('matrix-forward').style.display = type === 'forward' ? 'table' : 'none';
+        }
+
         function calculateQuarterlyMatrix(currentData) {
             const quarters = {};
             currentData.forEach(r => {
@@ -432,6 +458,37 @@
                 `;
             });
             html += `</div>`;
+            return html;
+        }
+
+        function generateMatrixHTML(id, ratesObj) {
+            const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
+            let html = `<table id="${id}" class="matrix-table" style="display: ${id==='matrix-current'?'table':'none'}; border-collapse: separate; border-spacing: 0;"><thead><tr><th style="border:none;"></th>`;
+            currencies.forEach(c => html += `<th style="color:#8b949e; border:none; padding-bottom:15px;">${c}</th>`);
+            html += `</tr></thead><tbody>`;
+            
+            let maxSpread = 0;
+            currencies.forEach(r => currencies.forEach(c => {
+                if(r !== c) maxSpread = Math.max(maxSpread, Math.abs(ratesObj[r] - ratesObj[c]));
+            }));
+            
+            currencies.forEach(rowCur => {
+                html += `<tr><td style="color:#8b949e; border:none; padding-right:15px;">${rowCur}</td>`;
+                currencies.forEach(colCur => {
+                    if (rowCur === colCur) {
+                        html += `<td style="background: rgba(255,255,255,0.02); text-align:center;">-</td>`;
+                    } else {
+                        let spread = (ratesObj[rowCur] - ratesObj[colCur]) * 100;
+                        let val = Math.round(spread);
+                        let opacity = Math.min(Math.abs(val) / (maxSpread * 100 || 1), 1) * 0.4 + 0.15; 
+                        let color = val >= 0 ? `rgba(34, 197, 94, ${opacity})` : `rgba(239, 68, 68, ${opacity})`;
+                        let text = val >= 0 ? `+${val}` : val;
+                        html += `<td style="background: ${color}; text-align:center; color:${val>=0?'#4ade80':'#f87171'};">${text}</td>`;
+                    }
+                });
+                html += `</tr>`;
+            });
+            html += `</tbody></table>`;
             return html;
         }
 
@@ -484,6 +541,142 @@
                 </div>
                 `;
 
+                // ADVANCED OVERVIEW COMPONENTS
+                const allBanksData = {};
+                ['fed', 'ecb', 'boe', 'boj', 'boc', 'rba'].forEach(b => {
+                    if (globalGroupedSnapshots[b] && globalGroupedSnapshots[b].length > 0) {
+                        allBanksData[b] = globalGroupedSnapshots[b][0].rows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
+                    }
+                });
+
+                // 1. Meeting Collision Timeline
+                const nowMs = Date.now();
+                const endMs = nowMs + (180 * 24 * 60 * 60 * 1000); // 6 Months Horizon
+                const mtgMap = {};
+                
+                Object.keys(allBanksData).forEach(b => {
+                    allBanksData[b].forEach(mtg => {
+                        const ms = new Date(mtg.date).getTime();
+                        if (ms >= nowMs && ms <= endMs) {
+                            const dStr = mtg.date;
+                            if(!mtgMap[dStr]) mtgMap[dStr] = { ms, banks: [] };
+                            mtgMap[dStr].banks.push(b.toUpperCase());
+                        }
+                    });
+                });
+
+                let timelineNodesHTML = '';
+                Object.values(mtgMap).forEach(m => {
+                    let pct = ((m.ms - nowMs) / (endMs - nowMs)) * 100;
+                    if(pct > 95) pct = 95; // padding
+                    const scale = m.banks.length > 1 ? 1.4 : 1;
+                    const bColor = m.banks.length > 1 ? '#00b4f9' : '#8b5cf6';
+                    const sShadow = m.banks.length > 1 ? `box-shadow: 0 0 12px ${bColor};` : '';
+                    
+                    const bankStr = m.banks.join(', ');
+                    const diffDays = Math.round((m.ms - nowMs) / (1000*60*60*24));
+
+                    timelineNodesHTML += `
+                    <div class="timeline-node" style="left: ${pct}%; transform: translateX(-50%) scale(${scale}); background: ${bColor}; ${sShadow}"></div>
+                    <div class="timeline-lbl-top" style="left: ${pct}%; top: 5px;">${bankStr}</div>
+                    <div class="timeline-lbl-btm" style="left: ${pct}%; top: 60px;">+${diffDays}d</div>
+                    `;
+                });
+
+                // 2. Conviction Index
+                const convictions = [];
+                Object.keys(allBanksData).forEach(b => {
+                    const nextMtg = allBanksData[b][0];
+                    if (nextMtg && nextMtg.prob) {
+                        let val = parseFloat(String(nextMtg.prob).replace('%','')) || 0;
+                        let score = Math.round(Math.abs(val - 50) * 2);
+                        let status = score < 33 ? 'CONTESTED' : (score < 66 ? 'MODERATE' : 'SETTLED');
+                        let bColor = score < 33 ? '#8b5cf6' : (score < 66 ? '#f97316' : '#22c55e');
+                        let tColor = score < 33 ? 'rgba(139,92,246,0.2)' : (score < 66 ? 'rgba(249,115,22,0.2)' : 'rgba(34,197,94,0.2)');
+                        convictions.push({ bank: b.toUpperCase(), date: nextMtg.date, prob: nextMtg.prob, action: nextMtg.hike_cut || 'move', score, status, bColor, tColor });
+                    }
+                });
+                convictions.sort((a,b) => a.score - b.score);
+
+                let convictionHTML = '';
+                convictions.forEach(c => {
+                    convictionHTML += `
+                    <div class="conviction-row">
+                        <div class="conv-lbl">
+                            <div style="font-weight:700; color:#fff;">${c.bank}</div>
+                            <div style="font-size:10px; margin-top:2px;">${c.date} &middot; ${c.prob} ${c.action}</div>
+                        </div>
+                        <div class="conv-track">
+                            <div class="conv-dot" style="left: ${c.score}%; background: ${c.bColor}; box-shadow: 0 0 8px ${c.bColor};"></div>
+                        </div>
+                        <div class="conv-score">${c.score}</div>
+                        <div class="conv-badge" style="color: ${c.bColor}; background: ${c.tColor}; border-color: ${c.bColor};">${c.status}</div>
+                    </div>
+                    `;
+                });
+
+                // 3. FX Carry Matrix
+                const rates = { current: {}, forward: {} };
+                const mainRows = currentData;
+                Object.keys(allBanksData).forEach(b => {
+                    const curCode = fxMap[b];
+                    const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
+                    const mRow = mainRows.find(r => r.bank && r.bank.includes(targetNames[b]));
+                    let cRate = mRow ? parseFloat(String(mRow.current).replace('%','')) : 0;
+                    rates.current[curCode] = cRate;
+                    
+                    const bRows = allBanksData[b];
+                    let fRate = parseFloat(String(bRows[bRows.length-1].implied).replace('%','')) || cRate;
+                    rates.forward[curCode] = fRate;
+                });
+
+                const advancedToolsHTML = `
+                <div class="bank-card" style="margin-bottom: 20px; padding: 20px;">
+                    <div style="font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; margin-bottom: 8px;">MEETING COLLISION TIMELINE</div>
+                    <div style="font-size: 12px; color: #8b949e; margin-bottom: 10px;">Every upcoming decision mapped across a 6-month horizon. Larger markers flag weeks with more than one bank deciding.</div>
+                    <div class="timeline-container">
+                        <div class="timeline-track"></div>
+                        <div style="position:absolute; top:25px; left:40px; font-size:10px; color:#8b949e;">Today</div>
+                        ${timelineNodesHTML}
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <div class="bank-card" style="flex: 1; min-width: 320px; padding: 20px; margin-bottom: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+                            <div>
+                                <div style="font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; margin-bottom: 6px;">MARKET CONVICTION INDEX</div>
+                                <div style="font-size: 11px; color: #8b949e;">Distance from a 50/50 coin-flip on next-meeting probability.</div>
+                            </div>
+                        </div>
+                        ${convictionHTML}
+                        <div style="display: flex; justify-content: center; margin-top: 20px;">
+                            <div style="width: 150px; height: 4px; background: linear-gradient(90px, #8b5cf6, #22c55e); border-radius: 2px; position:relative;">
+                                <div style="position:absolute; top:8px; left:0; font-size:10px; color:#8b949e; transform:translateX(-50%);">Coin-flip (0)</div>
+                                <div style="position:absolute; top:8px; right:0; font-size:10px; color:#8b949e; transform:translateX(50%);">Settled (100)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bank-card" style="flex: 1.5; min-width: 400px; padding: 20px; margin-bottom: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+                            <div>
+                                <div style="font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; margin-bottom: 6px;">FX CARRY MATRIX (BPS SPREAD)</div>
+                                <div style="font-size: 11px; color: #8b949e;">Yield differential between pairs. Row Currency minus Column Currency.</div>
+                            </div>
+                            <div style="display:flex; gap:6px; background:#161b22; padding:4px; border-radius:6px; border:1px solid #30363d;">
+                                <button class="ds-btn matrix-btn active-toggle" onclick="toggleMatrix('current')" style="padding: 4px 10px; border:none;">Current</button>
+                                <button class="ds-btn matrix-btn" onclick="toggleMatrix('forward')" style="padding: 4px 10px; border:none;">Forward 1yr</button>
+                            </div>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            ${generateMatrixHTML('matrix-current', rates.current)}
+                            ${generateMatrixHTML('matrix-forward', rates.forward)}
+                        </div>
+                    </div>
+                </div>
+                `;
+
                 const overviewChartHTML = `
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                     <div class="bank-card" style="flex: 1; min-width: 320px; margin-bottom: 20px;">
@@ -497,7 +690,7 @@
                 </div>
                 `;
                 
-                container.innerHTML = summaryHTML + overviewChartHTML;
+                container.innerHTML = summaryHTML + advancedToolsHTML + overviewChartHTML;
 
             } else {
                 let currentRate = "0.00%";
@@ -682,8 +875,6 @@
                 chartsWrapper.style.gap = '20px';
                 chartsWrapper.style.flexWrap = 'wrap';
                 
-                // Adjusted Flex ratios: 1 for the Line Chart (slimmer), 1.2 for the Bar chart (wider)
-                // Adjusted Heights: Line chart is taller (450px). Bar chart fills its space above the matrix.
                 chartsWrapper.innerHTML = `
                     <div class="bank-card" style="flex: 1; min-width: 320px; margin-bottom: 20px; display: flex; flex-direction: column;">
                         <div class="bank-card-header" style="border-bottom: none;">
@@ -758,7 +949,6 @@
             }
             container.appendChild(tableCard);
 
-            // INSTITUTIONAL MASTER GUIDE
             const guideCard = document.createElement('div');
             guideCard.className = 'guide-box';
             guideCard.innerHTML = `
