@@ -396,6 +396,7 @@
             });
         }
 
+        // FIX: Re-size all charts when switching UI tabs
         function setupTabs() {
             document.getElementById('mainTabs').addEventListener('click', (e) => {
                 const btn = e.target.closest('.tab-btn');
@@ -406,9 +407,33 @@
 
                 document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active-pane'));
                 const activePane = document.getElementById(`${btn.dataset.tab}-pane`);
-                if (activePane) activePane.classList.add('active-pane');
+                if (activePane) {
+                    activePane.classList.add('active-pane');
+                    
+                    // Force Chart.js to recalculate dimensions now that container is visible
+                    setTimeout(() => {
+                        for (let key in chartInstances) {
+                            if (chartInstances[key] && typeof chartInstances[key].resize === 'function') {
+                                chartInstances[key].resize();
+                            }
+                        }
+                    }, 20);
+                }
             });
         }
+
+        // FIX: Re-size all charts if the user switches browser tabs or leaves the app and comes back
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === 'visible') {
+                setTimeout(() => {
+                    for (let key in chartInstances) {
+                        if (chartInstances[key] && typeof chartInstances[key].resize === 'function') {
+                            chartInstances[key].resize();
+                        }
+                    }
+                }, 20);
+            }
+        });
 
         window.toggleDatasetByLabel = function(chartId, datasetLabel, btn) {
             const chart = chartInstances[chartId];
@@ -892,7 +917,7 @@
                         <div class="bank-card-header">
                             <span>IMPLIED POINTS (BPS)</span>
                         </div>
-                        <div class="chart-holder" style="flex-grow: 1; min-height: 320px;">
+                        <div class="chart-holder" style="flex-grow: 1; height: 320px;">
                             <canvas id="${barChartId}"></canvas>
                         </div>
                         ${calculateQuarterlyMatrix(currentData)}
