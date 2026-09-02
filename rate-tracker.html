@@ -187,8 +187,7 @@
         let countdownTimerId = null;
         
         const CACHE_KEY = 'aw_central_bank_rates_cache';
-        const CACHE_LIFESPAN_MS = 1000 * 60 * 60 * 3; 
-
+        
         const banksToFetch = [
             { id: 'main', title: 'Next Meeting Overview' },
             { id: 'fed', title: 'Federal Reserve (USA)' },
@@ -295,33 +294,53 @@
         async function loadData() {
             const statusIndicator = document.getElementById('status-indicator');
             const cachedString = localStorage.getItem(CACHE_KEY);
+            let cacheObj = null;
             
             if (cachedString) {
-                try {
-                    const cacheObj = JSON.parse(cachedString);
-                    if ((Date.now() - cacheObj.savedAt) < CACHE_LIFESPAN_MS) {
-                        renderAllData(cacheObj.data);
-                        const dbTimeStr = new Date(cacheObj.dbTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        statusIndicator.innerText = `Loaded from Cache | DB Data from: ${dbTimeStr}`;
-                        document.getElementById('global-loader').style.display = 'none';
-                        return; 
-                    }
-                } catch (e) {}
+                try { cacheObj = JSON.parse(cachedString); } catch (e) {}
             }
 
             try {
                 statusIndicator.innerText = "Checking database for updates...";
+                
+                // 1. FAST CHECK: Ask Supabase for the single most recent timestamp
+                const { data: latestRow, error: timeError } = await dataClient
+                    .from('central_bank_rates')
+                    .select('updated_at')
+                    .order('updated_at', { ascending: false })
+                    .limit(1);
+                    
+                if (timeError) throw timeError;
+                
+                let dbIsNewer = false;
+                let latestDbTime = 0;
+                
+                if (latestRow && latestRow.length > 0) {
+                    latestDbTime = new Date(latestRow[0].updated_at).getTime();
+                    // Override trigger: If the database is newer than our cache, kill the cache.
+                    if (!cacheObj || latestDbTime > cacheObj.dbTimestamp) {
+                        dbIsNewer = true;
+                    }
+                }
+
+                // 2. Load from Cache ONLY if no newer data exists in the database
+                if (cacheObj && !dbIsNewer) {
+                    renderAllData(cacheObj.data);
+                    const dbTimeStr = new Date(cacheObj.dbTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    statusIndicator.innerText = `Loaded from Cache | DB Data from: ${dbTimeStr}`;
+                    document.getElementById('global-loader').style.display = 'none';
+                    return; 
+                }
+
+                // 3. Otherwise, download the fresh data (Bypassing cache)
+                statusIndicator.innerText = "Downloading fresh market data...";
                 const { data, error } = await dataClient.from('central_bank_rates').select('*');
                 if (error) throw error;
 
                 if (data && data.length > 0) {
                     const groupedData = {};
-                    let latestTimestamp = 0;
                     
                     data.forEach(item => {
-                        const rowTime = new Date(item.updated_at).getTime();
-                        if (rowTime > latestTimestamp) latestTimestamp = rowTime;
-
                         if (!groupedData[item.bank_id]) groupedData[item.bank_id] = [];
                         let parsedRows = item.rows;
                         if (typeof parsedRows === 'string') {
@@ -334,9 +353,10 @@
                         groupedData[bankId].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
                     });
 
-                    localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), dbTimestamp: latestTimestamp, data: groupedData }));
+                    // Save the new fresh data to cache with the exact timestamp
+                    localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), dbTimestamp: latestDbTime, data: groupedData }));
                     renderAllData(groupedData);
-                    statusIndicator.innerText = `Synced | Data Updated: ${new Date(latestTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                    statusIndicator.innerText = `Synced | Data Updated: ${new Date(latestDbTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
                 } else {
                     renderEmptyStates("Awaiting initial data sync from the automated background process.");
                     statusIndicator.innerText = "Database Empty";
@@ -396,7 +416,7 @@
             });
         }
 
-        // FIX: Re-size all charts when switching UI tabs
+        // Re-size all charts when switching UI tabs
         function setupTabs() {
             document.getElementById('mainTabs').addEventListener('click', (e) => {
                 const btn = e.target.closest('.tab-btn');
@@ -422,7 +442,7 @@
             });
         }
 
-        // FIX: Re-size all charts if the user switches browser tabs or leaves the app and comes back
+        // Re-size all charts if the user switches browser tabs or leaves the app and comes back
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === 'visible') {
                 setTimeout(() => {
@@ -917,7 +937,7 @@
                         <div class="bank-card-header">
                             <span>IMPLIED POINTS (BPS)</span>
                         </div>
-                        <div class="chart-holder" style="flex-grow: 1; height: 320px;">
+                        <div class="chart-holder" style="flex-grow: 1; min-height: 320px;">
                             <canvas id="${barChartId}"></canvas>
                         </div>
                         ${calculateQuarterlyMatrix(currentData)}
