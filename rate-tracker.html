@@ -78,12 +78,13 @@
         .quarter-lbl { font-size: 11px; color: #8b949e; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
         .quarter-val { font-size: 15px; font-weight: 700; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 
-        .timeline-container { position: relative; width: 100%; height: 80px; margin: 20px 0 40px 0; padding: 0 40px; }
+        /* UPGRADED TIMELINE CSS */
+        .timeline-container { position: relative; width: 100%; height: 80px; padding: 0 40px; }
         .timeline-track { position: absolute; top: 40px; left: 40px; right: 40px; height: 2px; background: #30363d; }
         .timeline-node { position: absolute; top: 31px; width: 20px; height: 20px; border-radius: 50%; background: #8b5cf6; border: 4px solid #0d1117; transform: translateX(-50%); z-index: 2; transition: all 0.2s; box-shadow: 0 0 10px rgba(139, 92, 246, 0.5); }
         .timeline-node:hover { transform: translateX(-50%) scale(1.2); }
-        .timeline-lbl-top { position: absolute; top: 0; transform: translateX(-50%); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #c9d1d9; width: 80px; }
-        .timeline-lbl-btm { position: absolute; top: 55px; transform: translateX(-50%); text-align: center; font-size: 11px; color: #8b949e; font-weight: 500; width: 80px; }
+        .timeline-lbl-top { position: absolute; top: -14px; transform: translateX(-50%); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #c9d1d9; width: 120px; line-height: 1.4; }
+        .timeline-lbl-btm { position: absolute; top: 65px; transform: translateX(-50%); text-align: center; font-size: 11px; color: #8b949e; font-weight: 500; width: 120px; }
         
         .conviction-row { display: flex; align-items: center; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; }
         .conv-lbl { width: 130px; font-size: 12px; color: #c9d1d9; flex-shrink: 0; }
@@ -198,41 +199,13 @@
         const fxMap = { 'fed': 'USD', 'ecb': 'EUR', 'boe': 'GBP', 'boj': 'JPY', 'boc': 'CAD', 'rba': 'AUD' };
 
         const bankMacroContext = {
-            main: {
-                role: "Global Divergence Matrix",
-                focus: "Compare relative rate curves across all 6 major central banks to identify broad macro liquidity trends.",
-                impact: "Divergence in forward paths creates long-term structural trends in FX pairs. When one bank is projected to hike while another is priced to cut, capital flows rapidly toward the higher yield over time, driving sustained currency trends."
-            },
-            fed: {
-                role: "The World's Reserve Currency Anchor",
-                focus: "The US Federal Reserve dictates global liquidity. Its rate path serves as the baseline constraint for all other central banks. Track the 7-Day Velocity closely to spot sudden macro regime shifts.",
-                impact: "Aggressive hawkish Fed repricing sucks liquidity from global markets, strengthens the USD (DXY), raises US Treasury yields, and puts intense pressure on foreign central banks to keep up to defend their own currencies."
-            },
-            ecb: {
-                role: "Eurozone Monetary Policy Driver",
-                focus: "Monitor the ECB's Cycle Peak relative to the Fed. The ECB often lags the Fed's cycle due to the fragmented nature of the European bond market and sluggish growth.",
-                impact: "When the ECB's rate path diverges significantly from the Fed, it becomes the primary driver for EUR/USD. The ECB is highly sensitive to German manufacturing data and localized Eurozone inflation prints."
-            },
-            boe: {
-                role: "UK Interest Rate Anchor",
-                focus: "Track the 1st 25bps Milestone and Next Meeting Pricing. The UK economy is highly financialized with floating-rate mortgages, making the BOE extremely sensitive to domestic inflation.",
-                impact: "GBP is heavily reactive to shifting short-term rate paths. A sudden increase in BOE pricing velocity often creates outsized, volatile swings in GBP/USD and EUR/GBP."
-            },
-            boj: {
-                role: "Global Low-Yield / Carry Trade Origin",
-                focus: "Monitor the Implied Points (Bps) bar chart closely. The BOJ has maintained near-zero rates for decades. Any expectation of a rate hike is a major macro event.",
-                impact: "Because the Yen is the world's primary funding currency, even small expected rate increases (e.g., +10 bps) can trigger massive, violent unwinds of global carry trades, sparking risk-off sentiment in equities."
-            },
-            boc: {
-                role: "High-Beta Commodity & Housing Proxy",
-                focus: "Watch the 12M FX Spread vs the US Fed. The Canadian economy is deeply integrated with the US, but heavily exposed to crude oil prices and highly leveraged household debt.",
-                impact: "BOC policy shifts directly impact USD/CAD. If the BOC cuts rates faster than the Fed due to domestic housing stress, CAD will depreciate rapidly. Oil price shocks also heavily influence this curve."
-            },
-            rba: {
-                role: "Commodity & Asian Growth Barometer",
-                focus: "Track 7-Day Velocity and the Quarterly Matrix. The RBA's rate path is heavily influenced by global industrial demand, iron ore exports, and the health of the Chinese economy.",
-                impact: "The RBA drives AUD/USD. If China stimulates its economy, the RBA rate path often shifts hawkish. Conversely, domestic mortgage cliffs in Australia can force sudden dovish repricing regardless of global trends."
-            }
+            main: { role: "Global Divergence Matrix", focus: "Compare relative rate curves across all 6 major central banks to identify broad macro liquidity trends.", impact: "Divergence in forward paths creates long-term structural trends in FX pairs." },
+            fed: { role: "The World's Reserve Currency Anchor", focus: "The US Federal Reserve dictates global liquidity.", impact: "Aggressive hawkish Fed repricing sucks liquidity from global markets, strengthens the USD (DXY)." },
+            ecb: { role: "Eurozone Monetary Policy Driver", focus: "Monitor the ECB's Cycle Peak relative to the Fed.", impact: "When the ECB's rate path diverges significantly from the Fed, it becomes the primary driver for EUR/USD." },
+            boe: { role: "UK Interest Rate Anchor", focus: "Track the 1st 25bps Milestone and Next Meeting Pricing.", impact: "GBP is heavily reactive to shifting short-term rate paths." },
+            boj: { role: "Global Low-Yield / Carry Trade Origin", focus: "Monitor the Implied Points (Bps) bar chart closely.", impact: "Because the Yen is the world's primary funding currency, even small expected rate increases trigger massive unwinds." },
+            boc: { role: "High-Beta Commodity & Housing Proxy", focus: "Watch the 12M FX Spread vs the US Fed.", impact: "BOC policy shifts directly impact USD/CAD." },
+            rba: { role: "Commodity & Asian Growth Barometer", focus: "Track 7-Day Velocity and the Quarterly Matrix.", impact: "The RBA drives AUD/USD." }
         };
 
         function parseBps(str) {
@@ -420,12 +393,9 @@
                 const activePane = document.getElementById(`${btn.dataset.tab}-pane`);
                 if (activePane) {
                     activePane.classList.add('active-pane');
-                    
                     setTimeout(() => {
                         for (let key in chartInstances) {
-                            if (chartInstances[key] && typeof chartInstances[key].resize === 'function') {
-                                chartInstances[key].resize();
-                            }
+                            if (chartInstances[key] && typeof chartInstances[key].resize === 'function') chartInstances[key].resize();
                         }
                     }, 20);
                 }
@@ -436,9 +406,7 @@
             if (document.visibilityState === 'visible') {
                 setTimeout(() => {
                     for (let key in chartInstances) {
-                        if (chartInstances[key] && typeof chartInstances[key].resize === 'function') {
-                            chartInstances[key].resize();
-                        }
+                        if (chartInstances[key] && typeof chartInstances[key].resize === 'function') chartInstances[key].resize();
                     }
                 }, 20);
             }
@@ -554,12 +522,10 @@
                 
                 if (mainSnapshots.length > 1) {
                     const latestMainRows = mainSnapshots[0].rows.filter(r => r.dataset === 'current');
-                    
                     for (let i = 1; i < mainSnapshots.length; i++) {
                         const historicalMainRows = mainSnapshots[i].rows.filter(r => r.dataset === 'current');
                         let changedBanks = [];
                         
-                        // Compare the current dataset against historical to see if any bank's meeting date shifted forward
                         for (let b of latestMainRows) {
                             const oldBankRow = historicalMainRows.find(old => old.bank === b.bank);
                             if (oldBankRow && oldBankRow.date !== b.date) {
@@ -574,21 +540,14 @@
                         }
                         
                         if (changedBanks.length > 0) {
-                            // Sort by date to ensure we get the most recently passed meeting if multiple changed
                             changedBanks.sort((a,b) => new Date(b.date) - new Date(a.date));
                             const target = changedBanks[0];
-                            recentMeeting = {
-                                bank: target.bank,
-                                date: target.date,
-                                diff: target.newRate - target.oldRate,
-                                newRateStr: target.newRateStr
-                            };
+                            recentMeeting = { bank: target.bank, date: target.date, diff: target.newRate - target.oldRate, newRateStr: target.newRateStr };
                             break;
                         }
                     }
                 }
                 
-                // Fallback state if database has no date changes recorded yet
                 if (!recentMeeting) {
                     recentMeeting = { bank: "Tracking Active...", date: "Awaiting next resolution", diff: 0, newRateStr: "-" };
                 }
@@ -597,13 +556,8 @@
                 let resultColor = "#8b949e";
                 if (recentMeeting.diff !== 0) {
                     let diffBps = Math.round(recentMeeting.diff * 100);
-                    if (diffBps < 0) {
-                        resultText = `${Math.abs(diffBps)} bps CUT`;
-                        resultColor = "#ef4444";
-                    } else {
-                        resultText = `${Math.abs(diffBps)} bps HIKE`;
-                        resultColor = "#22c55e";
-                    }
+                    if (diffBps < 0) { resultText = `${Math.abs(diffBps)} bps CUT`; resultColor = "#ef4444"; } 
+                    else { resultText = `${Math.abs(diffBps)} bps HIKE`; resultColor = "#22c55e"; }
                 }
 
                 const summaryHTML = `
@@ -645,37 +599,55 @@
                     }
                 });
 
-                // 1. Meeting Collision Timeline
+                // --- UPGRADED TIMELINE CLUSTERING LOGIC ---
                 const nowMs = Date.now();
-                const endMs = nowMs + (180 * 24 * 60 * 60 * 1000); // 6 Months Horizon
-                const mtgMap = {};
+                const endMs = nowMs + (180 * 24 * 60 * 60 * 1000); 
                 
+                const rawNodes = [];
                 Object.keys(allBanksData).forEach(b => {
                     allBanksData[b].forEach(mtg => {
                         const ms = new Date(mtg.date).getTime();
                         if (ms >= nowMs && ms <= endMs) {
-                            const dStr = mtg.date;
-                            if(!mtgMap[dStr]) mtgMap[dStr] = { ms, banks: [] };
-                            mtgMap[dStr].banks.push(b.toUpperCase());
+                            rawNodes.push({ bank: b.toUpperCase(), ms: ms });
                         }
                     });
                 });
+                rawNodes.sort((a,b) => a.ms - b.ms);
+
+                const clusteredNodes = [];
+                rawNodes.forEach(node => {
+                    if (clusteredNodes.length === 0) {
+                        clusteredNodes.push({ ms: node.ms, banks: [node.bank] });
+                    } else {
+                        const lastGroup = clusteredNodes[clusteredNodes.length - 1];
+                        // If meetings are within 6 days of each other, group them into a single node
+                        if (node.ms - lastGroup.ms <= 6 * 24 * 60 * 60 * 1000) {
+                            if (!lastGroup.banks.includes(node.bank)) lastGroup.banks.push(node.bank);
+                        } else {
+                            clusteredNodes.push({ ms: node.ms, banks: [node.bank] });
+                        }
+                    }
+                });
 
                 let timelineNodesHTML = '';
-                Object.values(mtgMap).forEach(m => {
+                clusteredNodes.forEach(m => {
                     let pct = ((m.ms - nowMs) / (endMs - nowMs)) * 100;
-                    if(pct > 95) pct = 95; // padding
+                    if(pct > 96) pct = 96;
+                    if(pct < 4) pct = 4;
+                    
                     const scale = m.banks.length > 1 ? 1.4 : 1;
                     const bColor = m.banks.length > 1 ? '#00b4f9' : '#8b5cf6';
                     const sShadow = m.banks.length > 1 ? `box-shadow: 0 0 12px ${bColor};` : '';
                     
-                    const bankStr = m.banks.join(', ');
+                    let bankStr = m.banks.join(', ');
+                    if (m.banks.length > 3) bankStr = m.banks.slice(0,3).join(', ') + '<br>' + m.banks.slice(3).join(', ');
+                    
                     const diffDays = Math.round((m.ms - nowMs) / (1000*60*60*24));
 
                     timelineNodesHTML += `
                     <div class="timeline-node" style="left: ${pct}%; transform: translateX(-50%) scale(${scale}); background: ${bColor}; ${sShadow}"></div>
-                    <div class="timeline-lbl-top" style="left: ${pct}%; top: 5px;">${bankStr}</div>
-                    <div class="timeline-lbl-btm" style="left: ${pct}%; top: 60px;">+${diffDays}d</div>
+                    <div class="timeline-lbl-top" style="left: ${pct}%;">${bankStr}</div>
+                    <div class="timeline-lbl-btm" style="left: ${pct}%;">+${diffDays}d</div>
                     `;
                 });
 
@@ -729,11 +701,14 @@
                 const advancedToolsHTML = `
                 <div class="bank-card" style="margin-bottom: 20px; padding: 20px;">
                     <div style="font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; margin-bottom: 8px;">MEETING COLLISION TIMELINE</div>
-                    <div style="font-size: 12px; color: #8b949e; margin-bottom: 10px;">Every upcoming decision mapped across a 6-month horizon. Larger markers flag weeks with more than one bank deciding.</div>
-                    <div class="timeline-container">
-                        <div class="timeline-track"></div>
-                        <div style="position:absolute; top:25px; left:40px; font-size:10px; color:#8b949e;">Today</div>
-                        ${timelineNodesHTML}
+                    <div style="font-size: 12px; color: #8b949e; margin-bottom: 10px;">Every upcoming decision mapped across a 6-month horizon. Clusters highlight macro weeks where multiple banks decide.</div>
+                    
+                    <div style="width: 100%; overflow-x: auto; padding-bottom: 10px; cursor: ew-resize;">
+                        <div class="timeline-container" style="min-width: 700px; margin: 20px 0;">
+                            <div class="timeline-track"></div>
+                            <div style="position:absolute; top:25px; left:40px; font-size:10px; color:#8b949e;">Today</div>
+                            ${timelineNodesHTML}
+                        </div>
                     </div>
                 </div>
 
