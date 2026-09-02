@@ -45,8 +45,7 @@
 
         .empty-state { text-align: center; padding: 40px 20px; color: #8b949e; font-family: 'Inter', sans-serif; font-size: 14px; border: 1px dashed #1c2230; border-radius: 12px; margin-top: 20px; }
 
-        /* UNIFORM & CENTERED KPI GRID */
-        .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, 175px); justify-content: center; gap: 14px; margin-bottom: 24px; width: 100%; }
+        .kpi-container { display: grid; justify-content: center; gap: 14px; margin-bottom: 24px; width: 100%; }
         .kpi-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
 
         .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; display: flex; flex-direction: column; }
@@ -67,7 +66,6 @@
 
         .chart-holder { padding: 20px; background: rgba(0,0,0,0.3); width: 100%; position: relative; flex-grow: 1; min-height: 250px; }
 
-        /* Guide & Matrix Styling */
         .guide-box { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; padding: 24px; margin-top: 24px; font-family: 'Inter', sans-serif; }
         .guide-header { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
         .guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 18px; }
@@ -80,7 +78,6 @@
         .quarter-lbl { font-size: 11px; color: #8b949e; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
         .quarter-val { font-size: 15px; font-weight: 700; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 
-        /* Advanced Overview Components Styling */
         .timeline-container { position: relative; width: 100%; height: 80px; margin: 20px 0 40px 0; padding: 0 40px; }
         .timeline-track { position: absolute; top: 40px; left: 40px; right: 40px; height: 2px; background: #30363d; }
         .timeline-node { position: absolute; top: 31px; width: 20px; height: 20px; border-radius: 50%; background: #8b5cf6; border: 4px solid #0d1117; transform: translateX(-50%); z-index: 2; transition: all 0.2s; box-shadow: 0 0 10px rgba(139, 92, 246, 0.5); }
@@ -303,7 +300,6 @@
             try {
                 statusIndicator.innerText = "Checking database for updates...";
                 
-                // 1. FAST CHECK: Ask Supabase for the single most recent timestamp
                 const { data: latestRow, error: timeError } = await dataClient
                     .from('central_bank_rates')
                     .select('updated_at')
@@ -317,13 +313,11 @@
                 
                 if (latestRow && latestRow.length > 0) {
                     latestDbTime = new Date(latestRow[0].updated_at).getTime();
-                    // Override trigger: If the database is newer than our cache, kill the cache.
                     if (!cacheObj || latestDbTime > cacheObj.dbTimestamp) {
                         dbIsNewer = true;
                     }
                 }
 
-                // 2. Load from Cache ONLY if no newer data exists in the database
                 if (cacheObj && !dbIsNewer) {
                     renderAllData(cacheObj.data);
                     const dbTimeStr = new Date(cacheObj.dbTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -332,7 +326,6 @@
                     return; 
                 }
 
-                // 3. Otherwise, download the fresh data (Bypassing cache)
                 statusIndicator.innerText = "Downloading fresh market data...";
                 const { data, error } = await dataClient.from('central_bank_rates').select('*');
                 if (error) throw error;
@@ -353,7 +346,6 @@
                         groupedData[bankId].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
                     });
 
-                    // Save the new fresh data to cache with the exact timestamp
                     localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), dbTimestamp: latestDbTime, data: groupedData }));
                     renderAllData(groupedData);
                     statusIndicator.innerText = `Synced | Data Updated: ${new Date(latestDbTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
@@ -416,7 +408,6 @@
             });
         }
 
-        // Re-size all charts when switching UI tabs
         function setupTabs() {
             document.getElementById('mainTabs').addEventListener('click', (e) => {
                 const btn = e.target.closest('.tab-btn');
@@ -430,7 +421,6 @@
                 if (activePane) {
                     activePane.classList.add('active-pane');
                     
-                    // Force Chart.js to recalculate dimensions now that container is visible
                     setTimeout(() => {
                         for (let key in chartInstances) {
                             if (chartInstances[key] && typeof chartInstances[key].resize === 'function') {
@@ -442,7 +432,6 @@
             });
         }
 
-        // Re-size all charts if the user switches browser tabs or leaves the app and comes back
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === 'visible') {
                 setTimeout(() => {
@@ -559,29 +548,91 @@
                 if (absoluteNextMtg.hike_cut) actionMain = absoluteNextMtg.hike_cut.toUpperCase();
                 let probValMain = Math.round(parseFloat(absoluteNextMtg.prob || 0));
 
+                // --- MOST RECENT DECISION TRACKER ---
+                let recentMeeting = null;
+                const mainSnapshots = globalGroupedSnapshots['main'] || [];
+                
+                if (mainSnapshots.length > 1) {
+                    const latestMainRows = mainSnapshots[0].rows.filter(r => r.dataset === 'current');
+                    
+                    for (let i = 1; i < mainSnapshots.length; i++) {
+                        const historicalMainRows = mainSnapshots[i].rows.filter(r => r.dataset === 'current');
+                        let changedBanks = [];
+                        
+                        // Compare the current dataset against historical to see if any bank's meeting date shifted forward
+                        for (let b of latestMainRows) {
+                            const oldBankRow = historicalMainRows.find(old => old.bank === b.bank);
+                            if (oldBankRow && oldBankRow.date !== b.date) {
+                                changedBanks.push({
+                                    bank: b.bank,
+                                    date: oldBankRow.date,
+                                    oldRate: parseFloat(oldBankRow.current),
+                                    newRate: parseFloat(b.current),
+                                    newRateStr: b.current
+                                });
+                            }
+                        }
+                        
+                        if (changedBanks.length > 0) {
+                            // Sort by date to ensure we get the most recently passed meeting if multiple changed
+                            changedBanks.sort((a,b) => new Date(b.date) - new Date(a.date));
+                            const target = changedBanks[0];
+                            recentMeeting = {
+                                bank: target.bank,
+                                date: target.date,
+                                diff: target.newRate - target.oldRate,
+                                newRateStr: target.newRateStr
+                            };
+                            break;
+                        }
+                    }
+                }
+                
+                // Fallback state if database has no date changes recorded yet
+                if (!recentMeeting) {
+                    recentMeeting = { bank: "Tracking Active...", date: "Awaiting next resolution", diff: 0, newRateStr: "-" };
+                }
+
+                let resultText = "HOLD";
+                let resultColor = "#8b949e";
+                if (recentMeeting.diff !== 0) {
+                    let diffBps = Math.round(recentMeeting.diff * 100);
+                    if (diffBps < 0) {
+                        resultText = `${Math.abs(diffBps)} bps CUT`;
+                        resultColor = "#ef4444";
+                    } else {
+                        resultText = `${Math.abs(diffBps)} bps HIKE`;
+                        resultColor = "#22c55e";
+                    }
+                }
+
                 const summaryHTML = `
-                <div class="kpi-container">
+                <div class="kpi-container" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
                     <div class="kpi-card">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Up Next</div>
                         <div>
-                            <div style="font-size: 18px; font-weight: 700; color: #fff; margin-top: 6px;">${absoluteNextMtg.bank || 'N/A'}</div>
-                            <div style="font-size: 20px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; margin-top: 4px;" class="countdown-timer" data-date="${absoluteNextMtg.date}">--d --:--:--</div>
+                            <div style="font-size: 18px; font-weight: 700; color: #00b4f9; margin-top: 6px;">${absoluteNextMtg.bank || 'N/A'}</div>
+                            <div style="font-size: 18px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; margin-top: 4px;" class="countdown-timer" data-date="${absoluteNextMtg.date}">--d --:--:--</div>
                         </div>
                         <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">${absoluteNextMtg.date || ''} - 2:00 PM EDT</div>
                     </div>
+                    
                     <div class="kpi-card">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Next Meeting Pricing</div>
                         <div>
-                            <div style="font-size: 18px; font-weight: 700; color: #22c55e; margin-top: 6px;">${probValMain}% ${actionMain}</div>
+                            <div style="font-size: 18px; font-weight: 700; color: ${actionMain==='CUT'?'#ef4444':(actionMain==='HIKE'?'#22c55e':'#8b949e')}; margin-top: 6px;">${probValMain}% ${actionMain}</div>
+                            <div style="font-size: 14px; font-weight: 600; color: #fff; margin-top: 4px;">Target: ${absoluteNextMtg.current || '0.00%'}</div>
                         </div>
-                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">${parsedDeltaMain > 0 ? '+' : ''}${absoluteNextMtg.delta || '0'} bps</div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">Implied move: ${parsedDeltaMain > 0 ? '+' : ''}${absoluteNextMtg.delta || '0'} bps</div>
                     </div>
-                    <div class="kpi-card">
-                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Current Base Rate</div>
+
+                    <div class="kpi-card" style="border-color: #30363d; background: rgba(255,255,255,0.02);">
+                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Most Recent Decision</div>
                         <div>
-                            <div style="font-size: 18px; font-weight: 700; color: #fff; margin-top: 6px;">${absoluteNextMtg.current || '0.00%'}</div>
+                            <div style="font-size: 16px; font-weight: 700; color: #c9d1d9; margin-top: 6px;">${recentMeeting.bank}</div>
+                            <div style="font-size: 16px; font-weight: 700; color: ${resultColor}; font-family: 'JetBrains Mono', monospace; margin-top: 4px;">${resultText}</div>
                         </div>
-                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">Target Rate</div>
+                        <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">${recentMeeting.date} &middot; New Rate: ${recentMeeting.newRateStr}</div>
                     </div>
                 </div>
                 `;
@@ -851,7 +902,7 @@
                 }
 
                 const summaryHTML = `
-                <div class="kpi-container">
+                <div class="kpi-container" style="grid-template-columns: repeat(auto-fit, 175px);">
                     <div class="kpi-card">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Next Decision in</div>
                         <div>
