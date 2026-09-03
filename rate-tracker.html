@@ -79,11 +79,13 @@
         .quarter-val { font-size: 15px; font-weight: 700; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
 
         /* UPGRADED TIMELINE CSS */
-        .timeline-container { position: relative; width: 100%; height: 80px; padding: 0 40px; }
+        .timeline-container { position: relative; width: 100%; height: 90px; padding: 0 40px; margin-top: 40px; }
         .timeline-track { position: absolute; top: 40px; left: 40px; right: 40px; height: 2px; background: #30363d; }
         .timeline-node { position: absolute; top: 31px; width: 20px; height: 20px; border-radius: 50%; background: #8b5cf6; border: 4px solid #0d1117; transform: translateX(-50%); z-index: 2; transition: all 0.2s; box-shadow: 0 0 10px rgba(139, 92, 246, 0.5); }
         .timeline-node:hover { transform: translateX(-50%) scale(1.2); }
-        .timeline-lbl-top { position: absolute; top: -14px; transform: translateX(-50%); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #c9d1d9; width: 120px; line-height: 1.4; }
+        
+        /* Fixed squashing by increasing top negative margin and width, and supporting line breaks */
+        .timeline-lbl-top { position: absolute; top: -35px; transform: translateX(-50%); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #c9d1d9; width: 140px; line-height: 1.3; font-weight: 600; word-break: break-word; }
         .timeline-lbl-btm { position: absolute; top: 65px; transform: translateX(-50%); text-align: center; font-size: 11px; color: #8b949e; font-weight: 500; width: 120px; }
         
         .conviction-row { display: flex; align-items: center; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; }
@@ -516,7 +518,6 @@
                 if (absoluteNextMtg.hike_cut) actionMain = absoluteNextMtg.hike_cut.toUpperCase();
                 let probValMain = Math.round(parseFloat(absoluteNextMtg.prob || 0));
 
-                // --- MOST RECENT DECISION TRACKER ---
                 let recentMeeting = null;
                 const mainSnapshots = globalGroupedSnapshots['main'] || [];
                 
@@ -591,7 +592,6 @@
                 </div>
                 `;
 
-                // ADVANCED OVERVIEW COMPONENTS
                 const allBanksData = {};
                 ['fed', 'ecb', 'boe', 'boj', 'boc', 'rba'].forEach(b => {
                     if (globalGroupedSnapshots[b] && globalGroupedSnapshots[b].length > 0) {
@@ -599,7 +599,6 @@
                     }
                 });
 
-                // --- UPGRADED TIMELINE CLUSTERING LOGIC ---
                 const nowMs = Date.now();
                 const endMs = nowMs + (180 * 24 * 60 * 60 * 1000); 
                 
@@ -620,7 +619,6 @@
                         clusteredNodes.push({ ms: node.ms, banks: [node.bank] });
                     } else {
                         const lastGroup = clusteredNodes[clusteredNodes.length - 1];
-                        // If meetings are within 6 days of each other, group them into a single node
                         if (node.ms - lastGroup.ms <= 6 * 24 * 60 * 60 * 1000) {
                             if (!lastGroup.banks.includes(node.bank)) lastGroup.banks.push(node.bank);
                         } else {
@@ -639,8 +637,8 @@
                     const bColor = m.banks.length > 1 ? '#00b4f9' : '#8b5cf6';
                     const sShadow = m.banks.length > 1 ? `box-shadow: 0 0 12px ${bColor};` : '';
                     
-                    let bankStr = m.banks.join(', ');
-                    if (m.banks.length > 3) bankStr = m.banks.slice(0,3).join(', ') + '<br>' + m.banks.slice(3).join(', ');
+                    // FORCE VERTICAL STACKING with <br> tags instead of commas
+                    const bankStr = m.banks.join('<br>');
                     
                     const diffDays = Math.round((m.ms - nowMs) / (1000*60*60*24));
 
@@ -651,7 +649,6 @@
                     `;
                 });
 
-                // 2. Conviction Index
                 const convictions = [];
                 Object.keys(allBanksData).forEach(b => {
                     const nextMtg = allBanksData[b][0];
@@ -683,7 +680,6 @@
                     `;
                 });
 
-                // 3. FX Carry Matrix
                 const rates = { current: {}, forward: {} };
                 const mainRows = currentData;
                 Object.keys(allBanksData).forEach(b => {
