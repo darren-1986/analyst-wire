@@ -183,6 +183,7 @@
         let chartInstances = {};
         let globalGroupedSnapshots = {}; 
         let countdownTimerId = null;
+        let isLevelChartStepped = false;
         
         const CACHE_KEY = 'aw_central_bank_rates_cache';
         
@@ -425,6 +426,28 @@
             btn.classList.toggle('active-toggle');
         };
 
+        window.toggleStepLine = function() {
+            isLevelChartStepped = !isLevelChartStepped;
+            const bg = document.getElementById('step-toggle-bg');
+            const knob = document.getElementById('step-toggle-knob');
+            
+            if (isLevelChartStepped) {
+                bg.style.background = '#fff';
+                knob.style.background = '#000';
+                knob.style.left = '12px';
+            } else {
+                bg.style.background = 'rgba(255,255,255,0.1)';
+                knob.style.background = '#8b949e';
+                knob.style.left = '2px';
+            }
+            
+            const chart = chartInstances['main-level-chart'];
+            if (chart) {
+                chart.data.datasets.forEach(ds => ds.stepped = isLevelChartStepped ? 'middle' : false);
+                chart.update();
+            }
+        };
+
         window.toggleMatrix = function(type) {
             document.querySelectorAll('.matrix-btn').forEach(b => b.classList.remove('active-toggle'));
             event.target.classList.add('active-toggle');
@@ -504,11 +527,9 @@
             const currentSnapshot = snapshots[0];
             const currentData = currentSnapshot.rows.filter(r => r.dataset === 'current');
             const macro = bankMacroContext[bank.id] || bankMacroContext['main'];
-            const nowMs = Date.now() - (24 * 60 * 60 * 1000); // 24h grace buffer for timezone differences
+            const nowMs = Date.now() - (24 * 60 * 60 * 1000); 
 
-            // --- MAIN TAB LOGIC (Dramatically rewritten to bypass corrupt database rows) ---
             if (bank.id === 'main') {
-                // Dynamically build the master list directly from the 6 sub-banks
                 const aggregatedNextMeetings = [];
                 
                 ['ecb', 'fed', 'boe', 'boj', 'rba', 'boc'].forEach(bCode => {
@@ -525,7 +546,6 @@
                             const implied = parseFloat(String(nextMtg.implied).replace('%', '')) || 0;
                             const deltaBps = parseBps(nextMtg.delta);
                             
-                            // Reverse engineer current rate directly mathematically
                             const currentRateNum = implied - (deltaBps / 100);
                             
                             let impliedOutcome = 'HOLD';
@@ -533,7 +553,7 @@
                             if (deltaBps < -12.5) impliedOutcome = 'CUT';
                             
                             const lastImplied = parseFloat(String(lastMtg.implied).replace('%', '')) || currentRateNum;
-                            const outlookBps = Math.round((lastImplied - currentRateNum) * 100);
+                            const outlookBps = (lastImplied - currentRateNum) * 100;
                             
                             aggregatedNextMeetings.push({
                                 bankCode: bCode,
@@ -557,7 +577,6 @@
                 let actionMain = absoluteNextMtg.hike_cut ? absoluteNextMtg.hike_cut.toUpperCase() : 'HOLD';
                 let deltaColor = absoluteNextMtg.delta > 0 ? '#22c55e' : (absoluteNextMtg.delta < 0 ? '#ef4444' : '#8b949e');
 
-                // Perfect visual match to the target Top 3 KPIs
                 const summaryHTML = `
                 <div class="kpi-container" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
                     <div class="kpi-card" style="border-color: #30363d; background: rgba(255,255,255,0.02);">
@@ -574,7 +593,7 @@
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; text-align: left;">Pricing</div>
                         <div style="text-align: left; margin-top: 10px;">
                             <div style="font-size: 24px; font-weight: 700; color: ${deltaColor};">${absoluteNextMtg.prob} ${actionMain}</div>
-                            <div style="font-size: 13px; font-weight: 500; color: ${deltaColor}; margin-top: 4px;">${absoluteNextMtg.delta > 0 ? '+' : ''}${absoluteNextMtg.delta || '0'} bps</div>
+                            <div style="font-size: 13px; font-weight: 500; color: ${deltaColor}; margin-top: 4px;">${absoluteNextMtg.delta > 0 ? '+' : ''}${absoluteNextMtg.delta ? absoluteNextMtg.delta.toFixed(1) : '0'} bps</div>
                         </div>
                     </div>
 
@@ -588,7 +607,6 @@
                 </div>
                 `;
 
-                // Build Timeline directly from the robust aggregated dataset
                 const endMs = Date.now() + (180 * 24 * 60 * 60 * 1000); 
                 const rawNodes = aggregatedNextMeetings.filter(m => m.timestamp <= endMs);
                 
@@ -651,7 +669,6 @@
                     `;
                 });
 
-                // Build FX Carry Matrix
                 const rates = { current: {}, forward: {} };
                 ['fed', 'ecb', 'boe', 'boj', 'boc', 'rba'].forEach(bCode => {
                     const curCode = fxMap[bCode];
@@ -715,14 +732,18 @@
                     <div class="bank-card" style="flex: 1; min-width: 320px; margin-bottom: 20px;">
                         <div class="bank-card-header">
                             <span>IMPLIED POLICY RATE PATHS: LEVEL</span>
-                            <span style="font-size: 11px; font-weight: 400; color: #8b949e; cursor:pointer;">Step Line <span style="background:#fff; color:#000; border-radius:10px; padding:0 8px; margin-left:4px; font-weight:600;">O</span></span>
+                            <span id="step-line-toggle" style="font-size: 11px; font-weight: 400; color: #8b949e; cursor:pointer; display:flex; align-items:center; gap:6px;" onclick="toggleStepLine()">
+                                Step Line
+                                <div id="step-toggle-bg" style="width: 24px; height: 14px; background: rgba(255,255,255,0.1); border-radius: 10px; position: relative; transition: 0.2s;">
+                                    <div id="step-toggle-knob" style="width: 10px; height: 10px; background: #8b949e; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.2s;"></div>
+                                </div>
+                            </span>
                         </div>
                         <div class="chart-holder" style="height: 450px;"><canvas id="main-level-chart"></canvas></div>
                     </div>
                 </div>
                 `;
                 
-                // Build the main target table precisely matching the requested source image
                 let tableHTML = `<div class="bank-card" style="padding: 20px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><span style="font-family:'Inter', sans-serif; font-weight:700; font-size:14px; text-transform:uppercase;">UPCOMING MEETINGS</span><span style="font-size:11px; color:#8b949e;">Sort by: Date &nbsp; Δ (bps) &nbsp; 12-month</span></div><table style="font-size: 12px;"><thead>`;
                 tableHTML += `<tr><th style="padding: 8px 10px;">Next Meeting</th><th style="padding: 8px 10px;">Bank</th><th style="padding: 8px 10px; text-align:right;">Policy Rate</th><th style="padding: 8px 10px; text-align:right;">Probability</th><th style="padding: 8px 10px;">Hike/Cut</th><th style="padding: 8px 10px; text-align:right;">Δ vs Current (bps)</th><th style="padding: 8px 10px; text-align:center;">Implied Outcome</th><th style="padding: 8px 10px; text-align:right;">12-Month Outlook (bps)</th></tr></thead><tbody>`;
                 
@@ -738,9 +759,9 @@
                         <td style="padding: 12px 10px; text-align:right;">${row.current}</td>
                         <td style="padding: 12px 10px; text-align:right; color:${hcColor};">${row.prob}</td>
                         <td style="padding: 12px 10px; color:${hcColor};">${row.hike_cut}</td>
-                        <td style="padding: 12px 10px; text-align:right; color:#22c55e;">${row.delta > 0 ? '+'+row.delta.toFixed(1) : row.delta.toFixed(1)}</td>
+                        <td style="padding: 12px 10px; text-align:right; color:#22c55e;">${row.delta.toFixed(1)}</td>
                         <td style="padding: 12px 10px; text-align:center; color: ${outcomeColor}; font-weight: 600;">${row.implied_outcome}</td>
-                        <td style="padding: 12px 10px; text-align:right; color:#22c55e;">${row.outlook > 0 ? '+'+row.outlook.toFixed(1) : row.outlook.toFixed(1)}</td>
+                        <td style="padding: 12px 10px; text-align:right; color:#22c55e;">${row.outlook.toFixed(1)}</td>
                     </tr>`; 
                 });
                 tableHTML += `</tbody></table></div>`;
@@ -748,7 +769,6 @@
                 container.innerHTML = summaryHTML + advancedToolsHTML + overviewChartHTML + tableHTML;
 
             } else {
-                // --- INDIVIDUAL BANK TABS ---
                 let currentRateNum = 0;
                 let currentRate = "0.00%";
                 if (currentData.length > 0) {
@@ -915,14 +935,14 @@
             const lvlDatasets = [];
             const colors = { 'fed': '#00b4f9', 'ecb': '#ec4899', 'boe': '#ef4444', 'boj': '#eab308', 'boc': '#8b5cf6', 'rba': '#10b981' };
             const names = { 'fed': 'FED', 'ecb': 'ECB', 'boe': 'BOE', 'boj': 'BOJ', 'boc': 'BOC', 'rba': 'RBA' };
-            const nowMs = Date.now() - 86400000;
+            
+            const nowMs = Date.now();
 
-            let masterDates = [];
             ['fed', 'ecb', 'boe', 'boj', 'boc', 'rba'].forEach(bankId => {
                 const bankSnapshots = globalGroupedSnapshots[bankId] || [];
                 if (bankSnapshots.length > 0) {
                     const bData = bankSnapshots[0].rows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
-                    const futureMtg = bData.filter(r => r.date && new Date(r.date).getTime() >= nowMs);
+                    const futureMtg = bData.filter(r => r.date && new Date(r.date).getTime() >= (nowMs - 86400000));
                     
                     const refMtg = futureMtg.length > 0 ? futureMtg[0] : bData[0];
                     const imp = parseFloat(String(refMtg.implied).replace('%','')) || 0;
@@ -931,33 +951,67 @@
                     
                     const plotRows = futureMtg.length > 0 ? futureMtg : bData;
                     
-                    if (bankId === 'fed') {
-                        masterDates = ['Current', ...plotRows.map(row => row.date)];
-                    }
+                    const relData = [{ x: nowMs, y: 0 }];
+                    const lvlData = [{ x: nowMs, y: currentRate }];
 
-                    const deltas = [0, ...plotRows.map(row => parseBps(row.delta))];
-                    const levels = [currentRate, ...plotRows.map(row => parseFloat(String(row.implied).replace('%', '')) || 0)];
+                    plotRows.forEach(row => {
+                        const t = new Date(row.date).getTime();
+                        relData.push({ x: t, y: parseBps(row.delta) });
+                        lvlData.push({ x: t, y: parseFloat(String(row.implied).replace('%', '')) || 0 });
+                    });
 
-                    relDatasets.push({ label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, data: deltas });
-                    lvlDatasets.push({ label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, data: levels });
+                    relDatasets.push({ label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, data: relData });
+                    lvlDatasets.push({ label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, data: lvlData });
                 }
             });
 
             const commonOptions = {
                 responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-                plugins: { legend: { position: 'top', labels: { color: '#c9d1d9', boxWidth: 12, font: {family: 'Inter'} } } },
-                scales: { x: { grid: { display: false }, ticks: { color: '#8b949e', font: {family: 'JetBrains Mono', size: 10}, maxRotation: 45 } } }
+                plugins: { 
+                    legend: { position: 'top', labels: { color: '#c9d1d9', boxWidth: 12, font: {family: 'Inter'} } },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                const val = context[0].parsed.x;
+                                if (Math.abs(val - nowMs) < 86400000 * 5) return 'Current';
+                                const d = new Date(val);
+                                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+                            }
+                        }
+                    }
+                },
+                scales: { 
+                    x: { 
+                        type: 'linear',
+                        min: nowMs,
+                        grid: { display: true, color: 'rgba(28, 34, 48, 0.4)', drawBorder: false }, 
+                        ticks: { 
+                            color: '#8b949e', 
+                            font: {family: 'Inter', size: 10}, 
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 7,
+                            callback: function(value) {
+                                if (Math.abs(value - nowMs) < 86400000 * 5) return 'Current';
+                                const d = new Date(value);
+                                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                return months[d.getMonth()] + ' ' + d.getFullYear();
+                            }
+                        } 
+                    } 
+                }
             };
 
             const relCtx = relCanvas.getContext('2d');
             chartInstances['main-relative-chart'] = new Chart(relCtx, {
-                type: 'line', data: { labels: masterDates, datasets: relDatasets },
+                type: 'line', data: { datasets: relDatasets },
                 options: { ...commonOptions, scales: { ...commonOptions.scales, y: { title: { display: true, text: 'Δ vs Current (bps)', color: '#8b949e' }, grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9' } } } }
             });
 
             const lvlCtx = lvlCanvas.getContext('2d');
             chartInstances['main-level-chart'] = new Chart(lvlCtx, {
-                type: 'line', data: { labels: masterDates, datasets: lvlDatasets },
+                type: 'line', data: { datasets: lvlDatasets },
                 options: { ...commonOptions, scales: { ...commonOptions.scales, y: { title: { display: true, text: 'Policy Rate (%)', color: '#8b949e' }, grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9', callback: v => v.toFixed(2) + '%' } } } }
             });
         }
@@ -982,11 +1036,10 @@
             if (chartInstances[chartId]) chartInstances[chartId].destroy();
             if (chartInstances[barChartId]) chartInstances[barChartId].destroy();
 
-            const nowMs = Date.now() - 86400000;
+            const nowMs = Date.now();
             const rawCurrentRows = bankSnapshots[0].rows.map(r => getCorrectedRow(r));
-            const currentRows = rawCurrentRows.filter(r => r.date && new Date(r.date).getTime() >= nowMs);
+            const currentRows = rawCurrentRows.filter(r => r.date && new Date(r.date).getTime() >= (nowMs - 86400000));
             const plotRows = currentRows.length > 0 ? currentRows : rawCurrentRows;
-            const xLabels = ['Current', ...plotRows.map(row => row.date)];
             const currentVal = parseFloat(String(currentRateStr).replace('%', '')) || 0;
 
             const dsConfigs = [
@@ -1000,23 +1053,67 @@
                 let targetSnapshot = config.daysAgo === 0 ? bankSnapshots[0] : getHistoricalSnapshot(bankSnapshots, config.daysAgo);
                 
                 if (config.daysAgo === 0) {
-                    const plotRates = [currentVal, ...plotRows.map(row => parseFloat(String(row.implied || '').replace('%', '')) || 0)];
-                    datasets.push({ label: config.label, data: plotRates, borderColor: config.color, backgroundColor: 'rgba(0, 180, 249, 0.05)', borderWidth: 2, fill: true, tension: 0.25, pointBackgroundColor: '#0d1117' });
+                    const plotData = [{ x: nowMs, y: currentVal }];
+                    plotRows.forEach(row => {
+                        plotData.push({ x: new Date(row.date).getTime(), y: parseFloat(String(row.implied || '').replace('%', '')) || 0 });
+                    });
+                    datasets.push({ label: config.label, data: plotData, borderColor: config.color, backgroundColor: 'rgba(0, 180, 249, 0.05)', borderWidth: 2, fill: true, tension: 0.25, pointBackgroundColor: '#0d1117' });
                 } else {
                     const histRows = targetSnapshot ? targetSnapshot.rows.map(r => getCorrectedRow(r)) : [];
-                    const plotRates = xLabels.map((xL, idx) => {
-                        if (idx === 0) return null;
-                        const mRow = histRows.find(r => r.date && r.date.trim() === xL.trim());
-                        return mRow && mRow.implied ? parseFloat(String(mRow.implied).replace('%', '')) : null;
+                    const plotData = [];
+                    plotRows.forEach(xRow => {
+                        const mRow = histRows.find(r => r.date && r.date.trim() === xRow.date.trim());
+                        if (mRow && mRow.implied) {
+                            plotData.push({ x: new Date(xRow.date).getTime(), y: parseFloat(String(mRow.implied).replace('%', '')) });
+                        }
                     });
-                    datasets.push({ label: config.label, data: plotRates, borderColor: config.color, backgroundColor: 'transparent', borderWidth: 2, fill: false, tension: 0.25, spanGaps: true, hidden: !plotRates.some(v => v !== null), pointBackgroundColor: '#0d1117' });
+                    if (plotData.length > 0) {
+                        datasets.push({ label: config.label, data: plotData, borderColor: config.color, backgroundColor: 'transparent', borderWidth: 2, fill: false, tension: 0.25, spanGaps: true, pointBackgroundColor: '#0d1117' });
+                    }
                 }
             });
 
             const ctx = canvas.getContext('2d');
             chartInstances[chartId] = new Chart(ctx, {
-                type: 'line', data: { labels: xLabels, datasets: datasets },
-                options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9', callback: v => v.toFixed(2) + '%' } }, x: { grid: { display: false }, ticks: { color: '#8b949e', maxRotation: 45 } } }, plugins: { legend: { display: false } } }
+                type: 'line', data: { datasets: datasets },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, 
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    const val = context[0].parsed.x;
+                                    if (Math.abs(val - nowMs) < 86400000 * 5) return 'Current';
+                                    const d = new Date(val);
+                                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                    return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+                                }
+                            }
+                        }
+                    },
+                    scales: { 
+                        x: { 
+                            type: 'linear',
+                            min: nowMs,
+                            grid: { display: true, color: 'rgba(28, 34, 48, 0.4)', drawBorder: false }, 
+                            ticks: { 
+                                color: '#8b949e', 
+                                font: {family: 'Inter', size: 10}, 
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 7,
+                                callback: function(value) {
+                                    if (Math.abs(value - nowMs) < 86400000 * 5) return 'Current';
+                                    const d = new Date(value);
+                                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                    return months[d.getMonth()] + ' ' + d.getFullYear();
+                                }
+                            } 
+                        },
+                        y: { grid: { color: 'rgba(28, 34, 48, 0.6)' }, ticks: { color: '#c9d1d9', callback: v => v.toFixed(2) + '%' } } 
+                    } 
+                }
             });
 
             const barCtx = barCanvas.getContext('2d');
