@@ -506,15 +506,13 @@
             const macro = bankMacroContext[bank.id] || bankMacroContext['main'];
 
             if (bank.id === 'main') {
-                const cutoffMs = Date.now() - (14 * 24 * 60 * 60 * 1000); 
+                const nowMs = Date.now() - (24 * 60 * 60 * 1000); 
+                const validData = [...currentData].filter(r => r.date && !isNaN(new Date(r.date).getTime()));
+                const futureMtg = validData.filter(r => new Date(r.date).getTime() >= nowMs).sort((a, b) => new Date(a.date) - new Date(b.date));
+                const pastMtg = validData.filter(r => new Date(r.date).getTime() < nowMs).sort((a, b) => new Date(b.date) - new Date(a.date));
                 
-                const upcomingMeetings = [...currentData].filter(r => {
-                    if (!r.date) return false;
-                    const ms = new Date(r.date).getTime();
-                    return !isNaN(ms) && ms > cutoffMs;
-                }).sort((a, b) => new Date(a.date) - new Date(b.date));
-
-                const absoluteNextMtg = getCorrectedRow(upcomingMeetings[0] || {});
+                const activePool = futureMtg.length > 0 ? futureMtg : pastMtg;
+                const absoluteNextMtg = getCorrectedRow(activePool[0] || {});
 
                 let actionMain = 'HIKE';
                 let parsedDeltaMain = parseBps(absoluteNextMtg.delta);
@@ -527,7 +525,7 @@
                 const mainSnapshots = globalGroupedSnapshots['main'] || [];
                 
                 if (mainSnapshots.length > 1) {
-                    const latestMainRows = upcomingMeetings;
+                    const latestMainRows = activePool;
                     for (let i = 1; i < mainSnapshots.length; i++) {
                         const historicalMainRows = mainSnapshots[i].rows.filter(r => r.dataset === 'current');
                         let changedBanks = [];
@@ -575,7 +573,7 @@
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Up Next</div>
                         <div>
                             <div style="font-size: 18px; font-weight: 700; color: #00b4f9; margin-top: 6px;">${absoluteNextMtg.bank || 'N/A'}</div>
-                            <div style="font-size: 18px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; margin-top: 4px;" class="countdown-timer" data-date="${absoluteNextMtg.date}">--d --:--:--</div>
+                            <div style="font-size: 18px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; margin-top: 4px;" class="countdown-timer" data-date="${absoluteNextMtg.date || 'N/A'}">--d --:--:--</div>
                         </div>
                         <div style="font-size: 11px; color: #8b949e; margin-top: 8px;">${absoluteNextMtg.date || ''} - 2:00 PM EDT</div>
                     </div>
@@ -607,14 +605,13 @@
                     }
                 });
 
-                const nowMs = Date.now();
-                const endMs = nowMs + (180 * 24 * 60 * 60 * 1000); 
+                const endMs = Date.now() + (180 * 24 * 60 * 60 * 1000); 
                 
                 const rawNodes = [];
                 Object.keys(allBanksData).forEach(b => {
                     allBanksData[b].forEach(mtg => {
                         const ms = new Date(mtg.date).getTime();
-                        if (ms >= nowMs && ms <= endMs) {
+                        if (ms >= Date.now() && ms <= endMs) {
                             rawNodes.push({ bank: b.toUpperCase(), ms: ms });
                         }
                     });
@@ -637,7 +634,7 @@
 
                 let timelineNodesHTML = '';
                 clusteredNodes.forEach(m => {
-                    let pct = ((m.ms - nowMs) / (endMs - nowMs)) * 100;
+                    let pct = ((m.ms - Date.now()) / (endMs - Date.now())) * 100;
                     if(pct > 96) pct = 96;
                     if(pct < 4) pct = 4;
                     
@@ -647,7 +644,7 @@
                     
                     const bankStr = m.banks.join('<br>');
                     
-                    const diffDays = Math.round((m.ms - nowMs) / (1000*60*60*24));
+                    const diffDays = Math.round((m.ms - Date.now()) / (1000*60*60*24));
 
                     timelineNodesHTML += `
                     <div class="timeline-node" style="left: ${pct}%; transform: translateX(-50%) scale(${scale}); background: ${bColor}; ${sShadow}"></div>
@@ -691,8 +688,11 @@
                 Object.keys(allBanksData).forEach(b => {
                     const curCode = fxMap[b];
                     const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
-                    const mRow = upcomingMeetings.find(r => r.bank && r.bank.includes(targetNames[b]));
-                    let cRate = mRow ? parseFloat(String(mRow.current).replace('%','')) : 0;
+                    
+                    const bankRows = validData.filter(r => r.bank && r.bank.includes(targetNames[b]));
+                    bankRows.sort((a, b) => new Date(b.date) - new Date(a.date)); 
+                    
+                    let cRate = bankRows.length > 0 ? parseFloat(String(bankRows[0].current).replace('%','')) : 0;
                     rates.current[curCode] = cRate;
                     
                     const bRows = allBanksData[b];
@@ -987,14 +987,13 @@
                 let tableHTML = `<div class="bank-card-header"><span>UPCOMING CENTRAL BANK MEETINGS</span></div><table><thead>`;
                 tableHTML += `<tr><th>Next Meeting</th><th>Bank</th><th>Current Rate</th><th>Probability</th><th>Hike/Cut</th><th>Δ vs Current (bps)</th><th>Implied Outcome</th><th>12-Month Outlook (bps)</th></tr></thead><tbody>`;
                 
-                const cutoffMs = Date.now() - (14 * 24 * 60 * 60 * 1000); 
-                const upcomingMeetings = [...currentData].filter(r => {
-                    if (!r.date) return false;
-                    const ms = new Date(r.date).getTime();
-                    return !isNaN(ms) && ms > cutoffMs;
-                }).sort((a, b) => new Date(a.date) - new Date(b.date));
+                const nowMs = Date.now() - (24 * 60 * 60 * 1000); 
+                const validData = [...currentData].filter(r => r.date && !isNaN(new Date(r.date).getTime()));
+                const futureMtg = validData.filter(r => new Date(r.date).getTime() >= nowMs).sort((a, b) => new Date(a.date) - new Date(b.date));
+                const pastMtg = validData.filter(r => new Date(r.date).getTime() < nowMs).sort((a, b) => new Date(b.date) - new Date(a.date));
+                const tablePool = futureMtg.length > 0 ? futureMtg : pastMtg;
 
-                upcomingMeetings.slice(0, 6).forEach(r => { 
+                tablePool.slice(0, 6).forEach(r => { 
                     const row = getCorrectedRow(r);
                     let outcomeColor = '#8b949e';
                     const ocText = (row.implied_outcome || '').toUpperCase();
