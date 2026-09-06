@@ -82,6 +82,7 @@
         .timeline-track { position: absolute; top: 40px; left: 40px; right: 40px; height: 2px; background: #30363d; }
         .timeline-node { position: absolute; top: 31px; width: 20px; height: 20px; border-radius: 50%; background: #8b5cf6; border: 4px solid #0d1117; transform: translateX(-50%); z-index: 2; transition: all 0.2s; box-shadow: 0 0 10px rgba(139, 92, 246, 0.5); }
         .timeline-node:hover { transform: translateX(-50%) scale(1.2); }
+        
         .timeline-lbl-top { position: absolute; bottom: 65px; transform: translateX(-50%); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #c9d1d9; width: 140px; line-height: 1.3; font-weight: 600; word-break: break-word; }
         .timeline-lbl-btm { position: absolute; top: 65px; transform: translateX(-50%); text-align: center; font-size: 11px; color: #8b949e; font-weight: 500; width: 120px; }
         
@@ -501,23 +502,19 @@
             container.innerHTML = '';
             
             const currentSnapshot = snapshots[0];
-            let currentData = currentSnapshot.rows.filter(r => r.dataset === 'current');
+            const currentData = currentSnapshot.rows.filter(r => r.dataset === 'current');
             const macro = bankMacroContext[bank.id] || bankMacroContext['main'];
 
-            // FIX: Purge old 2020 archive rows from the 'main' overview table.
             if (bank.id === 'main') {
-                const cutoff = new Date();
-                cutoff.setDate(cutoff.getDate() - 5); 
+                const cutoffMs = Date.now() - (14 * 24 * 60 * 60 * 1000); 
                 
-                currentData = currentData.filter(r => {
-                    const d = new Date(r.date);
-                    return isNaN(d.getTime()) || d >= cutoff;
-                });
-            }
+                const upcomingMeetings = [...currentData].filter(r => {
+                    if (!r.date) return false;
+                    const ms = new Date(r.date).getTime();
+                    return !isNaN(ms) && ms > cutoffMs;
+                }).sort((a, b) => new Date(a.date) - new Date(b.date));
 
-            if (bank.id === 'main') {
-                const sortedMainData = [...currentData].sort((a, b) => new Date(a.date) - new Date(b.date));
-                const absoluteNextMtg = getCorrectedRow(sortedMainData[0] || {});
+                const absoluteNextMtg = getCorrectedRow(upcomingMeetings[0] || {});
 
                 let actionMain = 'HIKE';
                 let parsedDeltaMain = parseBps(absoluteNextMtg.delta);
@@ -530,13 +527,16 @@
                 const mainSnapshots = globalGroupedSnapshots['main'] || [];
                 
                 if (mainSnapshots.length > 1) {
-                    const latestMainRows = mainSnapshots[0].rows.filter(r => r.dataset === 'current');
+                    const latestMainRows = upcomingMeetings;
                     for (let i = 1; i < mainSnapshots.length; i++) {
                         const historicalMainRows = mainSnapshots[i].rows.filter(r => r.dataset === 'current');
                         let changedBanks = [];
                         
                         for (let b of latestMainRows) {
-                            const oldBankRow = historicalMainRows.find(old => old.bank === b.bank);
+                            const bankHistory = historicalMainRows.filter(old => old.bank === b.bank && old.date && !isNaN(new Date(old.date).getTime()));
+                            bankHistory.sort((x, y) => new Date(y.date) - new Date(x.date));
+                            const oldBankRow = bankHistory[0];
+                            
                             if (oldBankRow && oldBankRow.date !== b.date) {
                                 changedBanks.push({
                                     bank: b.bank,
@@ -688,11 +688,10 @@
                 });
 
                 const rates = { current: {}, forward: {} };
-                const mainRows = currentData;
                 Object.keys(allBanksData).forEach(b => {
                     const curCode = fxMap[b];
                     const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
-                    const mRow = mainRows.find(r => r.bank && r.bank.includes(targetNames[b]));
+                    const mRow = upcomingMeetings.find(r => r.bank && r.bank.includes(targetNames[b]));
                     let cRate = mRow ? parseFloat(String(mRow.current).replace('%','')) : 0;
                     rates.current[curCode] = cRate;
                     
@@ -771,7 +770,9 @@
                 const mainSnapshots = globalGroupedSnapshots['main'] || [];
                 if (mainSnapshots.length > 0) {
                     const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
-                    const mainRow = mainSnapshots[0].rows.find(r => r.bank && r.bank.includes(targetNames[bank.id]));
+                    const validMainRows = mainSnapshots[0].rows.filter(r => r.date && !isNaN(new Date(r.date).getTime()));
+                    validMainRows.sort((a,b) => new Date(b.date) - new Date(a.date));
+                    const mainRow = validMainRows.find(r => r.bank && r.bank.includes(targetNames[bank.id]));
                     if (mainRow) currentRate = mainRow.current;
                 }
 
@@ -985,9 +986,15 @@
             if (bank.id === 'main') {
                 let tableHTML = `<div class="bank-card-header"><span>UPCOMING CENTRAL BANK MEETINGS</span></div><table><thead>`;
                 tableHTML += `<tr><th>Next Meeting</th><th>Bank</th><th>Current Rate</th><th>Probability</th><th>Hike/Cut</th><th>Δ vs Current (bps)</th><th>Implied Outcome</th><th>12-Month Outlook (bps)</th></tr></thead><tbody>`;
-                // FIX: Limit the table size so it doesn't bleed endlessly with historical data
-                const sortedMainData = [...currentData].sort((a, b) => new Date(a.date) - new Date(b.date));
-                sortedMainData.slice(0, 6).forEach(r => { 
+                
+                const cutoffMs = Date.now() - (14 * 24 * 60 * 60 * 1000); 
+                const upcomingMeetings = [...currentData].filter(r => {
+                    if (!r.date) return false;
+                    const ms = new Date(r.date).getTime();
+                    return !isNaN(ms) && ms > cutoffMs;
+                }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                upcomingMeetings.slice(0, 6).forEach(r => { 
                     const row = getCorrectedRow(r);
                     let outcomeColor = '#8b949e';
                     const ocText = (row.implied_outcome || '').toUpperCase();
