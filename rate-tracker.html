@@ -53,8 +53,8 @@
         .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; display: flex; flex-direction: column; }
         .bank-card-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         
-        .table-responsive-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; min-width: 850px; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 13px; }
+        .table-responsive-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; display: block; }
+        .table-responsive-wrapper table { width: 100%; min-width: max-content; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12px; }
         th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #1c2230; white-space: nowrap; }
         th { color: #8b949e; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { color: #c9d1d9; }
@@ -68,13 +68,6 @@
         .ds-btn:hover { border-color: #8b949e; }
 
         .chart-holder { padding: 20px; background: rgba(0,0,0,0.3); width: 100%; position: relative; flex-grow: 1; min-height: 250px; }
-
-        .guide-box { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; padding: 24px; margin-top: 24px; font-family: 'Inter', sans-serif; }
-        .guide-header { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-        .guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 18px; }
-        .guide-card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-        .guide-title { font-size: 14px; font-weight: 600; color: #00b4f9; }
-        .guide-desc { font-size: 13px; color: #8b949e; line-height: 1.6; }
 
         .quarter-matrix { display: flex; flex-wrap: wrap; gap: 10px; padding: 16px 20px; background: rgba(0,0,0,0.2); border-top: 1px solid #1c2230; flex-shrink: 0; }
         .quarter-chip { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 10px 14px; flex: 1 1 120px; text-align: center; }
@@ -549,18 +542,29 @@
                         
                         if (futureMtgs.length > 0) {
                             const nextMtg = futureMtgs[0];
-                            const absoluteLastDatasetMtg = bRows[bRows.length - 1]; 
                             
                             const implied = parseFloat(String(nextMtg.implied).replace('%', '')) || 0;
                             const deltaBps = parseBps(nextMtg.delta);
-                            
                             const currentRateNum = implied - (deltaBps / 100);
                             
                             let impliedOutcome = 'HOLD';
                             if (deltaBps > 12.5) impliedOutcome = 'HIKE';
                             if (deltaBps < -12.5) impliedOutcome = 'CUT';
                             
-                            const lastImplied = parseFloat(String(absoluteLastDatasetMtg.implied).replace('%', '')) || currentRateNum;
+                            // True 12-Month Outlook Calculation
+                            const oneYearFromNow = Date.now() + (365 * 24 * 60 * 60 * 1000);
+                            let closestMtg = bRows[bRows.length - 1]; // Fallback to end of curve
+                            let minDiff = Infinity;
+                            
+                            bRows.forEach(r => {
+                                const t = new Date(r.date).getTime();
+                                if (t >= Date.now()) {
+                                    const diff = Math.abs(t - oneYearFromNow);
+                                    if (diff < minDiff) { minDiff = diff; closestMtg = r; }
+                                }
+                            });
+                            
+                            const lastImplied = parseFloat(String(closestMtg.implied).replace('%', '')) || currentRateNum;
                             const outlookBps = (lastImplied - currentRateNum) * 100;
                             
                             aggregatedNextMeetings.push({
@@ -759,23 +763,46 @@
                 </div>
                 `;
                 
-                let tableHTML = `<div class="bank-card" style="padding: 20px 20px 0 20px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><span style="font-family:'Inter', sans-serif; font-weight:700; font-size:14px; text-transform:uppercase;">UPCOMING MEETINGS</span>
-                <span style="font-size:11px; color:#8b949e; display: flex; align-items: center; gap: 8px;">
-                    Sort by: 
-                    <span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; color: #fff; cursor: default;">Date</span> 
-                    <span>Δ (bps)</span> 
-                    <span>12-month</span>
-                </span>
-                </div><div class="table-responsive-wrapper"><table style="font-size: 12px; margin-bottom: 15px;"><thead>`;
-                tableHTML += `<tr><th style="padding: 8px 10px;">Next Meeting</th><th style="padding: 8px 10px;">Bank</th><th style="padding: 8px 10px; text-align:right;">Policy Rate</th><th style="padding: 8px 10px; text-align:right;">Probability</th><th style="padding: 8px 10px;">Hike/Cut</th><th style="padding: 8px 10px; text-align:right;">Δ vs Current (bps)</th><th style="padding: 8px 10px; text-align:center;">Implied Outcome</th><th style="padding: 8px 10px; text-align:right;">12-Month Outlook (bps)</th></tr></thead><tbody>`;
+                let tableHTML = `<div class="bank-card" style="padding: 20px 20px 0 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
+                    <div>
+                        <span style="font-family:'Inter', sans-serif; font-weight:700; font-size:14px; text-transform:uppercase; display:block; margin-bottom:12px;">UPCOMING MEETINGS</span>
+                        <span style="font-size:11px; color:#8b949e; display:flex; align-items:center; gap:6px;">As of: 00:00 09/07/2026 &#9881;</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size:11px; color:#8b949e; display: flex; align-items: center; gap: 8px; justify-content: flex-end; margin-bottom: 8px;">
+                            Sort by: 
+                            <span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; color: #fff; cursor: default;">Date</span> 
+                            <span>Δ (bps)</span> 
+                            <span>12-month</span>
+                        </div>
+                        <div style="font-size:11px; color:#8b949e; display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
+                            Step: 
+                            <select style="background: transparent; border: 1px solid #30363d; color: #c9d1d9; border-radius: 4px; padding: 2px 6px; font-family: 'Inter', sans-serif; font-size: 11px; outline: none; cursor: pointer;">
+                                <option>25 bps</option>
+                                <option>10 bps</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive-wrapper"><table style="margin-bottom: 15px;"><thead>`;
+                
+                tableHTML += `<tr>
+                    <th style="padding: 8px 10px;">Next Meeting</th>
+                    <th style="padding: 8px 10px;">Bank</th>
+                    <th style="padding: 8px 10px; text-align:right;">Policy Rate</th>
+                    <th style="padding: 8px 10px; text-align:right;">Probability</th>
+                    <th style="padding: 8px 10px;">Hike/Cut</th>
+                    <th style="padding: 8px 10px; text-align:right;">Δ vs Current<br>(bps)</th>
+                    <th style="padding: 8px 10px; text-align:center;">Implied<br>Outcome</th>
+                    <th style="padding: 8px 10px; text-align:right;">12-Month Outlook<br>(bps)</th>
+                </tr></thead><tbody>`;
                 
                 aggregatedNextMeetings.forEach(row => { 
                     const hcColor = row.hike_cut === 'hike' ? '#22c55e' : (row.hike_cut === 'cut' ? '#ef4444' : '#8b949e');
                     let outcomeColor = '#8b949e';
                     if (row.implied_outcome === 'HIKE') outcomeColor = '#22c55e';
                     if (row.implied_outcome === 'CUT') outcomeColor = '#ef4444';
-                    
-                    const deltaBpsNum = parseBps(row.delta);
 
                     tableHTML += `<tr>
                         <td style="padding: 12px 10px;">${row.date}</td>
