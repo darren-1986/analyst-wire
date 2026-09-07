@@ -53,7 +53,8 @@
         .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; display: flex; flex-direction: column; }
         .bank-card-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         
-        table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 13px; }
+        .table-responsive-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; min-width: 850px; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 13px; }
         th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #1c2230; white-space: nowrap; }
         th { color: #8b949e; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { color: #c9d1d9; }
@@ -205,8 +206,7 @@
         const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
         const fxMap = { 'fed': 'USD', 'ecb': 'EUR', 'boe': 'GBP', 'boj': 'JPY', 'boc': 'CAD', 'rba': 'AUD' };
 
-        // External static macro data mapping to supply the missing CSTR variable
-        const mockCSTR = { 'ecb': '2.180%', 'fed': '3.550%', 'boe': '3.680%', 'boj': '0.950%', 'boc': '2.150%', 'rba': '4.250%' };
+        const mockCSTR = { 'ecb': '2.189%', 'fed': '5.330%', 'boe': '5.180%', 'boj': '0.050%', 'boc': '4.750%', 'rba': '4.350%' };
 
         const bankMacroContext = {
             main: { role: "Global Divergence Matrix", focus: "Compare relative rate curves across all 6 major central banks to identify broad macro liquidity trends.", impact: "Divergence in forward paths creates long-term structural trends in FX pairs." },
@@ -344,6 +344,36 @@
             }
         }
 
+        function startCountdowns() {
+            if (countdownTimerId) clearInterval(countdownTimerId);
+            countdownTimerId = setInterval(() => {
+                document.querySelectorAll('.countdown-timer').forEach(el => {
+                    const dateStr = el.getAttribute('data-date');
+                    if (!dateStr || dateStr === 'N/A') return;
+                    
+                    let targetDate = new Date(dateStr + " 14:00:00 EDT").getTime();
+                    if (isNaN(targetDate)) {
+                        targetDate = new Date(dateStr).getTime() + (14 * 60 * 60 * 1000); 
+                    }
+
+                    const now = new Date().getTime();
+                    const diff = targetDate - now;
+
+                    if (diff < 0) {
+                        el.innerHTML = "Meeting Started";
+                        return;
+                    }
+
+                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    el.innerHTML = `${d}d ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                });
+            }, 1000);
+        }
+
         function renderAllData(groupedData) {
             globalGroupedSnapshots = groupedData; 
             banksToFetch.forEach(bank => {
@@ -351,6 +381,7 @@
                 renderBankTab(bank, bankSnapshots);
             });
             drawOverviewCharts();
+            startCountdowns();
         }
 
         function renderEmptyStates(message) {
@@ -466,7 +497,7 @@
 
         function generateMatrixHTML(id, ratesObj) {
             const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
-            let html = `<table id="${id}" class="matrix-table" style="display: ${id==='matrix-current'?'table':'none'}; border-collapse: separate; border-spacing: 0;"><thead><tr><th style="border:none;"></th>`;
+            let html = `<div class="table-responsive-wrapper"><table id="${id}" class="matrix-table" style="display: ${id==='matrix-current'?'table':'none'}; border-collapse: separate; border-spacing: 0;"><thead><tr><th style="border:none;"></th>`;
             currencies.forEach(c => html += `<th style="color:#8b949e; border:none; padding-bottom:15px;">${c}</th>`);
             html += `</tr></thead><tbody>`;
             
@@ -476,7 +507,7 @@
             }));
             
             currencies.forEach(rowCur => {
-                html += `<tr><td style="color:#8b949e; border:none; padding-right:15px;">${rowCur}</td>`;
+                html += `<tr><td style="color:#8b949e; border:none; padding-right:15px; font-weight: 500;">${rowCur}</td>`;
                 currencies.forEach(colCur => {
                     if (rowCur === colCur) {
                         html += `<td style="background: rgba(255,255,255,0.02); text-align:center;">-</td>`;
@@ -491,7 +522,7 @@
                 });
                 html += `</tr>`;
             });
-            html += `</tbody></table>`;
+            html += `</tbody></table></div>`;
             return html;
         }
 
@@ -539,8 +570,8 @@
                                 timestamp: new Date(nextMtg.date).getTime(),
                                 current: currentRateNum.toFixed(2) + '%',
                                 prob: nextMtg.prob || '0%',
-                                hike_cut: deltaBps > 0 ? 'hike' : (deltaBps < 0 ? 'cut' : 'hold'),
-                                delta: deltaBps,
+                                hike_cut: nextMtg.hike_cut || (deltaBps > 0 ? 'hike' : (deltaBps < 0 ? 'cut' : 'hold')),
+                                delta: nextMtg.delta,
                                 implied_outcome: impliedOutcome,
                                 outlook: outlookBps
                             });
@@ -552,8 +583,10 @@
                 const absoluteNextMtg = aggregatedNextMeetings[0] || {};
 
                 let actionMain = absoluteNextMtg.hike_cut ? absoluteNextMtg.hike_cut.toUpperCase() : 'HOLD';
-                let deltaColor = absoluteNextMtg.delta > 0 ? '#10b981' : (absoluteNextMtg.delta < 0 ? '#ef4444' : '#8b949e');
+                let parsedDelta = parseBps(absoluteNextMtg.delta);
+                let deltaColor = parsedDelta > 0 ? '#10b981' : (parsedDelta < 0 ? '#ef4444' : '#8b949e');
                 
+                const cstrLabel = absoluteNextMtg.bankCode === 'ecb' ? '€STR' : 'CSTR';
                 const cstrVal = mockCSTR[absoluteNextMtg.bankCode] || '-';
 
                 const summaryHTML = `
@@ -563,8 +596,12 @@
                             <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Up Next</div>
                         </div>
                         <div style="text-align: left; margin-top: 10px;">
-                            <div style="font-size: 26px; font-weight: 800; color: #fff; line-height: 1.1;">${absoluteNextMtg.bankCode ? absoluteNextMtg.bankCode.toUpperCase() : 'N/A'}</div>
-                            <div style="font-size: 12px; color: #8b949e; margin-top: 6px;">${absoluteNextMtg.date || ''} - 8:15am EDT</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #fff; line-height: 1.1;">${absoluteNextMtg.bank || 'N/A'}</div>
+                            <div style="font-size: 12px; color: #8b949e; margin-top: 6px; display: flex; gap: 8px; align-items: center;">
+                                <span>${absoluteNextMtg.date || ''} - 8:15am EDT</span>
+                                <span style="color: #30363d;">|</span>
+                                <span class="countdown-timer" data-date="${absoluteNextMtg.date}" style="color: #00b4f9; font-weight: 700; font-family: 'JetBrains Mono', monospace;">--d --:--:--</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -572,7 +609,7 @@
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; text-align: left;">Pricing</div>
                         <div style="text-align: left; margin-top: 10px;">
                             <div style="font-size: 26px; font-weight: 800; color: ${deltaColor}; line-height: 1.1; letter-spacing: -0.5px;">${absoluteNextMtg.prob} ${actionMain}</div>
-                            <div style="font-size: 12px; font-weight: 500; color: ${deltaColor}; margin-top: 6px;">${absoluteNextMtg.delta > 0 ? '+' : ''}${absoluteNextMtg.delta ? absoluteNextMtg.delta.toFixed(1) : '0'} bps</div>
+                            <div style="font-size: 12px; font-weight: 500; color: ${deltaColor}; margin-top: 6px;">${parsedDelta > 0 ? '+' : ''}${absoluteNextMtg.delta || '0'} bps</div>
                         </div>
                     </div>
 
@@ -580,7 +617,7 @@
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; text-align: left;">Current Rate</div>
                         <div style="text-align: left; margin-top: 10px;">
                             <div style="font-size: 26px; font-weight: 800; color: #fff; line-height: 1.1;">${absoluteNextMtg.current || '0.00%'}</div>
-                            <div style="font-size: 12px; color: #8b949e; margin-top: 6px;">Last CSTR: ${cstrVal}</div>
+                            <div style="font-size: 12px; color: #8b949e; margin-top: 6px;">Last ${cstrLabel}: ${cstrVal}</div>
                         </div>
                     </div>
                 </div>
@@ -595,7 +632,7 @@
                         clusteredNodes.push({ ms: node.timestamp, banks: [node.bankCode.toUpperCase()] });
                     } else {
                         const lastGroup = clusteredNodes[clusteredNodes.length - 1];
-                        if (node.timestamp - lastGroup.ms <= 12 * 24 * 60 * 60 * 1000) {
+                        if (node.timestamp - lastGroup.ms <= 7 * 24 * 60 * 60 * 1000) {
                             if (!lastGroup.banks.includes(node.bankCode.toUpperCase())) lastGroup.banks.push(node.bankCode.toUpperCase());
                         } else {
                             clusteredNodes.push({ ms: node.timestamp, banks: [node.bankCode.toUpperCase()] });
@@ -665,8 +702,8 @@
                 <div class="bank-card" style="margin-bottom: 20px; padding: 24px;">
                     <div style="font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; margin-bottom: 8px;">MEETING COLLISION TIMELINE</div>
                     <div style="font-size: 12px; color: #8b949e; margin-bottom: 10px;">Every upcoming decision mapped across a 6-month horizon. Clusters highlight macro weeks where multiple banks decide.</div>
-                    <div style="width: 100%; overflow-x: auto; padding-bottom: 10px; cursor: ew-resize;">
-                        <div class="timeline-container" style="min-width: 1400px; margin: 30px 0;">
+                    <div style="width: 100%; padding-bottom: 10px;">
+                        <div class="timeline-container" style="min-width: 600px; margin: 30px 0;">
                             <div class="timeline-track"></div>
                             ${timelineNodesHTML}
                         </div>
@@ -693,10 +730,8 @@
                                 <button class="ds-btn matrix-btn" onclick="toggleMatrix('forward')" style="padding: 4px 10px; border:none;">Forward 1yr</button>
                             </div>
                         </div>
-                        <div style="overflow-x: auto;">
-                            ${generateMatrixHTML('matrix-current', rates.current)}
-                            ${generateMatrixHTML('matrix-forward', rates.forward)}
-                        </div>
+                        ${generateMatrixHTML('matrix-current', rates.current)}
+                        ${generateMatrixHTML('matrix-forward', rates.forward)}
                     </div>
                 </div>
                 `;
@@ -724,7 +759,14 @@
                 </div>
                 `;
                 
-                let tableHTML = `<div class="bank-card" style="padding: 20px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><span style="font-family:'Inter', sans-serif; font-weight:700; font-size:14px; text-transform:uppercase;">UPCOMING MEETINGS</span><span style="font-size:11px; color:#8b949e;">Sort by: Date &nbsp; Δ (bps) &nbsp; 12-month</span></div><table style="font-size: 12px;"><thead>`;
+                let tableHTML = `<div class="bank-card" style="padding: 20px 20px 0 20px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><span style="font-family:'Inter', sans-serif; font-weight:700; font-size:14px; text-transform:uppercase;">UPCOMING MEETINGS</span>
+                <span style="font-size:11px; color:#8b949e; display: flex; align-items: center; gap: 8px;">
+                    Sort by: 
+                    <span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; color: #fff; cursor: default;">Date</span> 
+                    <span>Δ (bps)</span> 
+                    <span>12-month</span>
+                </span>
+                </div><div class="table-responsive-wrapper"><table style="font-size: 12px; margin-bottom: 15px;"><thead>`;
                 tableHTML += `<tr><th style="padding: 8px 10px;">Next Meeting</th><th style="padding: 8px 10px;">Bank</th><th style="padding: 8px 10px; text-align:right;">Policy Rate</th><th style="padding: 8px 10px; text-align:right;">Probability</th><th style="padding: 8px 10px;">Hike/Cut</th><th style="padding: 8px 10px; text-align:right;">Δ vs Current (bps)</th><th style="padding: 8px 10px; text-align:center;">Implied Outcome</th><th style="padding: 8px 10px; text-align:right;">12-Month Outlook (bps)</th></tr></thead><tbody>`;
                 
                 aggregatedNextMeetings.forEach(row => { 
@@ -732,6 +774,8 @@
                     let outcomeColor = '#8b949e';
                     if (row.implied_outcome === 'HIKE') outcomeColor = '#22c55e';
                     if (row.implied_outcome === 'CUT') outcomeColor = '#ef4444';
+                    
+                    const deltaBpsNum = parseBps(row.delta);
 
                     tableHTML += `<tr>
                         <td style="padding: 12px 10px;">${row.date}</td>
@@ -739,12 +783,12 @@
                         <td style="padding: 12px 10px; text-align:right;">${row.current}</td>
                         <td style="padding: 12px 10px; text-align:right; color:${hcColor};">${row.prob}</td>
                         <td style="padding: 12px 10px; color:${hcColor};">${row.hike_cut}</td>
-                        <td style="padding: 12px 10px; text-align:right; color:#22c55e;">${row.delta.toFixed(1)}</td>
+                        <td style="padding: 12px 10px; text-align:right; color:#22c55e;">${row.delta}</td>
                         <td style="padding: 12px 10px; text-align:center; color: ${outcomeColor}; font-weight: 600;">${row.implied_outcome}</td>
-                        <td style="padding: 12px 10px; text-align:right; color:#22c55e;">${row.outlook > 0 ? '+' : ''}${row.outlook.toFixed(1)}</td>
+                        <td style="padding: 12px 10px; text-align:right; color:#22c55e;">${row.outlook.toFixed(1)}</td>
                     </tr>`; 
                 });
-                tableHTML += `</tbody></table></div>`;
+                tableHTML += `</tbody></table></div><div style="padding: 15px 0; font-size: 11px; color: #8b949e; line-height: 1.5; border-top: 1px solid #1c2230;">Probabilities are approximate and represent a market-implied consensus which is subject to change. See explainer below for interpreting table output. Dates and times in EST/EDT.</div></div>`;
 
                 container.innerHTML = summaryHTML + advancedToolsHTML + overviewChartHTML + tableHTML;
 
@@ -883,7 +927,7 @@
                 container.appendChild(chartsWrapper);
                 setTimeout(() => reconstructIndividualChart(chartId, barChartId, snapshots, currentRate), 50);
                 
-                let tableHTML = `<div class="bank-card"><div class="bank-card-header"><span>MEETING-BY-MEETING RATE PATH</span></div><table><thead>`;
+                let tableHTML = `<div class="bank-card"><div class="bank-card-header"><span>MEETING-BY-MEETING RATE PATH</span></div><div class="table-responsive-wrapper"><table><thead>`;
                 tableHTML += `<tr><th>Meeting</th><th>Implied Rate (Post-Meeting)</th><th>Probability of Hike(Cut)</th><th># of Hikes(Cuts)</th><th>Δ vs Current (bps)</th></tr></thead><tbody>`;
                 activePool.forEach(r => { 
                     const row = getCorrectedRow(r);
@@ -895,7 +939,7 @@
                         <td class="highlight-green">${parseBps(row.delta) > 0 ? '+'+row.delta : row.delta}</td>
                     </tr>`; 
                 });
-                tableHTML += `</tbody></table></div>`;
+                tableHTML += `</tbody></table></div></div>`;
                 
                 const wrapper = document.createElement('div');
                 wrapper.innerHTML = tableHTML;
