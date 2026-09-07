@@ -30,8 +30,10 @@
         .dropdown-content a:hover { background-color: #21262d; color: #fff; }
 
         .dashboard-wrapper { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0; position: relative; }
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #1c2230; background: #0d1117; flex-shrink: 0; }
-        .dashboard-header h1 { font-family: 'Inter', sans-serif; font-size: 16px; margin: 0; color: #fff; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .dashboard-header { display: flex; flex-direction: column; justify-content: center; padding: 16px 20px; border-bottom: 1px solid #1c2230; background: #0d1117; flex-shrink: 0; gap: 6px; }
+        .dashboard-header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .dashboard-header h1 { font-family: 'Inter', sans-serif; font-size: 18px; margin: 0; color: #fff; font-weight: 700; }
+        .dashboard-header p { font-family: 'Inter', sans-serif; font-size: 13px; margin: 0; color: #8b949e; }
         .status-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8b949e; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .tabs-nav { display: flex; background: #161b22; border-bottom: 1px solid #1c2230; padding: 10px 20px 0 20px; gap: 5px; flex-shrink: 0; overflow-x: auto; }
@@ -46,13 +48,13 @@
         .empty-state { text-align: center; padding: 40px 20px; color: #8b949e; font-family: 'Inter', sans-serif; font-size: 14px; border: 1px dashed #1c2230; border-radius: 12px; margin-top: 20px; }
 
         .kpi-container { display: grid; justify-content: center; gap: 14px; margin-bottom: 24px; width: 100%; }
-        .kpi-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
+        .kpi-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; text-align: left; }
 
         .bank-card { background: #0d1117; border: 1px solid #1c2230; border-radius: 12px; overflow: hidden; margin-bottom: 20px; display: flex; flex-direction: column; }
         .bank-card-header { background: #161b22; padding: 12px 20px; border-bottom: 1px solid #1c2230; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         
         table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 13px; }
-        th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid #1c2230; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #1c2230; white-space: nowrap; }
         th { color: #8b949e; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
         td { color: #c9d1d9; }
         tr:last-child td { border-bottom: none; }
@@ -139,8 +141,11 @@
 
     <div class="dashboard-wrapper">
         <div class="dashboard-header">
-            <h1>Central Bank Rate Expectations</h1>
-            <div class="status-text" id="status-indicator">Connecting to Database...</div>
+            <div class="dashboard-header-top">
+                <h1>Central Bank Rate Expectations</h1>
+                <div class="status-text" id="status-indicator">Connecting to Database...</div>
+            </div>
+            <p>A comparison hub for market-implied policy rate paths. Explore and compare market consensus for major central banks meeting by meeting</p>
         </div>
 
         <div class="tabs-nav" id="mainTabs">
@@ -199,6 +204,9 @@
 
         const targetNames = { 'fed': 'Federal Reserve', 'ecb': 'European Central Bank', 'boe': 'Bank of England', 'boj': 'Bank of Japan', 'boc': 'Bank of Canada', 'rba': 'Reserve Bank of Australia' };
         const fxMap = { 'fed': 'USD', 'ecb': 'EUR', 'boe': 'GBP', 'boj': 'JPY', 'boc': 'CAD', 'rba': 'AUD' };
+
+        // External static macro data mapping to supply the missing CSTR variable
+        const mockCSTR = { 'ecb': '2.180%', 'fed': '3.550%', 'boe': '3.680%', 'boj': '0.950%', 'boc': '2.150%', 'rba': '4.250%' };
 
         const bankMacroContext = {
             main: { role: "Global Divergence Matrix", focus: "Compare relative rate curves across all 6 major central banks to identify broad macro liquidity trends.", impact: "Divergence in forward paths creates long-term structural trends in FX pairs." },
@@ -336,36 +344,6 @@
             }
         }
 
-        function startCountdowns() {
-            if (countdownTimerId) clearInterval(countdownTimerId);
-            countdownTimerId = setInterval(() => {
-                document.querySelectorAll('.countdown-timer').forEach(el => {
-                    const dateStr = el.getAttribute('data-date');
-                    if (!dateStr || dateStr === 'N/A') return;
-                    
-                    let targetDate = new Date(dateStr + " 14:00:00 EDT").getTime();
-                    if (isNaN(targetDate)) {
-                        targetDate = new Date(dateStr).getTime() + (14 * 60 * 60 * 1000); 
-                    }
-
-                    const now = new Date().getTime();
-                    const diff = targetDate - now;
-
-                    if (diff < 0) {
-                        el.innerHTML = "Meeting Started";
-                        return;
-                    }
-
-                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-                    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const s = Math.floor((diff % (1000 * 60)) / 1000);
-
-                    el.innerHTML = `${d}d ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-                });
-            }, 1000);
-        }
-
         function renderAllData(groupedData) {
             globalGroupedSnapshots = groupedData; 
             banksToFetch.forEach(bank => {
@@ -373,7 +351,6 @@
                 renderBankTab(bank, bankSnapshots);
             });
             drawOverviewCharts();
-            startCountdowns();
         }
 
         function renderEmptyStates(message) {
@@ -541,7 +518,7 @@
                         
                         if (futureMtgs.length > 0) {
                             const nextMtg = futureMtgs[0];
-                            const lastMtg = futureMtgs[futureMtgs.length - 1];
+                            const absoluteLastDatasetMtg = bRows[bRows.length - 1]; 
                             
                             const implied = parseFloat(String(nextMtg.implied).replace('%', '')) || 0;
                             const deltaBps = parseBps(nextMtg.delta);
@@ -552,7 +529,7 @@
                             if (deltaBps > 12.5) impliedOutcome = 'HIKE';
                             if (deltaBps < -12.5) impliedOutcome = 'CUT';
                             
-                            const lastImplied = parseFloat(String(lastMtg.implied).replace('%', '')) || currentRateNum;
+                            const lastImplied = parseFloat(String(absoluteLastDatasetMtg.implied).replace('%', '')) || currentRateNum;
                             const outlookBps = (lastImplied - currentRateNum) * 100;
                             
                             aggregatedNextMeetings.push({
@@ -575,7 +552,9 @@
                 const absoluteNextMtg = aggregatedNextMeetings[0] || {};
 
                 let actionMain = absoluteNextMtg.hike_cut ? absoluteNextMtg.hike_cut.toUpperCase() : 'HOLD';
-                let deltaColor = absoluteNextMtg.delta > 0 ? '#22c55e' : (absoluteNextMtg.delta < 0 ? '#ef4444' : '#8b949e');
+                let deltaColor = absoluteNextMtg.delta > 0 ? '#10b981' : (absoluteNextMtg.delta < 0 ? '#ef4444' : '#8b949e');
+                
+                const cstrVal = mockCSTR[absoluteNextMtg.bankCode] || '-';
 
                 const summaryHTML = `
                 <div class="kpi-container" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
@@ -584,24 +563,24 @@
                             <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Up Next</div>
                         </div>
                         <div style="text-align: left; margin-top: 10px;">
-                            <div style="font-size: 20px; font-weight: 700; color: #fff;">${absoluteNextMtg.bankCode ? absoluteNextMtg.bankCode.toUpperCase() : 'N/A'}</div>
-                            <div style="font-size: 13px; color: #8b949e; margin-top: 4px;">${absoluteNextMtg.date || ''} - 8:15am EDT</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #fff; line-height: 1.1;">${absoluteNextMtg.bankCode ? absoluteNextMtg.bankCode.toUpperCase() : 'N/A'}</div>
+                            <div style="font-size: 12px; color: #8b949e; margin-top: 6px;">${absoluteNextMtg.date || ''} - 8:15am EDT</div>
                         </div>
                     </div>
                     
                     <div class="kpi-card" style="border-color: #30363d; background: rgba(255,255,255,0.02);">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; text-align: left;">Pricing</div>
                         <div style="text-align: left; margin-top: 10px;">
-                            <div style="font-size: 24px; font-weight: 700; color: ${deltaColor};">${absoluteNextMtg.prob} ${actionMain}</div>
-                            <div style="font-size: 13px; font-weight: 500; color: ${deltaColor}; margin-top: 4px;">${absoluteNextMtg.delta > 0 ? '+' : ''}${absoluteNextMtg.delta ? absoluteNextMtg.delta.toFixed(1) : '0'} bps</div>
+                            <div style="font-size: 26px; font-weight: 800; color: ${deltaColor}; line-height: 1.1; letter-spacing: -0.5px;">${absoluteNextMtg.prob} ${actionMain}</div>
+                            <div style="font-size: 12px; font-weight: 500; color: ${deltaColor}; margin-top: 6px;">${absoluteNextMtg.delta > 0 ? '+' : ''}${absoluteNextMtg.delta ? absoluteNextMtg.delta.toFixed(1) : '0'} bps</div>
                         </div>
                     </div>
 
                     <div class="kpi-card" style="border-color: #30363d; background: rgba(255,255,255,0.02);">
                         <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; text-align: left;">Current Rate</div>
                         <div style="text-align: left; margin-top: 10px;">
-                            <div style="font-size: 24px; font-weight: 700; color: #fff;">${absoluteNextMtg.current || '0.00%'}</div>
-                            <div style="font-size: 13px; color: #8b949e; margin-top: 4px;">Last CSTR: -</div>
+                            <div style="font-size: 26px; font-weight: 800; color: #fff; line-height: 1.1;">${absoluteNextMtg.current || '0.00%'}</div>
+                            <div style="font-size: 12px; color: #8b949e; margin-top: 6px;">Last CSTR: ${cstrVal}</div>
                         </div>
                     </div>
                 </div>
@@ -616,7 +595,7 @@
                         clusteredNodes.push({ ms: node.timestamp, banks: [node.bankCode.toUpperCase()] });
                     } else {
                         const lastGroup = clusteredNodes[clusteredNodes.length - 1];
-                        if (node.timestamp - lastGroup.ms <= 6 * 24 * 60 * 60 * 1000) {
+                        if (node.timestamp - lastGroup.ms <= 12 * 24 * 60 * 60 * 1000) {
                             if (!lastGroup.banks.includes(node.bankCode.toUpperCase())) lastGroup.banks.push(node.bankCode.toUpperCase());
                         } else {
                             clusteredNodes.push({ ms: node.timestamp, banks: [node.bankCode.toUpperCase()] });
@@ -635,7 +614,7 @@
                     const diffDays = Math.round((m.ms - Date.now()) / (1000*60*60*24));
 
                     timelineNodesHTML += `
-                    <div class="timeline-node" style="left: ${pct}%; transform: translateX(-50%) scale(${scale}); background: ${bColor};"></div>
+                    <div class="timeline-node" style="left: ${pct}%; transform: translateX(-50%) scale(${scale}); background: ${bColor}; box-shadow: 0 0 14px ${bColor};"></div>
                     <div class="timeline-lbl-top" style="left: ${pct}%;">${bankStr}</div>
                     <div class="timeline-lbl-btm" style="left: ${pct}%;">+${diffDays}d</div>
                     `;
@@ -683,13 +662,12 @@
                 });
 
                 const advancedToolsHTML = `
-                <div class="bank-card" style="margin-bottom: 20px; padding: 20px;">
+                <div class="bank-card" style="margin-bottom: 20px; padding: 24px;">
                     <div style="font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; margin-bottom: 8px;">MEETING COLLISION TIMELINE</div>
                     <div style="font-size: 12px; color: #8b949e; margin-bottom: 10px;">Every upcoming decision mapped across a 6-month horizon. Clusters highlight macro weeks where multiple banks decide.</div>
                     <div style="width: 100%; overflow-x: auto; padding-bottom: 10px; cursor: ew-resize;">
-                        <div class="timeline-container" style="min-width: 700px; margin: 20px 0;">
+                        <div class="timeline-container" style="min-width: 1400px; margin: 30px 0;">
                             <div class="timeline-track"></div>
-                            <div style="position:absolute; top:25px; left:40px; font-size:10px; color:#8b949e;">Today</div>
                             ${timelineNodesHTML}
                         </div>
                     </div>
@@ -724,12 +702,13 @@
                 `;
 
                 const overviewChartHTML = `
-                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    <div class="bank-card" style="flex: 1; min-width: 320px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <div class="bank-card" style="flex: 1; min-width: 320px; margin-bottom: 0;">
                         <div class="bank-card-header"><span>IMPLIED POLICY RATE PATHS: RELATIVE</span></div>
-                        <div class="chart-holder" style="height: 450px;"><canvas id="main-relative-chart"></canvas></div>
+                        <div class="chart-holder" style="height: 400px; padding-bottom: 0;"><canvas id="main-relative-chart"></canvas></div>
+                        <div style="padding: 15px 20px 25px 20px; font-size: 11px; color: #8b949e;">Lines show how many basis points of rate hikes/cuts are priced-in between now and each upcoming meeting. Toggle banks via the legend.</div>
                     </div>
-                    <div class="bank-card" style="flex: 1; min-width: 320px; margin-bottom: 20px;">
+                    <div class="bank-card" style="flex: 1; min-width: 320px; margin-bottom: 0;">
                         <div class="bank-card-header">
                             <span>IMPLIED POLICY RATE PATHS: LEVEL</span>
                             <span id="step-line-toggle" style="font-size: 11px; font-weight: 400; color: #8b949e; cursor:pointer; display:flex; align-items:center; gap:6px;" onclick="toggleStepLine()">
@@ -739,7 +718,8 @@
                                 </div>
                             </span>
                         </div>
-                        <div class="chart-holder" style="height: 450px;"><canvas id="main-level-chart"></canvas></div>
+                        <div class="chart-holder" style="height: 400px; padding-bottom: 0;"><canvas id="main-level-chart"></canvas></div>
+                        <div style="padding: 15px 20px 25px 20px; font-size: 11px; color: #8b949e;">Lines show the implied policy rate following each upcoming meeting (percent). Toggle banks via the legend.</div>
                     </div>
                 </div>
                 `;
@@ -761,7 +741,7 @@
                         <td style="padding: 12px 10px; color:${hcColor};">${row.hike_cut}</td>
                         <td style="padding: 12px 10px; text-align:right; color:#22c55e;">${row.delta.toFixed(1)}</td>
                         <td style="padding: 12px 10px; text-align:center; color: ${outcomeColor}; font-weight: 600;">${row.implied_outcome}</td>
-                        <td style="padding: 12px 10px; text-align:right; color:#22c55e;">${row.outlook.toFixed(1)}</td>
+                        <td style="padding: 12px 10px; text-align:right; color:#22c55e;">${row.outlook > 0 ? '+' : ''}${row.outlook.toFixed(1)}</td>
                     </tr>`; 
                 });
                 tableHTML += `</tbody></table></div>`;
@@ -960,8 +940,8 @@
                         lvlData.push({ x: t, y: parseFloat(String(row.implied).replace('%', '')) || 0 });
                     });
 
-                    relDatasets.push({ label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, data: relData });
-                    lvlDatasets.push({ label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 2, data: lvlData });
+                    relDatasets.push({ label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0, pointRadius: 0, pointHoverRadius: 6, data: relData });
+                    lvlDatasets.push({ label: names[bankId], borderColor: colors[bankId], backgroundColor: 'transparent', borderWidth: 2, tension: 0, pointRadius: 0, pointHoverRadius: 6, data: lvlData });
                 }
             });
 
@@ -991,7 +971,7 @@
                             font: {family: 'Inter', size: 10}, 
                             maxRotation: 0,
                             autoSkip: true,
-                            maxTicksLimit: 7,
+                            maxTicksLimit: 6,
                             callback: function(value) {
                                 if (Math.abs(value - nowMs) < 86400000 * 5) return 'Current';
                                 const d = new Date(value);
@@ -1057,7 +1037,7 @@
                     plotRows.forEach(row => {
                         plotData.push({ x: new Date(row.date).getTime(), y: parseFloat(String(row.implied || '').replace('%', '')) || 0 });
                     });
-                    datasets.push({ label: config.label, data: plotData, borderColor: config.color, backgroundColor: 'rgba(0, 180, 249, 0.05)', borderWidth: 2, fill: true, tension: 0.25, pointBackgroundColor: '#0d1117' });
+                    datasets.push({ label: config.label, data: plotData, borderColor: config.color, backgroundColor: 'rgba(0, 180, 249, 0.05)', borderWidth: 2, fill: true, tension: 0, pointBackgroundColor: '#0d1117' });
                 } else {
                     const histRows = targetSnapshot ? targetSnapshot.rows.map(r => getCorrectedRow(r)) : [];
                     const plotData = [];
@@ -1068,7 +1048,7 @@
                         }
                     });
                     if (plotData.length > 0) {
-                        datasets.push({ label: config.label, data: plotData, borderColor: config.color, backgroundColor: 'transparent', borderWidth: 2, fill: false, tension: 0.25, spanGaps: true, pointBackgroundColor: '#0d1117' });
+                        datasets.push({ label: config.label, data: plotData, borderColor: config.color, backgroundColor: 'transparent', borderWidth: 2, fill: false, tension: 0, spanGaps: true, pointBackgroundColor: '#0d1117' });
                     }
                 }
             });
@@ -1102,7 +1082,7 @@
                                 font: {family: 'Inter', size: 10}, 
                                 maxRotation: 0,
                                 autoSkip: true,
-                                maxTicksLimit: 7,
+                                maxTicksLimit: 6,
                                 callback: function(value) {
                                     if (Math.abs(value - nowMs) < 86400000 * 5) return 'Current';
                                     const d = new Date(value);
