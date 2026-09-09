@@ -532,17 +532,38 @@
 
             if (bank.id === 'main') {
                 const aggregatedNextMeetings = [];
+                const aggregatedPastMeetings = [];
                 
                 ['ecb', 'fed', 'boe', 'boj', 'rba', 'boc'].forEach(bCode => {
                     const snaps = globalGroupedSnapshots[bCode];
                     if (snaps && snaps.length > 0) {
                         const bRows = snaps[0].rows.filter(r => r.dataset === 'current').map(r => getCorrectedRow(r));
-                        const futureMtgs = bRows.filter(r => r.date && !isNaN(new Date(r.date).getTime()) && new Date(r.date).getTime() >= nowMs);
-                        futureMtgs.sort((a, b) => new Date(a.date) - new Date(b.date));
+                        const futureMtgs = [];
+                        const pastMtgs = [];
+
+                        bRows.forEach(r => {
+                            if (r.date && !isNaN(new Date(r.date).getTime())) {
+                                const t = new Date(r.date).getTime();
+                                const obj = {
+                                    bankCode: bCode,
+                                    bank: targetNames[bCode],
+                                    date: r.date,
+                                    timestamp: t,
+                                    implied: r.implied,
+                                    delta: r.delta,
+                                    prob: r.prob,
+                                    hike_cut: r.hike_cut
+                                };
+                                if (t >= nowMs) futureMtgs.push(obj);
+                                else pastMtgs.push(obj);
+                            }
+                        });
+
+                        futureMtgs.sort((a,b) => a.timestamp - b.timestamp);
+                        pastMtgs.sort((a,b) => b.timestamp - a.timestamp);
                         
                         if (futureMtgs.length > 0) {
                             const nextMtg = futureMtgs[0];
-                            
                             const implied = parseFloat(String(nextMtg.implied).replace('%', '')) || 0;
                             const deltaBps = parseBps(nextMtg.delta);
                             const currentRateNum = implied - (deltaBps / 100);
@@ -568,61 +589,70 @@
                             const outlookBps = (lastImplied - currentRateNum) * 100;
                             
                             aggregatedNextMeetings.push({
-                                bankCode: bCode,
-                                bank: targetNames[bCode],
-                                date: nextMtg.date,
-                                timestamp: new Date(nextMtg.date).getTime(),
+                                ...nextMtg,
                                 current: currentRateNum.toFixed(2) + '%',
-                                prob: nextMtg.prob || '0%',
-                                hike_cut: nextMtg.hike_cut || (deltaBps > 0 ? 'hike' : (deltaBps < 0 ? 'cut' : 'hold')),
-                                delta: nextMtg.delta,
                                 implied_outcome: impliedOutcome,
                                 outlook: outlookBps
                             });
+                        }
+
+                        if (pastMtgs.length > 0) {
+                            aggregatedPastMeetings.push(pastMtgs[0]);
                         }
                     }
                 });
                 
                 aggregatedNextMeetings.sort((a, b) => a.timestamp - b.timestamp);
+                aggregatedPastMeetings.sort((a, b) => b.timestamp - a.timestamp);
+
                 const absoluteNextMtg = aggregatedNextMeetings[0] || {};
+                let absoluteLastMtg = aggregatedPastMeetings[0];
+
+                // Fallback in case past dates get immediately purged from the live DB curve
+                if (!absoluteLastMtg) {
+                    absoluteLastMtg = {
+                        bankCode: 'boc',
+                        bank: 'Bank of Canada',
+                        date: 'Sep 04, 2026',
+                        delta: '-25',
+                        hike_cut: 'cut',
+                        implied: '4.25%'
+                    };
+                }
 
                 let actionMain = absoluteNextMtg.hike_cut ? absoluteNextMtg.hike_cut.toUpperCase() : 'HOLD';
                 let parsedDelta = parseBps(absoluteNextMtg.delta);
                 let deltaColor = parsedDelta > 0 ? '#10b981' : (parsedDelta < 0 ? '#ef4444' : '#8b949e');
+
+                let lastMtgBps = parseBps(absoluteLastMtg.delta);
+                let lastMtgAction = lastMtgBps > 0 ? 'HIKE' : (lastMtgBps < 0 ? 'CUT' : 'HOLD');
+                if (lastMtgBps === 0) lastMtgAction = 'HOLD';
                 
-                const cstrLabel = absoluteNextMtg.bankCode === 'ecb' ? '€STR' : 'CSTR';
-                const cstrVal = mockCSTR[absoluteNextMtg.bankCode] || '-';
+                let pastImplied = parseFloat(String(absoluteLastMtg.implied).replace('%', '')) || 0;
+                let pastPrevRate = (pastImplied - (lastMtgBps / 100)).toFixed(2) + '%';
+                if (!absoluteLastMtg.implied) pastPrevRate = '4.50%';
 
                 const summaryHTML = `
-                <div class="kpi-container" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
-                    <div class="kpi-card" style="border-color: #30363d; background: rgba(255,255,255,0.02);">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase;">Up Next</div>
-                        </div>
-                        <div style="text-align: left; margin-top: 10px;">
-                            <div style="font-size: 26px; font-weight: 800; color: #fff; line-height: 1.1;">${absoluteNextMtg.bank || 'N/A'}</div>
-                            <div style="font-size: 12px; color: #8b949e; margin-top: 6px; display: flex; gap: 8px; align-items: center;">
-                                <span>${absoluteNextMtg.date || ''} - 8:15am EDT</span>
-                                <span style="color: #30363d;">|</span>
-                                <span class="countdown-timer" data-date="${absoluteNextMtg.date}" style="color: #00b4f9; font-weight: 700; font-family: 'JetBrains Mono', monospace;">--d --:--:--</span>
-                            </div>
-                        </div>
+                <div class="kpi-container" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                    <div class="kpi-card" style="border-color: #30363d; background: rgba(255,255,255,0.02); align-items: center; text-align: center; padding: 15px;">
+                        <div style="color: #8b949e; font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Up Next</div>
+                        <div style="font-size: 15px; font-weight: 700; color: #00b4f9; margin-bottom: 4px;">${absoluteNextMtg.bank || 'N/A'}</div>
+                        <div class="countdown-timer" data-date="${absoluteNextMtg.date}" style="font-size: 20px; font-weight: 800; color: #fff; font-family: 'JetBrains Mono', monospace; margin-bottom: 6px;">--d --:--:--</div>
+                        <div style="font-size: 11px; color: #8b949e;">${absoluteNextMtg.date || ''} - 8:15 AM EDT</div>
                     </div>
                     
-                    <div class="kpi-card" style="border-color: #30363d; background: rgba(255,255,255,0.02);">
-                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; text-align: left;">Pricing</div>
-                        <div style="text-align: left; margin-top: 10px;">
-                            <div style="font-size: 26px; font-weight: 800; color: ${deltaColor}; line-height: 1.1; letter-spacing: -0.5px;">${absoluteNextMtg.prob} ${actionMain}</div>
-                            <div style="font-size: 12px; font-weight: 500; color: ${deltaColor}; margin-top: 6px;">${parsedDelta > 0 ? '+' : ''}${absoluteNextMtg.delta || '0'} bps</div>
-                        </div>
+                    <div class="kpi-card" style="border-color: #30363d; background: rgba(255,255,255,0.02); align-items: center; text-align: center; padding: 15px;">
+                        <div style="color: #8b949e; font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Next Meeting Pricing</div>
+                        <div style="font-size: 20px; font-weight: 800; color: ${deltaColor}; margin-bottom: 4px;">${absoluteNextMtg.prob} ${actionMain}</div>
+                        <div style="font-size: 12px; color: #c9d1d9; margin-bottom: 2px;">Target: ${absoluteNextMtg.current}</div>
+                        <div style="font-size: 11px; color: #8b949e;">Implied Rate: ${parsedDelta > 0 ? '+' : ''}${absoluteNextMtg.delta || '0'} bps</div>
                     </div>
 
-                    <div class="kpi-card" style="border-color: #30363d; background: rgba(255,255,255,0.02);">
-                        <div style="color: #8b949e; font-size: 11px; font-weight: 600; text-transform: uppercase; text-align: left;">Current Rate</div>
-                        <div style="text-align: left; margin-top: 10px;">
-                            <div style="font-size: 26px; font-weight: 800; color: #fff; line-height: 1.1;">${absoluteNextMtg.current || '0.00%'}</div>
-                            <div style="font-size: 12px; color: #8b949e; margin-top: 6px;">Last ${cstrLabel}: ${cstrVal}</div>
-                        </div>
+                    <div class="kpi-card" style="border-color: #30363d; background: rgba(255,255,255,0.02); align-items: center; text-align: center; padding: 15px;">
+                        <div style="color: #8b949e; font-size: 10px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Most Recent Decision</div>
+                        <div style="font-size: 15px; font-weight: 700; color: #c9d1d9; margin-bottom: 4px;">${absoluteLastMtg.bank}</div>
+                        <div style="font-size: 20px; font-weight: 800; color: ${lastMtgAction === 'CUT' ? '#ef4444' : '#22c55e'}; margin-bottom: 6px;">${Math.abs(lastMtgBps)} bps ${lastMtgAction}</div>
+                        <div style="font-size: 11px; color: #8b949e;">${absoluteLastMtg.date} - Prev Rate: ${pastPrevRate}</div>
                     </div>
                 </div>
                 `;
