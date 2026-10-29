@@ -1,37 +1,158 @@
-<div style="max-width: 600px; margin: 0 auto; background: #fff; border: 1px solid #ccc; border-radius: 8px; overflow: hidden; font-family: Arial, sans-serif;">
-  
-  <div style="background: #111; color: #fff; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
-    <span>Analyst Wire Market Feed</span>
-    <label style="cursor: pointer; font-size: 0.9em;">
-      <input type="checkbox" id="squawk-toggle"> Enable Audio Squawk
-    </label>
-  </div>
-  
-  <div id="market-feed" style="max-height: 500px; overflow-y: auto;">
-    <div id="loading-msg" style="padding: 20px; color: #666; text-align: center;">
-      Connecting to data source...
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analyst Wire - Market Feed & Squawk</title>
+  <style>
+    body {
+      background: #f4f4f9;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      margin: 0;
+    }
+    .widget-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .widget-header {
+      background: #111;
+      color: #fff;
+      padding: 15px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .feed-container {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    .loading-msg {
+      padding: 20px;
+      color: #666;
+      text-align: center;
+    }
+    .news-item {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    .news-time {
+      color: #888;
+      font-size: 0.8em;
+      margin-bottom: 5px;
+    }
+    .news-title {
+      font-weight: bold;
+      font-size: 1.05em;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widget-container">
+    <div class="widget-header">
+      <span>Analyst Wire Market Feed</span>
+      <label style="cursor: pointer; font-size: 0.9em; font-weight: normal;">
+        <input type="checkbox" id="squawk-toggle"> Enable Audio Squawk
+      </label>
+    </div>
+    
+    <div id="market-feed" class="feed-container">
+      <div id="loading-msg" class="loading-msg">
+        Connecting to data source...
+      </div>
     </div>
   </div>
 
-</div>
+  <script>
+    const processedHeadlines = new Set();
 
-<script>
-  const processedHeadlines = new Set();
+    async function fetchMarketNews() {
+      /* Using CNBC Top Market News to avoid Yahoo's strict proxy blocking */
+      const rssUrl = 'https://search.cnbc.com/rs/search/combinedcms/view.xml?id=10000664';
+      
+      /* Using corsproxy.io, which is highly resilient against mobile DNS and privacy shields */
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(rssUrl);
+      
+      const container = document.getElementById('market-feed');
 
-  async function fetchMarketNews() {
-    /* Using CNBC Top Market News to avoid Yahoo's strict proxy blocking */
-    const rssUrl = 'https://search.cnbc.com/rs/search/combinedcms/view.xml?id=10000664';
-    /* Using corsproxy.io, which is rarely blocked by mobile DNS or privacy shields */
-    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(rssUrl);
+      try {
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error("Proxy connection refused by the data source.");
+        
+        const text = await response.text();
+        
+        /* Parse the raw XML natively */
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(text, "text/xml");
+        
+        /* Catch Cloudflare bot-protection pages returning as HTML instead of XML */
+        if (xmlDoc.getElementsByTagName('parsererror').length > 0 || !xmlDoc.querySelector("item")) {
+           throw new Error("Received a security block instead of a news feed.");
+        }
+
+        /* Reverse so newest items render at the absolute top */
+        const items = Array.from(xmlDoc.querySelectorAll("item")).reverse();
+        
+        const loadingMsg = document.getElementById('loading-msg');
+        if (loadingMsg) loadingMsg.remove();
+
+        items.forEach(item => {
+          const title = item.querySelector("title")?.textContent;
+          const pubDate = item.querySelector("pubDate")?.textContent;
+          
+          if (title && !processedHeadlines.has(title)) {
+            processedHeadlines.add(title);
+            
+            const headlineEl = document.createElement('div');
+            headlineEl.className = 'news-item';
+            headlineEl.innerHTML = `
+              <div class="news-time">${new Date(pubDate).toLocaleTimeString()}</div>
+              <div class="news-title">${title}</div>
+            `;
+            
+            container.prepend(headlineEl);
+            
+            /* CUSTOM AUDIO SQUAWK & FILTER LOGIC */
+            const audioEnabled = document.getElementById('squawk-toggle').checked;
+            const lowerTitle = title.toLowerCase();
+            
+            const isImportant = title.toUpperCase() === title || 
+                                lowerTitle.includes('breaking') || 
+                                lowerTitle.includes('fed') || 
+                                lowerTitle.includes('rate') || 
+                                lowerTitle.includes('ecb');
+            
+            const matchesCategory = lowerTitle.includes('gold') || 
+                                    lowerTitle.includes('oil') || 
+                                    lowerTitle.includes('stocks') || 
+                                    lowerTitle.includes('bitcoin');
+            
+            if (audioEnabled && (isImportant || matchesCategory)) {
+              const utterance = new SpeechSynthesisUtterance(title);
+              utterance.rate = 1.1; 
+              window.speechSynthesis.speak(utterance);
+            }
+          }
+        });
+        
+      } catch (error) {
+        document.getElementById('loading-msg').innerHTML = `<span style="color: red; font-weight: bold;">Network Blocked: ${error.message} <br><br>If you still see this, check if your device has a Private DNS active.</span>`;
+      }
+    }
+
+    /* Initial load */
+    fetchMarketNews();
     
-    const container = document.getElementById('market-feed');
+    /* Refresh the feed every 30 seconds */
+    setInterval(fetchMarketNews, 30000);
+  </script>
 
-    try {
-      const response = await fetch(proxyUrl);
-      if (!response.ok) throw new Error("Proxy connection refused by the data source.");
-      
-      const text = await response.text();
-      
-      /* Parse the raw XML natively */
-      const parser = new DOMParser();
-      const
+</body>
+</html>
