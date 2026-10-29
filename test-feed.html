@@ -74,38 +74,32 @@
     const processedHeadlines = new Set();
 
     async function fetchMarketNews() {
-      /* Using CNBC Top Market News to avoid Yahoo's strict proxy blocking */
+      /* Using rss2json service which proxies requests server-side, 
+         completely bypassing browser CORS and public proxy refusal blocks. */
       const rssUrl = 'https://search.cnbc.com/rs/search/combinedcms/view.xml?id=10000664';
-      
-      /* Using corsproxy.io, which is highly resilient against mobile DNS and privacy shields */
-      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(rssUrl);
+      const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
       
       const container = document.getElementById('market-feed');
 
       try {
-        const response = await fetch(proxyUrl);
-        if (!response.ok) throw new Error("Proxy connection refused by the data source.");
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error("API network response failed.");
         
-        const text = await response.text();
+        const data = await response.json();
         
-        /* Parse the raw XML natively */
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(text, "text/xml");
-        
-        /* Catch Cloudflare bot-protection pages returning as HTML instead of XML */
-        if (xmlDoc.getElementsByTagName('parsererror').length > 0 || !xmlDoc.querySelector("item")) {
-           throw new Error("Received a security block instead of a news feed.");
+        if (data.status !== 'ok') {
+          throw new Error("Data source temporarily rate-limited the connection.");
         }
 
         /* Reverse so newest items render at the absolute top */
-        const items = Array.from(xmlDoc.querySelectorAll("item")).reverse();
+        const items = data.items.reverse();
         
         const loadingMsg = document.getElementById('loading-msg');
         if (loadingMsg) loadingMsg.remove();
 
         items.forEach(item => {
-          const title = item.querySelector("title")?.textContent;
-          const pubDate = item.querySelector("pubDate")?.textContent;
+          const title = item.title;
+          const pubDate = item.pubDate;
           
           if (title && !processedHeadlines.has(title)) {
             processedHeadlines.add(title);
@@ -143,7 +137,7 @@
         });
         
       } catch (error) {
-        document.getElementById('loading-msg').innerHTML = `<span style="color: red; font-weight: bold;">Network Blocked: ${error.message} <br><br>If you still see this, check if your device has a Private DNS active.</span>`;
+        document.getElementById('loading-msg').innerHTML = `<span style="color: red; font-weight: bold;">Connection Error: ${error.message}</span>`;
       }
     }
 
