@@ -65,45 +65,43 @@
     
     <div id="market-feed" class="feed-container">
       <div id="loading-msg" class="loading-msg">
-        Connecting directly to data source...
+        Connecting securely to Finnhub API...
       </div>
     </div>
   </div>
 
   <script>
     const processedHeadlines = new Set();
+    
+    /* INSERT YOUR FREE FINNHUB API KEY HERE */
+    const API_KEY = 'YOUR_FINNHUB_API_KEY'; 
 
     async function fetchMarketNews() {
-      /* Direct API bypassing all proxies. Trusted domain avoids ISP network blocks. */
-      const apiUrl = 'https://query2.finance.yahoo.com/v1/finance/search?q=markets&quotesCount=0&newsCount=20';
+      /* Finnhub's general news endpoint allows CORS natively. No proxies needed. */
+      const apiUrl = `https://finnhub.io/api/v1/news?category=general&token=${API_KEY}`;
       const container = document.getElementById('market-feed');
 
       try {
         const response = await fetch(apiUrl);
         
         if (!response.ok) {
-            throw new Error("Failed to connect to the data source.");
+            throw new Error("Failed to connect to Finnhub.");
         }
         
         const data = await response.json();
         
-        if (!data.news || !Array.isArray(data.news)) {
-            throw new Error("Received an invalid data format.");
-        }
-
-        /* Reverse the array so when we prepend, the newest items stay at the absolute top */
-        const items = data.news.reverse();
-        
         const loadingMsg = document.getElementById('loading-msg');
         if (loadingMsg) loadingMsg.remove();
 
+        /* Finnhub returns an array of news objects. We'll take the latest 20 and reverse for UI stacking */
+        const items = data.slice(0, 20).reverse();
+
         items.forEach(item => {
-          const title = item.title;
+          const title = item.headline;
           
-          /* Yahoo returns time in seconds, JavaScript needs milliseconds */
-          const pubDate = new Date(item.providerPublishTime * 1000);
+          /* Finnhub returns Unix timestamps in seconds */
+          const pubDate = new Date(item.datetime * 1000);
           
-          /* Only process brand new headlines */
           if (title && !processedHeadlines.has(title)) {
             processedHeadlines.add(title);
             
@@ -120,20 +118,17 @@
             const audioEnabled = document.getElementById('squawk-toggle').checked;
             const lowerTitle = title.toLowerCase();
             
-            /* Define Importance Triggers */
             const isImportant = title.toUpperCase() === title || 
                                 lowerTitle.includes('breaking') || 
                                 lowerTitle.includes('fed') || 
                                 lowerTitle.includes('rate') || 
                                 lowerTitle.includes('ecb');
             
-            /* Define Category Match */
             const matchesCategory = lowerTitle.includes('gold') || 
                                     lowerTitle.includes('oil') || 
                                     lowerTitle.includes('stocks') || 
                                     lowerTitle.includes('bitcoin');
             
-            /* Fire the text reader if criteria is met */
             if (audioEnabled && (isImportant || matchesCategory)) {
               const utterance = new SpeechSynthesisUtterance(title);
               utterance.rate = 1.1; 
@@ -147,10 +142,7 @@
       }
     }
 
-    /* Initial load */
     fetchMarketNews();
-    
-    /* Refresh the feed every 30 seconds */
     setInterval(fetchMarketNews, 30000);
   </script>
 
