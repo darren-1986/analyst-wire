@@ -65,7 +65,7 @@
     
     <div id="market-feed" class="feed-container">
       <div id="loading-msg" class="loading-msg">
-        Bypassing fetch restrictions...
+        Connecting directly to data source...
       </div>
     </div>
   </div>
@@ -73,87 +73,85 @@
   <script>
     const processedHeadlines = new Set();
 
-    /* Global callback function required for JSONP */
-    window.processSquawkData = function(data) {
+    async function fetchMarketNews() {
+      /* Direct API bypassing all proxies. Trusted domain avoids ISP network blocks. */
+      const apiUrl = 'https://query2.finance.yahoo.com/v1/finance/search?q=markets&quotesCount=0&newsCount=20';
       const container = document.getElementById('market-feed');
-      const loadingMsg = document.getElementById('loading-msg');
-      
-      if (data.status !== 'ok') {
-        if (loadingMsg) {
-          loadingMsg.innerHTML = `<span style="color: red; font-weight: bold;">Data source temporarily unavailable.</span>`;
-        }
-        return;
-      }
 
-      if (loadingMsg) loadingMsg.remove();
-
-      /* Reverse so newest items render at the absolute top */
-      const items = data.items.reverse();
-
-      items.forEach(item => {
-        const title = item.title;
-        const pubDate = item.pubDate;
+      try {
+        const response = await fetch(apiUrl);
         
-        if (title && !processedHeadlines.has(title)) {
-          processedHeadlines.add(title);
-          
-          const headlineEl = document.createElement('div');
-          headlineEl.className = 'news-item';
-          headlineEl.innerHTML = `
-            <div class="news-time">${new Date(pubDate).toLocaleTimeString()}</div>
-            <div class="news-title">${title}</div>
-          `;
-          
-          container.prepend(headlineEl);
-          
-          /* CUSTOM AUDIO SQUAWK & FILTER LOGIC */
-          const audioEnabled = document.getElementById('squawk-toggle').checked;
-          const lowerTitle = title.toLowerCase();
-          
-          const isImportant = title.toUpperCase() === title || 
-                              lowerTitle.includes('breaking') || 
-                              lowerTitle.includes('fed') || 
-                              lowerTitle.includes('rate') || 
-                              lowerTitle.includes('ecb');
-          
-          const matchesCategory = lowerTitle.includes('gold') || 
-                                  lowerTitle.includes('oil') || 
-                                  lowerTitle.includes('stocks') || 
-                                  lowerTitle.includes('bitcoin');
-          
-          if (audioEnabled && (isImportant || matchesCategory)) {
-            const utterance = new SpeechSynthesisUtterance(title);
-            utterance.rate = 1.1; 
-            window.speechSynthesis.speak(utterance);
-          }
+        if (!response.ok) {
+            throw new Error("Failed to connect to the data source.");
         }
-      });
-    };
+        
+        const data = await response.json();
+        
+        if (!data.news || !Array.isArray(data.news)) {
+            throw new Error("Received an invalid data format.");
+        }
 
-    function fetchMarketNewsJSONP() {
-      /* CNBC Top Market News feed */
-      const rssUrl = 'https://search.cnbc.com/rs/search/combinedcms/view.xml?id=10000664';
-      
-      /* Create a native script tag to bypass the fetch() API entirely */
-      const script = document.createElement('script');
-      script.src = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&callback=processSquawkData`;
-      
-      /* Clean up the script tag after it runs so they don't pile up */
-      script.onload = () => script.remove();
-      
-      /* If this error triggers, your device has a hard DNS blacklist active */
-      script.onerror = () => {
-        document.getElementById('loading-msg').innerHTML = `<span style="color: red; font-weight: bold;">Hard Network Block: Your device's privacy shield or Ad-blocker is completely blacklisting the data provider. You must whitelist 'rss2json.com' or disable your shield for this page.</span>`;
-      };
-      
-      document.body.appendChild(script);
+        /* Reverse the array so when we prepend, the newest items stay at the absolute top */
+        const items = data.news.reverse();
+        
+        const loadingMsg = document.getElementById('loading-msg');
+        if (loadingMsg) loadingMsg.remove();
+
+        items.forEach(item => {
+          const title = item.title;
+          
+          /* Yahoo returns time in seconds, JavaScript needs milliseconds */
+          const pubDate = new Date(item.providerPublishTime * 1000);
+          
+          /* Only process brand new headlines */
+          if (title && !processedHeadlines.has(title)) {
+            processedHeadlines.add(title);
+            
+            const headlineEl = document.createElement('div');
+            headlineEl.className = 'news-item';
+            headlineEl.innerHTML = `
+              <div class="news-time">${pubDate.toLocaleTimeString()}</div>
+              <div class="news-title">${title}</div>
+            `;
+            
+            container.prepend(headlineEl);
+            
+            /* CUSTOM AUDIO SQUAWK & FILTER LOGIC */
+            const audioEnabled = document.getElementById('squawk-toggle').checked;
+            const lowerTitle = title.toLowerCase();
+            
+            /* Define Importance Triggers */
+            const isImportant = title.toUpperCase() === title || 
+                                lowerTitle.includes('breaking') || 
+                                lowerTitle.includes('fed') || 
+                                lowerTitle.includes('rate') || 
+                                lowerTitle.includes('ecb');
+            
+            /* Define Category Match */
+            const matchesCategory = lowerTitle.includes('gold') || 
+                                    lowerTitle.includes('oil') || 
+                                    lowerTitle.includes('stocks') || 
+                                    lowerTitle.includes('bitcoin');
+            
+            /* Fire the text reader if criteria is met */
+            if (audioEnabled && (isImportant || matchesCategory)) {
+              const utterance = new SpeechSynthesisUtterance(title);
+              utterance.rate = 1.1; 
+              window.speechSynthesis.speak(utterance);
+            }
+          }
+        });
+        
+      } catch (error) {
+        document.getElementById('loading-msg').innerHTML = `<span style="color: red; font-weight: bold;">Connection Error: ${error.message}</span>`;
+      }
     }
 
     /* Initial load */
-    fetchMarketNewsJSONP();
+    fetchMarketNews();
     
     /* Refresh the feed every 30 seconds */
-    setInterval(fetchMarketNewsJSONP, 30000);
+    setInterval(fetchMarketNews, 30000);
   </script>
 
 </body>
