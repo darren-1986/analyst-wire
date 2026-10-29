@@ -1,0 +1,103 @@
+<div style="max-width: 600px; margin: 0 auto; background: #fff; border: 1px solid #ccc; border-radius: 8px; overflow: hidden; font-family: Arial, sans-serif;">
+  
+  <div style="background: #111; color: #fff; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+    <span>Global Market Feed</span>
+    <label style="cursor: pointer; font-size: 0.9em;">
+      <input type="checkbox" id="squawk-toggle"> Enable Audio Squawk
+    </label>
+  </div>
+  
+  <div id="market-feed" style="max-height: 500px; overflow-y: auto;">
+    <div id="loading-msg" style="padding: 20px; color: #666; text-align: center;">
+      HTML loaded. Waiting for JavaScript...
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* 1. Prove JavaScript is actually executing */
+  document.getElementById('loading-msg').innerText = "JavaScript is running! Fetching live data...";
+  
+  const processedHeadlines = new Set();
+
+  async function fetchMarketNews() {
+    /* Using Yahoo Finance All Markets RSS via a raw CORS proxy */
+    const rssUrl = 'https://finance.yahoo.com/news/rss';
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}&disableCache=true`;
+    
+    const container = document.getElementById('market-feed');
+
+    try {
+      const response = await fetch(proxyUrl);
+      if (!response.ok) throw new Error("Network response was blocked.");
+      
+      const data = await response.json();
+      
+      /* Parse the raw XML returned by the feed */
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+      
+      /* Reverse the array so the absolute newest items get placed at the top of the feed */
+      const items = Array.from(xmlDoc.querySelectorAll("item")).reverse();
+      
+      /* Remove loading message once we have data */
+      const loadingMsg = document.getElementById('loading-msg');
+      if (loadingMsg) loadingMsg.remove();
+
+      items.forEach(item => {
+        const title = item.querySelector("title").textContent;
+        const pubDate = item.querySelector("pubDate").textContent;
+        
+        /* Only process brand new headlines */
+        if (!processedHeadlines.has(title)) {
+          processedHeadlines.add(title);
+          
+          /* Render the text into the HTML DOM */
+          const headlineEl = document.createElement('div');
+          headlineEl.style.padding = "15px";
+          headlineEl.style.borderBottom = "1px solid #eee";
+          headlineEl.innerHTML = `
+            <div style="color: #888; font-size: 0.8em; margin-bottom: 5px;">${new Date(pubDate).toLocaleTimeString()}</div>
+            <div style="font-weight: bold; font-size: 1.05em; color: #333;">${title}</div>
+          `;
+          
+          container.prepend(headlineEl);
+          
+          /* CUSTOM AUDIO SQUAWK & FILTER LOGIC */
+          const audioEnabled = document.getElementById('squawk-toggle').checked;
+          const lowerTitle = title.toLowerCase();
+          
+          /* Define Importance Triggers */
+          const isImportant = title.toUpperCase() === title || 
+                              lowerTitle.includes('breaking') || 
+                              lowerTitle.includes('fed') || 
+                              lowerTitle.includes('rate') || 
+                              lowerTitle.includes('ecb');
+          
+          /* Define Category Match */
+          const matchesCategory = lowerTitle.includes('gold') || 
+                                  lowerTitle.includes('oil') || 
+                                  lowerTitle.includes('stocks') || 
+                                  lowerTitle.includes('bitcoin');
+          
+          /* If audio is checked AND the headline matches your custom criteria, squawk it */
+          if (audioEnabled && (isImportant || matchesCategory)) {
+            const utterance = new SpeechSynthesisUtterance(title);
+            utterance.rate = 1.1; 
+            window.speechSynthesis.speak(utterance);
+          }
+        }
+      });
+      
+    } catch (error) {
+      document.getElementById('loading-msg').innerHTML = `<span style="color: red; font-weight: bold;">Connection Error: ${error.message}</span>`;
+    }
+  }
+
+  /* Initial load */
+  fetchMarketNews();
+  
+  /* Refresh the feed every 30 seconds */
+  setInterval(fetchMarketNews, 30000);
+</script>
