@@ -9,45 +9,39 @@
   
   <div id="market-feed" style="max-height: 500px; overflow-y: auto;">
     <div id="loading-msg" style="padding: 20px; color: #666; text-align: center;">
-      HTML loaded. Waiting for JavaScript...
+      Connecting to data source...
     </div>
   </div>
 
 </div>
 
 <script>
-  /* 1. Prove JavaScript is actually executing */
-  document.getElementById('loading-msg').innerText = "JavaScript is running! Fetching live data...";
-  
   const processedHeadlines = new Set();
 
   async function fetchMarketNews() {
-    /* Using Yahoo Finance All Markets RSS via a raw CORS proxy */
+    /* Using the stable rss2json API now that we are out of the sandbox */
     const rssUrl = 'https://finance.yahoo.com/news/rss';
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}&disableCache=true`;
+    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
     
     const container = document.getElementById('market-feed');
 
     try {
-      const response = await fetch(proxyUrl);
-      if (!response.ok) throw new Error("Network response was blocked.");
+      const response = await fetch(apiUrl);
+      if (!response.ok) throw new Error("Browser blocked the request or API is down.");
       
       const data = await response.json();
-      
-      /* Parse the raw XML returned by the feed */
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+      if (data.status !== 'ok') throw new Error("Feed source rejected the request.");
       
       /* Reverse the array so the absolute newest items get placed at the top of the feed */
-      const items = Array.from(xmlDoc.querySelectorAll("item")).reverse();
+      const items = data.items.reverse();
       
       /* Remove loading message once we have data */
       const loadingMsg = document.getElementById('loading-msg');
       if (loadingMsg) loadingMsg.remove();
 
       items.forEach(item => {
-        const title = item.querySelector("title").textContent;
-        const pubDate = item.querySelector("pubDate").textContent;
+        const title = item.title;
+        const pubDate = item.pubDate;
         
         /* Only process brand new headlines */
         if (!processedHeadlines.has(title)) {
