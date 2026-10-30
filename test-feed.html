@@ -3,53 +3,76 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Analyst Wire - Market Feed & Squawk</title>
+  <title>Analyst Wire - Market Squawk</title>
   <style>
     body {
-      background: #f4f4f9;
+      background: #0e1017;
+      color: #d1d5db;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
       padding: 20px;
-      font-family: Arial, sans-serif;
       margin: 0;
     }
     .widget-container {
-      max-width: 600px;
+      max-width: 850px;
       margin: 0 auto;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      background: #161922;
+      border: 1px solid #282d3c;
+      border-radius: 6px;
       overflow: hidden;
     }
     .widget-header {
-      background: #111;
-      color: #fff;
-      padding: 15px;
-      font-weight: bold;
+      background: #0a0b10;
+      padding: 14px 20px;
+      border-bottom: 1px solid #282d3c;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
+    .controls-panel {
+      padding: 15px 20px;
+      background: #11131b;
+      border-bottom: 1px solid #282d3c;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 0.9em;
+    }
+    .category-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #1f2330;
+    }
     .feed-container {
-      max-height: 500px;
+      max-height: 550px;
       overflow-y: auto;
     }
-    .loading-msg {
-      padding: 20px;
-      color: #666;
-      text-align: center;
-    }
     .news-item {
-      padding: 15px;
-      border-bottom: 1px solid #eee;
+      padding: 12px 20px;
+      border-bottom: 1px solid #1f2330;
+    }
+    .news-item.important {
+      border-left: 4px solid #ef4444;
+      background: rgba(239, 68, 68, 0.06);
     }
     .news-time {
-      color: #888;
+      color: #6b7280;
       font-size: 0.8em;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
     .news-title {
-      font-weight: bold;
-      font-size: 1.05em;
-      color: #333;
+      font-size: 0.98em;
+      line-height: 1.4;
+      color: #f3f4f6;
+    }
+    .badge-important {
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.7em;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-right: 6px;
     }
   </style>
 </head>
@@ -57,93 +80,136 @@
 
   <div class="widget-container">
     <div class="widget-header">
-      <span>Analyst Wire Market Feed</span>
-      <label style="cursor: pointer; font-size: 0.9em; font-weight: normal;">
-        <input type="checkbox" id="squawk-toggle"> Enable Audio Squawk
+      <span style="font-weight: bold; color: #00e676;">ANALYST WIRE // SQUAWK</span>
+      <label style="color: #f59e0b; font-weight: bold; cursor: pointer;">
+        <input type="checkbox" id="squawk-toggle"> 🔊 AUDIO SQUAWK
       </label>
+    </div>
+
+    <div class="controls-panel">
+      <label style="color: #ef4444; font-weight: bold; cursor: pointer;">
+        <input type="checkbox" id="importance-toggle"> ⚠️ IMPORTANT ONLY
+      </label>
+
+      <div class="category-filters">
+        <span style="color: #6b7280; font-weight: bold;">Categories:</span>
+        <label><input type="checkbox" class="cat-filter" value="centralBanks" checked> Central Banks</label>
+        <label><input type="checkbox" class="cat-filter" value="equities" checked> Equities</label>
+        <label><input type="checkbox" class="cat-filter" value="forex" checked> Forex</label>
+        <label><input type="checkbox" class="cat-filter" value="commodities" checked> Commodities</label>
+        <label><input type="checkbox" class="cat-filter" value="crypto" checked> Crypto</label>
+      </div>
     </div>
     
     <div id="market-feed" class="feed-container">
-      <div id="loading-msg" class="loading-msg">
-        Connecting securely to Finnhub API...
+      <div id="loading-msg" style="padding: 20px; color: #6b7280; text-align: center;">
+        Attempting direct connection... (Requires CORS Extension)
       </div>
     </div>
   </div>
 
   <script>
     const processedHeadlines = new Set();
-    
-    /* INSERT YOUR FREE FINNHUB API KEY HERE */
-    const API_KEY = 'YOUR_FINNHUB_API_KEY'; 
+
+    /* Asset Keyword Dictionaries */
+    const categoryKeywords = {
+      centralBanks: ['fed', 'fomc', 'ecb', 'boe', 'boj', 'rba', 'pboc', 'rate', 'powell', 'lagarde', 'inflation', 'cpi'],
+      equities: ['stock', 'shares', 'nasdaq', 'spx', 's&p', 'dow', 'earnings', 'wall street', 'nyse'],
+      forex: ['usd', 'eur', 'gbp', 'jpy', 'aud', 'cad', 'chf', 'nzd', 'forex', 'currency'],
+      commodities: ['gold', 'silver', 'oil', 'wti', 'brent', 'crude', 'copper', 'opec', 'energy'],
+      crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'sec']
+    };
+
+    /* Importance Keyword Triggers */
+    const importanceKeywords = [
+      'breaking', 'urgent', 'alert', 'flash', 'unexpected', 'surge', 'plunge', 'emergency'
+    ];
+
+    function checkImportance(title) {
+      const lower = title.toLowerCase();
+      const isAllUpper = title === title.toUpperCase() && title.length > 20;
+      return isAllUpper || importanceKeywords.some(kw => lower.includes(kw));
+    }
+
+    function getMatchedCategories(title) {
+      const lower = title.toLowerCase();
+      const matched = [];
+      for (const [category, keywords] of Object.entries(categoryKeywords)) {
+        if (keywords.some(kw => lower.includes(kw))) {
+          matched.push(category);
+        }
+      }
+      return matched;
+    }
 
     async function fetchMarketNews() {
-      /* Finnhub's general news endpoint allows CORS natively. No proxies needed. */
-      const apiUrl = `https://finnhub.io/api/v1/news?category=general&token=${API_KEY}`;
       const container = document.getElementById('market-feed');
+      
+      /* Direct connection to Yahoo Finance - NO PROXY */
+      const feedUrl = 'https://finance.yahoo.com/news/rss';
 
       try {
-        const response = await fetch(apiUrl);
+        const response = await fetch(feedUrl);
+        if (!response.ok) throw new Error("Direct fetch failed.");
         
-        if (!response.ok) {
-            throw new Error("Failed to connect to Finnhub.");
-        }
-        
-        const data = await response.json();
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+        const items = Array.from(xmlDoc.querySelectorAll("item")).reverse();
         
         const loadingMsg = document.getElementById('loading-msg');
         if (loadingMsg) loadingMsg.remove();
 
-        /* Finnhub returns an array of news objects. We'll take the latest 20 and reverse for UI stacking */
-        const items = data.slice(0, 20).reverse();
+        const audioEnabled = document.getElementById('squawk-toggle').checked;
+        const importantOnly = document.getElementById('importance-toggle').checked;
+        const activeCategories = Array.from(document.querySelectorAll('.cat-filter:checked')).map(cb => cb.value);
 
         items.forEach(item => {
-          const title = item.headline;
-          
-          /* Finnhub returns Unix timestamps in seconds */
-          const pubDate = new Date(item.datetime * 1000);
+          const title = item.querySelector("title")?.textContent;
+          const pubDate = item.querySelector("pubDate")?.textContent;
           
           if (title && !processedHeadlines.has(title)) {
             processedHeadlines.add(title);
-            
+
+            const isImportant = checkImportance(title);
+            const matchedCats = getMatchedCategories(title);
+            const passesCategory = matchedCats.length === 0 || matchedCats.some(cat => activeCategories.includes(cat));
+
+            if (importantOnly && !isImportant) return;
+            if (!passesCategory) return;
+
+            /* Render */
             const headlineEl = document.createElement('div');
-            headlineEl.className = 'news-item';
+            headlineEl.className = `news-item ${isImportant ? 'important' : ''}`;
             headlineEl.innerHTML = `
-              <div class="news-time">${pubDate.toLocaleTimeString()}</div>
-              <div class="news-title">${title}</div>
+              <div class="news-time">${new Date(pubDate).toLocaleTimeString()}</div>
+              <div class="news-title">
+                ${isImportant ? '<span class="badge-important">IMPORTANT</span>' : ''}
+                ${title}
+              </div>
             `;
-            
             container.prepend(headlineEl);
-            
-            /* CUSTOM AUDIO SQUAWK & FILTER LOGIC */
-            const audioEnabled = document.getElementById('squawk-toggle').checked;
-            const lowerTitle = title.toLowerCase();
-            
-            const isImportant = title.toUpperCase() === title || 
-                                lowerTitle.includes('breaking') || 
-                                lowerTitle.includes('fed') || 
-                                lowerTitle.includes('rate') || 
-                                lowerTitle.includes('ecb');
-            
-            const matchesCategory = lowerTitle.includes('gold') || 
-                                    lowerTitle.includes('oil') || 
-                                    lowerTitle.includes('stocks') || 
-                                    lowerTitle.includes('bitcoin');
-            
-            if (audioEnabled && (isImportant || matchesCategory)) {
+
+            /* Audio Squawk */
+            if (audioEnabled) {
+              window.speechSynthesis.cancel();
               const utterance = new SpeechSynthesisUtterance(title);
-              utterance.rate = 1.1; 
+              utterance.rate = 1.15;
               window.speechSynthesis.speak(utterance);
             }
           }
         });
         
       } catch (error) {
-        document.getElementById('loading-msg').innerHTML = `<span style="color: red; font-weight: bold;">Connection Error: ${error.message}</span>`;
+        const loadingMsg = document.getElementById('loading-msg');
+        if (loadingMsg) {
+          loadingMsg.innerHTML = `<span style="color: #ef4444; font-weight: bold;">Connection Error. Enable your CORS Browser Extension to allow direct fetching.</span>`;
+        }
       }
     }
 
     fetchMarketNews();
-    setInterval(fetchMarketNews, 30000);
+    setInterval(fetchMarketNews, 20000);
   </script>
 
 </body>
