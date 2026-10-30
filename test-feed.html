@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+l<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -6,43 +6,56 @@
   <title>Analyst Wire - Market Squawk</title>
   <style>
     body {
-      background: #0e1017;
-      color: #d1d5db;
+      background: #0a0e17;
+      color: #e2e8f0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-      padding: 20px;
+      padding: 15px;
       margin: 0;
     }
     .widget-container {
-      max-width: 850px;
+      max-width: 800px;
       margin: 0 auto;
-      background: #161922;
-      border: 1px solid #282d3c;
-      border-radius: 6px;
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
       overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.8);
     }
     .widget-header {
-      background: #0a0b10;
-      padding: 14px 20px;
-      border-bottom: 1px solid #282d3c;
+      background: #030712;
+      padding: 15px 20px;
+      border-bottom: 1px solid #1f2937;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
+    .widget-title {
+      font-weight: 800;
+      font-size: 1.1em;
+      color: #10b981;
+      letter-spacing: 0.5px;
+    }
     .controls-panel {
       padding: 15px 20px;
-      background: #11131b;
-      border-bottom: 1px solid #282d3c;
+      background: #0f172a;
+      border-bottom: 1px solid #1f2937;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      font-size: 0.9em;
+      font-size: 0.85em;
+    }
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
     }
     .category-filters {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
       padding-top: 10px;
-      border-top: 1px solid #1f2330;
+      border-top: 1px solid #1e293b;
     }
     .feed-container {
       max-height: 550px;
@@ -50,21 +63,22 @@
     }
     .news-item {
       padding: 12px 20px;
-      border-bottom: 1px solid #1f2330;
+      border-bottom: 1px solid #1e293b;
     }
     .news-item.important {
       border-left: 4px solid #ef4444;
-      background: rgba(239, 68, 68, 0.06);
+      background: rgba(239, 68, 68, 0.05);
     }
     .news-time {
-      color: #6b7280;
+      color: #64748b;
       font-size: 0.8em;
       margin-bottom: 4px;
+      font-weight: bold;
     }
     .news-title {
       font-size: 0.98em;
       line-height: 1.4;
-      color: #f3f4f6;
+      color: #f8fafc;
     }
     .badge-important {
       background: #ef4444;
@@ -73,26 +87,30 @@
       padding: 2px 6px;
       border-radius: 3px;
       margin-right: 6px;
+      font-weight: bold;
     }
+    label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
   </style>
 </head>
 <body>
 
   <div class="widget-container">
     <div class="widget-header">
-      <span style="font-weight: bold; color: #00e676;">ANALYST WIRE // SQUAWK</span>
-      <label style="color: #f59e0b; font-weight: bold; cursor: pointer;">
+      <span class="widget-title">ANALYST WIRE // SQUAWK</span>
+      <label style="color: #fbbf24; font-weight: bold;">
         <input type="checkbox" id="squawk-toggle"> 🔊 AUDIO SQUAWK
       </label>
     </div>
 
     <div class="controls-panel">
-      <label style="color: #ef4444; font-weight: bold; cursor: pointer;">
-        <input type="checkbox" id="importance-toggle"> ⚠️ IMPORTANT ONLY
-      </label>
+      <div class="control-row">
+        <label style="color: #ef4444; font-weight: bold;">
+          <input type="checkbox" id="importance-toggle"> ⚠️ IMPORTANT ONLY
+        </label>
+      </div>
 
       <div class="category-filters">
-        <span style="color: #6b7280; font-weight: bold;">Categories:</span>
+        <span style="color: #64748b; font-weight: bold;">Categories:</span>
         <label><input type="checkbox" class="cat-filter" value="centralBanks" checked> Central Banks</label>
         <label><input type="checkbox" class="cat-filter" value="equities" checked> Equities</label>
         <label><input type="checkbox" class="cat-filter" value="forex" checked> Forex</label>
@@ -102,28 +120,30 @@
     </div>
     
     <div id="market-feed" class="feed-container">
-      <div id="loading-msg" style="padding: 20px; color: #6b7280; text-align: center;">
-        Attempting direct connection... (Requires CORS Extension)
+      <div id="loading-msg" style="padding: 20px; color: #64748b; text-align: center;">
+        Awaiting API Key...
       </div>
     </div>
   </div>
 
   <script>
     const processedHeadlines = new Set();
+    
+    // ==========================================
+    // INSERT YOUR FREE FINNHUB API KEY HERE
+    // ==========================================
+    const API_KEY = 'YOUR_FINNHUB_KEY'; 
 
-    /* Asset Keyword Dictionaries */
+    /* Categorization Arrays */
     const categoryKeywords = {
-      centralBanks: ['fed', 'fomc', 'ecb', 'boe', 'boj', 'rba', 'pboc', 'rate', 'powell', 'lagarde', 'inflation', 'cpi'],
-      equities: ['stock', 'shares', 'nasdaq', 'spx', 's&p', 'dow', 'earnings', 'wall street', 'nyse'],
-      forex: ['usd', 'eur', 'gbp', 'jpy', 'aud', 'cad', 'chf', 'nzd', 'forex', 'currency'],
-      commodities: ['gold', 'silver', 'oil', 'wti', 'brent', 'crude', 'copper', 'opec', 'energy'],
+      centralBanks: ['fed', 'fomc', 'ecb', 'boe', 'boj', 'rba', 'rate', 'powell', 'lagarde', 'cpi', 'inflation'],
+      equities: ['stock', 'shares', 'nasdaq', 'spx', 's&p', 'dow', 'earnings', 'nyse'],
+      forex: ['usd', 'eur', 'gbp', 'jpy', 'aud', 'forex', 'currency', 'dollar'],
+      commodities: ['gold', 'silver', 'oil', 'wti', 'brent', 'crude', 'opec'],
       crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'sec']
     };
 
-    /* Importance Keyword Triggers */
-    const importanceKeywords = [
-      'breaking', 'urgent', 'alert', 'flash', 'unexpected', 'surge', 'plunge', 'emergency'
-    ];
+    const importanceKeywords = ['breaking', 'urgent', 'alert', 'unexpected', 'surge', 'plunge'];
 
     function checkImportance(title) {
       const lower = title.toLowerCase();
@@ -143,19 +163,20 @@
     }
 
     async function fetchMarketNews() {
+      if (API_KEY === 'YOUR_FINNHUB_KEY') {
+        document.getElementById('loading-msg').innerHTML = 'Please add your API key to the script.';
+        return;
+      }
+
       const container = document.getElementById('market-feed');
-      
-      /* Direct connection to Yahoo Finance - NO PROXY */
-      const feedUrl = 'https://finance.yahoo.com/news/rss';
+      const apiUrl = `https://finnhub.io/api/v1/news?category=general&token=${API_KEY}`;
 
       try {
-        const response = await fetch(feedUrl);
-        if (!response.ok) throw new Error("Direct fetch failed.");
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error("API Connection Failed.");
         
-        const xmlText = await response.text();
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-        const items = Array.from(xmlDoc.querySelectorAll("item")).reverse();
+        const data = await response.json();
+        const items = data.slice(0, 30).reverse(); // Process newest last so they stack on top
         
         const loadingMsg = document.getElementById('loading-msg');
         if (loadingMsg) loadingMsg.remove();
@@ -165,8 +186,8 @@
         const activeCategories = Array.from(document.querySelectorAll('.cat-filter:checked')).map(cb => cb.value);
 
         items.forEach(item => {
-          const title = item.querySelector("title")?.textContent;
-          const pubDate = item.querySelector("pubDate")?.textContent;
+          const title = item.headline;
+          const pubDate = new Date(item.datetime * 1000); // Finnhub uses Unix timestamps
           
           if (title && !processedHeadlines.has(title)) {
             processedHeadlines.add(title);
@@ -175,14 +196,15 @@
             const matchedCats = getMatchedCategories(title);
             const passesCategory = matchedCats.length === 0 || matchedCats.some(cat => activeCategories.includes(cat));
 
+            // Apply UI Filters
             if (importantOnly && !isImportant) return;
             if (!passesCategory) return;
 
-            /* Render */
+            // Render Headline
             const headlineEl = document.createElement('div');
             headlineEl.className = `news-item ${isImportant ? 'important' : ''}`;
             headlineEl.innerHTML = `
-              <div class="news-time">${new Date(pubDate).toLocaleTimeString()}</div>
+              <div class="news-time">${pubDate.toLocaleTimeString()}</div>
               <div class="news-title">
                 ${isImportant ? '<span class="badge-important">IMPORTANT</span>' : ''}
                 ${title}
@@ -190,7 +212,7 @@
             `;
             container.prepend(headlineEl);
 
-            /* Audio Squawk */
+            // Trigger Audio Squawk
             if (audioEnabled) {
               window.speechSynthesis.cancel();
               const utterance = new SpeechSynthesisUtterance(title);
@@ -201,10 +223,7 @@
         });
         
       } catch (error) {
-        const loadingMsg = document.getElementById('loading-msg');
-        if (loadingMsg) {
-          loadingMsg.innerHTML = `<span style="color: #ef4444; font-weight: bold;">Connection Error. Enable your CORS Browser Extension to allow direct fetching.</span>`;
-        }
+        document.getElementById('loading-msg').innerHTML = `<span style="color: #ef4444;">Error: ${error.message}</span>`;
       }
     }
 
