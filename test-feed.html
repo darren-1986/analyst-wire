@@ -334,6 +334,7 @@
         <label><input type="checkbox" class="cat-filter" value="forex" checked onchange="applyFilters()"> Forex</label>
         <label><input type="checkbox" class="cat-filter" value="commodities" checked onchange="applyFilters()"> Commodities</label>
         <label><input type="checkbox" class="cat-filter" value="crypto" checked onchange="applyFilters()"> Crypto</label>
+        <label><input type="checkbox" class="cat-filter" value="mergers" checked onchange="applyFilters()"> Mergers</label>
         <label style="color: #f97316; font-weight: bold;"><input type="checkbox" id="importance-toggle" onchange="applyFilters()"> BREAKING ONLY</label>
       </div>
     </div>
@@ -543,14 +544,15 @@
     let allHeadlines = []; 
     let visibleCount = 20; 
     let unreadCount = 0;
-    const CACHE_KEY = 'aw_squawk_v5_cache';
+    const CACHE_KEY = 'aw_squawk_v6_cache';
 
     const uiCategoryKeywords = {
       centralbanks: ['fed', 'fomc', 'ecb', 'boe', 'boj', 'rba', 'rate', 'powell', 'lagarde', 'cpi', 'inflation'],
       equities: ['stock', 'shares', 'nasdaq', 'spx', 's&p', 'dow', 'earnings', 'nyse'],
       forex: ['usd', 'eur', 'gbp', 'jpy', 'aud', 'forex', 'currency', 'dollar'],
       commodities: ['gold', 'silver', 'oil', 'wti', 'brent', 'crude', 'opec', 'copper'],
-      crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'sec', 'binance']
+      crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'sec', 'binance'],
+      mergers: ['merger', 'acquisition', 'buyout', 'takeover']
     };
     
     function togglePanel(panelId) {
@@ -616,9 +618,20 @@
       filteredHeadlines.slice(0, visibleCount).forEach((item, index) => {
         const pubDate = new Date(item.datetime * 1000);
         
-        const timeStr = pubDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-        const dateStr = pubDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        const tzStr = pubDate.toLocaleTimeString(undefined, { timeZoneName: 'short' }).split(' ')[2] || '';
+        // Explicit Timezone Resolution to lock formatting to local device clock
+        const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        
+        const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: userTimeZone };
+        const dateOptions = { month: 'short', day: 'numeric', timeZone: userTimeZone };
+        const tzOptions = { timeZoneName: 'short', timeZone: userTimeZone };
+        
+        const timeStr = pubDate.toLocaleTimeString(undefined, timeOptions);
+        const dateStr = pubDate.toLocaleDateString(undefined, dateOptions);
+        
+        // Extract localized timezone acronym (e.g. WITA, GMT+8)
+        const fullTzString = pubDate.toLocaleTimeString(undefined, tzOptions);
+        const tzParts = fullTzString.split(' ');
+        const tzStr = tzParts[tzParts.length - 1] || '';
 
         let tagsHtml = '';
         if (item.isImportant) {
@@ -662,10 +675,26 @@
     async function fetchMarketNews() {
       if (API_KEY === 'YOUR_FINNHUB_KEY') return;
       try {
-        // Appending timestamp to bypass mobile browser caching and pull actual live data
-        const response = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${API_KEY}&_t=${Date.now()}`, { cache: 'no-store' });
-        if (!response.ok) return;
-        const fetchedItems = await response.json();
+        // Fetch all 4 free Finnhub news categories concurrently to maximize data coverage
+        const categories = ['general', 'forex', 'crypto', 'merger'];
+        const fetchPromises = categories.map(cat => 
+            fetch(`https://finnhub.io/api/v1/news?category=${cat}&token=${API_KEY}&_t=${Date.now()}`, { cache: 'no-store' })
+            .then(res => res.ok ? res.json() : [])
+            .catch(() => [])
+        );
+        
+        const results = await Promise.all(fetchPromises);
+        const rawItems = results.flat();
+        
+        // Deduplicate cross-category items by Finnhub ID
+        const fetchedItems = [];
+        const seenIds = new Set();
+        rawItems.forEach(item => {
+            if (!seenIds.has(item.id)) {
+                seenIds.add(item.id);
+                fetchedItems.push(item);
+            }
+        });
         
         let newItemsAdded = false;
         let latestAudioItem = null;
