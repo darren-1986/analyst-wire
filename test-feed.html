@@ -14,7 +14,7 @@
       margin: 0;
     }
     .widget-container {
-      max-width: 800px;
+      max-width: 850px;
       margin: 0 auto;
       background: #111827;
       border: 1px solid #1f2937;
@@ -42,63 +42,95 @@
       background: #0f172a;
       border-bottom: 1px solid #1f2937;
       display: flex;
-      flex-direction: column;
-      gap: 12px;
-      font-size: 0.85em;
-    }
-    .control-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       gap: 15px;
+      align-items: center;
       flex-wrap: wrap;
     }
+    
+    /* Modern Inputs */
     .search-box {
       background: #1e293b;
       border: 1px solid #334155;
       color: #fff;
-      padding: 8px 12px;
-      border-radius: 4px;
+      padding: 9px 14px;
+      border-radius: 6px;
       width: 100%;
       max-width: 250px;
       font-family: inherit;
     }
-    .search-box:focus {
-      outline: none;
-      border-color: #3b82f6;
-    }
-    .category-filters {
+    .search-box:focus { outline: none; border-color: #3b82f6; }
+    
+    /* Custom Dropdown Styling */
+    .dropdown { position: relative; display: inline-block; }
+    .dropbtn {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 9px 16px;
+      font-size: 0.9em;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: bold;
       display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      padding-top: 10px;
-      border-top: 1px solid #1e293b;
       align-items: center;
+      gap: 8px;
     }
+    .dropbtn:hover { background: #334155; }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #1e293b;
+      min-width: 220px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.8);
+      border: 1px solid #334155;
+      border-radius: 6px;
+      z-index: 100;
+      top: 110%;
+      padding: 8px 0;
+    }
+    .dropdown-content.show { display: block; }
+    .dropdown-content label {
+      color: #e2e8f0;
+      padding: 8px 16px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+    .dropdown-content label:hover { background-color: #334155; }
+    .dropdown-divider { border-bottom: 1px solid #334155; margin: 4px 0; }
+
+    .toggle-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.9em; cursor: pointer; font-weight: bold;
+    }
+
     .feed-container {
-      max-height: 550px;
+      max-height: 600px;
       overflow-y: auto;
       position: relative;
       scroll-behavior: smooth;
     }
+    
+    /* Headline Items */
     .news-item {
-      padding: 14px 20px;
+      padding: 16px 20px;
       border-bottom: 1px solid #1e293b;
       transition: background 0.2s ease;
+      cursor: pointer;
     }
-    
-    /* Highlight for the absolute newest headline */
+    .news-item:hover { background: #151e2f; }
     .news-item.latest-headline {
-      background: rgba(16, 185, 129, 0.08);
+      background: rgba(16, 185, 129, 0.05);
       border-left: 3px solid #10b981;
     }
-    .news-item.important {
-      border-left: 3px solid #ef4444;
-      background: rgba(239, 68, 68, 0.05);
-    }
+    .news-item.important { border-left: 3px solid #ef4444; }
     .news-item.important.latest-headline {
       border-left: 3px solid #ef4444;
-      background: linear-gradient(90deg, rgba(239,68,68,0.1) 0%, rgba(16,185,129,0.05) 100%);
+      background: linear-gradient(90deg, rgba(239,68,68,0.1) 0%, rgba(16,185,129,0.02) 100%);
     }
 
     .news-meta {
@@ -111,19 +143,14 @@
       color: #94a3b8;
       font-size: 0.8em;
       font-weight: 600;
-      letter-spacing: 0.5px;
     }
-    .tags-container {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
+    .tags-container { display: flex; gap: 6px; flex-wrap: wrap; }
     
-    /* Modern Tag Pills */
+    /* Tag Pills */
     .tag {
-      font-size: 0.7em;
-      padding: 2px 8px;
-      border-radius: 12px;
+      font-size: 0.65em;
+      padding: 3px 8px;
+      border-radius: 4px;
       font-weight: bold;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -134,38 +161,62 @@
     .tag-forex { background: #1e3a8a; color: #93c5fd; border: 1px solid #3b82f6; }
     .tag-commodities { background: #78350f; color: #fcd34d; border: 1px solid #d97706; }
     .tag-crypto { background: #4c1d95; color: #c4b5fd; border: 1px solid #8b5cf6; }
+    .tag-tech { background: #0f766e; color: #5eead4; border: 1px solid #14b8a6; }
+    .tag-energy { background: #831843; color: #f9a8d4; border: 1px solid #db2777; }
     .tag-important { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
 
     .news-title {
       font-size: 1.05em;
       line-height: 1.4;
       color: #f8fafc;
+      display: flex;
+      align-items: center;
     }
-    
-    /* New Headline Alert Pop-up */
-    .new-alert-btn {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #3b82f6;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-weight: bold;
-      font-size: 0.85em;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      display: none;
-      z-index: 100;
-      transition: background 0.2s;
-    }
-    .new-alert-btn:hover {
-      background: #2563eb;
+    .expand-icon {
+      margin-left: auto;
+      font-size: 0.8em;
+      color: #64748b;
+      transition: transform 0.2s;
     }
 
-    label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    /* Expandable Summary Content */
+    .news-summary {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      background: #0f172a;
+      border-radius: 6px;
+      border: 1px solid #1e293b;
+      font-size: 0.9em;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+    .news-item.expanded .news-summary { display: block; }
+    .news-item.expanded .expand-icon { transform: rotate(180deg); }
+    .news-source-link {
+      display: inline-block;
+      margin-top: 8px;
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .news-source-link:hover { text-decoration: underline; }
+
+    /* Load More / Alerts */
+    .load-more-container { padding: 20px; text-align: center; border-top: 1px solid #1e293b; }
+    .btn-action {
+      background: #1e293b; color: #e2e8f0; border: 1px solid #334155;
+      padding: 8px 20px; border-radius: 20px; font-weight: bold;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-action:hover { background: #3b82f6; border-color: #3b82f6; }
+    
+    .new-alert-btn {
+      position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+      background: #3b82f6; color: white; border: none; padding: 8px 16px;
+      border-radius: 20px; font-weight: bold; font-size: 0.85em; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: none; z-index: 100;
+    }
   </style>
 </head>
 <body>
@@ -173,221 +224,267 @@
   <div class="widget-container">
     <div class="widget-header">
       <span class="widget-title">ANALYST WIRE // SQUAWK</span>
-      <label style="color: #fbbf24; font-weight: bold;">
+      <label class="toggle-label" style="color: #fbbf24;">
         <input type="checkbox" id="squawk-toggle"> 🔊 AUDIO SQUAWK
       </label>
     </div>
 
     <div class="controls-panel">
-      <div class="control-row">
-        <label style="color: #ef4444; font-weight: bold;">
-          <input type="checkbox" id="importance-toggle" onchange="applyFilters()"> ⚠️ IMPORTANT ONLY
-        </label>
-        <input type="text" id="search-box" class="search-box" placeholder="Search headlines..." onkeyup="applyFilters()">
+      <div class="dropdown">
+        <button class="dropbtn" onclick="toggleDropdown()">Categories ▼</button>
+        <div id="cat-dropdown" class="dropdown-content">
+          <label><input type="checkbox" id="cat-all" checked onchange="toggleAllCategories()"> All Categories</label>
+          <div class="dropdown-divider"></div>
+          <label><input type="checkbox" class="cat-filter" value="centralbanks" checked onchange="applyFilters()"> Central Banks</label>
+          <label><input type="checkbox" class="cat-filter" value="equities" checked onchange="applyFilters()"> Equities</label>
+          <label><input type="checkbox" class="cat-filter" value="forex" checked onchange="applyFilters()"> Forex</label>
+          <label><input type="checkbox" class="cat-filter" value="commodities" checked onchange="applyFilters()"> Commodities</label>
+          <label><input type="checkbox" class="cat-filter" value="crypto" checked onchange="applyFilters()"> Crypto</label>
+          <label><input type="checkbox" class="cat-filter" value="tech" checked onchange="applyFilters()"> Technology</label>
+          <label><input type="checkbox" class="cat-filter" value="energy" checked onchange="applyFilters()"> Energy</label>
+        </div>
       </div>
-
-      <div class="category-filters">
-        <span style="color: #64748b; font-weight: bold;">Filters:</span>
-        <label><input type="checkbox" class="cat-filter" value="centralbanks" checked onchange="applyFilters()"> Central Banks</label>
-        <label><input type="checkbox" class="cat-filter" value="equities" checked onchange="applyFilters()"> Equities</label>
-        <label><input type="checkbox" class="cat-filter" value="forex" checked onchange="applyFilters()"> Forex</label>
-        <label><input type="checkbox" class="cat-filter" value="commodities" checked onchange="applyFilters()"> Commodities</label>
-        <label><input type="checkbox" class="cat-filter" value="crypto" checked onchange="applyFilters()"> Crypto</label>
-      </div>
+      
+      <label class="toggle-label" style="color: #ef4444;">
+        <input type="checkbox" id="importance-toggle" onchange="applyFilters()"> ⚠️ IMPORTANT
+      </label>
+      
+      <input type="text" id="search-box" class="search-box" placeholder="Search headlines..." onkeyup="applyFilters()">
     </div>
     
     <div style="position: relative;">
       <button id="new-alert-btn" class="new-alert-btn" onclick="scrollToTop()">↑ New Headlines</button>
       <div id="market-feed" class="feed-container" onscroll="handleScroll()">
-        <div id="loading-msg" style="padding: 20px; color: #64748b; text-align: center;">
-          Connecting to feed...
+        <div id="feed-content"></div>
+        <div class="load-more-container">
+          <button id="load-more-btn" class="btn-action" onclick="loadMore()">Load More Headlines</button>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const processedHeadlines = new Set();
-    const feedContainer = document.getElementById('market-feed');
-    let unreadCount = 0;
-    
     // ==========================================
     // INSERT YOUR FREE FINNHUB API KEY HERE
     // ==========================================
     const API_KEY = 'd9fjrs9r01qu5nhepvo0d9fjrs9r01qu5nhepvog'; 
 
+    let allHeadlines = []; // Master array holding all cached & new items
+    let visibleCount = 20; 
+    let unreadCount = 0;
+    const CACHE_KEY = 'aw_news_cache';
+
     /* Categorization Arrays */
     const categoryKeywords = {
       centralbanks: ['fed', 'fomc', 'ecb', 'boe', 'boj', 'rba', 'rate', 'powell', 'lagarde', 'cpi', 'inflation'],
-      equities: ['stock', 'shares', 'nasdaq', 'spx', 's&p', 'dow', 'earnings', 'nyse'],
-      forex: ['usd', 'eur', 'gbp', 'jpy', 'aud', 'forex', 'currency', 'dollar'],
-      commodities: ['gold', 'silver', 'oil', 'wti', 'brent', 'crude', 'opec'],
-      crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'sec']
+      equities: ['stock', 'shares', 'nasdaq', 'spx', 's&p', 'dow', 'earnings', 'nyse', 'dividend'],
+      forex: ['usd', 'eur', 'gbp', 'jpy', 'aud', 'forex', 'currency', 'dollar', 'fx'],
+      commodities: ['gold', 'silver', 'oil', 'wti', 'brent', 'crude', 'opec', 'copper'],
+      crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'sec', 'binance', 'etf'],
+      tech: ['apple', 'microsoft', 'google', 'alphabet', 'meta', 'nvidia', 'ai', 'tech', 'semiconductor'],
+      energy: ['energy', 'gas', 'solar', 'exxon', 'chevron', 'power']
     };
 
     const importanceKeywords = ['breaking', 'urgent', 'alert', 'unexpected', 'surge', 'plunge'];
 
+    // --- Dropdown Logic ---
+    function toggleDropdown() {
+      document.getElementById("cat-dropdown").classList.toggle("show");
+    }
+    window.onclick = function(event) {
+      if (!event.target.matches('.dropbtn')) {
+        let dropdowns = document.getElementsByClassName("dropdown-content");
+        for (let i = 0; i < dropdowns.length; i++) {
+          if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('show');
+        }
+      }
+    }
+    function toggleAllCategories() {
+      const isChecked = document.getElementById('cat-all').checked;
+      document.querySelectorAll('.cat-filter').forEach(cb => cb.checked = isChecked);
+      applyFilters();
+    }
+    function updateAllCheckboxState() {
+      const allChecked = Array.from(document.querySelectorAll('.cat-filter')).every(cb => cb.checked);
+      document.getElementById('cat-all').checked = allChecked;
+    }
+
+    // --- Data Processing ---
     function checkImportance(title) {
       const lower = title.toLowerCase();
-      return (title === title.toUpperCase() && title.length > 20) || importanceKeywords.some(kw => lower.includes(kw));
+      return (title === title.toUpperCase() && title.length > 15) || importanceKeywords.some(kw => lower.includes(kw));
     }
 
     function getMatchedCategories(title, finnhubCategory) {
       const lower = title.toLowerCase();
       let matched = new Set();
-      
-      // Map Finnhub's native category if provided
-      if (finnhubCategory && finnhubCategory !== 'general') {
-         matched.add(finnhubCategory.toLowerCase());
-      }
-      
-      // Map custom keywords
+      if (finnhubCategory && finnhubCategory !== 'general') matched.add(finnhubCategory.toLowerCase());
       for (const [category, keywords] of Object.entries(categoryKeywords)) {
-        if (keywords.some(kw => lower.includes(kw))) {
-          matched.add(category);
-        }
+        if (keywords.some(kw => lower.includes(kw))) matched.add(category);
       }
-      
       if (matched.size === 0) matched.add('general');
       return Array.from(matched);
     }
 
-    // Filter Logic for Checkboxes and Search Box
-    function applyFilters() {
+    function squawk(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.15;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // --- Core Engine & Rendering ---
+    function loadCache() {
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          allHeadlines = JSON.parse(cached);
+          renderFeed();
+        }
+      } catch (e) { console.warn("Cache blocked."); }
+    }
+
+    function saveCache() {
+      try {
+        // Keep the latest 100 in browser memory to avoid size limits
+        localStorage.setItem(CACHE_KEY, JSON.stringify(allHeadlines.slice(0, 100)));
+      } catch (e) {}
+    }
+
+    function renderFeed() {
+      const container = document.getElementById('feed-content');
+      container.innerHTML = '';
+      
       const importantOnly = document.getElementById('importance-toggle').checked;
       const searchQuery = document.getElementById('search-box').value.toLowerCase();
       const activeCategories = Array.from(document.querySelectorAll('.cat-filter:checked')).map(cb => cb.value);
-      
-      const items = document.querySelectorAll('.news-item');
-      
-      items.forEach(item => {
-        const title = item.getAttribute('data-title').toLowerCase();
-        const isImportant = item.getAttribute('data-important') === 'true';
-        const tags = item.getAttribute('data-tags').split(',');
 
+      // 1. Filter the master array based on UI selections
+      const filteredHeadlines = allHeadlines.filter(item => {
+        const title = item.headline.toLowerCase();
         const matchesSearch = title.includes(searchQuery);
-        const matchesImportance = !importantOnly || isImportant;
-        const matchesCategory = tags.includes('general') || tags.some(tag => activeCategories.includes(tag));
+        const matchesImportance = !importantOnly || item.isImportant;
+        const matchesCategory = item.tags.includes('general') || item.tags.some(tag => activeCategories.includes(tag));
+        return matchesSearch && matchesImportance && matchesCategory;
+      });
 
-        if (matchesSearch && matchesImportance && matchesCategory) {
-          item.style.display = 'block';
-        } else {
-          item.style.display = 'none';
-        }
+      // 2. Hide or show Load More button
+      document.getElementById('load-more-btn').style.display = filteredHeadlines.length > visibleCount ? 'inline-block' : 'none';
+
+      // 3. Render only the visible chunk
+      const headlinesToRender = filteredHeadlines.slice(0, visibleCount);
+      
+      headlinesToRender.forEach((item, index) => {
+        // Formats to device timezone automatically (e.g. GMT+8 / WITA)
+        const formattedTime = new Date(item.datetime * 1000).toLocaleString(undefined, { 
+            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' 
+        });
+
+        let tagsHtml = '';
+        if (item.isImportant) tagsHtml += `<span class="tag tag-important">Important</span>`;
+        item.tags.forEach(cat => {
+          tagsHtml += `<span class="tag tag-${cat.replace(/[^a-zA-Z0-9]/g, '')}">${cat}</span>`;
+        });
+
+        const el = document.createElement('div');
+        // Apply highlight only if it is the absolute newest item in the unfiltered array
+        const isAbsoluteLatest = allHeadlines.length > 0 && item.id === allHeadlines[0].id;
+        el.className = `news-item ${item.isImportant ? 'important' : ''} ${isAbsoluteLatest ? 'latest-headline' : ''}`;
+        
+        // Expandable click handler
+        el.onclick = function() { this.classList.toggle('expanded'); };
+
+        el.innerHTML = `
+          <div class="news-meta">
+            <span class="news-time">${formattedTime}</span>
+            <div class="tags-container">${tagsHtml}</div>
+          </div>
+          <div class="news-title">
+            ${item.headline}
+            <span class="expand-icon">▼</span>
+          </div>
+          <div class="news-summary" onclick="event.stopPropagation();">
+            ${item.summary || 'No additional summary provided.'}
+            <br>
+            ${item.url ? `<a href="${item.url}" target="_blank" class="news-source-link">Read Full Article &rarr;</a>` : ''}
+          </div>
+        `;
+        container.appendChild(el);
       });
     }
 
-    // Scroll Logic for "New Headlines" Alert
-    function handleScroll() {
-      if (feedContainer.scrollTop < 50) {
-        document.getElementById('new-alert-btn').style.display = 'none';
-        unreadCount = 0;
-      }
+    function applyFilters() {
+      updateAllCheckboxState();
+      visibleCount = 20; // Reset pagination on new filter search
+      renderFeed();
     }
 
-    function scrollToTop() {
-      feedContainer.scrollTo({ top: 0, behavior: 'smooth' });
-      document.getElementById('new-alert-btn').style.display = 'none';
-      unreadCount = 0;
+    function loadMore() {
+      visibleCount += 20;
+      renderFeed();
     }
 
     async function fetchMarketNews() {
-      if (API_KEY === 'YOUR_FINNHUB_KEY') {
-        document.getElementById('loading-msg').innerHTML = 'Please add your API key to the script.';
-        return;
-      }
-
-      const apiUrl = `https://finnhub.io/api/v1/news?category=general&token=${API_KEY}`;
-
+      if (API_KEY === 'YOUR_FINNHUB_KEY') return;
       try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error("API Connection Failed.");
+        const response = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${API_KEY}`);
+        if (!response.ok) return;
+        const fetchedItems = await response.json();
         
-        const data = await response.json();
-        const items = data.slice(0, 30).reverse(); 
-        
-        const loadingMsg = document.getElementById('loading-msg');
-        if (loadingMsg) loadingMsg.remove();
-
-        const audioEnabled = document.getElementById('squawk-toggle').checked;
         let newItemsAdded = false;
+        let latestAudioHeadline = null;
 
-        items.forEach(item => {
-          const title = item.headline;
-          
-          if (title && !processedHeadlines.has(title)) {
-            processedHeadlines.add(title);
+        fetchedItems.forEach(item => {
+          // If headline doesn't exist in our master array, process it
+          if (!allHeadlines.some(existing => existing.id === item.id)) {
+            item.isImportant = checkImportance(item.headline);
+            item.tags = getMatchedCategories(item.headline, item.category);
+            allHeadlines.push(item);
             newItemsAdded = true;
-
-            const isImportant = checkImportance(title);
-            const matchedCats = getMatchedCategories(title, item.category);
-
-            // Date Formatting (Automatically uses local device timezone, e.g. GMT+8 / WITA)
-            const pubDate = new Date(item.datetime * 1000);
-            const formattedTime = pubDate.toLocaleString('en-US', { 
-                month: 'short', day: 'numeric', 
-                hour: 'numeric', minute: '2-digit', 
-                timeZoneName: 'short' 
-            });
-
-            // Build Tag HTML
-            let tagsHtml = '';
-            if (isImportant) tagsHtml += `<span class="tag tag-important">Important</span>`;
-            matchedCats.forEach(cat => {
-              const safeClass = cat.replace(/[^a-zA-Z0-9]/g, '');
-              tagsHtml += `<span class="tag tag-${safeClass}">${cat}</span>`;
-            });
-
-            // Render Headline
-            const headlineEl = document.createElement('div');
-            // Remove highlight from previous newest item
-            document.querySelectorAll('.latest-headline').forEach(el => el.classList.remove('latest-headline'));
             
-            headlineEl.className = `news-item latest-headline ${isImportant ? 'important' : ''}`;
-            headlineEl.setAttribute('data-title', title);
-            headlineEl.setAttribute('data-important', isImportant);
-            headlineEl.setAttribute('data-tags', matchedCats.join(','));
-            
-            headlineEl.innerHTML = `
-              <div class="news-meta">
-                <span class="news-time">${formattedTime}</span>
-                <div class="tags-container">${tagsHtml}</div>
-              </div>
-              <div class="news-title">${title}</div>
-            `;
-            
-            feedContainer.prepend(headlineEl);
-
-            // Trigger Audio Squawk
-            if (audioEnabled) {
-              window.speechSynthesis.cancel();
-              const utterance = new SpeechSynthesisUtterance(title);
-              utterance.rate = 1.15;
-              window.speechSynthesis.speak(utterance);
+            // Queue the newest relevant item for audio squawk
+            if (document.getElementById('squawk-toggle').checked) {
+               const activeCats = Array.from(document.querySelectorAll('.cat-filter:checked')).map(cb => cb.value);
+               const passesCat = item.tags.includes('general') || item.tags.some(tag => activeCats.includes(tag));
+               if (passesCat) latestAudioHeadline = item.headline;
             }
           }
         });
 
-        // Trigger filters on newly added items
         if (newItemsAdded) {
-            applyFilters();
-            
-            // Show "New Headlines" button if user has scrolled down
-            if (feedContainer.scrollTop > 50) {
-                unreadCount++;
-                const alertBtn = document.getElementById('new-alert-btn');
-                alertBtn.innerText = `↑ ${unreadCount} New Headline${unreadCount > 1 ? 's' : ''}`;
-                alertBtn.style.display = 'block';
-            }
+          // Strict chronological sort (newest timestamp first) guarantees correct stacking
+          allHeadlines.sort((a, b) => b.datetime - a.datetime);
+          saveCache();
+          renderFeed();
+          
+          if (latestAudioHeadline) squawk(latestAudioHeadline);
+          
+          // Show alert if scrolled down
+          const feedEl = document.getElementById('market-feed');
+          if (feedEl.scrollTop > 100) {
+            unreadCount++;
+            const alertBtn = document.getElementById('new-alert-btn');
+            alertBtn.innerText = `↑ ${unreadCount} New Headline${unreadCount > 1 ? 's' : ''}`;
+            alertBtn.style.display = 'block';
+          }
         }
-        
-      } catch (error) {
-        if(document.getElementById('loading-msg')) {
-           document.getElementById('loading-msg').innerHTML = `<span style="color: #ef4444;">Error: ${error.message}</span>`;
-        }
-      }
+      } catch (error) { console.error("Fetch error:", error); }
     }
 
+    // Scroll Logic
+    function handleScroll() {
+      if (document.getElementById('market-feed').scrollTop < 50) {
+        document.getElementById('new-alert-btn').style.display = 'none';
+        unreadCount = 0;
+      }
+    }
+    function scrollToTop() {
+      document.getElementById('market-feed').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Boot Up
+    loadCache();
     fetchMarketNews();
     setInterval(fetchMarketNews, 20000);
   </script>
