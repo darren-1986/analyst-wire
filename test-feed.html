@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Analyst Wire - Market Squawk</title>
   <style>
+    * { box-sizing: border-box; }
     body {
       background: #0a0e17;
       color: #e2e8f0;
@@ -20,6 +21,7 @@
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+      position: relative;
     }
     .widget-header {
       background: #030712;
@@ -47,8 +49,23 @@
     .control-row {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 15px;
       flex-wrap: wrap;
+    }
+    .search-box {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      width: 100%;
+      max-width: 250px;
+      font-family: inherit;
+    }
+    .search-box:focus {
+      outline: none;
+      border-color: #3b82f6;
     }
     .category-filters {
       display: flex;
@@ -56,39 +73,98 @@
       gap: 12px;
       padding-top: 10px;
       border-top: 1px solid #1e293b;
+      align-items: center;
     }
     .feed-container {
       max-height: 550px;
       overflow-y: auto;
+      position: relative;
+      scroll-behavior: smooth;
     }
     .news-item {
-      padding: 12px 20px;
+      padding: 14px 20px;
       border-bottom: 1px solid #1e293b;
+      transition: background 0.2s ease;
+    }
+    
+    /* Highlight for the absolute newest headline */
+    .news-item.latest-headline {
+      background: rgba(16, 185, 129, 0.08);
+      border-left: 3px solid #10b981;
     }
     .news-item.important {
-      border-left: 4px solid #ef4444;
+      border-left: 3px solid #ef4444;
       background: rgba(239, 68, 68, 0.05);
     }
-    .news-time {
-      color: #64748b;
-      font-size: 0.8em;
-      margin-bottom: 4px;
-      font-weight: bold;
+    .news-item.important.latest-headline {
+      border-left: 3px solid #ef4444;
+      background: linear-gradient(90deg, rgba(239,68,68,0.1) 0%, rgba(16,185,129,0.05) 100%);
     }
+
+    .news-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .news-time {
+      color: #94a3b8;
+      font-size: 0.8em;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .tags-container {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    
+    /* Modern Tag Pills */
+    .tag {
+      font-size: 0.7em;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tag-general { background: #334155; color: #f8fafc; }
+    .tag-centralbanks { background: #0c4a6e; color: #7dd3fc; border: 1px solid #0284c7; }
+    .tag-equities { background: #14532d; color: #86efac; border: 1px solid #22c55e; }
+    .tag-forex { background: #1e3a8a; color: #93c5fd; border: 1px solid #3b82f6; }
+    .tag-commodities { background: #78350f; color: #fcd34d; border: 1px solid #d97706; }
+    .tag-crypto { background: #4c1d95; color: #c4b5fd; border: 1px solid #8b5cf6; }
+    .tag-important { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
+
     .news-title {
-      font-size: 0.98em;
+      font-size: 1.05em;
       line-height: 1.4;
       color: #f8fafc;
     }
-    .badge-important {
-      background: #ef4444;
-      color: #fff;
-      font-size: 0.7em;
-      padding: 2px 6px;
-      border-radius: 3px;
-      margin-right: 6px;
+    
+    /* New Headline Alert Pop-up */
+    .new-alert-btn {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
       font-weight: bold;
+      font-size: 0.85em;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      display: none;
+      z-index: 100;
+      transition: background 0.2s;
     }
+    .new-alert-btn:hover {
+      background: #2563eb;
+    }
+
     label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
   </style>
 </head>
@@ -105,29 +181,35 @@
     <div class="controls-panel">
       <div class="control-row">
         <label style="color: #ef4444; font-weight: bold;">
-          <input type="checkbox" id="importance-toggle"> ⚠️ IMPORTANT ONLY
+          <input type="checkbox" id="importance-toggle" onchange="applyFilters()"> ⚠️ IMPORTANT ONLY
         </label>
+        <input type="text" id="search-box" class="search-box" placeholder="Search headlines..." onkeyup="applyFilters()">
       </div>
 
       <div class="category-filters">
-        <span style="color: #64748b; font-weight: bold;">Categories:</span>
-        <label><input type="checkbox" class="cat-filter" value="centralBanks" checked> Central Banks</label>
-        <label><input type="checkbox" class="cat-filter" value="equities" checked> Equities</label>
-        <label><input type="checkbox" class="cat-filter" value="forex" checked> Forex</label>
-        <label><input type="checkbox" class="cat-filter" value="commodities" checked> Commodities</label>
-        <label><input type="checkbox" class="cat-filter" value="crypto" checked> Crypto</label>
+        <span style="color: #64748b; font-weight: bold;">Filters:</span>
+        <label><input type="checkbox" class="cat-filter" value="centralbanks" checked onchange="applyFilters()"> Central Banks</label>
+        <label><input type="checkbox" class="cat-filter" value="equities" checked onchange="applyFilters()"> Equities</label>
+        <label><input type="checkbox" class="cat-filter" value="forex" checked onchange="applyFilters()"> Forex</label>
+        <label><input type="checkbox" class="cat-filter" value="commodities" checked onchange="applyFilters()"> Commodities</label>
+        <label><input type="checkbox" class="cat-filter" value="crypto" checked onchange="applyFilters()"> Crypto</label>
       </div>
     </div>
     
-    <div id="market-feed" class="feed-container">
-      <div id="loading-msg" style="padding: 20px; color: #64748b; text-align: center;">
-        Awaiting API Key...
+    <div style="position: relative;">
+      <button id="new-alert-btn" class="new-alert-btn" onclick="scrollToTop()">↑ New Headlines</button>
+      <div id="market-feed" class="feed-container" onscroll="handleScroll()">
+        <div id="loading-msg" style="padding: 20px; color: #64748b; text-align: center;">
+          Connecting to feed...
+        </div>
       </div>
     </div>
   </div>
 
   <script>
     const processedHeadlines = new Set();
+    const feedContainer = document.getElementById('market-feed');
+    let unreadCount = 0;
     
     // ==========================================
     // INSERT YOUR FREE FINNHUB API KEY HERE
@@ -136,7 +218,7 @@
 
     /* Categorization Arrays */
     const categoryKeywords = {
-      centralBanks: ['fed', 'fomc', 'ecb', 'boe', 'boj', 'rba', 'rate', 'powell', 'lagarde', 'cpi', 'inflation'],
+      centralbanks: ['fed', 'fomc', 'ecb', 'boe', 'boj', 'rba', 'rate', 'powell', 'lagarde', 'cpi', 'inflation'],
       equities: ['stock', 'shares', 'nasdaq', 'spx', 's&p', 'dow', 'earnings', 'nyse'],
       forex: ['usd', 'eur', 'gbp', 'jpy', 'aud', 'forex', 'currency', 'dollar'],
       commodities: ['gold', 'silver', 'oil', 'wti', 'brent', 'crude', 'opec'],
@@ -147,19 +229,66 @@
 
     function checkImportance(title) {
       const lower = title.toLowerCase();
-      const isAllUpper = title === title.toUpperCase() && title.length > 20;
-      return isAllUpper || importanceKeywords.some(kw => lower.includes(kw));
+      return (title === title.toUpperCase() && title.length > 20) || importanceKeywords.some(kw => lower.includes(kw));
     }
 
-    function getMatchedCategories(title) {
+    function getMatchedCategories(title, finnhubCategory) {
       const lower = title.toLowerCase();
-      const matched = [];
+      let matched = new Set();
+      
+      // Map Finnhub's native category if provided
+      if (finnhubCategory && finnhubCategory !== 'general') {
+         matched.add(finnhubCategory.toLowerCase());
+      }
+      
+      // Map custom keywords
       for (const [category, keywords] of Object.entries(categoryKeywords)) {
         if (keywords.some(kw => lower.includes(kw))) {
-          matched.push(category);
+          matched.add(category);
         }
       }
-      return matched;
+      
+      if (matched.size === 0) matched.add('general');
+      return Array.from(matched);
+    }
+
+    // Filter Logic for Checkboxes and Search Box
+    function applyFilters() {
+      const importantOnly = document.getElementById('importance-toggle').checked;
+      const searchQuery = document.getElementById('search-box').value.toLowerCase();
+      const activeCategories = Array.from(document.querySelectorAll('.cat-filter:checked')).map(cb => cb.value);
+      
+      const items = document.querySelectorAll('.news-item');
+      
+      items.forEach(item => {
+        const title = item.getAttribute('data-title').toLowerCase();
+        const isImportant = item.getAttribute('data-important') === 'true';
+        const tags = item.getAttribute('data-tags').split(',');
+
+        const matchesSearch = title.includes(searchQuery);
+        const matchesImportance = !importantOnly || isImportant;
+        const matchesCategory = tags.includes('general') || tags.some(tag => activeCategories.includes(tag));
+
+        if (matchesSearch && matchesImportance && matchesCategory) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    // Scroll Logic for "New Headlines" Alert
+    function handleScroll() {
+      if (feedContainer.scrollTop < 50) {
+        document.getElementById('new-alert-btn').style.display = 'none';
+        unreadCount = 0;
+      }
+    }
+
+    function scrollToTop() {
+      feedContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('new-alert-btn').style.display = 'none';
+      unreadCount = 0;
     }
 
     async function fetchMarketNews() {
@@ -168,7 +297,6 @@
         return;
       }
 
-      const container = document.getElementById('market-feed');
       const apiUrl = `https://finnhub.io/api/v1/news?category=general&token=${API_KEY}`;
 
       try {
@@ -176,41 +304,59 @@
         if (!response.ok) throw new Error("API Connection Failed.");
         
         const data = await response.json();
-        const items = data.slice(0, 30).reverse(); // Process newest last so they stack on top
+        const items = data.slice(0, 30).reverse(); 
         
         const loadingMsg = document.getElementById('loading-msg');
         if (loadingMsg) loadingMsg.remove();
 
         const audioEnabled = document.getElementById('squawk-toggle').checked;
-        const importantOnly = document.getElementById('importance-toggle').checked;
-        const activeCategories = Array.from(document.querySelectorAll('.cat-filter:checked')).map(cb => cb.value);
+        let newItemsAdded = false;
 
         items.forEach(item => {
           const title = item.headline;
-          const pubDate = new Date(item.datetime * 1000); // Finnhub uses Unix timestamps
           
           if (title && !processedHeadlines.has(title)) {
             processedHeadlines.add(title);
+            newItemsAdded = true;
 
             const isImportant = checkImportance(title);
-            const matchedCats = getMatchedCategories(title);
-            const passesCategory = matchedCats.length === 0 || matchedCats.some(cat => activeCategories.includes(cat));
+            const matchedCats = getMatchedCategories(title, item.category);
 
-            // Apply UI Filters
-            if (importantOnly && !isImportant) return;
-            if (!passesCategory) return;
+            // Date Formatting (Automatically uses local device timezone, e.g. GMT+8 / WITA)
+            const pubDate = new Date(item.datetime * 1000);
+            const formattedTime = pubDate.toLocaleString('en-US', { 
+                month: 'short', day: 'numeric', 
+                hour: 'numeric', minute: '2-digit', 
+                timeZoneName: 'short' 
+            });
+
+            // Build Tag HTML
+            let tagsHtml = '';
+            if (isImportant) tagsHtml += `<span class="tag tag-important">Important</span>`;
+            matchedCats.forEach(cat => {
+              const safeClass = cat.replace(/[^a-zA-Z0-9]/g, '');
+              tagsHtml += `<span class="tag tag-${safeClass}">${cat}</span>`;
+            });
 
             // Render Headline
             const headlineEl = document.createElement('div');
-            headlineEl.className = `news-item ${isImportant ? 'important' : ''}`;
+            // Remove highlight from previous newest item
+            document.querySelectorAll('.latest-headline').forEach(el => el.classList.remove('latest-headline'));
+            
+            headlineEl.className = `news-item latest-headline ${isImportant ? 'important' : ''}`;
+            headlineEl.setAttribute('data-title', title);
+            headlineEl.setAttribute('data-important', isImportant);
+            headlineEl.setAttribute('data-tags', matchedCats.join(','));
+            
             headlineEl.innerHTML = `
-              <div class="news-time">${pubDate.toLocaleTimeString()}</div>
-              <div class="news-title">
-                ${isImportant ? '<span class="badge-important">IMPORTANT</span>' : ''}
-                ${title}
+              <div class="news-meta">
+                <span class="news-time">${formattedTime}</span>
+                <div class="tags-container">${tagsHtml}</div>
               </div>
+              <div class="news-title">${title}</div>
             `;
-            container.prepend(headlineEl);
+            
+            feedContainer.prepend(headlineEl);
 
             // Trigger Audio Squawk
             if (audioEnabled) {
@@ -221,9 +367,24 @@
             }
           }
         });
+
+        // Trigger filters on newly added items
+        if (newItemsAdded) {
+            applyFilters();
+            
+            // Show "New Headlines" button if user has scrolled down
+            if (feedContainer.scrollTop > 50) {
+                unreadCount++;
+                const alertBtn = document.getElementById('new-alert-btn');
+                alertBtn.innerText = `↑ ${unreadCount} New Headline${unreadCount > 1 ? 's' : ''}`;
+                alertBtn.style.display = 'block';
+            }
+        }
         
       } catch (error) {
-        document.getElementById('loading-msg').innerHTML = `<span style="color: #ef4444;">Error: ${error.message}</span>`;
+        if(document.getElementById('loading-msg')) {
+           document.getElementById('loading-msg').innerHTML = `<span style="color: #ef4444;">Error: ${error.message}</span>`;
+        }
       }
     }
 
