@@ -3,261 +3,285 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Analyst Wire - Market Squawk</title>
+  <title>Analyst Wire - Real-Time Terminal</title>
   <style>
     * { box-sizing: border-box; }
     body {
-      background: #0a0e17;
+      background: #000000;
       color: #e2e8f0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       padding: 15px;
       margin: 0;
     }
-    .widget-container {
-      max-width: 850px;
+    
+    .terminal-container {
+      max-width: 900px;
       margin: 0 auto;
-      background: #111827;
-      border: 1px solid #1f2937;
+      background: #0f111a;
+      border: 1px solid #1e2233;
       border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.9);
       position: relative;
     }
-    .widget-header {
-      background: #030712;
-      padding: 15px 20px;
-      border-bottom: 1px solid #1f2937;
+
+    /* --- HEADER & CONTROLS --- */
+    .terminal-header {
+      background: #0a0c13;
+      padding: 12px 20px;
+      border-bottom: 1px solid #1e2233;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .widget-title {
-      font-weight: 800;
-      font-size: 1.1em;
-      color: #10b981;
+    .brand-title {
+      font-weight: 700;
+      font-size: 0.95em;
+      color: #ffffff;
       letter-spacing: 0.5px;
     }
-    .controls-panel {
-      padding: 15px 20px;
-      background: #0f172a;
-      border-bottom: 1px solid #1f2937;
+    .brand-title span { color: #3b82f6; } /* Analyst Wire Blue Accent */
+
+    .controls-bar {
+      padding: 10px 20px;
+      background: #151822;
+      border-bottom: 1px solid #1e2233;
       display: flex;
       gap: 15px;
       align-items: center;
       flex-wrap: wrap;
     }
-    
-    /* Modern Inputs */
-    .search-box {
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: #fff;
-      padding: 9px 14px;
-      border-radius: 6px;
-      width: 100%;
-      max-width: 250px;
-      font-family: inherit;
-    }
-    .search-box:focus { outline: none; border-color: #3b82f6; }
-    
-    /* Custom Dropdown Styling */
-    .dropdown { position: relative; display: inline-block; }
-    .dropbtn {
-      background: #1e293b;
+
+    /* Minimalist Inputs */
+    .search-input {
+      background: #0a0c13;
+      border: 1px solid #2a2f45;
       color: #e2e8f0;
-      padding: 9px 16px;
-      font-size: 0.9em;
-      border: 1px solid #334155;
-      border-radius: 6px;
-      cursor: pointer;
-      font-family: inherit;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      width: 200px;
+      font-size: 0.85em;
     }
-    .dropbtn:hover { background: #334155; }
+    .search-input:focus { outline: none; border-color: #3b82f6; }
+
+    .dropdown { position: relative; display: inline-block; }
+    .drop-btn {
+      background: #0a0c13;
+      color: #cbd5e1;
+      padding: 6px 12px;
+      font-size: 0.85em;
+      border: 1px solid #2a2f45;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .drop-btn:hover { border-color: #475569; }
     .dropdown-content {
       display: none;
       position: absolute;
-      background-color: #1e293b;
-      min-width: 220px;
-      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.8);
-      border: 1px solid #334155;
-      border-radius: 6px;
+      background: #151822;
+      min-width: 200px;
+      box-shadow: 0px 8px 20px rgba(0,0,0,0.9);
+      border: 1px solid #2a2f45;
+      border-radius: 4px;
       z-index: 100;
       top: 110%;
       padding: 8px 0;
     }
     .dropdown-content.show { display: block; }
     .dropdown-content label {
-      color: #e2e8f0;
-      padding: 8px 16px;
-      text-decoration: none;
+      color: #cbd5e1;
+      padding: 6px 16px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       cursor: pointer;
-      font-size: 0.9em;
+      font-size: 0.85em;
     }
-    .dropdown-content label:hover { background-color: #334155; }
-    .dropdown-divider { border-bottom: 1px solid #334155; margin: 4px 0; }
+    .dropdown-content label:hover { background: #1e2233; }
+    .divider { border-bottom: 1px solid #2a2f45; margin: 4px 0; }
 
-    .toggle-label {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 0.9em; cursor: pointer; font-weight: bold;
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85em;
+      cursor: pointer;
+      font-weight: 600;
     }
+    .toggle-group.orange { color: #ea580c; }
+    .toggle-group.green { color: #10b981; }
 
+    /* --- FEED LAYOUT --- */
     .feed-container {
-      max-height: 600px;
+      max-height: 650px;
       overflow-y: auto;
       position: relative;
       scroll-behavior: smooth;
     }
-    
-    /* Headline Items */
-    .news-item {
-      padding: 16px 20px;
-      border-bottom: 1px solid #1e293b;
-      transition: background 0.2s ease;
+
+    .news-row {
+      display: flex;
+      padding: 12px 20px;
+      border-bottom: 1px solid #1e2233;
+      transition: background 0.2s;
       cursor: pointer;
     }
-    .news-item:hover { background: #151e2f; }
-    .news-item.latest-headline {
-      background: rgba(16, 185, 129, 0.05);
-      border-left: 3px solid #10b981;
-    }
-    .news-item.important { border-left: 3px solid #ef4444; }
-    .news-item.important.latest-headline {
-      border-left: 3px solid #ef4444;
-      background: linear-gradient(90deg, rgba(239,68,68,0.1) 0%, rgba(16,185,129,0.02) 100%);
-    }
+    .news-row:hover { background: #1a1e29; }
 
-    .news-meta {
+    /* Highlight Styling */
+    .news-row.latest {
+      background: rgba(37, 99, 235, 0.08); /* Subtle blue for newest */
+    }
+    .news-row.important {
+      background: #ea580c; /* Vibrant orange matching image */
+      color: #000000;
+      border-bottom: 1px solid #c2410c;
+    }
+    .news-row.important:hover { background: #f97316; }
+
+    /* Left Column: Time & Date */
+    .time-col {
+      width: 70px;
+      flex-shrink: 0;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
+      flex-direction: column;
+      padding-top: 2px;
     }
-    .news-time {
+    .time-main {
+      font-weight: 700;
+      font-size: 0.95em;
       color: #94a3b8;
-      font-size: 0.8em;
-      font-weight: 600;
     }
-    .tags-container { display: flex; gap: 6px; flex-wrap: wrap; }
+    .news-row.important .time-main { color: #000; font-weight: 900; }
     
-    /* Tag Pills */
+    .time-sub {
+      font-size: 0.65em;
+      color: #64748b;
+      margin-top: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .news-row.important .time-sub { color: rgba(0,0,0,0.7); }
+
+    /* Right Column: Headline & Tags */
+    .content-col {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .headline-text {
+      font-size: 0.95em;
+      line-height: 1.4;
+      font-weight: 500;
+      color: #f1f5f9;
+    }
+    .news-row.important .headline-text { color: #000000; font-weight: 700; }
+
+    /* Mini Tags */
+    .tags-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
     .tag {
       font-size: 0.65em;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      background: #1e2233;
+      color: #94a3b8;
     }
-    .tag-general { background: #334155; color: #f8fafc; }
-    .tag-centralbanks { background: #0c4a6e; color: #7dd3fc; border: 1px solid #0284c7; }
-    .tag-equities { background: #14532d; color: #86efac; border: 1px solid #22c55e; }
-    .tag-forex { background: #1e3a8a; color: #93c5fd; border: 1px solid #3b82f6; }
-    .tag-commodities { background: #78350f; color: #fcd34d; border: 1px solid #d97706; }
-    .tag-crypto { background: #4c1d95; color: #c4b5fd; border: 1px solid #8b5cf6; }
-    .tag-tech { background: #0f766e; color: #5eead4; border: 1px solid #14b8a6; }
-    .tag-energy { background: #831843; color: #f9a8d4; border: 1px solid #db2777; }
-    .tag-important { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
+    /* Unique Tag Colors */
+    .tag-centralbanks { color: #38bdf8; }
+    .tag-equities { color: #4ade80; }
+    .tag-forex { color: #818cf8; }
+    .tag-commodities { color: #fbbf24; }
+    .tag-crypto { color: #c084fc; }
+    .news-row.important .tag { background: rgba(0,0,0,0.15); color: #000; }
 
-    .news-title {
-      font-size: 1.05em;
-      line-height: 1.4;
-      color: #f8fafc;
-      display: flex;
-      align-items: center;
-    }
-    .expand-icon {
-      margin-left: auto;
-      font-size: 0.8em;
-      color: #64748b;
-      transition: transform 0.2s;
-    }
-
-    /* Expandable Summary Content */
-    .news-summary {
+    /* Expandable Summary */
+    .summary-box {
       display: none;
-      margin-top: 12px;
-      padding: 12px;
-      background: #0f172a;
-      border-radius: 6px;
-      border: 1px solid #1e293b;
-      font-size: 0.9em;
-      color: #cbd5e1;
+      margin-top: 8px;
+      padding: 10px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 4px;
+      font-size: 0.85em;
+      color: #94a3b8;
       line-height: 1.5;
     }
-    .news-item.expanded .news-summary { display: block; }
-    .news-item.expanded .expand-icon { transform: rotate(180deg); }
-    .news-source-link {
+    .news-row.important .summary-box { color: #111; background: rgba(255,255,255,0.2); }
+    .news-row.expanded .summary-box { display: block; }
+    
+    .source-link {
       display: inline-block;
-      margin-top: 8px;
+      margin-top: 6px;
       color: #3b82f6;
       text-decoration: none;
-      font-weight: bold;
+      font-weight: 700;
     }
-    .news-source-link:hover { text-decoration: underline; }
+    .news-row.important .source-link { color: #000; text-decoration: underline; }
 
-    /* Load More / Alerts */
-    .load-more-container { padding: 20px; text-align: center; border-top: 1px solid #1e293b; }
+    /* Loading & Pagination */
+    .status-msg { padding: 25px; color: #64748b; text-align: center; font-size: 0.9em; }
+    .load-more-row { padding: 15px; text-align: center; border-top: 1px solid #1e2233; }
     .btn-action {
-      background: #1e293b; color: #e2e8f0; border: 1px solid #334155;
-      padding: 8px 20px; border-radius: 20px; font-weight: bold;
-      cursor: pointer; transition: background 0.2s;
+      background: #1e2233; color: #cbd5e1; border: none;
+      padding: 6px 16px; border-radius: 4px; font-weight: 600;
+      cursor: pointer; font-size: 0.85em;
     }
-    .btn-action:hover { background: #3b82f6; border-color: #3b82f6; }
-    
+    .btn-action:hover { background: #2a2f45; }
+
     .new-alert-btn {
-      position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-      background: #3b82f6; color: white; border: none; padding: 8px 16px;
-      border-radius: 20px; font-weight: bold; font-size: 0.85em; cursor: pointer;
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      background: #3b82f6; color: white; border: none; padding: 6px 14px;
+      border-radius: 12px; font-weight: bold; font-size: 0.8em; cursor: pointer;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: none; z-index: 100;
     }
   </style>
 </head>
 <body>
 
-  <div class="widget-container">
-    <div class="widget-header">
-      <span class="widget-title">ANALYST WIRE // SQUAWK</span>
-      <label class="toggle-label" style="color: #fbbf24;">
-        <input type="checkbox" id="squawk-toggle"> 🔊 AUDIO SQUAWK
+  <div class="terminal-container">
+    <div class="terminal-header">
+      <div class="brand-title">ANALYST WIRE <span>//</span> SQUAWK FEED</div>
+      <label class="toggle-group green">
+        <input type="checkbox" id="squawk-toggle"> 🔊 AUDIO ON
       </label>
     </div>
 
-    <div class="controls-panel">
+    <div class="controls-bar">
       <div class="dropdown">
-        <button class="dropbtn" onclick="toggleDropdown()">Categories ▼</button>
+        <button class="drop-btn" onclick="toggleDropdown()">Categories ▼</button>
         <div id="cat-dropdown" class="dropdown-content">
           <label><input type="checkbox" id="cat-all" checked onchange="toggleAllCategories()"> All Categories</label>
-          <div class="dropdown-divider"></div>
+          <div class="divider"></div>
           <label><input type="checkbox" class="cat-filter" value="centralbanks" checked onchange="applyFilters()"> Central Banks</label>
           <label><input type="checkbox" class="cat-filter" value="equities" checked onchange="applyFilters()"> Equities</label>
           <label><input type="checkbox" class="cat-filter" value="forex" checked onchange="applyFilters()"> Forex</label>
           <label><input type="checkbox" class="cat-filter" value="commodities" checked onchange="applyFilters()"> Commodities</label>
           <label><input type="checkbox" class="cat-filter" value="crypto" checked onchange="applyFilters()"> Crypto</label>
-          <label><input type="checkbox" class="cat-filter" value="tech" checked onchange="applyFilters()"> Technology</label>
-          <label><input type="checkbox" class="cat-filter" value="energy" checked onchange="applyFilters()"> Energy</label>
+          <label><input type="checkbox" class="cat-filter" value="geopolitics" checked onchange="applyFilters()"> Geopolitics</label>
         </div>
       </div>
       
-      <label class="toggle-label" style="color: #ef4444;">
-        <input type="checkbox" id="importance-toggle" onchange="applyFilters()"> ⚠️ IMPORTANT
+      <label class="toggle-group orange">
+        <input type="checkbox" id="importance-toggle" onchange="applyFilters()"> ⚠️ BREAKING ONLY
       </label>
       
-      <input type="text" id="search-box" class="search-box" placeholder="Search headlines..." onkeyup="applyFilters()">
+      <input type="text" id="search-box" class="search-input" placeholder="Search feed..." onkeyup="applyFilters()">
     </div>
     
     <div style="position: relative;">
       <button id="new-alert-btn" class="new-alert-btn" onclick="scrollToTop()">↑ New Headlines</button>
       <div id="market-feed" class="feed-container" onscroll="handleScroll()">
         <div id="feed-content"></div>
-        <div class="load-more-container">
-          <button id="load-more-btn" class="btn-action" onclick="loadMore()">Load More Headlines</button>
+        <div class="load-more-row">
+          <button id="load-more-btn" class="btn-action" onclick="loadMore()" style="display: none;">Load More</button>
         </div>
       </div>
     </div>
@@ -267,36 +291,31 @@
     // ==========================================
     // INSERT YOUR FREE FINNHUB API KEY HERE
     // ==========================================
-    const API_KEY = 'd9fjrs9r01qu5nhepvo0d9fjrs9r01qu5nhepvog'; 
+    const API_KEY = 'YOUR_FINNHUB_KEY'; 
 
-    let allHeadlines = []; // Master array holding all cached & new items
+    let allHeadlines = []; 
     let visibleCount = 20; 
     let unreadCount = 0;
-    const CACHE_KEY = 'aw_news_cache';
+    const CACHE_KEY = 'aw_squawk_cache';
 
-    /* Categorization Arrays */
+    /* Keyword Dictionaries */
     const categoryKeywords = {
       centralbanks: ['fed', 'fomc', 'ecb', 'boe', 'boj', 'rba', 'rate', 'powell', 'lagarde', 'cpi', 'inflation'],
-      equities: ['stock', 'shares', 'nasdaq', 'spx', 's&p', 'dow', 'earnings', 'nyse', 'dividend'],
-      forex: ['usd', 'eur', 'gbp', 'jpy', 'aud', 'forex', 'currency', 'dollar', 'fx'],
+      equities: ['stock', 'shares', 'nasdaq', 'spx', 's&p', 'dow', 'earnings', 'nyse'],
+      forex: ['usd', 'eur', 'gbp', 'jpy', 'aud', 'forex', 'currency', 'dollar'],
       commodities: ['gold', 'silver', 'oil', 'wti', 'brent', 'crude', 'opec', 'copper'],
-      crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'sec', 'binance', 'etf'],
-      tech: ['apple', 'microsoft', 'google', 'alphabet', 'meta', 'nvidia', 'ai', 'tech', 'semiconductor'],
-      energy: ['energy', 'gas', 'solar', 'exxon', 'chevron', 'power']
+      crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'sec', 'binance'],
+      geopolitics: ['war', 'strike', 'sanction', 'military', 'biden', 'putin', 'election', 'missile', 'attack']
     };
 
-    const importanceKeywords = ['breaking', 'urgent', 'alert', 'unexpected', 'surge', 'plunge'];
+    const importanceKeywords = ['breaking', 'urgent', 'alert', 'unexpected', 'surge', 'plunge', 'halts', 'fired'];
 
-    // --- Dropdown Logic ---
-    function toggleDropdown() {
-      document.getElementById("cat-dropdown").classList.toggle("show");
-    }
-    window.onclick = function(event) {
-      if (!event.target.matches('.dropbtn')) {
+    // --- UI Controls ---
+    function toggleDropdown() { document.getElementById("cat-dropdown").classList.toggle("show"); }
+    window.onclick = function(e) {
+      if (!e.target.matches('.drop-btn')) {
         let dropdowns = document.getElementsByClassName("dropdown-content");
-        for (let i = 0; i < dropdowns.length; i++) {
-          if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('show');
-        }
+        for (let i = 0; i < dropdowns.length; i++) dropdowns[i].classList.remove('show');
       }
     }
     function toggleAllCategories() {
@@ -304,12 +323,8 @@
       document.querySelectorAll('.cat-filter').forEach(cb => cb.checked = isChecked);
       applyFilters();
     }
-    function updateAllCheckboxState() {
-      const allChecked = Array.from(document.querySelectorAll('.cat-filter')).every(cb => cb.checked);
-      document.getElementById('cat-all').checked = allChecked;
-    }
 
-    // --- Data Processing ---
+    // --- Logic & Parsing ---
     function checkImportance(title) {
       const lower = title.toLowerCase();
       return (title === title.toUpperCase() && title.length > 15) || importanceKeywords.some(kw => lower.includes(kw));
@@ -334,22 +349,16 @@
       window.speechSynthesis.speak(utterance);
     }
 
-    // --- Core Engine & Rendering ---
+    // --- Rendering Engine ---
     function loadCache() {
       try {
         const cached = localStorage.getItem(CACHE_KEY);
-        if (cached) {
-          allHeadlines = JSON.parse(cached);
-          renderFeed();
-        }
-      } catch (e) { console.warn("Cache blocked."); }
+        if (cached) { allHeadlines = JSON.parse(cached); renderFeed(); }
+      } catch (e) {}
     }
 
     function saveCache() {
-      try {
-        // Keep the latest 100 in browser memory to avoid size limits
-        localStorage.setItem(CACHE_KEY, JSON.stringify(allHeadlines.slice(0, 100)));
-      } catch (e) {}
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(allHeadlines.slice(0, 100))); } catch (e) {}
     }
 
     function renderFeed() {
@@ -360,7 +369,6 @@
       const searchQuery = document.getElementById('search-box').value.toLowerCase();
       const activeCategories = Array.from(document.querySelectorAll('.cat-filter:checked')).map(cb => cb.value);
 
-      // 1. Filter the master array based on UI selections
       const filteredHeadlines = allHeadlines.filter(item => {
         const title = item.headline.toLowerCase();
         const matchesSearch = title.includes(searchQuery);
@@ -369,64 +377,54 @@
         return matchesSearch && matchesImportance && matchesCategory;
       });
 
-      // 2. Hide or show Load More button
       document.getElementById('load-more-btn').style.display = filteredHeadlines.length > visibleCount ? 'inline-block' : 'none';
 
-      // 3. Render only the visible chunk
-      const headlinesToRender = filteredHeadlines.slice(0, visibleCount);
-      
-      headlinesToRender.forEach((item, index) => {
-        // Formats to device timezone automatically (e.g. GMT+8 / WITA)
-        const formattedTime = new Date(item.datetime * 1000).toLocaleString(undefined, { 
-            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' 
-        });
+      filteredHeadlines.slice(0, visibleCount).forEach((item, index) => {
+        const pubDate = new Date(item.datetime * 1000);
+        
+        // Extract Time (HH:MM) and Date/Timezone separately for the stacked layout
+        const timeMain = pubDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+        const dateSub = pubDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        
+        // Get the short timezone acronym (e.g., WITA)
+        const tzString = pubDate.toLocaleTimeString(undefined, { timeZoneName: 'short' }).split(' ')[2] || '';
 
         let tagsHtml = '';
-        if (item.isImportant) tagsHtml += `<span class="tag tag-important">Important</span>`;
         item.tags.forEach(cat => {
           tagsHtml += `<span class="tag tag-${cat.replace(/[^a-zA-Z0-9]/g, '')}">${cat}</span>`;
         });
 
         const el = document.createElement('div');
-        // Apply highlight only if it is the absolute newest item in the unfiltered array
         const isAbsoluteLatest = allHeadlines.length > 0 && item.id === allHeadlines[0].id;
-        el.className = `news-item ${item.isImportant ? 'important' : ''} ${isAbsoluteLatest ? 'latest-headline' : ''}`;
         
-        // Expandable click handler
+        // Apply important and latest classes
+        el.className = `news-row ${item.isImportant ? 'important' : ''} ${isAbsoluteLatest && !item.isImportant ? 'latest' : ''}`;
+        
         el.onclick = function() { this.classList.toggle('expanded'); };
 
         el.innerHTML = `
-          <div class="news-meta">
-            <span class="news-time">${formattedTime}</span>
-            <div class="tags-container">${tagsHtml}</div>
+          <div class="time-col">
+            <div class="time-main">${timeMain}</div>
+            <div class="time-sub">${dateSub}<br>${tzString}</div>
           </div>
-          <div class="news-title">
-            ${item.headline}
-            <span class="expand-icon">▼</span>
-          </div>
-          <div class="news-summary" onclick="event.stopPropagation();">
-            ${item.summary || 'No additional summary provided.'}
-            <br>
-            ${item.url ? `<a href="${item.url}" target="_blank" class="news-source-link">Read Full Article &rarr;</a>` : ''}
+          <div class="content-col">
+            <div class="headline-text">${item.headline}</div>
+            <div class="tags-row">${tagsHtml}</div>
+            <div class="summary-box" onclick="event.stopPropagation();">
+              ${item.summary || 'No additional summary provided.'}
+              ${item.url ? `<br><a href="${item.url}" target="_blank" class="source-link">View Source &rarr;</a>` : ''}
+            </div>
           </div>
         `;
         container.appendChild(el);
       });
     }
 
-    function applyFilters() {
-      updateAllCheckboxState();
-      visibleCount = 20; // Reset pagination on new filter search
-      renderFeed();
-    }
-
-    function loadMore() {
-      visibleCount += 20;
-      renderFeed();
-    }
+    function applyFilters() { visibleCount = 20; renderFeed(); }
+    function loadMore() { visibleCount += 20; renderFeed(); }
 
     async function fetchMarketNews() {
-      if (API_KEY === 'YOUR_FINNHUB_KEY') return;
+      if (API_KEY === 'd9fjrs9r01qu5nhepvo0d9fjrs9r01qu5nhepvog') return;
       try {
         const response = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${API_KEY}`);
         if (!response.ok) return;
@@ -436,33 +434,28 @@
         let latestAudioHeadline = null;
 
         fetchedItems.forEach(item => {
-          // If headline doesn't exist in our master array, process it
           if (!allHeadlines.some(existing => existing.id === item.id)) {
             item.isImportant = checkImportance(item.headline);
             item.tags = getMatchedCategories(item.headline, item.category);
             allHeadlines.push(item);
             newItemsAdded = true;
             
-            // Queue the newest relevant item for audio squawk
             if (document.getElementById('squawk-toggle').checked) {
                const activeCats = Array.from(document.querySelectorAll('.cat-filter:checked')).map(cb => cb.value);
-               const passesCat = item.tags.includes('general') || item.tags.some(tag => activeCats.includes(tag));
-               if (passesCat) latestAudioHeadline = item.headline;
+               if (item.tags.includes('general') || item.tags.some(tag => activeCats.includes(tag))) {
+                   latestAudioHeadline = item.headline;
+               }
             }
           }
         });
 
         if (newItemsAdded) {
-          // Strict chronological sort (newest timestamp first) guarantees correct stacking
           allHeadlines.sort((a, b) => b.datetime - a.datetime);
           saveCache();
           renderFeed();
-          
           if (latestAudioHeadline) squawk(latestAudioHeadline);
           
-          // Show alert if scrolled down
-          const feedEl = document.getElementById('market-feed');
-          if (feedEl.scrollTop > 100) {
+          if (document.getElementById('market-feed').scrollTop > 100) {
             unreadCount++;
             const alertBtn = document.getElementById('new-alert-btn');
             alertBtn.innerText = `↑ ${unreadCount} New Headline${unreadCount > 1 ? 's' : ''}`;
@@ -472,7 +465,6 @@
       } catch (error) { console.error("Fetch error:", error); }
     }
 
-    // Scroll Logic
     function handleScroll() {
       if (document.getElementById('market-feed').scrollTop < 50) {
         document.getElementById('new-alert-btn').style.display = 'none';
@@ -483,7 +475,6 @@
       document.getElementById('market-feed').scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Boot Up
     loadCache();
     fetchMarketNews();
     setInterval(fetchMarketNews, 20000);
