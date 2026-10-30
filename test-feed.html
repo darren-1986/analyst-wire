@@ -177,7 +177,7 @@
     .news-row.important:hover { background: #ea580c; }
     
     .news-row.important.latest {
-        border-left: 4px solid #ffffff; /* Contrast border if it's breaking AND latest */
+        border-left: 4px solid #ffffff; 
     }
 
     /* Left Column: Full Local Date, Time, and TZ */
@@ -497,7 +497,7 @@
     };
 
     function shouldTriggerAudio(headlineText, finnhubCategory) {
-        if (userAudioConfig.mode === 'all') return true; // Read every single headline
+        if (userAudioConfig.mode === 'all') return true; 
 
         const lower = headlineText.toLowerCase();
         if (muteList.some(muteWord => lower.includes(muteWord))) return false;
@@ -511,10 +511,8 @@
             const hasAction = tier2Actions.some(action => lower.includes(action));
             return (hasAssetOrInstitution && hasAction);
         } else {
-            // Custom Mode
             let matchesSelection = false;
             
-            // Checking user selected categories against Finnhub's native tag OR our keyword arrays
             for (const cat of userAudioConfig.categories) {
                 if (finnhubCategory && finnhubCategory.toLowerCase() === cat.toLowerCase()) {
                     matchesSelection = true; break;
@@ -545,7 +543,7 @@
     let allHeadlines = []; 
     let visibleCount = 20; 
     let unreadCount = 0;
-    const CACHE_KEY = 'aw_squawk_v4_cache';
+    const CACHE_KEY = 'aw_squawk_v5_cache';
 
     const uiCategoryKeywords = {
       centralbanks: ['fed', 'fomc', 'ecb', 'boe', 'boj', 'rba', 'rate', 'powell', 'lagarde', 'cpi', 'inflation'],
@@ -580,7 +578,6 @@
       const lower = title.toLowerCase();
       const uiKeywords = ['breaking', 'urgent', 'alert', 'unexpected', 'surge', 'plunge', 'halts', 'fired'];
       const meetsUiCriteria = (title === title.toUpperCase() && title.length > 15) || uiKeywords.some(kw => lower.includes(kw));
-      // If the squawk filter caught it as important (Tiers 1-3), guarantee it gets highlighted in the UI
       return meetsUiCriteria || passedAudioFilter;
     }
     
@@ -619,7 +616,6 @@
       filteredHeadlines.slice(0, visibleCount).forEach((item, index) => {
         const pubDate = new Date(item.datetime * 1000);
         
-        // Full Explicit Time, Date, and TZ Formatting
         const timeStr = pubDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
         const dateStr = pubDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
         const tzStr = pubDate.toLocaleTimeString(undefined, { timeZoneName: 'short' }).split(' ')[2] || '';
@@ -666,33 +662,34 @@
     async function fetchMarketNews() {
       if (API_KEY === 'YOUR_FINNHUB_KEY') return;
       try {
-        const response = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${API_KEY}`);
+        // Appending timestamp to bypass mobile browser caching and pull actual live data
+        const response = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${API_KEY}&_t=${Date.now()}`, { cache: 'no-store' });
         if (!response.ok) return;
         const fetchedItems = await response.json();
         
         let newItemsAdded = false;
         let latestAudioItem = null;
+        
+        const currentUnixTime = Math.floor(Date.now() / 1000);
 
         fetchedItems.forEach(item => {
+          // Discard upstream time-travel glitches (rejecting timestamps more than 1 hour in the future)
+          if (item.datetime > currentUnixTime + 3600) return;
+
           if (!allHeadlines.some(existing => existing.id === item.id)) {
             
-            // 1. Check Audio Filter explicitly
             const passesAudioFilter = shouldTriggerAudio(item.headline, item.category);
             
-            // 2. Set UI Tags & Importance
             item.isImportant = checkUIImportance(item.headline, passesAudioFilter);
             item.tags = getMatchedCategories(item.headline, item.category);
             
             allHeadlines.push(item);
             newItemsAdded = true;
             
-            // 3. Queue the latest item for audio/ping
             if (audioEnabled && !isFirstLoad) {
-                // If it passes squawk logic, save the text to speak it
                 if (passesAudioFilter) {
                     latestAudioItem = { text: item.headline, shouldSpeak: true };
                 } 
-                // If it didn't pass, queue it to just ping the visualizer (radar style)
                 else if (!latestAudioItem) {
                     latestAudioItem = { text: item.headline, shouldSpeak: false };
                 }
