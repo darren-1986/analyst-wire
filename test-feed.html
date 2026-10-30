@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Analyst Wire - Real-Time Terminal & Squawk</title>
   
-  <!-- Modern typography import for the Audio Engine -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
@@ -30,19 +29,17 @@
     }
 
     /* =========================================================
-       NEW: ADVANCED AUDIO DASHBOARD (From Provided Code)
+       AUDIO SQUAWK DASHBOARD
        ========================================================= */
     .audio-dashboard {
         display: flex;
         align-items: center;
         background: #0a0c13;
         border-bottom: 1px solid #1e2233;
-        padding: 12px 20px;
+        padding: 12px 16px;
         justify-content: space-between;
-        transition: all 0.3s ease;
         width: 100%;
     }
-
     .audio-left {
         display: flex;
         align-items: center;
@@ -50,18 +47,15 @@
         min-width: 160px;
         flex-shrink: 0;
     }
-
     .squawk-logo {
-        height: 30px;
+        height: 28px;
         width: auto;
         object-fit: contain;
     }
-
     .audio-status-col {
         display: flex;
         flex-direction: column;
     }
-    
     .audio-status-col button {
         background: none; border: none; color: #8b949e;
         font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
@@ -77,7 +71,7 @@
     #timerText { font-size: 11px; color: #475569; margin-top: 4px; font-family: 'JetBrains Mono', monospace; min-height: 15px; }
     .status-on ~ #timerText { color: #10b981; }
 
-    /* The Massive Audio Visualizer */
+    /* Audio Visualizer */
     .squawk-visualizer {
         display: flex; align-items: center; justify-content: center; gap: 3px;
         height: 35px; flex-grow: 1; padding: 0 10px; opacity: 0.15; 
@@ -108,7 +102,6 @@
     @keyframes pulseWave { 0% { height: 4px; } 100% { height: 28px; box-shadow: 0 0 15px rgba(59, 130, 246, 1); } }
     @keyframes centerPulse { 0% { height: 15px; } 100% { height: 40px; box-shadow: 0 0 20px #fff, 0 0 40px #3b82f6; } }
 
-    /* Integrated Volume & Test Control */
     .vol-wrapper {
         display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3);
         padding: 6px 12px; border-radius: 20px; border: 1px solid #1e2233; flex-shrink: 0;
@@ -123,48 +116,8 @@
     }
     .test-audio-btn:hover { background: #3b82f6; color: #fff; }
 
-    .audio-settings-btn {
-        background: none; border: none; color: #8b949e; cursor: pointer; padding: 4px; display: flex; transition: color 0.2s;
-    }
-    .audio-settings-btn:hover { color: #fff; }
-    .audio-settings-btn svg { width: 18px; height: 18px; }
-
     /* =========================================================
-       AUDIO SETTINGS MODAL 
-       ========================================================= */
-    .modal-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
-        display: none; justify-content: center; align-items: center; z-index: 2000;
-    }
-    .modal-content {
-        background: #0f111a; border: 1px solid #1e2233; border-radius: 8px;
-        width: 90%; max-width: 450px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.9); font-family: 'Inter', sans-serif;
-    }
-    .modal-header {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 15px 20px; border-bottom: 1px solid #1e2233; background: #151924;
-    }
-    .modal-header h3 { margin: 0; font-size: 15px; color: #fff; font-weight: 600; }
-    .modal-header button { background: none; border: none; color: #8b949e; font-size: 22px; cursor: pointer; padding: 0; line-height: 1; }
-    .modal-header button:hover { color: #fff; }
-    .modal-body { padding: 20px; }
-    .setting-group { margin-bottom: 15px; }
-    .setting-group label.header-label { display: block; font-size: 11px; color: #8b949e; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; }
-    .setting-group select, .setting-group input[type="text"] {
-        width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #2a2f45;
-        background: #0a0c13; color: #fff; font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
-    }
-    .setting-group select:focus, .setting-group input[type="text"]:focus { border-color: #3b82f6; }
-    .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .checkbox-grid label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #cbd5e1; cursor: pointer; }
-    .checkbox-grid input[type="checkbox"] { accent-color: #3b82f6; cursor: pointer; width: 14px; height: 14px; }
-    .modal-footer { padding: 15px 20px; background: #151924; border-top: 1px solid #1e2233; text-align: right; }
-    .btn-save { background: #3b82f6; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; transition: background 0.2s; }
-    .btn-save:hover { background: #2563eb; }
-
-    /* =========================================================
-       TERMINAL HEADER & FEED CONTROLS (UNTOUCHED UI)
+       TERMINAL HEADER & FEED CONTROLS
        ========================================================= */
     .terminal-header {
       background: #151924; padding: 12px 16px; border-bottom: 1px solid #23283b;
@@ -183,13 +136,24 @@
     .filter-options { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8em; color: #cbd5e1; }
     .filter-options label { cursor: pointer; display: flex; align-items: center; gap: 4px; }
 
-    /* --- FEED LAYOUT (UNTOUCHED) --- */
+    /* --- FEED LAYOUT --- */
     .feed-container { max-height: 600px; overflow-y: auto; position: relative; scroll-behavior: smooth; }
     .news-row { display: flex; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: background 0.15s; }
     .news-row:hover { background: #1a1e2b; }
     
-    .news-row.latest { background: rgba(59, 130, 246, 0.08); }
-    .news-row.important { background: #f97316; color: #000000; border-bottom: none; }
+    /* Stronger Highlight for the Absolute Newest Headline */
+    .news-row.latest { 
+        background: rgba(59, 130, 246, 0.12); 
+        border-left: 3px solid #3b82f6; 
+    }
+    
+    /* Strong Highlight for Breaking News */
+    .news-row.important { 
+        background: #f97316; 
+        color: #000000; 
+        border-left: 3px solid #c2410c; 
+        border-bottom: none; 
+    }
     .news-row.important:hover { background: #ea580c; }
 
     .time-col { width: 60px; flex-shrink: 0; font-size: 0.85em; font-weight: 600; color: #94a3b8; padding-top: 1px; }
@@ -227,7 +191,7 @@
 
   <div class="terminal-wrapper">
       
-    <!-- NEW AUDIO DASHBOARD -->
+    <!-- AUDIO DASHBOARD -->
     <div class="audio-dashboard">
         <div class="audio-left">
             <img src="media/squawkimage.png" alt="Squawk" class="squawk-logo" onerror="this.style.display='none'">
@@ -253,16 +217,6 @@
             <span class="vol-icon">🔉</span>
             <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.1" value="1" title="Volume">
             <button class="test-audio-btn" onclick="runAudioTest()">TEST</button>
-            <button class="audio-settings-btn" onclick="openAudioModal()" title="Audio Settings">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="4" y1="6" x2="20" y2="6"></line>
-                    <line x1="14" y1="4" x2="14" y2="8"></line>
-                    <line x1="4" y1="12" x2="20" y2="12"></line>
-                    <line x1="8" y1="10" x2="8" y2="14"></line>
-                    <line x1="4" y1="18" x2="20" y2="18"></line>
-                    <line x1="16" y1="16" x2="16" y2="20"></line>
-                </svg>
-            </button>
         </div>
     </div>
 
@@ -311,52 +265,6 @@
     </div>
   </div>
 
-  <!-- AUDIO SETTINGS MODAL -->
-  <div id="audioSettingsModal" class="modal-overlay">
-      <div class="modal-content">
-          <div class="modal-header">
-              <h3>Audio Squawk Settings</h3>
-              <button onclick="closeAudioModal()">×</button>
-          </div>
-          <div class="modal-body">
-              <div class="setting-group">
-                  <label class="header-label">Filter Mode</label>
-                  <select id="squawkMode" onchange="toggleCustomSettings()">
-                      <option value="default">Analyst Wire Smart Filter (Default)</option>
-                      <option value="custom">Custom Squawk Filter</option>
-                  </select>
-              </div>
-              
-              <div id="customSettingsBlock" style="display: none; padding-top: 15px; border-top: 1px solid #1e2233; margin-top: 15px;">
-                  <div class="setting-group">
-                      <label class="header-label">Watchlist Markets</label>
-                      <div class="checkbox-grid">
-                          <label><input type="checkbox" value="commodities" class="custom-cat-cb"> Commodities</label>
-                          <label><input type="checkbox" value="forex" class="custom-cat-cb"> Forex</label>
-                          <label><input type="checkbox" value="equities" class="custom-cat-cb"> Equities</label>
-                          <label><input type="checkbox" value="crypto" class="custom-cat-cb"> Crypto</label>
-                          <label><input type="checkbox" value="centralBanks" class="custom-cat-cb"> Central Banks</label>
-                      </div>
-                  </div>
-                  <div class="setting-group" style="margin-top: 20px;">
-                      <label class="header-label">Specific Keywords (Comma Separated)</label>
-                      <input type="text" id="customKeywords" placeholder="e.g. inflation, tariffs, yield">
-                  </div>
-                  <div class="setting-group" style="margin-top: 20px;">
-                      <label class="header-label">Squawk Strictness</label>
-                      <select id="squawkStrictness">
-                          <option value="loose">Loose (Read ALL headlines containing selections)</option>
-                          <option value="strict">Strict (Requires action verbs / shock words)</option>
-                      </select>
-                  </div>
-              </div>
-          </div>
-          <div class="modal-footer">
-              <button class="btn-save" onclick="saveAudioSettings()">Save Settings</button>
-          </div>
-      </div>
-  </div>
-
   <script>
     // ==========================================
     // INSERT YOUR FREE FINNHUB API KEY HERE
@@ -368,36 +276,7 @@
        ========================================================= */
     let audioEnabled = false, seconds = 0, timerInterval;
     let audioCtx = null; 
-    let userAudioConfig = { mode: 'default', categories: [], keywords: [], strictness: 'loose' };
-    
-    let isFirstLoad = true; // Prevents audio spam when fetching past headlines on boot
-
-    function openAudioModal() {
-        document.getElementById('audioSettingsModal').style.display = 'flex';
-        document.getElementById('squawkMode').value = userAudioConfig.mode;
-        toggleCustomSettings();
-        document.querySelectorAll('.custom-cat-cb').forEach(cb => cb.checked = userAudioConfig.categories.includes(cb.value));
-        document.getElementById('customKeywords').value = userAudioConfig.keywords.join(', ');
-        document.getElementById('squawkStrictness').value = userAudioConfig.strictness;
-    }
-    
-    function closeAudioModal() { document.getElementById('audioSettingsModal').style.display = 'none'; }
-    function toggleCustomSettings() {
-        const mode = document.getElementById('squawkMode').value;
-        document.getElementById('customSettingsBlock').style.display = (mode === 'custom') ? 'block' : 'none';
-    }
-
-    function saveAudioSettings() {
-        userAudioConfig.mode = document.getElementById('squawkMode').value;
-        if (userAudioConfig.mode === 'custom') {
-            userAudioConfig.categories = Array.from(document.querySelectorAll('.custom-cat-cb:checked')).map(cb => cb.value);
-            const rawKws = document.getElementById('customKeywords').value;
-            userAudioConfig.keywords = rawKws.split(',').map(k => k.trim().toLowerCase()).filter(k => k.length > 0);
-            userAudioConfig.strictness = document.getElementById('squawkStrictness').value;
-        }
-        closeAudioModal();
-        alert(userAudioConfig.mode === 'default' ? 'Smart filter active.' : 'Custom squawk settings saved.');
-    }
+    let isFirstLoad = true; // Prevents audio spam on initial boot
 
     function initAudioContext() {
         if (!audioCtx) {
@@ -438,8 +317,8 @@
         }, 1000); 
     }
     
-    function speakText(text) { 
-        if (!audioEnabled) return; 
+    function squawk(text) { 
+        if (!audioEnabled || !('speechSynthesis' in window)) return; 
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text); 
         u.volume = parseFloat(document.getElementById('volSlider').value); 
@@ -454,8 +333,8 @@
     }
 
     function runAudioTest() {
-        if (!audioEnabled) return alert("Please click 'Disconnected' to turn the audio system On Air before testing.");
-        speakText("Audio system test complete. The visualizer is functioning correctly.");
+        if (!audioEnabled) return alert("Please connect the audio system first.");
+        squawk("Audio system test complete. The visualizer is functioning correctly.");
     }
     
     document.getElementById('volSlider').addEventListener('change', function() {
@@ -489,62 +368,16 @@
         btn.disabled = false;
     }
 
-    /* --- INTELLIGENT AUDIO FILTER LISTS --- */
-    const muteList = ['market wrap', 'recap', 'preview', 'for the week', 'expected to', 'poll:', 'technical analysis', 'update:'];
-    const tier1ExactTriggers = ['s&p global manufacturing', 'ism manufacturing', 'cpi', 'jolts', 'adp', 'crude oil inventories', 'initial jobless claims', 'nonfarm payrolls', 'unemployment rate', 'gdp', 'interest rate decision', 'emergency rate cut', 'circuit breaker', 'nfp'];
-    const tier2Assets = ['usd', 'eur', 'gbp', 'chf', 'aud', 'cad', 'nzd', 'jpy', 'gold', 'oil', 'crude', 'brent', 'wti', 'treasury', 's&p', 'nasdaq'];
-    const tier3Institutions = ['fed', 'ecb', 'boe', 'boj', 'rba', 'boc', 'snb', 'rbnz', 'sec', 'opec', 'powell', 'lagarde'];
-    const tier2Actions = ['surges', 'plummets', 'spikes', 'crashes', 'intervention', 'hike', 'cut', 'pause', 'pivot', 'breaks', 'tariff', 'sanctions', 'halts'];
-    const tier3Shocks = ['missile', 'military strike', 'war', 'attack', 'assassination', 'terror'];
-    const customFilterCats = { 
-        commodities: ['oil', 'gold', 'metal', 'copper', 'gas', 'brent', 'wti', 'silver'], 
-        forex: ['usd', 'eur', 'jpy', 'gbp', 'chf', 'aud', 'cad', 'nzd', 'fx', 'currency', 'yield'], 
-        equities: ['stock', 'equity', 'sp500', 'nasdaq', 'dow', 'shares'], 
-        crypto: ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'coin'], 
-        centralBanks: ['fed', 'ecb', 'boj', 'boe', 'rba', 'central bank', 'interest rate', 'hike', 'cut'] 
-    };
-
-    function shouldTriggerAudio(headlineText) {
-        const lower = headlineText.toLowerCase();
-        if (muteList.some(muteWord => lower.includes(muteWord))) return false;
-
-        if (userAudioConfig.mode === 'default') {
-            if (tier1ExactTriggers.some(trigger => lower.includes(trigger))) return true;
-            if (tier3Shocks.some(shock => lower.includes(shock))) return true;
-            if (lower.includes('monetary policy') || lower.includes('rate-hike') || lower.includes('basis points') || lower.includes('bps')) return true;
-
-            const hasAssetOrInstitution = tier2Assets.some(asset => lower.includes(asset)) || tier3Institutions.some(inst => lower.includes(inst));
-            const hasAction = tier2Actions.some(action => lower.includes(action));
-            
-            return (hasAssetOrInstitution && hasAction);
-        } else {
-            let matchesSelection = false;
-            for (const cat of userAudioConfig.categories) {
-                if (customFilterCats[cat] && customFilterCats[cat].some(word => lower.includes(word))) { matchesSelection = true; break; }
-            }
-            if (!matchesSelection && userAudioConfig.keywords.length > 0) {
-                if (userAudioConfig.keywords.some(kw => lower.includes(kw))) matchesSelection = true;
-            }
-            if (!matchesSelection) return false;
-
-            if (userAudioConfig.strictness === 'loose') return true;
-            else {
-                const hasAction = tier2Actions.some(action => lower.includes(action));
-                const isShock = tier3Shocks.some(shock => lower.includes(shock));
-                return (hasAction || isShock);
-            }
-        }
-    }
-
 
     /* =========================================================
-       NEWSFEED DATA & UI LOGIC (UNTOUCHED CORE)
+       NEWSFEED DATA & UI LOGIC
        ========================================================= */
     let allHeadlines = []; 
     let visibleCount = 20; 
     let unreadCount = 0;
     const CACHE_KEY = 'aw_squawk_v3_cache';
 
+    /* Finnhub Category Matching Arrays */
     const uiCategoryKeywords = {
       centralbanks: ['fed', 'fomc', 'ecb', 'boe', 'boj', 'rba', 'rate', 'powell', 'lagarde', 'cpi', 'inflation'],
       equities: ['stock', 'shares', 'nasdaq', 'spx', 's&p', 'dow', 'earnings', 'nyse'],
@@ -621,6 +454,8 @@
         item.tags.forEach(cat => { tagsHtml += `<span class="tag">${cat}</span>`; });
 
         const el = document.createElement('div');
+        
+        // This confirms the absolute newest headline in the array receives the blue highlight
         const isAbsoluteLatest = allHeadlines.length > 0 && item.id === allHeadlines[0].id;
         
         el.className = `news-row ${item.isImportant ? 'important' : ''} ${isAbsoluteLatest ? 'latest' : ''}`;
@@ -660,7 +495,7 @@
         const fetchedItems = await response.json();
         
         let newItemsAdded = false;
-        let newestHeadlineText = null;
+        let latestAudioHeadline = null;
 
         fetchedItems.forEach(item => {
           if (!allHeadlines.some(existing => existing.id === item.id)) {
@@ -668,7 +503,18 @@
             item.tags = getMatchedCategories(item.headline, item.category);
             allHeadlines.push(item);
             newItemsAdded = true;
-            if (!newestHeadlineText) newestHeadlineText = item.headline; // Capture the very latest one for audio
+            
+            // INTELLIGENT AUDIO FILTER: Only queue audio if it passes the user's active UI checkboxes
+            if (audioEnabled && !isFirstLoad) {
+                const activeCats = Array.from(document.querySelectorAll('.cat-filter:checked')).map(cb => cb.value);
+                const passesCat = item.tags.includes('general') || item.tags.some(tag => activeCats.includes(tag));
+                const importantOnly = document.getElementById('importance-toggle').checked;
+                const passesImportance = !importantOnly || item.isImportant;
+
+                if (passesCat && passesImportance) {
+                    latestAudioHeadline = item.headline; 
+                }
+            }
           }
         });
 
@@ -677,13 +523,13 @@
           saveCache();
           renderFeed();
           
-          // Audio Trigger Logic
-          if (audioEnabled && !isFirstLoad && newestHeadlineText) {
-              if (shouldTriggerAudio(newestHeadlineText)) {
-                  speakText(newestHeadlineText);
+          // Trigger Audio Engine
+          if (audioEnabled && !isFirstLoad) {
+              if (latestAudioHeadline) {
+                  squawk(latestAudioHeadline); // Spoken out loud
               } else {
                   const vol = parseFloat(document.getElementById('volSlider').value);
-                  playSynthesizedPing(vol);
+                  playSynthesizedPing(vol); // Just ping for background news filtered out by UI
               }
           }
           
@@ -695,7 +541,7 @@
           }
         }
         
-        isFirstLoad = false; // Boot sequence complete, safe to squawk future items
+        isFirstLoad = false; 
       } catch (error) { console.error("Fetch error:", error); }
     }
 
